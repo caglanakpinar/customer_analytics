@@ -21,15 +21,54 @@ from utils import current_date_to_day
 class CreateSampleIndex:
     def __init__(self, host, port, start_date, end_date, prev_day_count):
         """
-        Created sample data randomly selected data and actions. This aims to create a ElasticSearch index with data
-        which will be similar to any -commerce business of data.
-        There are some defqult expected values. Some are stored at configs.py,
-        some are stored as constant directly into the code in order to see the impact of creation the data.
+        Creating Sample orders and downloads ElasticSearch Index:
+            - Sample indexes must be predictable.
+            - It must allow us to interpret for Exploratory Analysis.
+            - It can be useful for generating dashboards and charts, in order to impress users.
+            - Sample Indexes must be realistic.
+            - This aims to create an ElasticSearch index with data
+              which will be similar to any e-commerce business of data.
+            - Data sets are created with actions of e-commerce of the purchase process and users acquisition processes;
+                - Download
+                - Signup
+                - Login
+                - product add to basket
+                - Order screen
+                - Purchase
+
+            Example of Order (key, value dictionary);
+             {'id': 66597918,
+               'date': '2020-12-13T09:20:00',
+               'actions': {'has_sessions': True,
+                'has_basket': True,
+                'order_screen': False,
+                'purchased': False,
+                'add_to_basket': {'p_28': {'duration': 42, '_date': '2020-12-13T09:16:48'},
+                 'p_45': {'duration': 23, '_date': '2020-12-13T09:17:11'},
+                 'p_135': {'duration': 26, '_date': '2020-12-13T09:17:37'},
+                 'p_144': {'duration': 95, '_date': '2020-12-13T09:19:12'},
+                 'p_59': {'duration': 26, '_date': '2020-12-13T09:19:38'},
+                 'p_71': {'duration': 22, '_date': '2020-12-13T09:20:00'}}},
+               'client': 'u_552873',
+               'promotion_id': None,
+               'payment_amount': 20.725,
+               'discount_amount': 0,
+               'basket': {'p_28': {'price': 3.0, 'category': 'p_c_7', 'rank': 1},
+                'p_45': {'price': 9.375, 'category': 'p_c_9', 'rank': 92},
+                'p_135': {'price': 0.255, 'category': 'p_c_1', 'rank': 188},
+                'p_144': {'price': 4.095, 'category': 'p_c_6', 'rank': 70},
+                'p_59': {'price': 2.32, 'category': 'p_c_1', 'rank': 15},
+                'p_71': {'price': 1.68, 'category': 'p_c_3', 'rank': 155}},
+               'total_products': 6,
+               'session_start_date': '2020-12-13T09:16:06'}
+
+        There are some default expected values. Some are stored at configs.py,
+        some are stored as constant directly into the code in order to see the impact of creating the data.
         :param host: default 'localhost'
-        :param port: default elasticsearch default port 9200
-        :param start_date: date aim to start to create sample data default start date is at configs.py
-        :param end_date: date aim to end to create sample data default end date is recent date.
-        :param prev_day_count:
+        :param port: default ElasticSearch default port 9200
+        :param start_date: date aims to start to create sample data default start date is at configs.py
+        :param end_date: date aim to end to create sample data default end date is the recent date.
+        :param prev_day_count: number of days back for data creation
         """
         self.host = host if host is not None else '127.0.0.1'
         self.port = int(port) if host is not None else 9200
@@ -103,9 +142,9 @@ class CreateSampleIndex:
     def decide_date(self, date, start=True):
         """
         Decides the date start or end date of the randomly sampling data.
-        If one of each (start, or end) has not been assigned default_sample_data_previous_day form configs.py works
+        If one of each (start, or end) has not been assigned default_sample_data_previous_day form configs.py works.
         :param date: date format for assigning start or end date date decision
-        :param start: which date we are deciding? start or end date?
+        :param start: which date we are deciding on? start or end date?
         :return: date format: datetime
         """
         if date is None:
@@ -123,9 +162,9 @@ class CreateSampleIndex:
 
     def create_dates(self):
         """
-        creates dates iterating from start date to end date.
+        creates dates iterating from the start date to the end date.
         Randomly Sampling is working day by day.
-        We also need weeks. At here we are assigning weeks as mondays of each week.
+        We also need weeks. At here we are assigning weeks as Mondays of each week.
         """
         self.start_date = self.decide_date(self.start_date)
         self.end_date = self.decide_date(self.end_date, start=False)
@@ -139,10 +178,10 @@ class CreateSampleIndex:
 
     def create_customers(self):
         """
-        -   Customers are randomly created with format 'u_2000'. Each iteration randomly users are selected.
-        -   There are static newcomer ratio at here. Each day plus the order count, there must be ratio of newcomers.
-        -   There is also 'customer_churn_list' function which
-        allows us to calculate randomly selected churn rate for each day and day part
+        -   Customers are randomly created with the format 'u_2000'. Each iteration randomly users are selected.
+        -   There is a static newcomer ratio here. Each day plus the order count, there must be the ratio of newcomers.
+        -   There is also the 'customer_churn_list' function which
+        allows us to calculate the randomly selected churn rate for each day and day part.
         """
         self.client_active = ['u_' + str(i) for i in range(1000000)]
         self.customer_newcomer_ratio = np.arange(0, 0.3, 0.025).tolist()
@@ -157,12 +196,12 @@ class CreateSampleIndex:
     def create_product_list(self):
         """
             -   Products are optional when it is created the original index.
-                However, at here just for an example it creates the products.
+                However, here just for an example, it creates the products.
             -   Products are assigned as 'p_100'
             -   Product Categories are assigned as 'p_c_100'.
-            -   Each products have their own prices lated to their categories.
+            -   Each product have their own prices related to their categories.
                 'price_multiplier' are also decided related to categories of purchasability.
-            -   'ratio' wilh help us to ratio of the product of choosability of the customers.
+            -   'ratio' is helping us to a ratio of the product of choosability of the customers.
 
         """
         products_list = ['p_' + str(i) for i in range(200)]
@@ -171,7 +210,7 @@ class CreateSampleIndex:
             _cat = 'p_c_' + str(i)
             self.products_category_list[_cat] = {}
             if i in [9, 10]:
-                self.products_category_list[_cat][' '] = list(range(20, 35))
+                self.products_category_list[_cat]['price_multiplier'] = list(range(20, 35))
                 self.products_category_list[_cat]['ratio'] = 0.2
             if i in range(5, 9):
                 self.products_category_list[_cat]['price_multiplier'] = list(range(10, 21))
@@ -202,7 +241,7 @@ class CreateSampleIndex:
 
     def create_order_product_count(self):
         """
-        Number of product count in a orders. These number (integer) is randomly selected for each order or basket.
+        The number of product count in order. These number (integer) is randomly selected for each order or basket.
         """
         self.order_of_num_products = list(range(3, 5)) * 30 + list(range(5, 9)) * 50 + list(range(9, 11)) * 20
         self.order_of_num_products_for_no_orders = [0] * 50 + list(range(1, 3)) * 50 + list(range(3, 5)) * 30 + list(
@@ -212,8 +251,9 @@ class CreateSampleIndex:
 
     def create_day_part_order_counts(self):
         """
-        Each day or day parts are sampling individually. However these day parts differs realted to weekend or week day.
-        Each day part and order can have range of numbers which indicates
+        The number of Purchased Order Count per day part per week/weekend:
+        Each day or daypart is sampling individually. However, these dayparts differ related to weekend or weekday.
+        Each day part can have a range of numbers which indicates
         the total number of orders for queried week part.
         """
         self.days_part_of_total_orders = {'week':
@@ -242,15 +282,15 @@ class CreateSampleIndex:
     def create_promotions(self):
         """
         Promotions are also optional for the original 'orders' index.
-        Promotions directly affects the discount rato in the sampling methology.
+        Promotions directly affect the discount rate in the sampling methodology.
         There are 4 product categories;
             -   'acquisition',
             -   'engaged',
             -   'upsell_basket',
             -   'active'
-        Each category have a ratio which refers the discount ratio of the order.
-        If the discount order is higher thatn the other promotion categories,
-         number  of orders related to that promotions must be lower than that promotion.
+        Each category has a ratio that refers to the discount ratio of the order.
+        If the discount order is higher than the other promotion categories,
+         the number of orders related to that promotions must be lower than that promotion.
         """
         self.promotion_list = ['promo_' + str(i) for i in range(100)]
         self.promo_levels = {}
@@ -274,10 +314,10 @@ class CreateSampleIndex:
     def order_basket_duration(self, product):
         """
         Action which is 'add to basket' is also optional.
-        however, in  the sampling, 'each add to basket' actions are calculated.
-        :param product: each product of purchasability ratio will differs
+        however, in the sampling, 'each adds to basket' actions are calculated.
+        :param product: each product of purchasability ratio will differ
                         the duration of customer decision of adding for purchase.
-        :return: duration in second
+        :return: duration (sec)
         """
         if self.products_category_list[self.products[product]['category']]['ratio'] == 0.2:
             duration = random.sample(list(range(10, 200)), 1)[0]
@@ -288,12 +328,29 @@ class CreateSampleIndex:
         return duration
 
     def purchase_to_basket_duration(self, average_amount, total_amount):
+        """
+        Calculation of total duration per product related to add to basket action.
+        According to the total amount of the basket increases related to products of price, the duration will change.
+        If there is a higher price, the duration will be higher too.
+        :param average_amount: Average basket value when a product is added to the basket.
+        :param total_amount: Total basket value when a product is added to the basket.
+        :return: Duration (sec)
+        """
         random_duration = random.sample(list(range(20, 120)), 1)[0]
         multiplier = (total_amount - average_amount) / max(total_amount, average_amount)
         additional_duration = random_duration * multiplier * 0.05
         return random_duration + additional_duration
 
     def get_actions(self):
+        """
+        Actions are optional. But, 'has_sessions' and 'purchased' actions are required.
+        Ratio ranges of an order of steps from session to purchase.
+        Actions;
+            - has sessions     : Boolean; indicates a login process of a client
+            - has has_basket   : Boolean; indicates a 'add to basket' process of a client
+            - has order_screen : Boolean; indicates a 'payment screen' process of a client
+            - has purchased    : Boolean; indicates an order process of a client
+        """
         actions = ['has_sessions', 'has_basket', 'order_screen', 'purchased']
         self.action_funnel_related_to_order = {'has_sessions': np.arange(1.5, 2, 0.01).tolist(),
                                                'has_basket': np.arange(1.3, 1.5, 0.01).tolist(),
@@ -309,6 +366,10 @@ class CreateSampleIndex:
         self.order_duration_from_session_to_purchase = lambda product_count: random.sample(list(range(10, 200), 1)[0])
 
     def get_download_hour_diff(self):
+        """
+        Calculating customer's first order or session to download the hour difference.
+
+        """
         self.customers_orders_download_diff = {}
         for i in range(0, 1000):
             if i in [1, 2, 3]:
@@ -322,6 +383,13 @@ class CreateSampleIndex:
                                                          list(range(72, 144)) * 30 + list(range(144, 2216)) * 20
 
     def get_download_order_ratios(self):
+        """
+        The number of Download Count related to Order Count per day part per week/weekend:
+        Each day or dayparts are sampling individually. However, these dayparts differ related to weekend or weekday.
+        Each day part and order can have a range of numbers which indicates
+        the total number of downloads for the queried week part.
+
+        """
         self.days_part_of_total_downloads = {'week':
                                               {"nights":
                                                    {"range": np.arange(1.1, 1.3, 0.1).tolist(),
@@ -346,6 +414,12 @@ class CreateSampleIndex:
                                           }
 
     def get_day_part(self, hour, is_weekend):
+        """
+        day part decision at download are sampled.
+        :param hour: realted hour
+        :param is_weekend: week (isoweekday; 1, 2, 3, 4, 5) or weekend (iso-weekday; 6, 7)
+        :return: nights, mornings, evenings
+        """
         if is_weekend == 'week':
             if 0 <= hour < 9:
                 return 'nights'
@@ -362,6 +436,17 @@ class CreateSampleIndex:
                 return 'evenings'
 
     def get_customer_order_to_detected_downloads(self):
+        """
+        Downloads Index Sampling:
+            - Sampling starts after the order index sampling process is done.
+            - Each download transaction is processed by each client. So, client and download numbers must be the same.
+            - First, 1. Clients who have at least one purchased transaction, are collected.
+                    2.  Clients who have no order but has session transaction, are collected.
+            - Both client list of download dates are sampled individually.
+            - The download date is formed per day per daypart for each client.
+            - When the 'downloads' index is created with the download date,
+              signup date is also creating a date between the download date and first session date.
+        """
         self.connect_elastic_search()
         self.create_index()
         self.create_dates()
@@ -376,7 +461,7 @@ class CreateSampleIndex:
 
         print("query date :", self.days[0][0].isoformat())
         match = {"size": 1000000, "from": 0,
-                  "query": {
+                 "query": {
                       "bool": {
                           "filter": {"range": {"session_start_date": {"gte": self.days[0][0].isoformat()}}}
                       }
@@ -417,12 +502,28 @@ class CreateSampleIndex:
             columns={"id": "session_count"})
 
     def get_insert_obj(self, list_of_obj, index):
+        """
+        bulk insert list is creating.
+        :param list_of_obj: list of objects (orders)
+        :param index: downloads or orders
+        """
         for i in list_of_obj:
             add_cmd = {"_index": index,
                        "_source": i}
             yield add_cmd
 
     def get_ordered_users_of_downloads(self):
+        """
+        Downloads Index Sampling:
+            - Sampling starts after the order index sampling process is done.
+            - Each download transaction is processed by each client. So, client and download numbers must be the same.
+            - First, 1. Clients who have at least one purchased transaction, are collected.
+                    2.  Clients who have no order but has session transaction, are collected.
+            - Both client list of download dates are sampled individually.
+            - The download date is formed per day per daypart for each client.
+            - When the 'downloads' index is created with the download date,
+              signup date is also creating a date between the download date and first session date.
+        """
         downloads = []
         for c in self.orders_df_pv.to_dict("results"):
             _download_obj = {"id": None, "download_date": None, "signup_date": None, 'client': None}
@@ -442,6 +543,17 @@ class CreateSampleIndex:
         del _download_obj
 
     def get_downloads(self):
+        """
+        Downloads Index Sampling:
+            - Sampling starts after the order index sampling process is done.
+            - Each download transaction is processed by each client. So, client and download numbers must be the same.
+            - First, 1. Clients who have at least one purchased transaction, are collected.
+                    2.  Clients who have no order but has session transaction, are collected.
+            - Both client list of download dates are sampled individually.
+            - The download date is formed per day per daypart for each client.
+            - When the 'downloads' index is created with the download date,
+              signup date is also creating a date between the download date and first session date.
+        """
         self.get_customer_order_to_detected_downloads()
         self.get_ordered_users_of_downloads()
         print(self.es.cat.count('orders', params={"format": "json"}))
@@ -556,6 +668,80 @@ class CreateSampleIndex:
             print(self.es.cat.count('downloads', params={"format": "json"}))
 
     def execute_sampling(self):
+        """
+        Orders Index Sampling:
+            - Iteratively, from the active client list there randomly the number of clients are sampled
+              related to daypart and week/weekend per day.
+            - Number of sampled clients must be the number of orders
+              which is also randomly selected from range order count list related to
+              'days_part_of_total_orders[week_part][day_part]["range"]'.
+
+            - randomly selected client list iteratively converting to a purchased order.
+              Each randomly selected active client has an order with actions;
+                'has_Sessions', 'has_basket', 'has_order_screeen'.
+              When a randomly selected active client of order is created,
+                - basket obj is creating; (list of obj);
+                     * Number or item in the basket is randomly selected.
+                     * According to the number of Number or item in the basket,
+                       each obj represents the products that have been purchased from the related client.
+                     * When the basket is created, the duration between each product of selection from the client also randomly chosen.
+                     * Actions are also created when products are created with the date according to chosen durations.
+                - Actions obj is created (list of obj);
+                     * Each action must be in the boolean format (True/False).
+                       In addition to that add_to_basket_Action is created as a list of objects.
+
+            - Start date and date of each order also calculated in the range of hours of daypart.
+            - Purchase Amount is calculated total price of products.
+              Each product is also chosen randomly according to the ratio of them.
+            - Promotion Orders are also selected randomly with 'has_promo'.
+            - Related to the selected promotion, the discount amount is calculated.
+              If promotion is None, discount amount = 0.0.
+
+            - Previous Sessions of Each randomly selected active list client;
+                * It is possible that users can have multiple times sessions before they have ordered.
+                  It is also randomly decided whether or not they have a session before order.
+                  This session will be created during the day in the range of daypart.
+
+            - Session with no Orders;
+                * It is possible that there might be a number of sessions with no purchase are accomplished.
+                * The number of the session with no purchase is also selected randomly.
+                * Other actions 'has_basket', 'has _order_screen' are also decided randomly.
+
+            - In the end, we are aiming to create an order index with the session, has_basket, has_order_screen, purchased.
+
+                # of has_Session >= # of has_basket >= # of has_order_screen >= # of purchased
+
+            Example;
+            
+              {'id': 66597918,
+               'date': '2020-12-13T09:20:00',
+               'actions': {'has_sessions': True,
+                'has_basket': True,
+                'order_screen': False,
+                'purchased': False,
+                'add_to_basket': {'p_28': {'duration': 42, '_date': '2020-12-13T09:16:48'},
+                 'p_45': {'duration': 23, '_date': '2020-12-13T09:17:11'},
+                 'p_135': {'duration': 26, '_date': '2020-12-13T09:17:37'},
+                 'p_144': {'duration': 95, '_date': '2020-12-13T09:19:12'},
+                 'p_59': {'duration': 26, '_date': '2020-12-13T09:19:38'},
+                 'p_71': {'duration': 22, '_date': '2020-12-13T09:20:00'}}},
+               'client': 'u_552873',
+               'promotion_id': None,
+               'payment_amount': 20.725,
+               'discount_amount': 0,
+               'basket': {'p_28': {'price': 3.0, 'category': 'p_c_7', 'rank': 1},
+                'p_45': {'price': 9.375, 'category': 'p_c_9', 'rank': 92},
+                'p_135': {'price': 0.255, 'category': 'p_c_1', 'rank': 188},
+                'p_144': {'price': 4.095, 'category': 'p_c_6', 'rank': 70},
+                'p_59': {'price': 2.32, 'category': 'p_c_1', 'rank': 15},
+                'p_71': {'price': 1.68, 'category': 'p_c_3', 'rank': 155}},
+               'total_products': 6,
+               'session_start_date': '2020-12-13T09:16:06'}
+
+            - At the end of each week, 'CHURN RATE' is also calculated and
+              clients are randomly selected from the weekly_active_cliet list.
+              These clients are removing from whole active clients not to get an order transaction from them.
+        """
         self.connect_elastic_search()
         self.create_index()
         self.create_dates()
