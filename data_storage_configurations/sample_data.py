@@ -116,6 +116,7 @@ class CreateSampleIndex:
         self.days_part_of_total_downloads = None
         self.rest_of_clients = None
         self.customers_orders_download_diff = None
+        self.prev_downloads = []
 
     def connect_elastic_search(self):
         """
@@ -446,6 +447,8 @@ class CreateSampleIndex:
             - The download date is formed per day per daypart for each client.
             - When the 'downloads' index is created with the download date,
               signup date is also creating a date between the download date and first session date.
+            - !!! If there is an created 'downloads' index with assigned clients,
+              It removes the old ones from the new ones !!!!
         """
         self.connect_elastic_search()
         self.create_index()
@@ -479,7 +482,24 @@ class CreateSampleIndex:
                         })
         print("orders are collected !!!!")
         self.orders_df = pd.DataFrame(res)
-        print(self.orders_df.head())
+
+        try:
+            print("query date :", self.days[0][0].isoformat())
+            match = {"size": 1000000, "from": 0,
+                     "query": {
+                          "bool": {
+                              "filter": {"range": {"session_start_date": {"gte": self.days[0][0].isoformat()}}}
+                          }
+                      },
+                      "fields": ["client"],
+                      "_source": True
+                      }
+            for r in self.es.search(index='downloads', body=match)['hits']['hits']:
+                self.prev_downloads.append(r['fields']['client'][0])
+        except Exception as e:
+            print(e)
+
+        self.orders_df = self.orders_df[~(self.orders_df['client'].isin(self.prev_downloads))]
         self.orders_df['date'] = self.orders_df['date'].apply(
             lambda x: datetime.datetime.strptime(str(x)[0:10] + ' ' + str(x)[11:19], '%Y-%m-%d %H:%M:%S'))
         self.orders_df['hours'] = self.orders_df['date'].apply(lambda x: x.hour)
