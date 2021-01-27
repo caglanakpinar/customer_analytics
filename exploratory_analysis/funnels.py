@@ -315,8 +315,8 @@ class Funnels:
             - start date will be filtered from data frame. In this example; .query("daily > @start_date")
 
         :param funnel_name: funnel the whole name, includes funnel type and time period.
-        :param start_date: fuunel first date
-        :param end_data: funnel last date
+        :param start_date: funnel first date
+        :param end_date: funnel last date
         :return: data frame
         """
         report_name, funnel_type, time_period = funnel_name.split("_")
