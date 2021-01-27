@@ -333,14 +333,15 @@ class Funnels:
         self.query_es.query_builder(fields=None, _source=True,
                                     date_queries=date_queries,
                                     boolean_queries=boolean_queries)
-        _data = pd.DataFrame(self.query_es.get_data_from_es(index="reports")[0]['_source']['data'])
-
-        if time_period not in ['yearly', 'hourly']:
-            _data[time_period] = _data[time_period].apply(lambda x: convert_to_date(x))
+        _res = self.query_es.get_data_from_es(index="reports")
+        _data = pd.DataFrame()
+        if len(_res) != 0:
+            _data = pd.DataFrame(_res[0]['_source']['data'])
             if start_date is not None:
-                start_date = convert_to_date(start_date)
-                _data = _data[_data[time_period] >= start_date]
-
+                _data[time_period] = _data[time_period].apply(lambda x: convert_to_date(x))
+                if time_period not in ['yearly', 'hourly']:
+                    start_date = convert_to_date(start_date)
+                    _data = _data[_data[time_period] >= start_date]
         return _data
 
 
