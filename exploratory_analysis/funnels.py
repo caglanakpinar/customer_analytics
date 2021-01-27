@@ -13,7 +13,7 @@ from data_storage_configurations.query_es import QueryES
 class Funnels:
     def __init__(self, actions, purchase_actions=None, host=None, port=None):
         """
-        It is useful for creating exploratory analysis of data frames for charts and tables.
+        It is useful for creating an exploratory analysis of data frames for charts and tables.
             -   Purchase Actions Funnel:
                 This funnel shows the values from session to purchase.
                 ElasticSearch index must contain 'has_sessions' and 'purchased' actions.
@@ -25,12 +25,12 @@ class Funnels:
 
             -   Download Actions Funnel:
                 This funnel shows the values from download to session.
-                !!! It is not a funnel client who has download in same time period (daily, weekly, ..) ordered.
+                !!! It is not a funnel client who has download in the same time period (daily, weekly, ..) ordered.
 
-        Each funnel is craeted per time period (daily, weekly, hourly, monthly)
-        There are 3*2 and overall funnel (total numbers) created.
+        Each funnel is created per time period (daily, weekly, hourly, monthly)
+        There are 3*2 and an overall funnel (total numbers) created.
         These funnels are stored in the elasticsearch reports index.
-        It is flexiable to collect funnel by using fetch.
+        It is flexible to collect funnel by using fetch.
 
         :param actions: download additional actions
         :param purchase_actions: purchase additional actions
@@ -57,13 +57,11 @@ class Funnels:
         self.time_periods = time_periods
         self.purchase_action_funnel_fields = ["id", "session_start_date"]
         self.action_funnel_fields = ["id", "session_start_date"]
-        self.downloads_fields = []
-        self.match = {}
         self.query_size = elasticsearch_settings['settings']['index.query.default_field']
 
     def get_time_period(self, transactions, date_column):
         """
-        converting date values into the time_periods (hourly weekly, monthly,..)
+        converting date column of  values into the time_periods (hourly weekly, monthly,..)
         :param transactions: total data (orders/downloads data with actions)
         :return: data set with time periods
         """
@@ -76,18 +74,17 @@ class Funnels:
     def get_purchase_action_funnel_data(self, action, date_column, index='orders'):
         """
         Each action has been calculated related to time periods.
-        This process is aggregation of related  order id or client according to time periods.
+        This process is an aggregation of related order id or client according to time periods.
         There are 4 time periods;
             - monthly
             - weekly
             - daily
             - hourly
-        Aggregated value is assigned as a column related to 'action' argument.
+        Aggregated value is assigned as a column related to the 'action' argument.
         date_column shows which date column must be used.
         There are 2 options for query the data by using query_es.py.
         Orders or Downloads indexes can be queried related to action.
         :param action: action from orders / downloads
-        :return:
         """
 
         transactions = pd.DataFrame(self.query_es.get_data_from_es(index=index))
@@ -110,11 +107,11 @@ class Funnels:
 
     def merge_actions(self, data):
         """
-        After each action of calculation has been done related to time period,
+        After each action of calculation has been done related to the time period,
         The need to be merge related to time periods.
         After merging it is clearly seen the conversion from one action to another
         :param data: transaction data
-        :return:
+        :return: funnels  - {'has_basket': {'hourly': dataframe, 'daily': dataframe, .... }, 'has_Sessions': {...}}
         """
         funnels = {}
         for p in self.time_periods:  # collects funnels
@@ -128,8 +125,42 @@ class Funnels:
 
     def purchase_action_funnel(self, start_date=None):
         """
+        This is a funnel related to actions during a session. It starts from the session end with the purchase.
+        -   All date calculations are applied via session_start_date.
+        -   In order to calculate actions, Each action must be assigned to the orders index as a Boolean format in the 'actions' dictionary. e.g; actions.has_basket: True
+        -   Each action must be queried individually via 'session_start_date'.
+            In the query, only the boolean action will change.
+        -   Example of purchased action query;
 
-        :return:
+                    {'size': 10000000,
+                     'from': 0,
+                     '_source': False,
+                     'fields': ['id', 'session_start_date'],
+                     'query': {'bool': {'must': [{'term': {'actions.purchased': True}}]}}}
+
+            Size is copied from elasticsearch orders index settings.
+             No need for 'session_start_date' if it is calculating of whole orders index population.
+             After funnels are ready, they are inserting into the reports index individually.
+             Each time period of the funnel is inserted as an object into the reports index.
+             - Example of inserting funnel;
+
+                 {"id": 1232421424,
+                  "report_date": '2021-01-01T00:00:00',
+                  "report_name": "funnel",
+                  "report_types": {"time_period": "daily, "type": 'orders'},
+                  "data": [{'daily': Timestamp('2020-12-13 00:00:00'),
+                            'daily_purchased': 3,
+                            'daily_has_sessions': 1233,
+                            'daily_has_basket': 1080,
+                            'daily_order_screen': 269}]}
+
+            - purchase funnel process:
+                1. check if there are additional actions
+                2. order session and other actions of count per week, day, hour (query_es.py - QueryBuilder)
+                3. merge actions related to time periods
+                4. insert into the reports index.
+
+            - Required actions: session_start_date; datetime, has_session; boolean, has_purchase; boolean
         """
 
         if self.purchase_actions is not None:  # check for additional actions
@@ -142,22 +173,63 @@ class Funnels:
                 self.query_es.date_queries_builder({"session_start_date": {"gte": start_date}})
             self.query_es.boolean_queries_buildier({"actions." + a: True})
             self.query_es.query_builder(fields=self.purchase_action_funnel_fields)
-            print(self.query_es.match)
             self.purchase_action_funnel_data[a] = self.get_purchase_action_funnel_data(action=a,
                                                                                        date_column='session_start_date')
+        # merge actions related to time periods
         self.purchase_funnels = self.merge_actions(self.purchase_action_funnel_data)
-        self.insert_into_reports_index(self.purchase_funnels, start_date)
+        self.insert_into_reports_index(self.purchase_funnels, start_date)  # insert into the reports index
 
     def download_signup_session_order_funnel(self, start_date=None):
         """
+        This is a funnel related to actions from download to purchase includes sessions.
+        -   All date calculations are applied via session_start_date, download date, signup date or
+            action + '_date'.
+        -   In order to calculate actions, Each action must be assigned to downloads and orders index.
+            Actions that are related to purchase, must be assigned as Boolean format in the 'actions' dictionary.
+            e.g; actions.has_basket: True
+            Actions that are related to downloads must be assigned to the downloads index as a date.
+            If there is no action event that happens it must 'None' date value.
+        -   Orders action 'sessions' and 'purchase' are pulled from purchase_funnel_data.
+            Other actions must be queried individually from the downloads index.
+        -   Example of Download action query;
 
-        :return:
+                    {'size': 10000000,
+                     'from': 0,
+                     '_source': False,
+                     'fields': ['id',  action +'_date'],
+                     'query': {"bool": {"must": [{'range': {action +'_date': {'gte': start_date}}}]}}
+                    }
+
+             Size is copied from elasticsearch orders index settings.
+             No need for 'session_start_date' if it is calculating of whole orders index population.
+             After funnels are ready, they are inserting into the reports index individually.
+             Each time period of the funnel is inserted as an object into the reports index.
+             - Example of inserting funnel;
+
+                 {"id": 1232421424,
+                  "report_date": '2021-01-01T00:00:00',
+                  "report_name": "funnel",
+                  "report_types": {"time_period": "daily, "type": 'downloads'},
+                  "data": [{'daily': Timestamp('2020-12-13 00:00:00'),
+                            'daily_purchased': 3,
+                            'daily_has_sessions': 1233,
+                            'daily_download': 15824,
+                            'daily_signup': 610}]}
+
+            - download funnel process:
+                1. check if there are additional actions
+                2. download and other actions of count per week, day, hour (query_es.py - QueryBuilder)
+                3. merge actions related to time periods
+                4. insert into the reports index.
+
+            - Required actions: download date; datetime, has_session; boolean, has_purchase; boolean
         """
         start_date = default_query_date if start_date is None else start_date
         if self.actions is not None:  # check for additional actions
             for a in self.actions:
                 self.action_funnel_data[a] = {p: pd.DataFrame() for p in self.time_periods}
-        for a in self.action_funnel_data:  # order session and other actions of count per week, day, hour
+
+        for a in self.action_funnel_data:  # download and other actions of count per week, day, hour
             if a in ['purchased', 'has_sessions']:
                 self.action_funnel_data[a] = self.purchase_action_funnel_data[a]
             else:
@@ -166,46 +238,55 @@ class Funnels:
                 self.query_es = QueryES(port=self.port, host=self.host)
                 self.query_es.date_queries_builder({_date_column: {"gte": start_date}})
                 self.query_es.query_builder(fields=self.action_funnel_fields)
-                print(self.query_es.match)
                 self.action_funnel_data[a] = self.get_purchase_action_funnel_data(action=a,
                                                                                   date_column=_date_column,
                                                                                   index='downloads')
+        # merge actions related to time periods
         self.download_funnels = self.merge_actions(self.action_funnel_data)
+        # insert into the reports index
         self.insert_into_reports_index(self.download_funnels, start_date, funnel_type='downloads')
 
     def overall_funnel(self, start_date=None):
-
-
-        print(self.purchase_funnels['monthly'].head())
-        print(self.download_funnels['monthly'].head())
-
-        if start_date is not None:
+        """
+        All actions are combined into a dictionary. Total values are calculated via monthly funnels.
+        1 row of the data frame is created.
+        yearly arguments assigned for each action column. e.g; downloads = yearly_downloads
+        overall_funnel is inserted into the reports index.
+        """
+        if start_date is not None: # filter monthly column for each actions
             dfs = []
             for df in [self.purchase_funnels['monthly'], self.download_funnels['monthly']]:
                 dfs.append(df.query("monthly >= @start_date"))
             self.purchase_funnels['monthly'], self.download_funnels['monthly'] = dfs
 
-        _action_columns = set(
+        _action_columns = set( # collect all unique actions via orders and downloads actions
             list(self.purchase_funnels['monthly'].columns) +
-            list(self.download_funnels['monthly'].columns)) - set(['monthly'])
+            list(self.download_funnels['monthly'].columns)) - set('monthly')
 
-        print(_action_columns)
-
-        for a in _action_columns:
+        for a in _action_columns: # calculate each action of total
             _column = "_".join(['yearly', a.split("monthly_")[-1]])
             if a in self.purchase_funnels['monthly'].columns:
                 self.overall_funnels[_column] = sum(self.purchase_funnels['monthly'][a])
             else:
                 self.overall_funnels[_column] = sum(self.download_funnels['monthly'][a])
-        print(pd.DataFrame([self.overall_funnels]))
         self.time_periods = ['yearly']
+        # insert into the reports index
         self.insert_into_reports_index({"yearly": pd.DataFrame([self.overall_funnels])},
                                        start_date, funnel_type='overall')
         self.time_periods = time_periods
 
     def insert_into_reports_index(self, funnel, start_date, funnel_type='orders'):
         """
-        :return:
+        via query_es.py, each report can be inserted into the reports index with the given format.
+        {"id": unique report id,
+         "report_date": start_date or current date,
+         "report_name": "funnel",
+         "report_types": {"time_period": yearly (only for overall funnel), monthly, hourly, weekly, daily
+                          "type": orders, downloads, overall
+                          },
+         "data": funnel[t].to_dict("results") - adataframe to list of dictionary
+         }
+
         """
         list_of_obj = []
         for t in self.time_periods:
@@ -219,14 +300,29 @@ class Funnels:
 
     def fetch(self, funnel_name, start_date=None, end_date=None):
         """
+        This allows us to query the created funnels.
+        funnel_name is crucial for us to collect the correct filters.
+        Example of queries;
+            -   funnel name: funnel_downloads_daily,
+            -   start_date: 2021-01-01T00:00:00
+            -   end_date: 2021-04-01T00:00:00
 
-        :param funnel_name:
-        :param start_date:
-        :param end_data:
-        :param orders:
-        :return:
+            {'size': 10000000,
+            'from': 0,
+            '_source': True,
+            'query': {'bool': {'must': [
+                                        {'term': {'report_name': 'funnel'}},
+                                        {'term': {'report_types.time_period': 'daily'}},
+                                        {'term': {'report_types.type': 'downloads'}},
+                                        {'range': {'report_date': {'lt': '2021-04-01T00:00:00'}}}]}}}
+
+            - start date will be filtered from data frame. In this example; .query("daily > @start_date")
+
+        :param funnel_name: funnel the whole name, includes funnel type and time period.
+        :param start_date: fuunel first date
+        :param end_data: funnel last date
+        :return: data frame
         """
-        # funnel_name funnel_download_weekly
         report_name, funnel_type, time_period = funnel_name.split("_")
         boolean_queries, date_queries = [], []
         boolean_queries = [{"term": {"report_name": report_name}},
