@@ -65,10 +65,9 @@ class Funnels:
         :param transactions: total data (orders/downloads data with actions)
         :return: data set with time periods
         """
-        transactions['hourly'] = transactions[date_column].apply(lambda x: convert_str_to_hour(x))
-        transactions['daily'] = transactions[date_column].apply(lambda x: convert_dt_to_day_str(x))
-        transactions['weekly'] = transactions[date_column].apply(lambda x: find_week_of_monday(x))
-        transactions['monthly'] = transactions[date_column].apply(lambda x: convert_dt_to_month_str(x))
+        for p in list(zip(self.time_periods,
+                     [convert_str_to_hour, convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
+            transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
         return transactions
 
     def get_purchase_action_funnel_data(self, action, date_column, index='orders'):
@@ -90,20 +89,16 @@ class Funnels:
         transactions = pd.DataFrame(self.query_es.get_data_from_es(index=index))
         transactions = self.get_time_period(transactions=transactions, date_column=date_column)
 
-        # daily orders
-        daily_t = transactions.groupby("daily").agg({"id": "count"}).reset_index().rename(
-            columns={"id": "daily_" + action})
+        funnels = {}
         # hourly orders
-        hourly_t = transactions.groupby(["daily", "hourly"]).agg({"id": "count"}).reset_index()
-        hourly_t = hourly_t.groupby("hourly").agg({"id": "mean"}).reset_index().rename(
+        funnels = {'hourly': transactions.groupby(["daily", "hourly"]).agg({"id": "count"}).reset_index()}
+        funnels['hourly'] = funnels['hourly'].groupby("hourly").agg({"id": "mean"}).reset_index().rename(
             columns={"id": "hourly_" + action})
-        # weekly orders
-        weekly_t = transactions.groupby("weekly").agg({"id": "count"}).reset_index().rename(
-            columns={"id": "weekly_" + action})
-        # monthly orders
-        monthly_t = transactions.groupby("monthly").agg({"id": "count"}).reset_index().rename(
-            columns={"id": "monthly_" + action})
-        return {"daily": daily_t, "hourly": hourly_t, "weekly": weekly_t, "monthly": monthly_t}
+        # weekly - monthly - daily orders
+        for p in ['weekly', 'monthly', 'daily']:
+            funnels[p] = transactions.groupby(p).agg(
+                {"id": "count"}).reset_index().rename(columns={"id": "_".join([p, action])})
+        return funnels
 
     def merge_actions(self, data):
         """
@@ -127,7 +122,8 @@ class Funnels:
         """
         This is a funnel related to actions during a session. It starts from the session end with the purchase.
         -   All date calculations are applied via session_start_date.
-        -   In order to calculate actions, Each action must be assigned to the orders index as a Boolean format in the 'actions' dictionary. e.g; actions.has_basket: True
+        -   In order to calculate actions, Each action must be assigned to the orders index
+            as a Boolean format in the 'actions' dictionary. e.g; actions.has_basket: True
         -   Each action must be queried individually via 'session_start_date'.
             In the query, only the boolean action will change.
         -   Example of purchased action query;
