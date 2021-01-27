@@ -257,8 +257,7 @@ class Funnels:
 
         _action_columns = set( # collect all unique actions via orders and downloads actions
             list(self.purchase_funnels['monthly'].columns) +
-            list(self.download_funnels['monthly'].columns)) - set('monthly')
-
+            list(self.download_funnels['monthly'].columns)) - set(['monthly'])
         for a in _action_columns: # calculate each action of total
             _column = "_".join(['yearly', a.split("monthly_")[-1]])
             if a in list(self.purchase_funnels['monthly'].columns):
