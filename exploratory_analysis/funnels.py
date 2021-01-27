@@ -261,7 +261,7 @@ class Funnels:
 
         for a in _action_columns: # calculate each action of total
             _column = "_".join(['yearly', a.split("monthly_")[-1]])
-            if a in self.purchase_funnels['monthly'].columns:
+            if a in list(self.purchase_funnels['monthly'].columns):
                 self.overall_funnels[_column] = sum(self.purchase_funnels['monthly'][a])
             else:
                 self.overall_funnels[_column] = sum(self.download_funnels['monthly'][a])
