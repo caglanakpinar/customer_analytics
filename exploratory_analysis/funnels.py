@@ -11,7 +11,7 @@ from data_storage_configurations.query_es import QueryES
 
 
 class Funnels:
-    def __init__(self, actions, purchase_actions=None, host=None, port=None):
+    def __init__(self, actions, purchase_actions=None, host=None, port=None, download_index='downloads', order_index='orders'):
         """
         It is useful for creating an exploratory analysis of data frames for charts and tables.
             -   Purchase Actions Funnel:
@@ -32,13 +32,31 @@ class Funnels:
         These funnels are stored in the elasticsearch reports index.
         It is flexible to collect funnel by using fetch.
 
+        !!!!
+        ******* ******** *****
+        Dimensional Funnel:
+        Funnels must be created individually for dimensions. For instance, the Data set contains locations dimension.
+        In this case, each location of 'orders' and 'downloads' indexes must be created individually.
+        by using 'download_index' and 'order_index' dimension can be assigned in order to create a funnel
+
+        download_index; downloads_location1 this will be the location dimension of
+                        parameters in order to query downloads indexes; 'location1'.
+        download_index; orders_location1 this will be the location dimension of
+                        parameters in order to query orders indexes; 'location1'.
+        ******* ******** *****
+        !!!
+
         :param actions: download additional actions
         :param purchase_actions: purchase additional actions
         :param host: elasticsearch host
         :param port: elasticsearch port
+        :param download_index: elasticsearch port
+        :param order_index: elasticsearch port
         """
         self.port = default_es_port if port is None else port
         self.host = default_es_host if host is None else host
+        self.download_index = download_index
+        self.order_index = order_index
         self.query_es = QueryES(port=self.port, host=self.port)
         self.actions = actions
         self.purchase_actions = purchase_actions
