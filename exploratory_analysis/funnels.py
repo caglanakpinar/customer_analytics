@@ -108,6 +108,8 @@ class Funnels:
         There are 2 options for query the data by using query_es.py.
         Orders or Downloads indexes can be queried related to action.
         :param action: action from orders / downloads
+        :param date_column: action_date column. If it is for orders, one option; session_start_date
+        :param index: action from orders / downloads
         """
 
         transactions = pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index if index is None else index))
@@ -274,8 +276,7 @@ class Funnels:
         yearly arguments assigned for each action column. e.g; downloads = yearly_downloads
         overall_funnel is inserted into the reports index.
         :param start_date:
-        :param index:
-        :return:
+        :param index: refers the dimensionality of the whole data.
         """
         if start_date is not None:  # filter monthly column for each actions
             dfs = []
@@ -305,16 +306,16 @@ class Funnels:
         {"id": unique report id,
          "report_date": start_date or current date,
          "report_name": "funnel",
+         "index": "main",
          "report_types": {"time_period": yearly (only for overall funnel), monthly, hourly, weekly, daily
                           "type": orders, downloads, overall
                           },
          "data": funnel[t].to_dict("results") -  dataframe to list of dictionary
          }
-        :param funnel:
-        :param start_date:
-        :param funnel_type:
-        :param index:
-        :return:
+        :param funnel: data set, data frame
+        :param start_date: data start date
+        :param funnel_type: orders, downloads
+        :param index: dimentionality of data index orders_location1 ;  dimension = location1
         """
         list_of_obj = []
         for t in self.time_periods:
@@ -341,6 +342,7 @@ class Funnels:
             '_source': True,
             'query': {'bool': {'must': [
                                         {'term': {'report_name': 'funnel'}},
+                                        {"term": {"index": "orders_location1"}}
                                         {'term': {'report_types.time_period': 'daily'}},
                                         {'term': {'report_types.type': 'downloads'}},
                                         {'range': {'report_date': {'lt': '2021-04-01T00:00:00'}}}]}}}
@@ -350,6 +352,7 @@ class Funnels:
         :param funnel_name: funnel the whole name, includes funnel type and time period.
         :param start_date: funnel first date
         :param end_date: funnel last date
+        :param index: index_name in order to get dimension_of data. If there is no dimension, no need to be assigned
         :return: data frame
         """
         report_name, funnel_type, time_period = funnel_name.split("_")
