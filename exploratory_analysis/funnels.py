@@ -11,7 +11,13 @@ from data_storage_configurations.query_es import QueryES
 
 
 class Funnels:
-    def __init__(self, actions, purchase_actions=None, host=None, port=None, download_index='downloads', order_index='orders'):
+    def __init__(self,
+                 actions,
+                 purchase_actions=None,
+                 host=None,
+                 port=None,
+                 download_index='downloads',
+                 order_index='orders'):
         """
         It is useful for creating an exploratory analysis of data frames for charts and tables.
             -   Purchase Actions Funnel:
@@ -191,7 +197,8 @@ class Funnels:
                                                                                        date_column='session_start_date')
         # merge actions related to time periods
         self.purchase_funnels = self.merge_actions(self.purchase_action_funnel_data)
-        self.insert_into_reports_index(self.purchase_funnels, start_date)  # insert into the reports index
+        # insert into the reports index
+        self.insert_into_reports_index(self.purchase_funnels, start_date, index=self.order_index)
 
     def download_signup_session_order_funnel(self, start_date=None):
         """
