@@ -69,7 +69,7 @@ class Funnels:
         self.purchase_action_funnel_data = {
                                    'purchased': {t: None for t in time_periods},
                                    'has_sessions': {t: None for t in time_periods}
-                                   }
+                      }
         self.action_funnel_data = {
                                    'purchased': {t: None for t in time_periods},
                                    'has_sessions': {t: None for t in time_periods}
@@ -375,8 +375,8 @@ class Funnels:
         if len(_res) != 0:
             _data = pd.DataFrame(_res[0]['_source']['data'])
             if start_date is not None:
-                _data[time_period] = _data[time_period].apply(lambda x: convert_to_date(x))
                 if time_period not in ['yearly', 'hourly']:
+                    _data[time_period] = _data[time_period].apply(lambda x: convert_to_date(x))
                     start_date = convert_to_date(start_date)
                     _data = _data[_data[time_period] >= start_date]
         return _data
