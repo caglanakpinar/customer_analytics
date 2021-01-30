@@ -324,7 +324,7 @@ class Funnels:
                           "report_name": "funnel",
                           "index": get_index_group(index),
                           "report_types": {"time_period": t, "type": funnel_type},
-                          "data": funnel[t].to_dict("results")}
+                          "data": funnel[t].fillna(0).to_dict("results")}
             list_of_obj.append(insert_obj)
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
