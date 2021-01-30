@@ -11,14 +11,7 @@ from data_storage_configurations.query_es import QueryES
 
 
 class Funnels:
-    def __init__(self,
-                 actions,
-                 purchase_actions=None,
-                 host=None,
-                 port=None,
-                 download_index='downloads',
-                 order_index='orders'):
-        """
+    """
         It is useful for creating an exploratory analysis of data frames for charts and tables.
             -   Purchase Actions Funnel:
                 This funnel shows the values from session to purchase.
@@ -37,7 +30,15 @@ class Funnels:
         There are 3*2 and an overall funnel (total numbers) created.
         These funnels are stored in the elasticsearch reports index.
         It is flexible to collect funnel by using fetch.
-
+    """
+    def __init__(self,
+                 actions,
+                 purchase_actions=None,
+                 host=None,
+                 port=None,
+                 download_index='downloads',
+                 order_index='orders'):
+        """
         !!!!
         ******* ******** *****
         Dimensional Funnel:
