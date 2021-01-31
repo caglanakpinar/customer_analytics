@@ -85,7 +85,7 @@ class Cohorts:
         self.query_es = QueryES(port=port, host=host)
         self.has_download = has_download
         self.download_field_data = ["id", "download_date", "client"]
-        self.session_orders_field_data = ["id", "session_start_date", "client"]
+        self.session_orders_field_data = ["id", "session_start_date", "client", "payment_amount"]
         self.downloads = pd.DataFrame()
         self.orders = pd.DataFrame()
         self.download_to_first_order = pd.DataFrame()
