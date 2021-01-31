@@ -431,10 +431,8 @@ class Cohorts:
                                        cohort_type='customers_journey',
                                        index=self.order_index)
 
-    def fetch(self, cohort_name, _from=None, _to=None, start_date=None, end_date=None):
+    def fetch(self, cohort_name, start_date=None, end_date=None):
         """
-
-        :return: data frame
         Example of cohort_name;
 
             cohort_orders_from_1_to_2_daily;
@@ -458,8 +456,8 @@ class Cohorts:
         boolean_queries = [{"term": {"report_name": "cohort"}},
                            {"term": {"report_types.time_period": _time_period}},
                            {"term": {"report_types.type": _cohort_type}},
-                           {"term": {"report_types._from": _from}},
-                           {"term": {"report_types._to": _to}}]
+                           {"term": {"report_types.from": _from}},
+                           {"term": {"report_types.to": _to}}]
 
         if end_date is not None:
             date_queries = [{"range": {"report_date": {"lt": convert_to_iso_format(end_date)}}}]
