@@ -88,7 +88,7 @@ class Cohorts:
         self.session_orders_field_data = ["id", "session_start_date", "client"]
         self.downloads = pd.DataFrame()
         self.orders = pd.DataFrame()
-        self.sessions = pd.DataFrame()
+        self.download_to_first_order = pd.DataFrame()
         self.time_periods = ['daily', 'weekly']
         self.cohorts = {'downloads_to_1st_order': {_t: None for _t in self.time_periods},
                         'orders_from_1_to_2': {_t: None for _t in self.time_periods},
