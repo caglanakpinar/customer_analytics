@@ -82,6 +82,8 @@ class Cohorts:
         """
         self.port = default_es_port if port is None else port
         self.host = default_es_host if host is None else host
+        self.download_index = download_index
+        self.order_index = order_index
         self.query_es = QueryES(port=port, host=host)
         self.has_download = has_download
         self.download_field_data = ["id", "download_date", "client"]
