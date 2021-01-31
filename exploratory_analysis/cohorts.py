@@ -368,17 +368,24 @@ class Cohorts:
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def get_cohort_name(self, cohort_name):
-        _cohort_type = cohort_name.split("_")[0]
-        if _cohort_type == 'order':
-            _from, _to = cohort_name.split("_")[2], cohort_name.split("_")[3]
-        else:
-            _from, _to = 0, 1
+        """
+        cohort_name format; cohort_orders_from_1_to_2_weekly;
+        This indicates a weekly cohort related to customers who order their 2nd orders.
+        This structured cohort name is split in order to collect _from, _to, _cohort_type filters.
+        :param cohort_name: structured cohort name
+        :return: _cohort_type, _from, _to (string). These are directly sent to 'fetch' and 'insert_into_reports_index'.
+        """
+        _cohort_type = cohort_name.split("_")[1]
+        _from, _to = 0, 1
+        if _cohort_type == 'orders':
+            try:
+                _from, _to = int(cohort_name.split("_")[3]), int(cohort_name.split("_")[5])
+            except Exception as e:
+                print("from - to not in cohort_name !!")
         return _cohort_type, _from, _to
 
     def execute_cohort(self, start_date):
         """
-
-        :return:
         1.  collect downloads and orders data from given indexes.
         2.  create From Download to 1st Order Cohort per week and day.
         3.  create From 1st/2nd/3rd order To 2nd/3rd/4th order Cohort per week and day.
@@ -404,23 +411,27 @@ class Cohorts:
         self.cohort_download_to_1st_order()
         self.cohort_from_to_order()
         self.customer_average_journey()
-
         for _c in self.cohorts:
-            for p in self.time_periods:
-                _cohort_type, _from, _to = self.get_cohort_name(_c)
-                self.insert_into_reports_index(self.cohorts[_c],
-                                               start_date,
-                                               _from=_from,
-                                               _to=_to,
-                                               cohort_type=_cohort_type)
+            if _c != 'customers_journey':
+                for p in self.cohorts[_c]:
+                    _cohort_type, _from, _to = self.get_cohort_name('cohort_' +_c)
+                    self.cohorts[_c][p][p] = self.cohorts[_c][p][p].apply(lambda x: str(x)[0:10])
+                    self.insert_into_reports_index(self.cohorts[_c][p],
+                                                   start_date,
+                                                   _from=_from,
+                                                   _to=_to,
+                                                   time_period=p,
+                                                   cohort_type=_cohort_type,
+                                                   index=self.order_index
+                                                   if _c.split("_")[0] != 'downloads' else self.download_index)
 
-        self.time_periods = ['yearly']
-        self.insert_into_reports_index(self.cohorts['customer_average_journey'],
+        self.insert_into_reports_index(self.cohorts['customers_journey']['hourly'],
                                        start_date,
+                                       time_period='hourly',
                                        _from=0,
                                        _to=100,
-                                       cohort_type='customer_journey')
-        self.time_periods = ['yearly']
+                                       cohort_type='customers_journey',
+                                       index=self.order_index)
 
     def fetch(self, cohort_name, _from=None, _to=None, start_date=None, end_date=None):
         """
