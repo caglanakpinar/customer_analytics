@@ -118,7 +118,7 @@ class Cohorts:
         :param start_date: starting query date
         """
         if len(self.orders) == 0:
-            self.query_es = QueryES(port=self.port, host=self.port)
+            self.query_es = QueryES(port=self.port, host=self.host)
             self.query_es.query_builder(fields=self.session_orders_field_data,
                                         boolean_queries=[{"actions.purchased": True}],
                                         date_queries=[{"range": {"session_start_date": {"gte": start_date}}}])
