@@ -150,7 +150,7 @@ class Cohorts:
         :param time_period_back: desire time period (# of days)
         :return: data frame with columns; weekly/daily, 0, 1, 2, ... 100
         """
-        _time_periods = pd.DataFrame(list(cohort[cohort.columns[0]])).rename(columns={0: "days"})
+        _time_periods = pd.DataFrame(list(cohort[cohort.columns[0]])).rename(columns={0: time_period})
         _cohort = pd.DataFrame(np.array(cohort.drop(cohort.columns[0], axis=1)))
 
         if time_period_back is not None:
