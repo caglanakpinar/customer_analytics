@@ -131,8 +131,8 @@ class Cohorts:
             if self.has_download:
                 self.query_es = QueryES(port=self.port, host=self.host)
                 self.query_es.query_builder(fields=self.download_field_data)
-                self.downloads = self.query_es.get_data_from_es(index='downloads')
-                self.downloads = self.get_time_period(self.downloads, 'download_date')
+                self.downloads = self.query_es.get_data_from_es(index=self.download_index)
+                self.downloads = self.get_time_period(pd.DataFrame(self.downloads), 'download_date')
 
     def convert_cohort_to_readable_form(self, cohort, time_period_back=None):
         """
