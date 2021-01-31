@@ -252,10 +252,10 @@ class Cohorts:
                 by=['client', time_period], ascending=True).groupby(['client'])[time_period].shift(-1)
         if 'diff_days' not in list(self.orders.columns):
             self.orders['diff_days'] = self.orders.apply(
-                lambda row: calculate_time_diff(row['date'], row['next_order_date'], 'day'), axis=1)
-        if 'diff_weeks' not in self.orders.columns:
+                lambda row: calculate_time_diff(row[time_period], row['next_order_date'], 'daily'), axis=1)
+        if 'diff_weeks' not in list(self.orders.columns):
             self.orders['diff_weeks'] = self.orders.apply(
-                lambda row: calculate_time_diff(row['date'], row['next_order_date'], 'week'), axis=1)
+                lambda row: calculate_time_diff(row[time_period], row['next_order_date'], 'weekly'), axis=1)
 
     def cohort_from_to_order(self):
         """
