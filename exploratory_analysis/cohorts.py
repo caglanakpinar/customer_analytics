@@ -359,16 +359,12 @@ class Cohorts:
         :param cohort_type: orders, downloads, customer_journeys
         :param index: dimensionality of data index orders_location1 ;  dimension = location1
         """
-        :return:
-        """
-        list_of_obj = []
-        for t in self.time_periods:
-            insert_obj = {"id": np.random.randint(200000000),
-                          "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
-                          "report_name": "cohort",
-                          "report_types": {"time_period": t, "from": _from, "to": _to,  "type": cohort_type},
-                          "data": cohort[t].to_dict("results")}
-            list_of_obj.append(insert_obj)
+        list_of_obj = [{"id": np.random.randint(200000000),
+                        "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
+                        "report_name": "cohort",
+                        "index": get_index_group(index),
+                        "report_types": {"time_period": time_period, "from": _from, "to": _to,  "type": cohort_type},
+                        "data": cohort.fillna(0.0).to_dict("results")}]
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def get_cohort_name(self, cohort_name):
