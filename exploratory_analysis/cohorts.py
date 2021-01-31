@@ -105,7 +105,7 @@ class Cohorts:
         :return: data set with time periods
         """
         for p in list(zip(self.time_periods,
-                     [convert_str_to_hour, convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
+                          [convert_dt_to_day_str, find_week_of_monday])):
             transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
         return transactions
 
