@@ -11,14 +11,7 @@ from data_storage_configurations.query_es import QueryES
 
 
 class Funnels:
-    def __init__(self,
-                 actions,
-                 purchase_actions=None,
-                 host=None,
-                 port=None,
-                 download_index='downloads',
-                 order_index='orders'):
-        """
+    """
         It is useful for creating an exploratory analysis of data frames for charts and tables.
             -   Purchase Actions Funnel:
                 This funnel shows the values from session to purchase.
@@ -37,7 +30,15 @@ class Funnels:
         There are 3*2 and an overall funnel (total numbers) created.
         These funnels are stored in the elasticsearch reports index.
         It is flexible to collect funnel by using fetch.
-
+    """
+    def __init__(self,
+                 actions,
+                 purchase_actions=None,
+                 host=None,
+                 port=None,
+                 download_index='downloads',
+                 order_index='orders'):
+        """
         !!!!
         ******* ******** *****
         Dimensional Funnel:
@@ -69,7 +70,7 @@ class Funnels:
         self.purchase_action_funnel_data = {
                                    'purchased': {t: None for t in time_periods},
                                    'has_sessions': {t: None for t in time_periods}
-                                   }
+                      }
         self.action_funnel_data = {
                                    'purchased': {t: None for t in time_periods},
                                    'has_sessions': {t: None for t in time_periods}
@@ -90,7 +91,7 @@ class Funnels:
         :return: data set with time periods
         """
         for p in list(zip(self.time_periods,
-                     [convert_str_to_hour, convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
+                     [convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
             transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
         return transactions
 
@@ -324,7 +325,7 @@ class Funnels:
                           "report_name": "funnel",
                           "index": get_index_group(index),
                           "report_types": {"time_period": t, "type": funnel_type},
-                          "data": funnel[t].to_dict("results")}
+                          "data": funnel[t].fillna(0).to_dict("results")}
             list_of_obj.append(insert_obj)
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
@@ -375,8 +376,8 @@ class Funnels:
         if len(_res) != 0:
             _data = pd.DataFrame(_res[0]['_source']['data'])
             if start_date is not None:
-                _data[time_period] = _data[time_period].apply(lambda x: convert_to_date(x))
                 if time_period not in ['yearly', 'hourly']:
+                    _data[time_period] = _data[time_period].apply(lambda x: convert_to_date(x))
                     start_date = convert_to_date(start_date)
                     _data = _data[_data[time_period] >= start_date]
         return _data
