@@ -129,7 +129,7 @@ class Cohorts:
             self.orders = self.get_time_period(pd.DataFrame(self.orders), 'session_start_date')
         if len(self.downloads) == 0:
             if self.has_download:
-                self.query_es = QueryES(port=self.port, host=self.port)
+                self.query_es = QueryES(port=self.port, host=self.host)
                 self.query_es.query_builder(fields=self.download_field_data)
                 self.downloads = self.query_es.get_data_from_es(index='downloads')
                 self.downloads = self.get_time_period(self.downloads, 'download_date')
