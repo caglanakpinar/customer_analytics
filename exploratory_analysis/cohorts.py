@@ -134,7 +134,7 @@ class Cohorts:
                 self.downloads = self.query_es.get_data_from_es(index=self.download_index)
                 self.downloads = self.get_time_period(pd.DataFrame(self.downloads), 'download_date')
 
-    def convert_cohort_to_readable_form(self, cohort, time_period_back=None):
+    def convert_cohort_to_readable_form(self, cohort, time_period, time_period_back=None):
         """
         handles the multi-index problem of the pandas data frame. Each cohort has a date column.
         1. splits date column and creates separate data frame.
