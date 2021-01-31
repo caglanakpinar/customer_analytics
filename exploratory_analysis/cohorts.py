@@ -188,21 +188,19 @@ class Cohorts:
                                                     self.downloads,
                                                     on='client',
                                                     how='left')
-            self.download_to_first_order['download_to_first_order_weekly'] = self.download_to_first_order.apply(
-                lambda row: calculate_time_diff(row['download_date'], row['date'], period='week'), axis=1)
-            self.download_to_first_order['download_to_first_order_daily'] = self.download_to_first_order.apply(
-                lambda row: calculate_time_diff(row['download_date'], row['date'], period='day'), axis=1)
-
+            self.download_to_first_order = self.get_time_period(self.download_to_first_order, 'session_start_date')
             for p in self.time_periods:
-                self.cohorts['download_to_1st_order'][p] = self.download_to_first_order.sort_values(
-                by=['download_to_first_order_' + p, p],
+                self.download_to_first_order['downloads_to_first_order_' + p] = self.download_to_first_order.apply(
+                    lambda row: calculate_time_diff(row['download_date'], row[p], period=p), axis=1)
+                self.cohorts['downloads_to_1st_order'][p] = self.download_to_first_order.sort_values(
+                by=['downloads_to_first_order_' + p, p],
                 ascending=True).pivot_table(index=p,
-                                            columns='download_to_first_order_'+p,
+                                            columns='downloads_to_first_order_'+p,
                                             aggfunc={"client": lambda x: len(np.unique(x))}
                                             ).reset_index().rename(columns={"client": "client_count"})
 
-                self.cohorts['download_to_1st_order'][p] = self.convert_cohort_to_readable_form(
-                self.cohorts['download_to_1st_order'][p])
+                self.cohorts['downloads_to_1st_order'][p] = self.convert_cohort_to_readable_form(
+                self.cohorts['downloads_to_1st_order'][p], time_period=p)
 
     def get_order_cohort(self, order_seq_num, time_period='daily'):
         """
