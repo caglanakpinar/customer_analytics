@@ -226,11 +226,13 @@ class Cohorts:
         """
         index_column = time_period if time_period == 'daily' else 'weekly'
         column_pv = 'diff_days' if time_period == 'daily' else 'diff_weeks'
-        orders_from_to = self.orders.query("next_order_date == next_order_date")
-        orders_from_to = orders_from_to.query("order_seq_num in @order_seq_num")
+        orders_from_to = self.orders.query("next_order_date == next_order_date")  # removing clients only have 1 order
+        orders_from_to = orders_from_to.query("order_seq_num in @order_seq_num")  # filter which cohort is executed
         orders_from_to = orders_from_to.sort_values(by=[column_pv, index_column], ascending=True)
-        orders_from_to = orders_from_to.pivot_table(index=index_column, columns=column_pv, aggfunc={
-            "client": lambda x: len(np.unique(x))}).reset_index().rename(columns={"client": "client_count"})
+        orders_from_to = orders_from_to.pivot_table(index=index_column,  # rows are dates (days or mondays of each week)
+                                                    columns=column_pv,  # day or week difference (integer start with 0)
+                                                    aggfunc={"client": lambda x: len(np.unique(x))}  # of unique clients
+                                                    ).reset_index().rename(columns={"client": "client_count"})
         return orders_from_to
 
     def cohort_time_difference_and_order_sequence(self):
