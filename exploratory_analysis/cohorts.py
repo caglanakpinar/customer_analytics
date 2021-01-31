@@ -184,7 +184,7 @@ class Cohorts:
 
         """
         if self.has_download:
-            self.download_to_first_order = pd.merge(self.orders.drop(['weeks', 'days', 'hours'], axis=1),
+            self.download_to_first_order = pd.merge(self.orders,
                                                     self.downloads,
                                                     on='client',
                                                     how='left')
