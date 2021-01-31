@@ -282,11 +282,12 @@ class Cohorts:
         """
         for o in self.order_seq:
             for p in self.time_periods:
-                self.cohort_time_difference_and_order_sequence()
-                self.cohorts["order_from_" + str(o) + "_to_" + str(o+1)][p] = self.get_order_cohort(order_seq_num=[o],
-                                                                                                    time_period=p)
-                self.cohorts["order_from_" + str(o) + "_to_" + str(o+1)][p] = self.convert_cohort_to_readable_form(
-                    self.cohorts["order_from_" + str(o) + "_to_" + str(o+1)][p])
+                print("order_seq :", o, " || time_periods :", p)
+                _cohort_name = "orders_from_" + str(o) + "_to_" + str(o+1)
+                self.cohort_time_difference_and_order_sequence(p)
+                self.cohorts[_cohort_name][p] = self.get_order_cohort(order_seq_num=[o], time_period=p)
+                self.cohorts[_cohort_name][p] = self.convert_cohort_to_readable_form(self.cohorts[_cohort_name][p],
+                                                                                     time_period=p)
 
     def customer_average_journey(self):
         """
