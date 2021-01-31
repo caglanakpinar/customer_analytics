@@ -123,7 +123,7 @@ class Cohorts:
         if len(self.orders) == 0:
             self.query_es = QueryES(port=self.port, host=self.host)
             self.query_es.query_builder(fields=self.session_orders_field_data,
-                                        boolean_queries=[{"actions.purchased": True}],
+                                        boolean_queries=[{"term": {"actions.purchased": True}}],
                                         date_queries=[{"range": {"session_start_date": {"gte": start_date}}}])
             self.orders = self.query_es.get_data_from_es()
             self.orders = self.get_time_period(self.orders, 'session_start_date')
