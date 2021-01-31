@@ -119,6 +119,7 @@ class Cohorts:
         query_es.py handles collecting data.
         :param start_date: starting query date
         """
+        start_date = default_query_date if start_date is None else start_date
         if len(self.orders) == 0:
             self.query_es = QueryES(port=self.port, host=self.host)
             self.query_es.query_builder(fields=self.session_orders_field_data,
