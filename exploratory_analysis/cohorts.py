@@ -20,9 +20,74 @@ from data_storage_configurations.query_es import QueryES
 
 class Cohorts:
     """
+        - From Download to 1st Order Cohort.
+            - There are two types of that cohort. Weekly and Daily.
+
+        ***** Examples of Interpret Cohorts; ******
+
+        Download to 1st Order Daily Cohort;
+
+        	daily	        0	    1	    2	   3	   4	    118	119	120	121
+            2021-01-18	501.0	351.0	529.0	393.0	404.0	...	0.0	0.0	0.0	0.0
+            2021-01-19	535.0	356.0	356.0	504.0	412.0	...	0.0	0.0	0.0	0.0
+            2021-01-20	608.0	375.0	387.0	389.0	564.0	...	0.0	0.0	0.0	0.0
+            2021-01-21	422.0	278.0	312.0	320.0	295.0	...	0.0	0.0	0.0	0.0
+
+        - 0 - 2021-01-18 ; 501.0 Clients who download in 2021-01-18, have first order in same day
+        - 2 - 2021-01-21 ; 312.0 Clients who download in 2021-01-18, have first order after 2 days.
+
+        Orders From 1st to 2nd Weekly Cohort;
+
+            weekly	         0	     1	    2	     3	       9	 10	  11
+            2021-01-18	1586.0	1232.0	877.0	1050.0	 ... 0.0	0.0	 0.0
+            2021-01-25	1054.0	874.0	1121.0	1070.0	 ... 0.0	0.0	 0.0
+            2021-02-01	631.0	876.0	838.0	810.0	 ... 0.0	0.0	 0.0
+
+        - 0 - 2021-01-18 ; 1586.0 Clients who have their 1st orders within the week 2021-01-18 (Monday of each week),
+                           have their 2nd order in the same week (within the week 2021-01-18)
+        - 2 - 2021-02-01 ; 838.0 Clients who have their 1st orders within the week 2021-02-01 (Monday of each week),
+                           have their 2nd order in after 2 weeks (within the week 2021-02-15)
+
+    Customers Journey Calculation;
+    1.  Calculate average Hour difference from Download to 1st orders.
+    2.  Calculate average order
+    3.  For each calculated average orders, calculate the average purchase amount,
+        Example;
+        average 2 orders, 1st orders avg 30.3£, 2nd orders avg 33.3£
+    4.  Calculate average recent hours customers last order to a recent date.
 
     """
-    def __init__(self, has_download=True, host=None, port=None):
+    def __init__(self,
+                 has_download=True,
+                 host=None,
+                 port=None,
+                 download_index='downloads',
+                 order_index='orders'):
+        """
+        !!!!
+        ******* ******** *****
+        Dimensional Cohorts:
+        Cohorts must be created individually for dimensions. For instance, the Data set contains locations dimension.
+        In this case, each location of 'orders' and 'downloads' indexes must be created individually.
+        by using 'download_index' and 'order_index' dimensions can be assigned in order to create a cohort.
+
+        download_index; downloads_location1 this will be the location dimension of
+                        parameters in order to query downloads indexes; 'location1'.
+        download_index; orders_location1 this will be the location dimension of
+                        parameters in order to query orders indexes; 'location1'.
+        ******* ******** *****
+        !!!
+
+        !!!!
+        If a business has no download action (no mobile app) there is no need for download to first-order calculations.
+        !!!!
+
+        :param has_download:  True/False related business of requirements
+        :param host: elasticsearch host
+        :param port: elasticsearch port
+        :param download_index: elasticsearch port
+        :param order_index: elasticsearch port
+        """
         self.port = default_es_port if port is None else port
         self.host = default_es_host if host is None else host
         self.query_es = QueryES(port=port, host=host)
@@ -54,9 +119,10 @@ class Cohorts:
 
     def get_data(self, start_date):
         """
-
-        :param start_date:
-        :return:
+        Collecting orders and downloads data.
+        Before query for orders and downloads it checks is there any queried data before.
+        query_es.py handles collecting data.
+        :param start_date: starting query date
         """
         if len(self.orders) == 0:
             self.query_es = QueryES(port=self.port, host=self.port)
@@ -74,8 +140,19 @@ class Cohorts:
 
     def convert_cohort_to_readable_form(self, cohort, time_period_back=None):
         """
-        :param cohort:
-        :return:
+        handles the multi-index problem of the pandas data frame. Each cohort has a date column.
+        1. splits date column and creates separate data frame.
+        2. collects value columns (0, 1, ..110) same ordered as date data-frame and creates separate date-frame
+        3. Concatenate date data-frame and values data-frame.
+
+        time_period_back;
+        When only the last 2 weeks of cohort number of assigned on time_period_back will filter out the cohort.
+
+
+        :param cohort: cohort with multi-index
+        :param time_period: weeky, daily, indicated date column
+        :param time_period_back: desire time period (# of days)
+        :return: data frame with columns; weekly/daily, 0, 1, 2, ... 100
         """
         _time_periods = pd.DataFrame(list(cohort[cohort.columns[0]])).rename(columns={0: "days"})
         _cohort = pd.DataFrame(np.array(cohort.drop(cohort.columns[0], axis=1)))
@@ -96,8 +173,19 @@ class Cohorts:
 
     def cohort_download_to_1st_order(self):
         """
+        From Download to 1st order weekly and daily event values.
+        1. Each user of the first-order date is created as a data-frame.
+        2. Each client of days/weeks between download date and 1st order date is calculated individually.
+        3. Date column is created (daily or weekly)
+        4. pivoted data;
+            - columns; weekday difference between download to 1 order date per user.
+            - rows; time period; daily or weekly;
+            - values; the number of client count
 
-        :return:
+        !!!!
+        If a business has no download action (no mobile app) there is no need for download to first-order calculations.
+        !!!!
+
         """
         if self.has_download:
             self.download_to_first_order = pd.merge(self.orders.drop(['weeks', 'days', 'hours'], axis=1),
@@ -121,6 +209,25 @@ class Cohorts:
                 self.cohorts['download_to_1st_order'][p])
 
     def get_order_cohort(self, order_seq_num, time_period='daily'):
+        """
+        1.  Remove users who only have 1 order.
+            The main aim here is to create a cohort related to users of 2nd, 3rd and 4th orders.
+        2.  Filter the .. the order related to 'order_seq_num'.
+        3.  Create cohort; rows are dates (weekly/daily), columns number of date difference (week or day)
+
+
+        Example of creation a cohort;
+            Let`s check the cohort_orders_from_1_to_2_daily;
+
+            order_date  next_order_date    date_diff   client
+            2021-01-18  2021-01-21         3           c_20
+
+            This data-frame must be pivoted related to columns order_date,  date_diff, the client (count aggregation).
+
+        :param order_seq_num: 2, 3, 4
+        :param time_period: weekly or daily
+        :return: cohort data-frame with multi-index
+        """
         index_column = time_period if time_period == 'daily' else 'weekly'
         column_pv = 'diff_days' if time_period == 'daily' else 'diff_weeks'
         orders_from_to = self.orders.query("next_order_date == next_order_date")
@@ -138,6 +245,24 @@ class Cohorts:
             self.orders['next_order_date'] = \
             self.orders.sort_values(by=['client', 'date'], ascending=True).groupby(['client'])['date'].shift(-1)
         if 'diff_days' not in self.orders.columns:
+    def cohort_time_difference_and_order_sequence(self, time_period):
+        """
+        It is for the ƒinal shape of the cohort related to Orders.
+            1.  order sequence number is created as a column per user.
+            2.  next order date is assigned as a newly generated column.
+            3.  Calculating the time differences between recent order dates and next order dates per user.
+                Time difference must be measured related to time periods.
+                e.g. daily; day difference, weekly; week difference
+
+        :param time_period: daily, weekly
+        """
+        if 'order_seq_num' not in list(self.orders.columns):
+            self.orders['order_seq_num'] = self.orders.sort_values(
+                by=['client', time_period], ascending=True).groupby(['client'])['client'].cumcount() + 1
+        if 'next_order_date' not in list(self.orders.columns):
+            self.orders['next_order_date'] = self.orders.sort_values(
+                by=['client', time_period], ascending=True).groupby(['client'])[time_period].shift(-1)
+        if 'diff_days' not in list(self.orders.columns):
             self.orders['diff_days'] = self.orders.apply(
                 lambda row: calculate_time_diff(row['date'], row['next_order_date'], 'day'), axis=1)
         if 'diff_weeks' not in self.orders.columns:
@@ -146,8 +271,24 @@ class Cohorts:
 
     def cohort_from_to_order(self):
         """
+        From Order .. to order ... weekly and daily event values.
+            - Orders From 1st to 2nd Weekly/Daily
+            - Orders From 2nd to 3rd Weekly/Daily
+            - Orders From 3rd to 4th Weekly/Daily
+        !!! check 'get_order_cohort'
+        1. Each client of days/weeks between recent order date and previous order date is calculated individually.
+            Example; Orders From 1st to 2nd Weekly/Daily is being calculated;
+                     Clients orders from 1st to 2nd date differences are calculated
+                     according to time period (weekly/daily).
+            !!! check 'cohort_time_difference_and_order_sequence'
+        2. Date column is created (daily or weekly)
+           Related to example above, date column will 1st order dates of clients
+        3. pivoted data;
+            - columns; week - day difference between from ...th order to .. th order date per user.
+            - rows; time period; daily or weekly;
+            - values; number of client count
+        4. This process is initialized iteratively for (1st, 2nd, 3rd, 4th order).
 
-        :return:
         """
         for o in self.order_seq:
             for p in self.time_periods:
@@ -159,15 +300,73 @@ class Cohorts:
 
     def customer_average_journey(self):
         """
-        - Calculate Customers average total orders
-        - Line chart from download to first order average hour difference
-        - Iteratively add x axis the average time difference from 1 order to next one, till the average total order count.
-        - Y axis will be average amount per order
+        Customers Journey Calculation;
+        1.  Calculate average Hour difference from Download to 1st orders.
+        2.  Calculate average order
+        3.  For each calculated average orders, calculate the average purchase amount,
+            Example;
+            average 2 orders, 1st orders avg 30.3£, 2nd orders avg 33.3£
+        4.  Calculate average recent hours customers last order to a recent date.
+            """
+        # e.g. the average is 3; customers of 1st, 2nd 3rd orders have involved the process.
+        avg_order_count = int(np.mean(self.orders['order_seq_num']))
+        # max date for calculate average recency value (hour).
+        max_date = max(self.orders['session_start_date'])
+        self.orders['hourly'] = self.orders['session_start_date'].apply(lambda x: convert_str_to_hour(x))
+        self.orders = pd.merge(self.orders.drop(self.time_periods, axis=1),
+                               self.downloads.drop('id', axis=1),
+                               on='client',
+                               how='left')
+        self.orders['download_to_first_order_hourly'] = self.orders.apply(
+            lambda row: calculate_time_diff(row['download_date'], row['hourly'], 'hourly'), axis=1)
 
+        self.orders['diff_hours_recency'] = self.orders.apply(
+            lambda row: calculate_time_diff(row['hourly'], max_date, 'hourly'), axis=1)
+
+        x_axis, y_axis = [0, np.mean(self.orders['download_to_first_order_hourly'])], [0, np.mean(
+            self.orders['payment_amount'])]
+        for o in range(1, avg_order_count):  # iterate each order and calculate hour difference and avg. payment amount.
+            _orders = self.orders.query("order_seq_num == @o and next_order_date == next_order_date")
+            y_axis.append(np.mean(_orders['payment_amount']))
+            x_val = x_axis[-1] + np.mean(list(_orders.query("order_seq_num != 0").groupby("diff_hours").agg(
+                {"id": "count"}).reset_index().sort_values(by='id', ascending=False)['diff_hours'])[0])
+            x_axis.append(x_val)
+        # recency value is added as the last point on the x-axis
+        x_axis += [x_axis[-1] + np.mean(self.orders['diff_hours_recency'])]
+        y_axis += [0]
+        self.cohorts['customers_journey']['hourly'] = pd.DataFrame(
+            zip(x_axis, y_axis)).rename(columns={0: "hourly order differences", 1: "customers` average Purchase Value"})
+
+    def insert_into_reports_index(self,
+                                  cohort,
+                                  start_date,
+                                  time_period,
+                                  _from=0,
+                                  _to=1,
+                                  cohort_type='orders',
+                                  index='orders'):
         """
-        self.cohorts['customer_average_journey'] = pd.DataFrame()
+        via query_es.py, each report can be inserted into the reports index with the given format.
+        {"id": unique report id,
+         "report_date": start_date or current date,
+         "report_name": "cohort",
+         "index": "main",
+         "report_types": {"time_period": weekly, daily, hourly (only for customers_journey)
+                          "type": orders, downloads,
+                          "_from": 0 (only for downlods), 1, 2, 3
+                          "_to": 1, 2, 3, 4
+                          },
+         "data": cohort.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
+         }
+         !!! null values are assigned to 0.
 
-    def insert_into_reports_index(self, cohort, start_date, _from=0, _to=1, cohort_type='orders'):
+        :param cohort: data set, data frame
+        :param start_date: data start date
+        :param time_period: daily, weekly
+        :param _from: which order is cohort created from?
+        :param _to: which order is cohort created to?
+        :param cohort_type: orders, downloads, customer_journeys
+        :param index: dimensionality of data index orders_location1 ;  dimension = location1
         """
         :return:
         """
@@ -193,6 +392,26 @@ class Cohorts:
         """
 
         :return:
+        1.  collect downloads and orders data from given indexes.
+        2.  create From Download to 1st Order Cohort per week and day.
+        3.  create From 1st/2nd/3rd order To 2nd/3rd/4th order Cohort per week and day.
+        4.  create customer average journey From Download to the order count
+            that is the average order count of all customers.
+        5.  At the end 9 individual reports are created.
+            Here are the created reports after the execution;
+                -   cohort_downloads_daily
+                -   cohort_downloads_weekly
+                -   cohort_orders_from_1_to_2_daily
+                -   cohort_orders_from_2_to_3_daily
+                -   cohort_orders_from_3_to_4_daily
+                -   cohort_orders_from_1_to_2_weekly
+                -   cohort_orders_from_2_to_3_weekly
+                -   cohort_orders_from_3_to_4_weekly
+                -   customers_journey_hourly
+
+        6.  insert each cohort individually into 'reports' index.
+
+        :param start_date: starting date of collecting data
         """
         self.get_data(start_date)
         self.cohort_download_to_1st_order()
@@ -220,6 +439,22 @@ class Cohorts:
         """
 
         :return: data frame
+        Example of cohort_name;
+
+            cohort_orders_from_1_to_2_daily;
+                cohort_type; orders
+                time_period; daily
+                orders from; 1
+                orders to; 2
+
+        Directly, these arguments are sent to elasticsearch reports index in order to fetch related reports.
+
+        :param cohort_name: e.g. cohort_orders_from_1_to_2_daily
+        :param _from: 1, 2, 3, 4 no need when it is for 'cohort_download_daily' / 'cohort_download_weekly'
+        :param _to: 2, 3, 4
+        :param start_date: filter cohort date start
+        :param end_date: directly sending end_Date to report_date in reports index.
+        :return: data data-frame
         """
         _cohort_type, _from, _to = self.get_cohort_name(cohort_name)
         _time_period = cohort_name.split("_")[-1]
