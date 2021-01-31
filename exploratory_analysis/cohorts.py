@@ -235,14 +235,6 @@ class Cohorts:
                                                     ).reset_index().rename(columns={"client": "client_count"})
         return orders_from_to
 
-    def cohort_time_difference_and_order_sequence(self):
-        if 'order_seq_num' not in self.orders.columns:
-            self.orders['order_seq_num'] = \
-            self.orders.sort_values(by=['client', 'date'], ascending=True).groupby(['client'])['client'].cumcount() + 1
-        if 'next_order_date' not in self.orders.columns:
-            self.orders['next_order_date'] = \
-            self.orders.sort_values(by=['client', 'date'], ascending=True).groupby(['client'])['date'].shift(-1)
-        if 'diff_days' not in self.orders.columns:
     def cohort_time_difference_and_order_sequence(self, time_period):
         """
         It is for the ƒinal shape of the cohort related to Orders.
