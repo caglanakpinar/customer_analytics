@@ -91,7 +91,7 @@ class Funnels:
         :return: data set with time periods
         """
         for p in list(zip(self.time_periods,
-                     [convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
+                     [convert_str_to_hour, convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
             transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
         return transactions
 
@@ -115,8 +115,6 @@ class Funnels:
 
         transactions = pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index if index is None else index))
         transactions = self.get_time_period(transactions=transactions, date_column=date_column)
-
-        funnels = {}
         # hourly orders
         funnels = {'hourly': transactions.groupby(["daily", "hourly"]).agg({"id": "count"}).reset_index()}
         funnels['hourly'] = funnels['hourly'].groupby("hourly").agg({"id": "mean"}).reset_index().rename(
