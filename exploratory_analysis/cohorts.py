@@ -93,7 +93,8 @@ class Cohorts:
         self.cohorts = {'downloads_to_1st_order': {_t: None for _t in self.time_periods},
                         'orders_from_1_to_2': {_t: None for _t in self.time_periods},
                         'orders_from_2_to_3': {_t: None for _t in self.time_periods},
-                        'orders_from_3_to_4': {_t: None for _t in self.time_periods}
+                        'orders_from_3_to_4': {_t: None for _t in self.time_periods},
+                        'customers_journey': {'hourly': None}
                         }
 
         self.order_seq = [1, 2, 3]
