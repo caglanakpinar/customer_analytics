@@ -1,4 +1,4 @@
-
+from os.path import abspath, join
 
 
 elasticsearch_settings = {
@@ -84,3 +84,4 @@ default_es_port = 9200
 default_es_host = 'localhost'
 time_periods = ["hourly", "daily", "weekly", 'monthly']
 default_query_date = "1900-01-01T00:00:00"
+query_path = join(abspath(__file__).split("configs.py")[0], "docs")
