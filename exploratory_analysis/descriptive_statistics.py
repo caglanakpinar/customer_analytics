@@ -219,7 +219,7 @@ class Stats:
         3.  Find last week start date
         4.  Iterate metrics in order to calculate individually
         5.  Insert separate metrics which are data-frame stored individually.
-            The rest of them are merged and stored as one-row data-frame.
+            The rest of them are merged and stored as a one-row data-frame.
         """
         self.get_data(start_date=start_date)
         self.get_time_period()
