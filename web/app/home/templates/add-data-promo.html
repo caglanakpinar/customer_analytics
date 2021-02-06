@@ -1,0 +1,837 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Settings {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+
+			<h1 class="h3 mb-3">Promotion Data Source</h1>
+
+			<div class="row">
+				<div class="col-md-3 col-xl-2">
+
+					<div class="card">
+						<div class="card-header">
+							<h5 class="card-title mb-0">Orders & Downloads Data Source</h5>
+						</div>
+
+						<div class="list-group list-group-flush" role="tablist">
+							<a class="list-group-item list-group-item-action active" data-toggle="list" href="#connection" role="tab">
+							Data Connection
+							</a>
+							<a class="list-group-item list-group-item-action" data-toggle="list" href="#orders_index" role="tab">
+							Orders Index
+							</a>
+							<a class="list-group-item list-group-item-action" data-toggle="list" href="#downloads_index" role="tab">
+							Downloads Index
+							</a>
+							<a class="list-group-item list-group-item-action" data-toggle="list" href="#" role="tab">
+							Actions On Purchase
+							</a>
+							<a class="list-group-item list-group-item-action" data-toggle="list" href="#" role="tab">
+							Additional Actions
+							</a>
+							<a class="list-group-item list-group-item-action" data-toggle="list" href="#" role="tab">
+							Additional Data
+							</a>
+							<a class="list-group-item list-group-item-action" data-toggle="list" href="#source" role="tab">
+							Data Sources
+							</a>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-9 col-xl-3">
+					<div class="tab-content">
+						<div class="tab-pane fade show active" id="actions" role="tabpanel">
+							<div class="card">
+								<div class="card-header">
+									<h5 class="card-title mb-0">Orders Index</h5>
+								</div>
+								<div class="card-body">
+									<form>
+										<div class="row">
+											<div class="col-md-12">
+												<div class="mb-4 col-md-12">
+													<label class="form-label" for="inputState">Elastic Search Connection</label>
+													<select id="inputState" class="form-control">
+														<option selected> Connection 1 .. http:://localhost:9200</option>
+
+													</select>
+												</div>
+												<div class="mb-4 col-md-12">
+													<label class="form-label" for="inputState">Order Index Update Connection</label>
+													<select id="inputState" class="form-control">
+														<option selected> Connection 1 .. http:://localhost:9200</option>
+
+													</select>
+												</div>
+												<div class="mb-4 col-md-12">
+													<label class="form-label" for="inputState">Order Index Delete</label>
+													<select id="inputState" class="form-control">
+														<option selected> Connection 1 .. http:://localhost:9200</option>
+
+													</select>
+												</div>
+											</div>
+										</div>
+
+										<button type="submit" class="btn btn-primary">Save changes</button>
+									</form>
+								</div>
+
+							</div>
+							<div class="card">
+								<div class="card-header">
+									<h5 class="card-title mb-0">Downloads Index</h5>
+								</div>
+								<div class="card-body">
+
+									<div class="col-md-12">
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState">Elastic Search Connection</label>
+											<select id="inputState" class="form-control">
+												<option selected> Connection 1 .. http:://localhost:9200</option>
+
+											</select>
+										</div>
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState">Downloads Index Update Connection</label>
+											<select id="inputState" class="form-control">
+												<option selected> Connection 1 .. http:://localhost:9200</option>
+
+											</select>
+										</div>
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState">Downloads Index Delete</label>
+											<select id="inputState" class="form-control">
+												<option selected> Connection 1 .. http:://localhost:9200</option>
+
+											</select>
+										</div>
+									</div>
+									<button type="submit" class="btn btn-primary">Save changes</button>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane fade" id="orders_index" role="tabpanel">
+							<div class="card">
+								<div class="card-body">
+									<h5 class="card-title">Connect Data Source</h5>
+
+									<form>
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState"> use recently added data source</label>
+											<select id="inputState2" class="form-control">
+												<option selected>order_data; postgresql </option>
+												<option selected>order_data_csv; csv </option>
+
+											</select>
+										</div>
+										<button type="submit" class="btn btn-primary">Connect</button>
+									</form>
+
+								</div>
+							</div>
+							<div class="card">
+								<div class="card-body">
+									<h5 class="card-title">Create Data Source</h5>
+									<form action="">
+										<label class="form-check">
+										<input class="form-check-input" type="checkbox" id="myCheck" onclick="myFunction()">
+										<span class="form-check-label">
+											Add Data Set As Dimension of Previous Created Orders Data Sources
+										</span>
+											<div id="text" style="display:none">
+												<input type="text" class="form-control">
+											</div>
+
+									</label>
+									<div class="mb-3">
+										<label class="form-label" for="inputCity">name data source</label>
+										<input type="text" class="form-control" id="inputCity">
+									</div>
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState">data source</label>
+											<select id="inputState2" class="form-control">
+												<option selected>postgresql</option>
+												<option selected>google big query</option>
+												<option selected>aws redshift</option>
+												<option selected>csv</option>
+
+											</select>
+										</div>
+										<div class="mb-3">
+											<label class="form-label">Data Query or Path</label>
+											<textarea class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew">password</label>
+											<input type="password" class="form-control" id="inputPasswordNew">
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew">verify password</label>
+											<input type="password" class="form-control" id="inputPasswordNew">
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew2">user</label>
+											<input type="text" class="form-control" id="inputPasswordNew2">
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew2">port</label>
+											<input type="text" class="form-control" id="inputPasswordNew2">
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew2">host</label>
+											<input type="text" class="form-control" id="inputPasswordNew2">
+										</div>
+										<button type="submit" class="btn btn-primary">Connect</button>
+									</form>
+
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane fade" id="downloads_index" role="tabpanel">
+							<div class="card">
+								<div class="card-body">
+									<h5 class="card-title">Connect Data Source</h5>
+
+									<form>
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState"> use recently added data source</label>
+											<select id="inputState2" class="form-control">
+												<option selected>download_data; postgresql </option>
+												<option selected>download_data_csv; csv </option>
+
+											</select>
+										</div>
+										<button type="submit" class="btn btn-primary">Connect</button>
+									</form>
+
+								</div>
+							</div>
+							<div class="card">
+								<div class="card-body">
+									<h5 class="card-title">Create Data Source</h5>
+
+									<form>
+									<div class="mb-3">
+										<label class="form-label" for="inputCity">name data source</label>
+										<input type="text" class="form-control" id="inputCity">
+									</div>
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState">data source</label>
+											<select id="inputState2" class="form-control">
+												<option selected>postgresql</option>
+												<option selected>google big query</option>
+												<option selected>aws redshift</option>
+												<option selected>csv</option>
+
+											</select>
+										</div>
+										<div class="mb-3">
+											<label class="form-label">Data Query or Path</label>
+											<textarea class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew">password</label>
+											<input type="password" class="form-control" id="inputPasswordNew">
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew">verify password</label>
+											<input type="password" class="form-control" id="inputPasswordNew">
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew2">user</label>
+											<input type="text" class="form-control" id="inputPasswordNew2">
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew2">port</label>
+											<input type="text" class="form-control" id="inputPasswordNew2">
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew2">host</label>
+											<input type="text" class="form-control" id="inputPasswordNew2">
+										</div>
+										<button type="submit" class="btn btn-primary">Connect</button>
+									</form>
+
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane fade" id="additional_actions" role="tabpanel">
+							<div class="card">
+								<div class="card-body">
+									<h5 class="card-title">Choose the action type</h5>
+
+									<form>
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState"> use recently added data source</label>
+											<div>
+												<label class="form-check">
+													<input class="form-check-input" type="checkbox" value="">
+													<span class="form-check-label">
+													Option one is this and that&mdash;be sure to include why it's great
+													</span>
+												</label>
+												<label class="form-check">
+													<input class="form-check-input" type="checkbox" value="" disabled>
+													<span class="form-check-label">
+													Option two is disabled
+													</span>
+												</label>
+											</div>
+										</div>
+										<button type="submit" class="btn btn-primary">Connect</button>
+									</form>
+
+								</div>
+							</div>
+							<div class="card">
+								<div class="card-body">
+									<h5 class="card-title">Connect Data Source</h5>
+
+									<form>
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState"> use recently added data source</label>
+											<select id="inputState2" class="form-control">
+												<option selected>download_data; postgresql </option>
+												<option selected>download_data_csv; csv </option>
+
+											</select>
+										</div>
+										<button type="submit" class="btn btn-primary">Connect</button>
+									</form>
+
+								</div>
+							</div>
+							<div class="card">
+								<div class="card-body">
+									<h5 class="card-title">Create Data Source</h5>
+
+									<form>
+									<div class="mb-3">
+										<label class="form-label" for="inputCity">name data source</label>
+										<input type="text" class="form-control" id="inputCity">
+									</div>
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState">data source</label>
+											<select id="inputState2" class="form-control">
+												<option selected>postgresql</option>
+												<option selected>google big query</option>
+												<option selected>aws redshift</option>
+												<option selected>csv</option>
+
+											</select>
+										</div>
+										<div class="mb-3">
+											<label class="form-label">Data Query or Path</label>
+											<textarea class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew">password</label>
+											<input type="password" class="form-control" id="inputPasswordNew">
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew">verify password</label>
+											<input type="password" class="form-control" id="inputPasswordNew">
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew2">user</label>
+											<input type="text" class="form-control" id="inputPasswordNew2">
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew2">port</label>
+											<input type="text" class="form-control" id="inputPasswordNew2">
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew2">host</label>
+											<input type="text" class="form-control" id="inputPasswordNew2">
+										</div>
+										<button type="submit" class="btn btn-primary">Connect</button>
+									</form>
+
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-9 col-xl-7">
+
+					<div class="tab-content">
+
+							<div class="tab-pane fade show active" id="source" role="tabpanel">
+
+								<div class="card">
+
+									<div class="card-header">
+										<h5 class="card-title">Orders Table</h5>
+										<h6 class="card-subtitle text-muted">recently <code>orders</code> raw data</h6>
+
+									</div>
+									<div class="card-header" style="width:100%; height:100%">
+										<button class="btn btn-pill btn-primary" style="width:20%; height:20%" >Assign As Orders Raw Data</button>
+
+									</div>
+
+									<table class="table table-striped">
+										<thead>
+										<tr>
+									<th style="width:10%;">order Id
+
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_order_id"></i></a>
+										<div class="modal fade" id="update_order_id" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">order Id</h5>
+														<h6 class="card-subtitle text-muted"></h6>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">edit order Id column</h5>
+
+																	<div class="mb-3">
+																		<select id="inputState" class="form-control">
+																			<option selected>ordersId</option>
+																			<option selected>clients</option>
+																			<option selected>purchased</option>
+																		</select>
+																	</div>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button type="button" class="btn btn-primary">Edit</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</th>
+									<th style="width:10%;">client Id
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_client_id"></i></a>
+										<div class="modal fade" id="update_client_id" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Client Id</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">edit client Id column</h5>
+
+																	<div class="mb-3">
+																		<select id="inputState" class="form-control">
+																			<option selected>ordersId</option>
+																			<option selected>clients</option>
+																			<option selected>purchased</option>
+																		</select>
+																	</div>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button type="button" class="btn btn-primary">Edit</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</th>
+									<th style="width:10%">session_start_date
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#session_start_date"></i></a>
+										<div class="modal fade" id="session_start_date" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Session Start Date</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">edit session start date column</h5>
+
+																	<div class="mb-3">
+																		<select id="inputState" class="form-control">
+																			<option selected>ordersId</option>
+																			<option selected>clients</option>
+																			<option selected>purchased</option>
+																		</select>
+																	</div>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button type="button" class="btn btn-primary">Edit</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</th>
+									<th style="width:10%">end_date
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#end_date"></i></a>
+										<div class="modal fade" id="end_date" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Order End Date</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">edit order end date column</h5>
+
+																	<div class="mb-3">
+																		<select id="inputState" class="form-control">
+																			<option selected>ordersId</option>
+																			<option selected>clients</option>
+																			<option selected>purchased</option>
+																		</select>
+																	</div>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button type="button" class="btn btn-primary">Edit</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</th>
+									<th style="width:10%">purchase_amount
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#purchase_amount"></i></a>
+										<div class="modal fade" id="purchase_amount" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Purchase Amount</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">edit purchase amount</h5>
+																	<div class="mb-3">
+																		<select id="inputState" class="form-control">
+																			<option selected>ordersId</option>
+																			<option selected>clients</option>
+																			<option selected>purchased</option>
+																		</select>
+																	</div>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button type="button" class="btn btn-primary">Edit</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</th>
+									<th style="width:10%">discount_amount
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#discount_amount"></i></a>
+										<div class="modal fade" id="discount_amount" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Discount Amount</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">edit discount amount</h5>
+																	<div class="mb-3">
+																		<select id="inputState" class="form-control">
+																			<option selected>ordersId</option>
+																			<option selected>clients</option>
+																			<option selected>purchased</option>
+																		</select>
+																	</div>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button type="button" class="btn btn-primary">Edit</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</th>
+									<th style="width:10%">has_purchase
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#has_purchase"></i></a>
+										<div class="modal fade" id="has_purchase" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Has Purchase</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">edit purchase flag column</h5>
+																	<div class="mb-3">
+																		<select id="inputState" class="form-control">
+																			<option selected>ordersId</option>
+																			<option selected>clients</option>
+																			<option selected>purchased</option>
+																		</select>
+																	</div>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button type="button" class="btn btn-primary">Edit</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</th>
+								</tr>
+									</thead>
+										<tbody>
+								<tr>
+									<td>230320403</td>
+									<td>10000023232</td>
+									<td>2021-01-12 12:10:00</td>
+									<td>2021-01-12 12:13:00</td>
+									<td>25.3</td>
+									<td>0.3</td>
+									<td><span class="badge bg-success">success</span></td>
+								</tr>
+								<tr>
+									<td>230320403</td>
+									<td>10000023232</td>
+									<td>2021-01-12 12:10:00</td>
+									<td>2021-01-12 12:13:00</td>
+									<td>25.3</td>
+									<td>0.3</td>
+									<td><span class="badge bg-success">success</span></td>
+								</tr>
+								<tr>
+									<td>230320403</td>
+									<td>10000023232</td>
+									<td>2021-01-12 12:10:00</td>
+									<td>2021-01-12 12:13:00</td>
+									<td>25.3</td>
+									<td>0.3</td>
+									<td><span class="badge bg-success">success</span></td>
+								</tr>
+								<tr>
+									<td>230320403</td>
+									<td>10000023232</td>
+									<td>2021-01-12 12:10:00</td>
+									<td>2021-01-12 12:13:00</td>
+									<td>25.3</td>
+									<td>0.3</td>
+									<td><span class="badge bg-success">success</span></td>
+								</tr>
+								<tr>
+									<td>230320403</td>
+									<td>10000023232</td>
+									<td>2021-01-12 12:10:00</td>
+									<td>2021-01-12 12:13:00</td>
+									<td>25.3</td>
+									<td>0.3</td>
+									<td><span class="badge bg-success">success</span></td>
+								</tr>
+
+							</tbody>
+									</table>
+								</div>
+							</div>
+					</div>
+					<div class="tab-content">
+							<div class="tab-pane fade show active" id="source" role="tabpanel">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Downloads Table</h5>
+										<h6 class="card-subtitle text-muted">recently <code>downlods</code> raw data</h6>
+									</div>
+									<div class="card-header" style="width:100%; height:100%">
+										<button class="btn btn-pill btn-primary" style="width:20%; height:20%" >Assign As Orders Raw Data</button>
+
+									</div>
+								<table class="table table-striped">
+									<thead>
+											<tr>
+									    	  <th style="width:30%;">client Id
+											<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_order_id"></i></a>
+											<div class="modal fade" id="update_order_id" tabindex="-1" role="dialog" aria-hidden="true">
+												<div class="modal-dialog" role="document">
+													<div class="modal-content">
+														<div class="modal-header">
+															<h5 class="modal-title">client Id</h5>
+															<h6 class="card-subtitle text-muted"></h6>
+															<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+														</div>
+														<div class="modal-body m-3">
+															<div class="card">
+																<div class="card-body">
+																	<h5 class="card-title">edit client Id column</h5>
+
+																		<div class="mb-3">
+																			<select id="inputState" class="form-control">
+																				<option selected>ordersId</option>
+																				<option selected>clients</option>
+																				<option selected>purchased</option>
+																			</select>
+																		</div>
+																</div>
+															</div>
+														</div>
+														<div class="modal-footer">
+															<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+															<button type="button" class="btn btn-primary">Edit</button>
+														</div>
+													</div>
+												</div>
+											</div>
+									</th>
+									    	  <th style="width:30%;">download_date
+											<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_client_id"></i></a>
+											<div class="modal fade" id="update_client_id" tabindex="-1" role="dialog" aria-hidden="true">
+												<div class="modal-dialog" role="document">
+													<div class="modal-content">
+														<div class="modal-header">
+															<h5 class="modal-title">Download Date</h5>
+															<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+														</div>
+														<div class="modal-body m-3">
+															<div class="card">
+																<div class="card-body">
+																	<h5 class="card-title">edit download date column</h5>
+
+																		<div class="mb-3">
+																			<select id="inputState" class="form-control">
+																				<option selected>ordersId</option>
+																				<option selected>clients</option>
+																				<option selected>purchased</option>
+																			</select>
+																		</div>
+																</div>
+															</div>
+														</div>
+														<div class="modal-footer">
+															<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+															<button type="button" class="btn btn-primary">Edit</button>
+														</div>
+													</div>
+												</div>
+											</div>
+									</th>
+									    	  <th style="width:30%">signup_date
+											<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#session_start_date"></i></a>
+											<div class="modal fade" id="session_start_date" tabindex="-1" role="dialog" aria-hidden="true">
+												<div class="modal-dialog" role="document">
+													<div class="modal-content">
+														<div class="modal-header">
+															<h5 class="modal-title">Signup Date</h5>
+															<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+														</div>
+														<div class="modal-body m-3">
+															<div class="card">
+																<div class="card-body">
+																	<h5 class="card-title">edit signup date column</h5>
+
+																		<div class="mb-3">
+																			<select id="inputState" class="form-control">
+																				<option selected>ordersId</option>
+																				<option selected>clients</option>
+																				<option selected>purchased</option>
+																			</select>
+																		</div>
+																</div>
+															</div>
+														</div>
+														<div class="modal-footer">
+															<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+															<button type="button" class="btn btn-primary">Edit</button>
+														</div>
+													</div>
+												</div>
+											</div>
+									</th>
+								        	</tr>
+									    </thead>
+									<tbody>
+									<tr>
+										<td>230320403</td>
+										<td>2021-01-12 12:10:00</td>
+										<td>2021-01-12 12:13:00</td>
+									</tr>
+									<tr>
+										<td>230320403</td>
+										<td>2021-01-12 12:10:00</td>
+										<td>2021-01-12 12:13:00</td>
+									</tr>
+									<tr>
+										<td>230320403</td>
+										<td>2021-01-12 12:10:00</td>
+										<td>2021-01-12 12:13:00</td>
+									</tr>
+									<tr>
+										<td>230320403</td>
+										<td>2021-01-12 12:10:00</td>
+										<td>2021-01-12 12:13:00</td>
+									</tr>
+									<tr>
+										<td>230320403</td>
+										<td>2021-01-12 12:10:00</td>
+										<td>2021-01-12 12:13:00</td>
+									</tr>
+
+							</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+	</main>
+
+{% endblock content %}
+
+<script>
+function myFunction() {
+  // Get the checkbox
+  var checkBox = document.getElementById("myCheck");
+  // Get the output text
+  var text = document.getElementById("text");
+
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+  } else {
+    text.style.display = "none";
+  }
+}
+</script>
+{% block javascripts %}{% endblock javascripts %}
