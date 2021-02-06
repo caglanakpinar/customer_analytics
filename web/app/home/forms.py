@@ -141,6 +141,7 @@ class Charts:
         self.samples = samples
         self.reals = reals
         self.graph_json = {}
+        self.monitor = get_monitors()[0]
 
     def get_data(self, chart):
         """
@@ -217,6 +218,7 @@ class Charts:
         self.graph_json['charts'] = {}
         for c in charts[target]['charts']:
             trace = self.get_trace(charts[target]['charts'][c]['trace'], c)
+            self.get_widths_heights(chart=c, target=target)
             self.graph_json['charts'][c] = json.dumps({'trace': trace,
                                                        'layout': charts[target]['charts'][c]['layout']},
                                                       cls=plotly.utils.PlotlyJSONEncoder)
