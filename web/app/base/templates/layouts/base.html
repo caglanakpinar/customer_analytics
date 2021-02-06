@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="description" content="Responsive Admin &amp; Dashboard - Customer Analytics">
+	<meta name="author" content="customanality">
+	<meta name="keywords" content="customanality Customer Analytics">
+
+	<link rel="shortcut icon" href="/static/assets/img/icons/icon-48x48.png" />
+	<link rel="shortcut icon" href="/static/assets/img/icons/customanality.png" />
+
+	<title>
+        Customanality - {% block title %}{% endblock %}
+    </title>
+
+	<link href="/static/assets/css/app.css" rel="stylesheet">
+
+    <!-- Specific Page CSS goes HERE  -->
+    {% block stylesheets %}{% endblock stylesheets %}
+
+</head>
+
+<body>
+	<div class="wrapper">
+
+		{% include 'includes/sidebar.html' %}
+
+		<div class="main">
+
+			{% include 'includes/navigation.html' %}
+
+			{% block content %}{% endblock content %}
+
+			{% include 'includes/footer.html' %}
+
+		</div>
+	</div>
+
+	{% include 'includes/scripts.html' %}
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<!-- Specific Page JS goes HERE  -->
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    {% block javascripts %}{% endblock javascripts %}
+
+</body>
+</html>

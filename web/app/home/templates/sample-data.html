@@ -1,0 +1,134 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Settings {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+
+			<h1 class="h3 mb-3">Settings</h1>
+
+			<div class="row">
+				<div class="col-md-3 col-xl-2">
+
+					<div class="card">
+						<div class="card-header">
+							<h5 class="card-title mb-0">Profile Settings</h5>
+						</div>
+
+						<div class="list-group list-group-flush" role="tablist">
+							<a class="list-group-item list-group-item-action active" data-toggle="list" href="#account" role="tab">
+							Create Indexes
+							</a>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-9 col-xl-10">
+					<div class="tab-content">
+						<div class="tab-pane fade show active" id="account" role="tabpanel">
+
+							<div class="card">
+								<div class="card-header">
+									<h5 class="card-title mb-0"> Sample Randomly Generated Data Creation</h5>
+								</div>
+								<div class="card-body">
+									<form>
+										<div class="row">
+											<div class="col-md-8">
+												<div class="mb-3">
+													{% if values['row_0']['tag'] != '....' %}
+														<label class="form-label" for="esTagName">ElasticSearch Tag Name</label>
+														<select name="recent_tag" id="esTagName" class="form-control" required>
+															<option></option>
+															<option> {{ values['row_0']['tag'] + '; http://' + values['row_0']['host'] + ':' + values['row_0']['port'] }} </option>
+															{% if values['row_1']['tag'] != '....' %}
+																<option> {{ values['row_1']['tag'] + '; http://' + values['row_1']['host'] + ':' + values['row_1']['port'] }} </option>
+															{% endif %}
+															{% if values['row_2']['tag'] != '....' %}
+																<option> {{ values['row_2']['tag'] + '; http://' + values['row_2']['host'] + ':' + values['row_2']['port'] }} </option>
+															{% endif %}
+															{% if values['row_3']['tag'] != '....' %}
+																<option> {{ values['row_3']['tag'] + '; http://' + values['row_3']['host'] + ':' + values['row_3']['port'] }} </option>
+															{% endif %}
+															{% if values['row_4']['tag'] != '....' %}
+																<option> {{ values['row_4']['tag'] + '; http://' + values['row_4']['host'] + ':' + values['row_4']['port'] }} </option>
+															{% endif %}
+
+														</select>
+													{% endif %}
+													{% if values['row_0']['tag'] == '....' %}
+														<label class="form-label" for="alert">ElasticSearch Tag Name</label>
+														<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+															<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
+															<div class="alert-icon">
+																<i class="far fa-fw fa-bell"></i>
+															</div>
+															<div class="alert-message">
+																 <strong>CREATE ElasticSerach Connection!</strong>
+																<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+																<small>
+																	<a href="manage-data">ElasticSearch Configurations</a>
+																</small>
+															</div>
+														</div>
+														<small><a  href="manage-data">ElasticSearch Configurations</a></small>
+
+													{% endif %}
+												</div>
+												{% if values['row_0']['tag'] != '....' %}
+													<div class="mb-3">
+														<label class="form-label" for="inputUsername">ElasticSearch Tag Name</label>
+														<input type="text" class="form-control" id="inputUsername" placeholder="tag name assign at ElasticSearch Configuration">
+													</div>
+													<div class="mb-3">
+														<h1>Random Sample Data Creation</h1>
+														Random order and download transactions creation between given time range.
+														<h2>Check Customanality for SAmple Data Visualizations</h2>
+													</div>
+												{% endif %}
+
+											</div>
+											<div class="col-md-4">
+												<div class="align-self-center w-90">
+													<div class="chart">
+														<input name="date_start" id="datetimepicker-dashboard" hidden>
+													</div>
+												</div>
+
+											</div>
+										</div>
+										{% if values['row_0']['tag'] != '....' %}
+											<button type="submit" class="btn btn-primary">Create Orders & Downloads Index</button>
+										{% endif %}
+									</form>
+
+								</div>
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+			<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

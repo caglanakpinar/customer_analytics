@@ -1,0 +1,544 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Settings {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+
+			<h1 class="h3 mb-3">ElasticSearch Settings</h1>
+
+			<div class="row">
+				<div class="col-md-3 col-xl-2">
+
+					<div class="card">
+						<div class="card-header">
+							<h5 class="card-title mb-0">Profile Settings</h5>
+						</div>
+
+						<div class="list-group list-group-flush" role="tablist">
+							<a class="list-group-item list-group-item-action active" data-toggle="list" href="#account" role="tab">
+							Account
+							</a>
+							<a class="list-group-item list-group-item-action" data-toggle="list" href="#password" role="tab">
+							Edit account
+							</a>
+							<a class="list-group-item list-group-item-action" data-toggle="list" href="#delete" role="tab">
+							Delete account
+							</a>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-9 col-xl-5">
+					<div class="tab-content">
+						<div class="tab-pane fade show active" id="account" role="tabpanel">
+							<form method="POST">
+								<div class="col-md-12 10">
+								<div class="card">
+								<div class="card-header">
+									<h5 class="card-title mb-0">Connection Info</h5>
+								</div>
+								<div class="card-body">
+									<div class="row">
+										<div class="col-md-10">
+											<div class="mb-3">
+												<label class="form-label" for="inputUsername">tag ElasticSearch connection</label>
+												<input name="tag" type="text" class="form-control" id="inputUsername" placeholder="assign a name to connection" required>
+											</div>
+
+											<div class="mb-3">
+												<label class="form-label" for="inputUsername">host</label>
+												<input name="host" type="text" class="form-control" id="inputHost" placeholder="host">
+											</div>
+
+											<div class="mb-3">
+												<label class="form-label" for="inputUsername">port</label>
+												<input name="port" type="text" class="form-control" id="inputPort" placeholder="port">
+											</div>
+
+											<div class="mb-3">
+												<label class="form-label" for="inputUsername">ElasticSearch directory</label>
+												<input name="directory" type="text" class="form-control" id="esDirectory" placeholder="elasticsearch directory" required>
+											</div>
+
+											<div class="mb-3">
+												<label class="form-label" for="inputUsername">description</label>
+												<textarea rows="2" class="form-control" id="inputBio" placeholder="Information about the ElasticSearch"></textarea>
+											</div>
+										</div>
+									</div>
+									<button name="connect" type="submit"  value="True" class="btn btn-primary">Connect</button>
+								</div>
+								</div>
+									<div class="card">
+									<div class="card-header">
+										<h5 class="card-title mb-0">Advance Settings</h5>
+									</div>
+									<div class="card-body">
+										<div class="row">
+											<div class="mb-3 col-md-6">
+												<label class="form-label" for="inputFirstName">CPU Max Capacity</label>
+												<input name='cpu_capacity' type="text" class="form-control" id="inputFirstName" placeholder="Optional 4 CPU">
+											</div>
+											<div class="mb-3 col-md-6">
+												<label class="form-label" for="inputLastName">RAM (GB) Capacity</label>
+												<input name='ram_capacity'  type="text" class="form-control" id="inputLastName" placeholder="Optional 4 GB">
+											</div>
+										</div>
+										<div class="card">
+											<div class="card-header">
+												<h5 class="card-title mb-0">Download and Create ElasticSearch</h5>
+											</div>
+											<div class="card-body">
+												<div>
+													<label class="form-check">
+														<input class="form-check-input" type="radio" value="True" name="download_create_es" >
+														<span class="form-check-label">
+														Download ElasticSearch 7.10.0 and execute here
+														</span>
+													</label>
+													<label class="form-check">
+														<input class="form-check-input" type="radio" value="False" name="download_create_es" checked>
+														<span class="form-check-label">
+														I have already had ElasticSearch environment
+														</span>
+													</label>
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="mb-3 col-md-6">
+												<label class="form-label" for="inputCity">Download Path</label>
+												<input name="download_path" type="text" class="form-control" id="inputCity" placeholder="~/Downloads/..">
+											</div>
+											<div class="mb-3 col-md-6">
+												<label class="form-label" for="inputCity">URL</label>
+												<input name="url" type="text"  class="form-control" id="port" placeholder="http://localhost:9200">
+												<small> Optional - generated with host and port</small>
+											</div>
+										</div>
+										<button name="advance_settings" type="button" value="True" class="btn btn-primary">Save changes</button>
+									</div>
+								</div>
+								</div>
+							</form>
+						</div>
+						<div class="tab-pane fade" id="password" role="tabpanel">
+							<div class="card">
+								<div class="card-header">
+									<h5 class="card-title"> <strong>EDIT</strong> ElasticSearch</h5>
+									<h6 class="card-subtitle text-muted">choose recently added connection and update its parameters below.</h6>
+								</div>
+								<div class="card-body">
+									<form method="POST">
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState">Choose Connection</label>
+											<select name="recent_tag" id="inputState" class="form-control" required>
+												<option></option>
+												<option> {{ values['row_0']['tag']}} </option>
+												<option> {{ values['row_1']['tag']}} </option>
+												<option> {{ values['row_2']['tag']}} </option>
+												<option> {{ values['row_3']['tag']}} </option>
+												<option> {{ values['row_4']['tag']}} </option>
+											</select>
+											<small><a href="#">required</a></small>
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> Status </label>
+											<label class="form-check">
+												<input class="form-check-input" type="radio" value="off" name="status">
+												<span class="badge bg-danger">off</span>
+											</label>
+											<label class="form-check">
+												<input class="form-check-input" type="radio" value="on" name="status">
+												<span class="badge bg-success">on</span>
+											</label>
+											<label class="form-check">
+												<input class="form-check-input" type="radio" value="paused" name="status">
+												<span class="badge bg-warning">Paused</span>
+											</label>
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> ElasticSearch Tag Name</label>
+											<input name="tag" type="text" class="form-control" id="edit_tag_name">
+											<small><a href="#">type curr</a></small>
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> Host</label>
+											<input name="host" type="text" class="form-control" id="edit_inputPasswordCurrent">
+											<small><a href="#">type curr</a></small>
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew"><strong>NEW</strong> Port</label>
+											<input name="port"  type="text" class="form-control" id="inputPasswordNew">
+										</div>
+										<button name="edit" value="True" type="submit" class="btn btn-primary">Save changes</button>
+									</form>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane fade" id="delete" role="tabpanel">
+							<div class="card">
+								<div class="card-body">
+									<h5 class="card-title"> <strong>DELETE</strong> Elastic Search</h5>
+									<form method="POST">
+										<div class="mb-4 col-md-12">
+											<label class="form-label" for="inputState">Choose Connection</label>
+											<select name="tag" id="inputState" class="form-control" required>
+												<option></option>
+												<option> {{ values['row_0']['tag']}} </option>
+												<option> {{ values['row_1']['tag']}} </option>
+												<option> {{ values['row_2']['tag']}} </option>
+												<option> {{ values['row_3']['tag']}} </option>
+												<option> {{ values['row_4']['tag']}} </option>
+											</select>
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordCurrent">Delete ElasticSearch URL</label>
+											<input name="url"  type="text" class="form-control" id="inputPasswordCurrent" placeholder="http://localhost:9200">
+											<small><a href="#">Optional - generated with host and port</a></small>
+										</div>
+										<div class="mb-3">
+											<label class="form-label" for="inputPasswordNew">Delete ElasticSearch Folder</label>
+											<input name="directory" type="text" class="form-control" id="inputPasswordNew">
+										</div>
+										<button name="delete" value="True" type="submit" class="btn btn-primary">Save changes</button>
+									</form>
+
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-9 col-xl-5">
+					<div class="tab-content">
+						<div class="tab-pane fade show active" id="account" role="tabpanel">
+							<div class="card">
+						<div class="card-header">
+							<h5 class="card-title">Elastic Search Connections</h5>
+							<h6 class="card-subtitle text-muted">recently added connection</h6>
+						</div>
+						<table class="table table-striped">
+							<thead>
+								<tr>
+									<th style="width:40%;">Tag</th>
+									<th style="width:25%">URL</th>
+									<th>Status</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<form method="POST">
+								<tbody>
+								<tr>
+									<td>{{ values['row_0']['tag'] }}</td>
+									{% if values['row_0']['url'] == 'None' %}
+										<td>  <a href="{{ 'http://'+ values['row_0']['host'] + ':' +values['row_0']['port'] }}" target="_blank">{{ 'http://'+ values['row_0']['host'] + ':' +values['row_0']['port'] }}</a></td>
+									{% endif %}
+									{% if values['row_0']['url'] != 'None' %}
+										<td>{{ values['row_0']['url'] }}</td>
+									{% endif %}
+
+									{% if values['row_0']['status'] == '....' %}
+										<td><span class="badge bg-warning">Paused</span></td>
+									{% endif %}
+									{% if values['row_0']['status'] == 'paused' %}
+										<td><span class="badge bg-warning">Paused</span></td>
+									{% endif %}
+									{% if values['row_0']['status'] == 'on' %}
+										<td><span class="badge bg-success">on</span></td>
+									{% endif %}
+									{% if values['row_0']['status'] == 'off' %}
+										<td><span class="badge bg-danger">off</span></td>
+									{% endif %}
+
+									<td class="table-action">
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#edit_tag"></i></a>
+										<div class="modal fade" id="edit_tag" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Edit ElasticSearch</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Status</h5>
+																</div>
+																<div class="card-body m-3">
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="off" name="status">
+																		<span class="badge bg-danger">off</span>
+																	</label>
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="on" name="status" checked>
+																		<span class="badge bg-success">on</span>
+																	</label>
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="paused" name="status">
+																		<span class="badge bg-warning">Paused</span>
+																	</label>
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> ElasticSearch Tag Name</label>
+																	<input name="tag" type="text" class="form-control" id="edit_tag_name_2">
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong>  Host</label>
+																	<input name="host" type="text" class="form-control" id="edit_inputPasswordCurrent_2">
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordNew"> <strong>NEW</strong> Port</label>
+																	<input name="port"  type="text" class="form-control" id="inputPasswordNew_2">
+																</div>
+															</div>
+														</div>
+													</div>
+													<div  class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button name="edit" value="{{ values['row_0']['tag'] }}" type="submit" class="btn btn-primary">Save changes</button>
+													</div >
+												</div>
+											</div>
+										</div>
+										<a href="#"><i class="align-middle" data-feather="trash" data-toggle="modal" data-target="#delete_tag"></i></a>
+										<div class="modal fade" id="delete_tag" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title"> <strong>DELETE</strong> ElasticSearch Connection</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">Do you want to delete ElasticSearch Connection?</h5>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+														<button name="delete" type="submit" value="{{ values['row_0']['tag'] }}" class="btn btn-primary">Yes</button>
+													</div>
+
+												</div>
+											</div>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td>{{ values['row_1']['tag'] }}</td>
+									{% if values['row_1']['url'] == 'None' %}
+										<td>  <a href="{{ 'http://'+ values['row_1']['host'] + ':' +values['row_1']['port'] }}" target="_blank">{{ 'http://'+ values['row_1']['host'] + ':' +values['row_1']['port'] }}</a></td>
+									{% endif %}
+									{% if values['row_1']['url'] != 'None' %}
+										<td>{{ values['row_1']['url'] }}</td>
+									{% endif %}
+									{% if values['row_1']['status'] == '....' %}
+										<td><span class="badge bg-warning">Paused</span></td>
+									{% endif %}
+									{% if values['row_1']['status'] == 'paused' %}
+										<td><span class="badge bg-warning">Paused</span></td>
+									{% endif %}
+									{% if values['row_1']['status'] == 'on' %}
+										<td><span class="badge bg-success">on</span></td>
+									{% endif %}
+									{% if values['row_1']['status'] == 'off' %}
+										<td><span class="badge bg-danger">off</span></td>
+									{% endif %}
+									<td class="table-action">
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#defaultModalPrimary"></i></a>
+										<div class="modal fade" id="defaultModalPrimary" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Edit ElasticSearch</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Status</h5>
+																</div>
+																<div class="card-body m-3">
+																	<label class="form-check">
+																		<input name="status" class="form-check-input" type="radio" value="True" name="off">
+																		<span class="badge bg-danger">off</span>
+																	</label>
+																	<label class="form-check">
+																		<input name="status" class="form-check-input" type="radio" value="True" name="on">
+																		<span class="badge bg-success">on</span>
+																	</label>
+																	<label class="form-check">
+																		<input name="status" class="form-check-input" type="radio" value="True" name="paused">
+																		<span class="badge bg-warning">Paused</span>
+																	</label>
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> ElasticSearch Tag Name</label>
+																	<input name="tag" type="text" class="form-control" id="edit_tag_name_2">
+																	<small><a href="#">type curr</a></small>
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong>  Host</label>
+																	<input name="host" type="text" class="form-control" id="edit_inputPasswordCurrent_2">
+																	<small><a href="#">type curr</a></small>
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordNew"> <strong>NEW</strong> Port</label>
+																	<input name="port"  type="text" class="form-control" id="inputPasswordNew_2">
+																</div>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button type="submit" class="btn btn-primary">Save changes</button>
+													</div>
+												</div>
+											</div>
+										</div>
+										<a href="#"><i class="align-middle" data-feather="trash" data-toggle="modal" data-target="#delete_tag"></i></a>
+										<div class="modal fade" id="delete_tag" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<form method="POST">
+														<div class="modal-header">
+															<h5 class="modal-title"> <strong>DELETE</strong> ElasticSearch Connection</h5>
+															<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+														</div>
+														<div class="modal-body m-3">
+															<div class="card">
+																<div class="card-body">
+																	<h5 class="card-title">Do you want to delete ElasticSearch Connection?</h5>
+																</div>
+															</div>
+														</div>
+														<div class="modal-footer">
+															<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+															<button name="delete" type="submit" value="1" class="btn btn-primary">Yes</button>
+														</div>
+													</form>
+												</div>
+											</div>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td>{{ values['row_2']['tag'] }}</td>
+									{% if values['row_2']['url'] == 'None' %}
+										<td>  <a href="{{ 'http://'+ values['row_2']['host'] + ':' +values['row_2']['port'] }}" target="_blank">{{ 'http://'+ values['row_2']['host'] + ':' +values['row_2']['port'] }}</a></td>
+									{% endif %}
+									{% if values['row_2']['url'] != 'None' %}
+										<td>{{ values['row_2']['url'] }}</td>
+									{% endif %}
+
+
+									{% if values['row_2']['status'] == '....' %}
+										<td><span class="badge bg-warning">Paused</span></td>
+									{% endif %}
+									{% if values['row_2']['status'] == 'paused' %}
+										<td><span class="badge bg-warning">Paused</span></td>
+									{% endif %}
+									{% if values['row_2']['status'] == 'on' %}
+										<td><span class="badge bg-success">on</span></td>
+									{% endif %}
+									{% if values['row_2']['status'] == 'off' %}
+										<td><span class="badge bg-danger">off</span></td>
+									{% endif %}
+
+
+									<td class="table-action">
+										<a href="#"><i class="align-middle" data-feather="edit-2"></i></a>
+										<a href="#"><i class="align-middle" data-feather="trash"></i></a>
+									</td>
+								</tr>
+								<tr>
+									<td>{{ values['row_3']['tag'] }}</td>
+									{% if values['row_3']['url'] == 'None' %}
+										<td>  <a href="{{ 'http://'+ values['row_3']['host'] + ':' +values['row_3']['port'] }}" target="_blank">{{ 'http://'+ values['row_3']['host'] + ':' +values['row_3']['port'] }}</a></td>
+									{% endif %}
+									{% if values['row_3']['url'] != 'None' %}
+										<td>{{ values['row_3']['url'] }}</td>
+									{% endif %}
+
+									{% if values['row_3']['status'] == '....' %}
+										<td><span class="badge bg-warning">Paused</span></td>
+									{% endif %}
+									{% if values['row_3']['status'] == 'paused' %}
+										<td><span class="badge bg-warning">Paused</span></td>
+									{% endif %}
+									{% if values['row_3']['status'] == 'on' %}
+										<td><span class="badge bg-success">on</span></td>
+									{% endif %}
+									{% if values['row_3']['status'] == 'off' %}
+										<td><span class="badge bg-danger">off</span></td>
+									{% endif %}
+
+									<td class="table-action">
+										<a href="#"><i class="align-middle" data-feather="edit-2"></i></a>
+										<a href="#"><i class="align-middle" data-feather="trash"></i></a>
+									</td>
+								</tr>
+								<tr>
+									<td>{{ values['row_4']['tag'] }}</td>
+									{% if values['row_4']['url'] == 'None' %}
+										<td>  <a href="{{ 'http://'+ values['row_4']['host'] + ':' +values['row_4']['port'] }}" target="_blank">{{ 'http://'+ values['row_4']['host'] + ':' +values['row_4']['port'] }}</a></td>
+									{% endif %}
+									{% if values['row_4']['url'] != 'None' %}
+										<td>{{ values['row_4']['url'] }}</td>
+									{% endif %}
+									{% if values['row_4']['status'] == '....' %}
+										<td><span class="badge bg-warning">Paused</span></td>
+									{% endif %}
+									{% if values['row_4']['status'] == 'paused' %}
+										<td><span class="badge bg-warning">Paused</span></td>
+									{% endif %}
+									{% if values['row_4']['status'] == 'on' %}
+										<td><span class="badge bg-success">on</span></td>
+									{% endif %}
+									{% if values['row_4']['status'] == 'off' %}
+										<td><span class="badge bg-danger">off</span></td>
+									{% endif %}
+									<td class="table-action">
+										<a href="#"><i class="align-middle" data-feather="edit-2"></i></a>
+										<a href="#"><i class="align-middle" data-feather="trash"></i></a>
+									</td>
+								</tr>
+							</tbody>
+							</form>
+
+						</table>
+					</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+<script type="text/javascript">
+
+document.getElementById("filepicker").addEventListener("change", function(event) {
+  let output = document.getElementById("listing");
+  let files = event.target.files;
+
+  for (let i=0; i<files.length; i++) {
+    let item = document.createElement("li");
+    item.innerHTML = files[i].webkitRelativePath;
+    output.appendChild(item);
+  };
+}, false);
+
+</script>
+{% block javascripts %}{% endblock javascripts %}
