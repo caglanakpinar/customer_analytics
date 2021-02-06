@@ -178,7 +178,7 @@ class Charts:
         :param chart: e.g. rfm, customer_segmentation, ...
         :return:
         """
-        _data = self.get_data(chart) # collect data
+        _data = self.get_data(chart)  # collect data
         # data for line chart daily(sum), weekly(sum), houry(average), monthly(sum)
         if chart in ["_".join(['orders', t]) for t in time_periods]:
             _data = _data.sort_values(by=chart.split("_")[1], ascending=True)
