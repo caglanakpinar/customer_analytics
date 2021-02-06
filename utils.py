@@ -107,3 +107,12 @@ def get_index_group(index):
         return 'main'
     else:
         return index.split("_")[-1]
+
+
+def convert_dt_to_month_str(date):
+    """
+    converting date time to str date. e.g; 2020-12-12 00:00:14  - 2020-12-12.
+    :param date: datetime format; %Y-%m-%d %H:%M:%S
+    :return: string date
+    """
+    return datetime.datetime.strptime(str(date)[0:7], "%Y-%m")
