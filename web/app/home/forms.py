@@ -8,6 +8,7 @@ from os.path import abspath, join, dirname, basename
 from os import listdir
 import plotly.graph_objs as go
 import plotly
+from screeninfo import get_monitors
 
 from utils import convert_to_day
 from configs import time_periods
@@ -150,6 +151,21 @@ class Charts:
             return self.samples[chart]
         else:
             return self.reals[chart]
+
+    def get_widths_heights(self, target, chart):
+        if chart == 'customer_segmentation':
+            if self.monitor.height == 1080 and self.monitor.width == 1920:
+                width, height = 720, 450
+            if self.monitor.height == 1050 and self.monitor.width == 1680:
+                width, height = 1000, 400
+        if chart == 'rfm':
+            if self.monitor.height == 1080 and self.monitor.width == 1920:
+                width, height = 700, 600
+            if self.monitor.height == 1050 and self.monitor.width == 1680:
+                width, height = 1000, 600
+        if chart in ['customer_segmentation', 'rfm']:
+            charts[target]['charts'][chart]['layout']['width'] = width
+            charts[target]['charts'][chart]['layout']['height'] = height
 
     def get_trace(self, trace, chart):
         """
