@@ -1,0 +1,32 @@
+es_connection:
+  CREATE TABLE es_connection (
+  id INTEGER NOT NULL,
+  tag VARCHAR,
+  host VARCHAR,
+  port VARCHAR,
+  directory VARCHAR,
+  status VARCHAR,
+  cpu_capacity VARCHAR,
+  ram_capacity VARCHAR,
+  download_create_es VARCHAR,
+  download_path VARCHAR,
+  url VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+columns:
+  es_connection:
+    - id
+    - tag
+    - host
+    - port
+    - directory
+    - status
+    - cpu_capacity
+    - ram_capacity
+    - download_create_es
+    - download_path
+    - url
+
+tables:
+  SELECT name, tbl_name FROM sqlite_master where type ='table'
