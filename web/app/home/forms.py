@@ -55,7 +55,6 @@ charts = {
                                                       size=30,
                                                       color="crimson")),
                               'layout': go.Layout()},
-
              'customer_segmentation': {'trace': go.Treemap(
                  marker_colorscale='Blues',
                  textinfo="label+value+percent parent+percent entry", parents=[""] * 7),
@@ -110,7 +109,6 @@ class RealData:
     Just, For now, it is the same as Samples. (Work in progress)
     """
     kpis = {}
-
     ## TODO: data for all kpis will be directly from elasticsearch report index
     _base_path = abspath("").split(basename(abspath("")))[0]
     _base_path = abspath("") # .split(basename(abspath("")))[0]
