@@ -103,8 +103,10 @@ class CustomerSegmentation:
                                   "can`t lose them": {'r': [1, 2], 'f': [5], 'm': [5]},
                                   "hibernating": {'r': [2, 3], 'f': [2], 'm': [2]},
                                   "lost": {'r': [1], 'f': [1, 2, 3, 4, 5], 'm': [1, 2, 3, 4, 5]}}
+        self.segments_numerics = {}
         self.detected_segments = []
-        self.insert_columns = ["client", "recency_segment", "frequency_segment", "monetary_segment", "segments"]
+        self.insert_columns = ["client", "recency_segment", "frequency_segment",
+                               "monetary_segment", "segments", "segments_numeric"]
 
     def get_rfm(self, date):
         """
@@ -201,6 +203,13 @@ class CustomerSegmentation:
                                 {"recency": "mean"}).reset_index().sort_values(
                                 by='recency', ascending=True).reset_index(drop=True).reset_index().to_dict('results'):
             self.recency_segments[i['recency_segment']] = 5 - i['index']
+
+    def get_segments_numeric(self):
+        """
+        format; {"champions": 0, ..... , "can`t lose them": 8}
+        """
+        self.segments_numerics = {s[0]: s[1] for s in zip(list(self.customer_segments.keys()) + ['others'],
+                                                          list(range(len(list(self.customer_segments.keys()))+1)))}
 
     def get_monetary_segments(self):
         """
@@ -302,10 +311,14 @@ class CustomerSegmentation:
         self.get_monetary_segments()
         self.combine_segments()
         self.detect_customer_segments()
+        self.get_segments_numeric()
+
         self.rfm = pd.merge(self.rfm,
                             pd.DataFrame(self.detected_segments).rename(columns={0: "client", 1: "segments"}),
                             on='client', how='left')
         self.rfm['segments'] = self.rfm['segments'].fillna('others')
+        self.rfm['segments_numeric'] = self.rfm['segments'].apply(lambda x: self.segments_numerics[x])
+
         self.insert_into_reports_index(self.rfm[self.insert_columns], date=start_date, index=self.order_index)
 
     def fetch(self, start_date=None):
@@ -328,5 +341,5 @@ class CustomerSegmentation:
         _res = self.query_es.get_data_from_es(index="reports")
         _data = pd.DataFrame()
         if len(_res) != 0:
-            _data = pd.DataFrame(_res[0]['_source']['data'])
+            _data = pd.DataFrame(_res[-1]['_source']['data'])
         return _data
