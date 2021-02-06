@@ -95,6 +95,7 @@ class SampleData:
     """
     kpis = {}
     _base_path = abspath("").split(basename(abspath("")))[0]
+    _base_path = abspath("") #.split(basename(abspath("")))[0]
     folder = join(_base_path, "exploratory_analysis", 'sample_data', '')
     for f in listdir(dirname(folder)):
         if f.split(".")[1] == 'csv':
@@ -112,6 +113,7 @@ class RealData:
 
     ## TODO: data for all kpis will be directly from elasticsearch report index
     _base_path = abspath("").split(basename(abspath("")))[0]
+    _base_path = abspath("") # .split(basename(abspath("")))[0]
     folder = join(_base_path, "exploratory_analysis", 'sample_data', '')
     for f in listdir(dirname(folder)):
         if f.split(".")[1] == 'csv':
