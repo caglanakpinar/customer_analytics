@@ -368,15 +368,15 @@
 																</div>
 																<div class="card-body m-3">
 																	<label class="form-check">
-																		<input name="status" class="form-check-input" type="radio" value="True" name="off">
+																		<input name="status" class="form-check-input" type="radio" value="off">
 																		<span class="badge bg-danger">off</span>
 																	</label>
 																	<label class="form-check">
-																		<input name="status" class="form-check-input" type="radio" value="True" name="on">
+																		<input name="status" class="form-check-input" type="radio" value="on">
 																		<span class="badge bg-success">on</span>
 																	</label>
 																	<label class="form-check">
-																		<input name="status" class="form-check-input" type="radio" value="True" name="paused">
+																		<input name="status" class="form-check-input" type="radio" value="paused">
 																		<span class="badge bg-warning">Paused</span>
 																	</label>
 																</div>
@@ -399,7 +399,7 @@
 													</div>
 													<div class="modal-footer">
 														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-														<button type="submit" class="btn btn-primary">Save changes</button>
+														<button type="submit" name="edit" value="{{ values['row_1']['tag'] }}" class="btn btn-primary">Save changes</button>
 													</div>
 												</div>
 											</div>
@@ -422,7 +422,7 @@
 														</div>
 														<div class="modal-footer">
 															<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
-															<button name="delete" type="submit" value="1" class="btn btn-primary">Yes</button>
+															<button name="delete" type="submit" value="{{ values['row_1']['tag'] }}" class="btn btn-primary">Yes</button>
 														</div>
 													</form>
 												</div>
@@ -455,8 +455,79 @@
 
 
 									<td class="table-action">
-										<a href="#"><i class="align-middle" data-feather="edit-2"></i></a>
-										<a href="#"><i class="align-middle" data-feather="trash"></i></a>
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#edit_tag"></i></a>
+										<div class="modal fade" id="edit_tag" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Edit ElasticSearch</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Status</h5>
+																</div>
+																<div class="card-body m-3">
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="off" name="status">
+																		<span class="badge bg-danger">off</span>
+																	</label>
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="on" name="status" checked>
+																		<span class="badge bg-success">on</span>
+																	</label>
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="paused" name="status">
+																		<span class="badge bg-warning">Paused</span>
+																	</label>
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> ElasticSearch Tag Name</label>
+																	<input name="tag" type="text" class="form-control" id="edit_tag_name_2">
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong>  Host</label>
+																	<input name="host" type="text" class="form-control" id="edit_inputPasswordCurrent_2">
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordNew"> <strong>NEW</strong> Port</label>
+																	<input name="port"  type="text" class="form-control" id="inputPasswordNew_2">
+																</div>
+															</div>
+														</div>
+													</div>
+													<div  class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button name="edit" value="{{ values['row_2']['tag'] }}" type="submit" class="btn btn-primary">Save changes</button>
+													</div >
+												</div>
+											</div>
+										</div>
+										<a href="#"><i class="align-middle" data-feather="trash" data-toggle="modal" data-target="#delete_tag"></i></a>
+										<div class="modal fade" id="delete_tag" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title"> <strong>DELETE</strong> ElasticSearch Connection</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">Do you want to delete ElasticSearch Connection?</h5>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+														<button name="delete" type="submit" value="{{ values['row_2']['tag'] }}" class="btn btn-primary">Yes</button>
+													</div>
+
+												</div>
+											</div>
+										</div>
 									</td>
 								</tr>
 								<tr>
@@ -482,8 +553,79 @@
 									{% endif %}
 
 									<td class="table-action">
-										<a href="#"><i class="align-middle" data-feather="edit-2"></i></a>
-										<a href="#"><i class="align-middle" data-feather="trash"></i></a>
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#edit_tag"></i></a>
+										<div class="modal fade" id="edit_tag" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Edit ElasticSearch</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Status</h5>
+																</div>
+																<div class="card-body m-3">
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="off" name="status">
+																		<span class="badge bg-danger">off</span>
+																	</label>
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="on" name="status" checked>
+																		<span class="badge bg-success">on</span>
+																	</label>
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="paused" name="status">
+																		<span class="badge bg-warning">Paused</span>
+																	</label>
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> ElasticSearch Tag Name</label>
+																	<input name="tag" type="text" class="form-control" id="edit_tag_name_2">
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong>  Host</label>
+																	<input name="host" type="text" class="form-control" id="edit_inputPasswordCurrent_2">
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordNew"> <strong>NEW</strong> Port</label>
+																	<input name="port"  type="text" class="form-control" id="inputPasswordNew_2">
+																</div>
+															</div>
+														</div>
+													</div>
+													<div  class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button name="edit" value="{{ values['row_3']['tag'] }}" type="submit" class="btn btn-primary">Save changes</button>
+													</div >
+												</div>
+											</div>
+										</div>
+										<a href="#"><i class="align-middle" data-feather="trash" data-toggle="modal" data-target="#delete_tag"></i></a>
+										<div class="modal fade" id="delete_tag" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title"> <strong>DELETE</strong> ElasticSearch Connection</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">Do you want to delete ElasticSearch Connection?</h5>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+														<button name="delete" type="submit" value="{{ values['row_3']['tag'] }}" class="btn btn-primary">Yes</button>
+													</div>
+
+												</div>
+											</div>
+										</div>
 									</td>
 								</tr>
 								<tr>
@@ -507,8 +649,79 @@
 										<td><span class="badge bg-danger">off</span></td>
 									{% endif %}
 									<td class="table-action">
-										<a href="#"><i class="align-middle" data-feather="edit-2"></i></a>
-										<a href="#"><i class="align-middle" data-feather="trash"></i></a>
+										<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#edit_tag"></i></a>
+										<div class="modal fade" id="edit_tag" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title">Edit ElasticSearch</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Status</h5>
+																</div>
+																<div class="card-body m-3">
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="off" name="status">
+																		<span class="badge bg-danger">off</span>
+																	</label>
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="on" name="status" checked>
+																		<span class="badge bg-success">on</span>
+																	</label>
+																	<label class="form-check">
+																		<input class="form-check-input" type="radio" value="paused" name="status">
+																		<span class="badge bg-warning">Paused</span>
+																	</label>
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> ElasticSearch Tag Name</label>
+																	<input name="tag" type="text" class="form-control" id="edit_tag_name_2">
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong>  Host</label>
+																	<input name="host" type="text" class="form-control" id="edit_inputPasswordCurrent_2">
+																</div>
+																<div class="mb-3">
+																	<label class="form-label" for="inputPasswordNew"> <strong>NEW</strong> Port</label>
+																	<input name="port"  type="text" class="form-control" id="inputPasswordNew_2">
+																</div>
+															</div>
+														</div>
+													</div>
+													<div  class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														<button name="edit" value="{{ values['row_4']['tag'] }}" type="submit" class="btn btn-primary">Save changes</button>
+													</div >
+												</div>
+											</div>
+										</div>
+										<a href="#"><i class="align-middle" data-feather="trash" data-toggle="modal" data-target="#delete_tag"></i></a>
+										<div class="modal fade" id="delete_tag" tabindex="-1" role="dialog" aria-hidden="true">
+											<div class="modal-dialog" role="document">
+												<div class="modal-content">
+													<div class="modal-header">
+														<h5 class="modal-title"> <strong>DELETE</strong> ElasticSearch Connection</h5>
+														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body m-3">
+														<div class="card">
+															<div class="card-body">
+																<h5 class="card-title">Do you want to delete ElasticSearch Connection?</h5>
+															</div>
+														</div>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+														<button name="delete" type="submit" value="{{ values['row_4']['tag'] }}" class="btn btn-primary">Yes</button>
+													</div>
+
+												</div>
+											</div>
+										</div>
 									</td>
 								</tr>
 							</tbody>
