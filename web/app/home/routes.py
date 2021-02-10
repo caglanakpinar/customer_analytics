@@ -10,6 +10,7 @@ from jinja2 import TemplateNotFound
 
 from web.app.home.models import RouterRequest
 from web.app.home.forms import SampleData, RealData, Charts, charts
+from screeninfo import get_monitors
 
 
 samples = SampleData()
