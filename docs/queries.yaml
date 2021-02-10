@@ -14,6 +14,29 @@ es_connection:
   PRIMARY KEY (id)
   )
 
+data_connection:
+  CREATE TABLE data_connection (
+  id INTEGER NOT NULL,
+  tag VARCHAR,
+  dimension VARCHAR,
+  process VARCHAR,
+  orders_data_source_tag VARCHAR,
+  orders_data_source_type VARCHAR,
+  orders_data_query_path VARCHAR,
+  orders_password Binary,
+  orders_user VARCHAR,
+  orders_port VARCHAR,
+  orders_host VARCHAR,
+  downloads_data_source_tag VARCHAR,
+  downloads_data_source_type VARCHAR,
+  downloads_data_query_path VARCHAR,
+  downloads_password Binary,
+  downloads_user VARCHAR,
+  downloads_port VARCHAR,
+  downloads_host VARCHAR,
+  PRIMARY KEY (id)
+  )
+
 columns:
   es_connection:
     - id
@@ -27,6 +50,26 @@ columns:
     - download_create_es
     - download_path
     - url
+
+  data_connection:
+    - id
+    - tag
+    - dimension
+    - process
+    - orders_data_source_tag
+    - orders_data_source_type
+    - orders_data_query_path
+    - orders_password
+    - orders_user
+    - orders_port
+    - orders_host
+    - downloads_data_source_tag
+    - downloads_data_source_type
+    - downloads_data_query_path
+    - downloads_password
+    - downloads_user
+    - downloads_port
+    - downloads_host
 
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'
