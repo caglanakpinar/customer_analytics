@@ -9,7 +9,7 @@ from utils import read_yaml
 from configs import query_path, default_es_port, default_es_host
 import pandas as pd
 
-from web.app.base.util import hash_pass
+from data_storage_configurations import connection_check
 
 
 engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
