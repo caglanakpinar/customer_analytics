@@ -128,10 +128,6 @@
 												<input class="form-check-input" type="radio" value="on" name="status">
 												<span class="badge bg-success">on</span>
 											</label>
-											<label class="form-check">
-												<input class="form-check-input" type="radio" value="paused" name="status">
-												<span class="badge bg-warning">Paused</span>
-											</label>
 										</div>
 										<div class="mb-3">
 											<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> ElasticSearch Tag Name</label>
@@ -212,13 +208,6 @@
 									{% if values['row_0']['url'] != 'None' %}
 										<td>{{ values['row_0']['url'] }}</td>
 									{% endif %}
-
-									{% if values['row_0']['status'] == '....' %}
-										<td><span class="badge bg-warning">Paused</span></td>
-									{% endif %}
-									{% if values['row_0']['status'] == 'paused' %}
-										<td><span class="badge bg-warning">Paused</span></td>
-									{% endif %}
 									{% if values['row_0']['status'] == 'on' %}
 										<td><span class="badge bg-success">on</span></td>
 									{% endif %}
@@ -249,10 +238,6 @@
 																	<label class="form-check">
 																		<input class="form-check-input" type="radio" value="on" name="status" checked>
 																		<span class="badge bg-success">on</span>
-																	</label>
-																	<label class="form-check">
-																		<input class="form-check-input" type="radio" value="paused" name="status">
-																		<span class="badge bg-warning">Paused</span>
 																	</label>
 																</div>
 																<div class="mb-3">
@@ -310,12 +295,6 @@
 									{% if values['row_1']['url'] != 'None' %}
 										<td>{{ values['row_1']['url'] }}</td>
 									{% endif %}
-									{% if values['row_1']['status'] == '....' %}
-										<td><span class="badge bg-warning">Paused</span></td>
-									{% endif %}
-									{% if values['row_1']['status'] == 'paused' %}
-										<td><span class="badge bg-warning">Paused</span></td>
-									{% endif %}
 									{% if values['row_1']['status'] == 'on' %}
 										<td><span class="badge bg-success">on</span></td>
 									{% endif %}
@@ -345,10 +324,6 @@
 																	<label class="form-check">
 																		<input name="status" class="form-check-input" type="radio" value="on">
 																		<span class="badge bg-success">on</span>
-																	</label>
-																	<label class="form-check">
-																		<input name="status" class="form-check-input" type="radio" value="paused">
-																		<span class="badge bg-warning">Paused</span>
 																	</label>
 																</div>
 																<div class="mb-3">
@@ -409,14 +384,6 @@
 									{% if values['row_2']['url'] != 'None' %}
 										<td>{{ values['row_2']['url'] }}</td>
 									{% endif %}
-
-
-									{% if values['row_2']['status'] == '....' %}
-										<td><span class="badge bg-warning">Paused</span></td>
-									{% endif %}
-									{% if values['row_2']['status'] == 'paused' %}
-										<td><span class="badge bg-warning">Paused</span></td>
-									{% endif %}
 									{% if values['row_2']['status'] == 'on' %}
 										<td><span class="badge bg-success">on</span></td>
 									{% endif %}
@@ -448,10 +415,6 @@
 																	<label class="form-check">
 																		<input class="form-check-input" type="radio" value="on" name="status" checked>
 																		<span class="badge bg-success">on</span>
-																	</label>
-																	<label class="form-check">
-																		<input class="form-check-input" type="radio" value="paused" name="status">
-																		<span class="badge bg-warning">Paused</span>
 																	</label>
 																</div>
 																<div class="mb-3">
@@ -509,13 +472,6 @@
 									{% if values['row_3']['url'] != 'None' %}
 										<td>{{ values['row_3']['url'] }}</td>
 									{% endif %}
-
-									{% if values['row_3']['status'] == '....' %}
-										<td><span class="badge bg-warning">Paused</span></td>
-									{% endif %}
-									{% if values['row_3']['status'] == 'paused' %}
-										<td><span class="badge bg-warning">Paused</span></td>
-									{% endif %}
 									{% if values['row_3']['status'] == 'on' %}
 										<td><span class="badge bg-success">on</span></td>
 									{% endif %}
@@ -546,10 +502,6 @@
 																	<label class="form-check">
 																		<input class="form-check-input" type="radio" value="on" name="status" checked>
 																		<span class="badge bg-success">on</span>
-																	</label>
-																	<label class="form-check">
-																		<input class="form-check-input" type="radio" value="paused" name="status">
-																		<span class="badge bg-warning">Paused</span>
 																	</label>
 																</div>
 																<div class="mb-3">
@@ -607,12 +559,6 @@
 									{% if values['row_4']['url'] != 'None' %}
 										<td>{{ values['row_4']['url'] }}</td>
 									{% endif %}
-									{% if values['row_4']['status'] == '....' %}
-										<td><span class="badge bg-warning">Paused</span></td>
-									{% endif %}
-									{% if values['row_4']['status'] == 'paused' %}
-										<td><span class="badge bg-warning">Paused</span></td>
-									{% endif %}
 									{% if values['row_4']['status'] == 'on' %}
 										<td><span class="badge bg-success">on</span></td>
 									{% endif %}
@@ -642,10 +588,6 @@
 																	<label class="form-check">
 																		<input class="form-check-input" type="radio" value="on" name="status" checked>
 																		<span class="badge bg-success">on</span>
-																	</label>
-																	<label class="form-check">
-																		<input class="form-check-input" type="radio" value="paused" name="status">
-																		<span class="badge bg-warning">Paused</span>
 																	</label>
 																</div>
 																<div class="mb-3">
