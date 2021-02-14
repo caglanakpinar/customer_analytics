@@ -93,3 +93,9 @@ elasticsearch_connection_refused_comment = """
             ElasticSearch default port is 9200. If you running on local computer pls assign default host is 'localhost.' 
             """
 
+default_message = {'orders': '....',
+                        'orders_data': '....',
+                        'orders_columns': '....',
+                        'downloads': '....',
+                        'downloads_data': '....',
+                        'downloads_columns': '....'}
