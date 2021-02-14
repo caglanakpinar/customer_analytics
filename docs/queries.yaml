@@ -8,8 +8,6 @@ es_connection:
   status VARCHAR,
   cpu_capacity VARCHAR,
   ram_capacity VARCHAR,
-  download_create_es VARCHAR,
-  download_path VARCHAR,
   url VARCHAR,
   PRIMARY KEY (id)
   )
@@ -27,6 +25,7 @@ data_connection:
   orders_user VARCHAR,
   orders_port VARCHAR,
   orders_host VARCHAR,
+  orders_db VARCHAR,
   downloads_data_source_tag VARCHAR,
   downloads_data_source_type VARCHAR,
   downloads_data_query_path VARCHAR,
@@ -34,6 +33,50 @@ data_connection:
   downloads_user VARCHAR,
   downloads_port VARCHAR,
   downloads_host VARCHAR,
+  downloads_db VARCHAR,
+  is_action VARCHAR,
+  is_product VARCHAR,
+  is_promotion VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+data_columns_integration:
+  CREATE TABLE data_columns_integration (
+  id INTEGER NOT NULL,
+  tag VARCHAR,
+  dimension VARCHAR,
+  process VARCHAR,
+  order_id VARCHAR,
+  client VARCHAR,
+  session_start_date VARCHAR,
+  payment_amount VARCHAR,
+  discount_amount VARCHAR,
+  promotion_id VARCHAR,
+  date VARCHAR,
+  download_date VARCHAR,
+  data_type VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+orders_sample_data:
+  CREATE TABLE orders_sample_data (
+  id INTEGER NOT NULL,
+  order_id VARCHAR,
+  client VARCHAR,
+  session_start_date VARCHAR,
+  payment_amount VARCHAR,
+  discount_amount VARCHAR,
+  date VARCHAR,
+  has_purchased VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+downloads_sample_data:
+  CREATE TABLE downloads_sample_data (
+  id INTEGER NOT NULL,
+  client VARCHAR,
+  download_date VARCHAR,
+  signup_date VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -63,6 +106,7 @@ columns:
     - orders_user
     - orders_port
     - orders_host
+    - orders_db
     - downloads_data_source_tag
     - downloads_data_source_type
     - downloads_data_query_path
@@ -70,6 +114,38 @@ columns:
     - downloads_user
     - downloads_port
     - downloads_host
+    - downloads_db
+
+  data_columns_integration:
+    - id
+    - tag
+    - dimension
+    - process
+    - order_id
+    - client
+    - session_start_date
+    - payment_amount
+    - discount_amount
+    - promotion_id
+    - date
+    - download_date
+    - data_type
+
+  orders_sample_data:
+    - id
+    - order_id
+    - client
+    - session_start_date
+    - date
+    - payment_amount
+    - discount_amount
+    - has_purchased
+
+  downloads_sample_data:
+    - id
+    - client
+    - download_date
+    - signup_date
 
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'
