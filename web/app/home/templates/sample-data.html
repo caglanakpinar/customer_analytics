@@ -45,7 +45,9 @@
 														<label class="form-label" for="esTagName">ElasticSearch Tag Name</label>
 														<select name="recent_tag" id="esTagName" class="form-control" required>
 															<option></option>
-															<option> {{ values['row_0']['tag'] }} </option>
+															{% if values['row_0']['tag'] != '....' %}
+																<option> {{ values['row_0']['tag'] }} </option>
+															{% endif %}
 															{% if values['row_1']['tag'] != '....' %}
 																<option> {{ values['row_1']['tag'] }} </option>
 															{% endif %}
