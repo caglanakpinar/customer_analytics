@@ -42,6 +42,7 @@
 								<div class="card-header">
 									<h5 class="card-title mb-0">Connection Info</h5>
 								</div>
+
 								<div class="card-body">
 									<div class="row">
 										<div class="col-md-10">
@@ -66,64 +67,34 @@
 											</div>
 
 											<div class="mb-3">
-												<label class="form-label" for="inputUsername">description</label>
-												<textarea rows="2" class="form-control" id="inputBio" placeholder="Information about the ElasticSearch"></textarea>
+												<label class="form-label" for="inputUsername">Download ElasticSearch</label>
+											</div>
+											<div class="mb-3">
+												<a href="https://www.elastic.co/elasticsearch/" target="_blank">Download ElasticSearch! https://www.elastic.co/elasticsearch/</a>
+											</div>
+											<div class="row">
+												<div class="mb-3 col-md-6">
+													<label class="form-label" for="inputFirstName">CPU Max Capacity</label>
+													<input name='cpu_capacity' type="text" class="form-control" id="inputFirstName" placeholder="Optional 4 CPU">
+												</div>
+												<div class="mb-3 col-md-6">
+													<label class="form-label" for="inputLastName">RAM (GB) Capacity</label>
+													<input name='ram_capacity'  type="text" class="form-control" id="inputLastName" placeholder="Optional 4 GB">
+												</div>
+											</div>
+											<div class="mb-3">
+												<label class="form-label" for="inputCity">URL</label>
+												<input name="url" type="text"  class="form-control" id="port" placeholder="http://localhost:9200">
+												<small> Optional - generated with host and port</small>
 											</div>
 										</div>
 									</div>
 									<button name="connect" type="submit"  value="True" class="btn btn-primary">Connect</button>
 								</div>
 								</div>
-									<div class="card">
-									<div class="card-header">
-										<h5 class="card-title mb-0">Advance Settings</h5>
-									</div>
-									<div class="card-body">
-										<div class="row">
-											<div class="mb-3 col-md-6">
-												<label class="form-label" for="inputFirstName">CPU Max Capacity</label>
-												<input name='cpu_capacity' type="text" class="form-control" id="inputFirstName" placeholder="Optional 4 CPU">
-											</div>
-											<div class="mb-3 col-md-6">
-												<label class="form-label" for="inputLastName">RAM (GB) Capacity</label>
-												<input name='ram_capacity'  type="text" class="form-control" id="inputLastName" placeholder="Optional 4 GB">
-											</div>
-										</div>
-										<div class="card">
-											<div class="card-header">
-												<h5 class="card-title mb-0">Download and Create ElasticSearch</h5>
-											</div>
-											<div class="card-body">
-												<div>
-													<label class="form-check">
-														<input class="form-check-input" type="radio" value="True" name="download_create_es" >
-														<span class="form-check-label">
-														Download ElasticSearch 7.10.0 and execute here
-														</span>
-													</label>
-													<label class="form-check">
-														<input class="form-check-input" type="radio" value="False" name="download_create_es" checked>
-														<span class="form-check-label">
-														I have already had ElasticSearch environment
-														</span>
-													</label>
-												</div>
-											</div>
-										</div>
-										<div class="row">
-											<div class="mb-3 col-md-6">
-												<label class="form-label" for="inputCity">Download Path</label>
-												<input name="download_path" type="text" class="form-control" id="inputCity" placeholder="~/Downloads/..">
-											</div>
-											<div class="mb-3 col-md-6">
-												<label class="form-label" for="inputCity">URL</label>
-												<input name="url" type="text"  class="form-control" id="port" placeholder="http://localhost:9200">
-												<small> Optional - generated with host and port</small>
-											</div>
-										</div>
-										<button name="advance_settings" type="button" value="True" class="btn btn-primary">Save changes</button>
-									</div>
-								</div>
+
+
+
 								</div>
 							</form>
 						</div>
