@@ -157,7 +157,6 @@ class RouterRequest:
         return _r_updated
 
     def manage_data_integration(self, requests):
-        print(requests)
         if requests.get('connect', None) == 'True':
             self.check_for_table_exits(table='es_connection')
             requests['port'] = str(default_es_port) if requests['port'] is None else requests['port']
