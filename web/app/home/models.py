@@ -68,21 +68,21 @@ class RouterRequest:
 
     def data_connections_hold_edit_connection_check(self):
         conns = pd.read_sql(
-            """ SELECT id, tag, process FROM data_connection WHERE process in ('hold', 'edit', 'add_dimension') """, con)
+                            """ SELECT 
+                                    id, tag, process 
+                                FROM data_connection 
+                                WHERE process in ('hold', 'edit', 'add_dimension') """, con)
         if len(conns) != 0:
             holds, edits = conns.query("process == ('hold', 'add_dimension')"), conns.query("process == 'edit'")
             if len(holds) != 0:
                 for _id in list(holds['id'].unique()):
                     con.execute(self.delete_query(table='data_connection', condition=" id = " + str(_id) + " "))
-
-            print()
             if len(edits) != 0:
                 for _id in list(edits['id'].unique()):
                     con.execute(self.update_query(table='data_connection',
                                                   columns=["process"],
                                                   values={"process": "connected"},
                                                   condition=" id = '" + str(_id) + "' "))
-        print()
 
     def check_for_request(self, _r):
         _r_updated = {}
