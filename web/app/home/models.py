@@ -8,6 +8,7 @@ from os.path import abspath, join
 from utils import read_yaml
 from configs import query_path, default_es_port, default_es_host, default_message
 import pandas as pd
+from numpy import array
 
 from data_storage_configurations import connection_check
 
@@ -305,7 +306,8 @@ class RouterRequest:
                                         data=_sample_data_table.to_dict('results'))
             except Exception as e:
                 print(e)
-        self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
+
+            self.message[data_type] = 'Connected!'
 
     def create_sample_data(self, requests):
         # for orders index choose ElasticSearch Connection from es_connection table (only status == 'on')
@@ -333,6 +335,7 @@ class RouterRequest:
                 self.data_connections(self.check_for_request(req))
             if template == 'sample-data':
                 self.create_sample_data(self.check_for_request(req))
+        self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
         self.message = default_message
 
     def get_default_es_connection_values(self,
