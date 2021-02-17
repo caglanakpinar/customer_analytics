@@ -274,7 +274,36 @@ class RouterRequest:
                 self.sample_data_column_insert(is_for_orders=is_for_orders, tag=requests, columns=data_columns)
 
         if requests.get('orders_column_replacement', None) == 'True' or requests.get('downloads_column_replacement', None) == 'True':
+            source_tag_name, data_type, s_table = 'downloads_data_source_tag', 'downloads', 'downloads_sample_data'
+            if requests.get('orders_column_replacement', None) == 'True':
+                source_tag_name, data_type, s_table = 'orders_data_source_tag', 'orders', 'orders_sample_data'
+            id, process, requests['tag'] = self.get_holded_connection(source_tag_name)
+            self.check_for_table_exits(table='data_columns_integration')
+            data_columns_integration = pd.read_sql(""" SELECT id
+                                                       FROM data_columns_integration 
+                                                       WHERE tag = '""" + requests['tag'] +
+                                                   "'  AND data_type = '" + data_type + "' ",
+                                                   con).to_dict('results')
+
+            requests['data_type'] = data_type
+            if len(data_columns_integration) == 0:  # insert into data_columns_integration
+                for col in self.sqlite_queries['columns']['data_columns_integration'][1:]:
+                    if col not in list(requests.keys()):
+                        requests[col] = None
+                con.execute(self.insert_query(table='data_columns_integration',
+                                              columns=self.sqlite_queries['columns']['data_columns_integration'][1:],
                                               values=requests))
+            else:
+                con.execute(self.update_query(table='data_columns_integration',
+                                              condition=" id = " + str(data_columns_integration[0]['id']) + " ",
+                                              columns=self.sqlite_queries['columns']['data_columns_integration'][1:],
+                                              values=requests))
+
+            try:
+                _sample_data_table = pd.read_sql(""" SELECT * FROM  """ + s_table, con)
+                _sample_data_table = _sample_data_table.rename(columns={requests[i]: i for i in requests})
+                self.sample_data_insert(is_for_orders=True if data_type == 'orders' else False,
+                                        data=_sample_data_table.to_dict('results'))
             except Exception as e:
                 print(e)
         self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
