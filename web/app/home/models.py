@@ -108,6 +108,29 @@ class RouterRequest:
                 except Exception as e:
                     print(e)
 
+    def sample_data_column_insert(self, is_for_orders, tag, columns):
+        self.check_for_table_exits(table='data_columns')
+        data_type = 'orders' if is_for_orders else 'downloads'
+        tag = tag[data_type + '_data_source_tag']
+        try:
+            con.execute(self.insert_query(table='data_columns',
+                                          columns=self.sqlite_queries['columns']['data_columns'][1:],
+                                          values={'tag': tag, 'data_type': data_type, 'columns': "*".join(columns.tolist())}))
+
+        except Exception as e:
+            print(e)
+
+    def get_holded_connection(self, source_tag_name):
+        tags = pd.read_sql(
+            """
+            SELECT
+            id, tag, process, """ + source_tag_name +
+            """
+            FROM data_connection WHERE process in ('hold', 'edit', 'add_dimension') AND dimension != 'sample_data'
+            """, con).tail(1)
+        id, process, source_tag_name = list(tags['id'])[0], list(tags['process'])[0], list(tags[source_tag_name])[0]
+        return id, process, source_tag_name
+
     def check_for_request(self, _r):
         _r_updated = {}
         try:
