@@ -129,8 +129,6 @@ columns:
   data_columns_integration:
     - id
     - tag
-    - dimension
-    - process
     - order_id
     - client
     - session_start_date
@@ -139,7 +137,9 @@ columns:
     - promotion_id
     - date
     - download_date
+    - signup_date
     - data_type
+    - has_purchased
 
   orders_sample_data:
     - id
