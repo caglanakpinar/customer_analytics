@@ -205,6 +205,9 @@ class RouterRequest:
             except Exception as e:
                 print(e)
 
+        if requests.get('cancel', None) == 'True':
+            self.data_connections_hold_edit_connection_check()
+
         if requests.get('edit', None) == 'True':
             requests['process'] = 'edit'
             self.data_connections_hold_edit_connection_check()
