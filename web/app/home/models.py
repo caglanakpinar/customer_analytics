@@ -223,6 +223,8 @@ class RouterRequest:
                     requests[col] = None
             requests['process'] = 'add_dimension'
             requests['dimension'] = 'True'
+            requests['tag'] = list(pd.read_sql("SELECT tag FROM data_connection WHERE id = " + str(requests['id']),
+                                               con)['tag'])[0]
             self.data_connections_hold_edit_connection_check()
             con.execute(self.insert_query(table='data_connection',
                                           columns=self.sqlite_queries['columns']['data_connection'][1:],
@@ -251,11 +253,27 @@ class RouterRequest:
                 requests['process'] = process
 
             _columns = list(set(list(requests.keys())) & set(self.sqlite_queries['columns']['data_connection'][1:]))
+            conn_status, message, data, data_columns = connection_check(request={col: requests[col] for col in _columns},
+                                                                        index='orders' if is_for_orders else 'downloads')
 
-            try:
-                con.execute(self.update_query(table='data_connection',
-                                              condition=" id = " + str(id) + " ",
-                                              columns=_columns,
+            self.message['orders'] = message if is_for_orders else '....'
+            self.message['downloads'] = message if not is_for_orders else '....'
+            self.message['orders_columns'] = data_columns if is_for_orders else '....'
+            self.message['downloads_columns'] = data_columns if not is_for_orders else '....'
+
+            if conn_status:
+                try:
+                    con.execute(self.update_query(table='data_connection',
+                                                  condition=" id = " + str(id) + " ",
+                                                  columns=_columns,
+                                                  values=requests))
+                except Exception as e:
+                    print(e)
+
+                self.sample_data_insert(is_for_orders=is_for_orders, data=data)
+                self.sample_data_column_insert(is_for_orders=is_for_orders, tag=requests, columns=data_columns)
+
+        if requests.get('orders_column_replacement', None) == 'True' or requests.get('downloads_column_replacement', None) == 'True':
                                               values=requests))
             except Exception as e:
                 print(e)
