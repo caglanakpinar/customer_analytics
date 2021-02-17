@@ -229,7 +229,7 @@ class RouterRequest:
                                           values=requests))
 
         if requests.get('delete', None) == 'True':
-            con.execute(self.delete_query(table='data_connection', condition=" tag = '" + requests['tag'] + "' "))
+            con.execute(self.delete_query(table='data_connection', condition=" id = " + str(requests['id'])))
 
         if requests.get('orders_edit', None) == 'True' or requests.get('downloads_edit', None) == 'True':
             source_tag_name = 'orders_data_source_tag'
@@ -337,6 +337,23 @@ class RouterRequest:
                         values['row_hold_' + str(row)] = tables[3][row]
                 except Exception as e:
                     print(e)
+
+        if self.message['orders_data'] != '....':
+            try:
+                values['orders_data'] = {}
+                for row in range(len(self.message['orders_data'])):
+                    values['orders_data']['row_orders_data_' + str(row)] = self.message['orders_data'][row]
+            except Exception as e:
+                print(e)
+
+        if self.message['downloads_data'] != '....':
+            try:
+                values['downloads_data'] = {}
+                for row in range(len(self.message['downloads_data'])):
+                    values['downloads_data']['row_downloads_data_' + str(row)] = self.message['downloads_data'][row]
+            except Exception as e:
+                print(e)
+
         return values
 
     def fetch_results(self, template):
@@ -349,17 +366,17 @@ class RouterRequest:
                                               con).reset_index().tail(5).to_dict('results')]
                 except Exception as e:
                     print("there is no table has been created for now!")
+
         if template == 'sample-data':
-            if template == 'manage-data':
-                if 'es_connection' in list(self.tables['name']):
-                    try:
-                        self.table = [pd.read_sql(""" SELECT * 
-                                                      FROM es_connection as e 
-                                                      LEFT JOIN data_connection as d ON e.tag = d.tag 
-                                                      WHERE process != 'connected' """,
-                                                  con).reset_index().tail(5).to_dict('results')]
-                    except Exception as e:
-                        print("there is no table has been created for now!")
+            if 'es_connection' in list(self.tables['name']):
+                try:
+                    self.table = [pd.read_sql(""" SELECT e.*
+                                                  FROM es_connection as e 
+                                                  LEFT JOIN data_connection as d ON e.tag = d.tag 
+                                                  WHERE d.process is NULL and e.status = 'on' """,
+                                              con).reset_index().tail(5).to_dict('results')]
+                except Exception as e:
+                    print("there is no table has been created for now!")
 
             if len(pd.read_sql(
                 """
