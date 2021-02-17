@@ -251,7 +251,6 @@ class RouterRequest:
                 requests['process'] = 'connected'
             else:
                 requests['process'] = process
-
             _columns = list(set(list(requests.keys())) & set(self.sqlite_queries['columns']['data_connection'][1:]))
             conn_status, message, data, data_columns = connection_check(request={col: requests[col] for col in _columns},
                                                                         index='orders' if is_for_orders else 'downloads')
@@ -362,6 +361,9 @@ class RouterRequest:
             for row in range(5):
                 values['row_connect_' + str(row)] = {cols: "...." for cols in
                                                     self.sqlite_queries['columns']['data_connection']}
+        values['orders_data'] = '....'
+        values['downloads_data'] = '....'
+        values['message'] = self.message
 
         if tables is not None:
             for row in range(len(tables[0])):
