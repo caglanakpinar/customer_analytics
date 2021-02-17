@@ -157,5 +157,11 @@ columns:
     - download_date
     - signup_date
 
+  data_columns:
+    - id
+    - tag
+    - data_type
+    - columns
+
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'
