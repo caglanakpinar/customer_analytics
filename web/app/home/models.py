@@ -213,7 +213,7 @@ class RouterRequest:
             requests['process'] = 'edit'
             self.data_connections_hold_edit_connection_check()
             con.execute(self.update_query(table='data_connection',
-                                          condition=" tag = '" + requests['tag'] + "' ",
+                                          condition=" id = " + str(requests['id']),
                                           columns=["process"],
                                           values=requests))
 
