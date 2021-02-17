@@ -438,6 +438,42 @@ class RouterRequest:
                     except Exception as e:
                         print("there is no table has been created for now!")
 
+            if 'orders_sample_data' in list(self.tables['name']) or 'downloads_sample_data' in list(self.tables['name']):
+                query_editing_columns = lambda table, type, tag: """ SELECT columns
+                                                                     FROM {} 
+                                                                     WHERE data_type = '{}' 
+                                                                     AND tag = (SELECT 
+                                                                                    {} 
+                                                                                FROM data_connection 
+                                                                                WHERE process in ('hold', 
+                                                                                                  'edit', 
+                                                                                                  'add_dimension') LIMIT 1 
+                                                                                )
+                                                                """.format(table, type, tag)
+                main_query = lambda table: """ SELECT * FROM {} """.format(table)
+                # if self.message['orders_data'] == '....':
+                try:
+                    _orders_table = pd.read_sql(main_query('orders_sample_data'), con)
+                    if len(_orders_table) != 0:
+                        self.message['orders_data'] = _orders_table.to_dict('results')
+                    self.message['orders_columns'] = array(list(
+                        pd.read_sql(query_editing_columns('data_columns', 'orders', 'orders_data_source_tag'),
+                                    con)['columns'])[0].split("*"))
+
+                except Exception as e:
+                    print(e)
+
+                # if self.message['downloads_data'] == '....':
+                try:
+                    _downloads_table = pd.read_sql(main_query('downloads_sample_data'), con)
+                    if len(_downloads_table) != 0:
+                        self.message['downloads_data'] = _downloads_table.to_dict('results')
+                    self.message['downloads_columns'] = array(list(pd.read_sql(
+                        query_editing_columns('data_columns', 'downloads', 'downloads_data_source_tag'),
+                        con)['columns'])[0].split("*"))
+                except Exception as e:
+                    print(e)
+
         values = self.get_default_es_connection_values(tables=self.table,
                                                        active_connections=self.active_connections,
                                                        hold_connection=self.hold_connection,
