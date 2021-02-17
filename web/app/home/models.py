@@ -379,13 +379,12 @@ class RouterRequest:
                     print("there is no table has been created for now!")
 
             if len(pd.read_sql(
-                """
-                SELECT
-                *
-                FROM data_connection WHERE process != 'connected' AND dimension = 'sample_data'     
-                """, con)) != 0:
-                self.table = None
-
+                    """
+                    SELECT
+                    *
+                    FROM data_connection WHERE process != 'connected' AND dimension = 'sample_data'     
+                    """, con)) != 0:
+                    self.table = None
 
         # page 'add-data-purchase' of receiving data
         if template == 'add-data-purchase':
@@ -400,10 +399,16 @@ class RouterRequest:
                 if 'data_connection' in list(self.tables['name']):
                     try:
                         self.table = [pd.read_sql(""" 
-                                                     SELECT tag 
-                                                     FROM es_connection 
+                                                     SELECT data.id as id,
+                                                            es.tag as tag, 
+                                                            data.dimension as dimension,  
+                                                            data.orders_data_source_tag, 
+                                                            data.downloads_data_source_tag
+                                                     FROM es_connection es
+                                                     LEFT JOIN data_connection data
+                                                     ON es.tag = data.tag
                                                      WHERE status = 'on' 
-                                                        AND tag not IN (SELECT tag 
+                                                        AND es.tag not IN (SELECT tag 
                                                                         FROM data_connection 
                                                                         WHERE process = 'connected') 
                                                   """,
@@ -412,15 +417,23 @@ class RouterRequest:
                         print("there is no table has been created for now!")
 
                     try:
-                        self.table += [pd.read_sql(""" SELECT tag FROM data_connection where process = 'connected' """,
+                        self.table += [pd.read_sql(""" SELECT id,
+                                                              tag,
+                                                              dimension, 
+                                                              orders_data_source_tag, downloads_data_source_tag, process 
+                                                        FROM data_connection where process = 'connected' """,
                                                    con).reset_index().tail(5).to_dict('results')]
                     except Exception as e:
                         print("there is no table has been created for now!")
 
                     # check for hold  - edit - add_dimension
                     try:
-                        self.table += [pd.read_sql(""" SELECT tag, process FROM data_connection 
-                                                       WHERE process in ('hold', 'edit', 'add_dimension') """,
+                        self.table += [pd.read_sql(""" SELECT id,
+                                                              tag, 
+                                                              dimension, 
+                                                              orders_data_source_tag, downloads_data_source_tag process 
+                                                        FROM data_connection 
+                                                        WHERE process in ('hold', 'edit', 'add_dimension') """,
                                        con).tail(1).to_dict('results')]
                     except Exception as e:
                         print("there is no table has been created for now!")
@@ -431,7 +444,6 @@ class RouterRequest:
                                                        recent_connection=self.recent_connection)
 
         print("VAAAALUEEESSSSS :::", values)
-
         return values
 
 
