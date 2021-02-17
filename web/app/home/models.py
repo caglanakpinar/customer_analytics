@@ -235,9 +235,10 @@ class RouterRequest:
 
         if requests.get('orders_edit', None) == 'True' or requests.get('downloads_edit', None) == 'True':
             source_tag_name = 'orders_data_source_tag'
+            is_for_orders = False
             if requests.get('orders_edit', None) == 'True':
                 source_tag_name = 'downloads_data_source_tag'
-
+                is_for_orders = True
             tags = pd.read_sql(
                 """
                 SELECT
@@ -245,8 +246,7 @@ class RouterRequest:
                 """
                 FROM data_connection WHERE process in ('hold', 'edit', 'add_dimension') AND dimension != 'sample_data'
                 """, con).tail(1)
-            id, process = list(tags['id'])[0], list(tags['process'])[0]
-
+            id, process, tag = list(tags['id'])[0], list(tags['process'])[0], list(tags[source_tag_name])[0]
             if list(tags[source_tag_name])[0] not in ['', 'None', None, 'Null']:
                 requests['process'] = 'connected'
             else:
