@@ -80,6 +80,16 @@ downloads_sample_data:
   PRIMARY KEY (id)
   )
 
+
+data_columns:
+  CREATE TABLE data_columns (
+  id INTEGER NOT NULL,
+  tag VARCHAR,
+  data_type VARCHAR,
+  columns VARCHAR,
+  PRIMARY KEY (id)
+  )
+
 columns:
   es_connection:
     - id
