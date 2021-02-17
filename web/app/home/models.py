@@ -84,6 +84,29 @@ class RouterRequest:
                                                   values={"process": "connected"},
                                                   condition=" id = '" + str(_id) + "' "))
 
+    def sample_data_insert(self, is_for_orders, data=None):
+        if data is not None:
+            insert_columns = list(data[0].keys())
+            if is_for_orders:
+                table = 'orders_sample_data'
+                self.message['orders_data'] = data
+            else:
+                table = 'downloads_sample_data'
+                self.message['downloads_data'] = data
+
+            try:
+                con.execute("DROP TABLE " + table)
+            except Exception as e:
+                print(e)
+            con.execute(" CREATE TABLE " + table + " (" + " VARCHAR, ".join(insert_columns) + ")")
+            for i in data:
+                try:
+                    con.execute(self.insert_query(table=table,
+                                                  columns=insert_columns,
+                                                  values=i))
+                except Exception as e:
+                    print(e)
+
     def check_for_request(self, _r):
         _r_updated = {}
         try:
