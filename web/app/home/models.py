@@ -6,7 +6,7 @@ sys.path.insert(0, parentdir)
 from sqlalchemy import create_engine, MetaData
 from os.path import abspath, join
 from utils import read_yaml
-from configs import query_path, default_es_port, default_es_host
+from configs import query_path, default_es_port, default_es_host, default_message
 import pandas as pd
 
 from data_storage_configurations import connection_check
