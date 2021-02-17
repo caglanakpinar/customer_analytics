@@ -13,7 +13,7 @@ sys.path.insert(0, parentdir)
 from data_storage_configurations.data_access import GetData
 from data_storage_configurations.sample_data import CreateSampleIndex
 from data_storage_configurations.es_create_index import CreateOrderIndex, CreateDownloadIndex
-from configs import elasticsearch_connection_refused_comment, query_path
+from configs import elasticsearch_connection_refused_comment, query_path, acception_column_count
 from utils import read_yaml
 
 engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
@@ -150,9 +150,9 @@ def connection_check(request, index='orders'):
             if len(gd.data) != 0:
                 _columns = list(gd.data.columns)
                 _df = gd.data
-                if len(_columns) >= 5:
-                    _df = check_data_integration(data=_df, index=index)
-                    accept, message, data, raw_columns = True, 'Connected!', _df.to_dict('results'), list(gd.data.columns)
+                if len(_columns) >= acception_column_count[index]:  # required list; order_id, client, s_start_date, amount, has_purchased
+                    # _df = check_data_integration(data=_df, index=index)
+                    accept, message, data, raw_columns = True, 'Connected!', _df.to_dict('results'), gd.data.columns.values
     except Exception as e:
         print(e)
     return accept, message, data, raw_columns
@@ -160,10 +160,11 @@ def connection_check(request, index='orders'):
 
 def check_data_integration(data, index):
     columns = list(data.columns)
-    for col in sample_data_columns['orders_sample_data'][1:]:
+    for col in sample_data_columns[index + '_sample_data'][1:]:
         if col not in columns:
             data[col] = '....'
-    data = data[sample_data_columns['orders_sample_data'][1:]]
+    data = data[sample_data_columns[index + '_sample_data'][1:]]
+
     return data
 
 def initialize_elastic_search():
