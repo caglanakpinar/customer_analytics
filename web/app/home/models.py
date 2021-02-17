@@ -59,11 +59,12 @@ class RouterRequest:
                 requests[col] = 'None'
         return requests
 
-    def check_for_table_exits(self, table):
+    def check_for_table_exits(self, table, query=None):
         if table not in list(self.tables['name']):
-            print()
-            con.execute(self.sqlite_queries[table])
-            print()
+            if query is None:
+                con.execute(self.sqlite_queries[table])
+            else:
+                con.execute(query)
 
     def data_connections_hold_edit_connection_check(self):
         conns = pd.read_sql(
