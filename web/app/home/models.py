@@ -189,6 +189,7 @@ class RouterRequest:
         self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
 
     def data_connections(self, requests):
+        self.message = default_message
         # for orders index choose ElasticSearch Connection from es_connection table (only status == 'on')
         if requests.get('connect', None) == 'True':
             self.check_for_table_exits(table='data_connection')
