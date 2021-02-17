@@ -26,6 +26,7 @@ class RouterRequest:
         self.active_connections = False
         self.hold_connection = False
         self.recent_connection = False
+        self.message = default_message
 
     def insert_query(self, table, columns, values):
         values = [values[col] for col in columns]
@@ -260,6 +261,7 @@ class RouterRequest:
                 self.data_connections(self.check_for_request(req))
             if template == 'sample-data':
                 self.create_sample_data(self.check_for_request(req))
+        self.message = default_message
 
     def get_default_es_connection_values(self,
                                          tables=None,
@@ -312,6 +314,7 @@ class RouterRequest:
         return values
 
     def fetch_results(self, template):
+        self.message = default_message
         # pages manage-data and sample-data of receiving data
         if template == 'manage-data':
             if 'es_connection' in list(self.tables['name']):
