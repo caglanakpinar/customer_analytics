@@ -44,8 +44,6 @@ data_columns_integration:
   CREATE TABLE data_columns_integration (
   id INTEGER NOT NULL,
   tag VARCHAR,
-  dimension VARCHAR,
-  process VARCHAR,
   order_id VARCHAR,
   client VARCHAR,
   session_start_date VARCHAR,
@@ -54,7 +52,9 @@ data_columns_integration:
   promotion_id VARCHAR,
   date VARCHAR,
   download_date VARCHAR,
+  signup_date VARCHAR,
   data_type VARCHAR,
+  has_purchased VARCHAR,
   PRIMARY KEY (id)
   )
 
