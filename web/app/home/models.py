@@ -442,7 +442,7 @@ class RouterRequest:
                     self.table = None
 
         # page 'add-data-purchase' of receiving data
-        if template == 'add-data-purchase':
+        if template == 'add-data-purchase' or template == 'add-data-action':
             self.active_connections, self.hold_connection, self.recent_connection = True, True, True
             if 'es_connection' in list(self.tables['name']):
                 try:
