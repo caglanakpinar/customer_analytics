@@ -116,3 +116,4 @@ def convert_dt_to_month_str(date):
     :return: string date
     """
     return datetime.datetime.strptime(str(date)[0:7], "%Y-%m")
+

@@ -8,6 +8,7 @@ from os.path import abspath, join, dirname, basename
 from os import listdir
 import plotly.graph_objs as go
 import plotly
+from screeninfo import get_monitors
 
 from utils import convert_to_day
 from configs import time_periods
@@ -54,7 +55,6 @@ charts = {
                                                       size=30,
                                                       color="crimson")),
                               'layout': go.Layout()},
-
              'customer_segmentation': {'trace': go.Treemap(
                  marker_colorscale='Blues',
                  textinfo="label+value+percent parent+percent entry", parents=[""] * 7),
@@ -94,6 +94,7 @@ class SampleData:
     """
     kpis = {}
     _base_path = abspath("").split(basename(abspath("")))[0]
+    _base_path = abspath("") #.split(basename(abspath("")))[0]
     folder = join(_base_path, "exploratory_analysis", 'sample_data', '')
     for f in listdir(dirname(folder)):
         if f.split(".")[1] == 'csv':
@@ -108,9 +109,9 @@ class RealData:
     Just, For now, it is the same as Samples. (Work in progress)
     """
     kpis = {}
-
     ## TODO: data for all kpis will be directly from elasticsearch report index
     _base_path = abspath("").split(basename(abspath("")))[0]
+    _base_path = abspath("") # .split(basename(abspath("")))[0]
     folder = join(_base_path, "exploratory_analysis", 'sample_data', '')
     for f in listdir(dirname(folder)):
         if f.split(".")[1] == 'csv':
@@ -138,6 +139,7 @@ class Charts:
         self.samples = samples
         self.reals = reals
         self.graph_json = {}
+        self.monitor = get_monitors()[0]
 
     def get_data(self, chart):
         """
@@ -151,6 +153,21 @@ class Charts:
         else:
             return self.reals[chart]
 
+    def get_widths_heights(self, target, chart):
+        if chart == 'customer_segmentation':
+            if self.monitor.height == 1080 and self.monitor.width == 1920:
+                width, height = 720, 450
+            if self.monitor.height == 1050 and self.monitor.width == 1680:
+                width, height = 1000, 400
+        if chart == 'rfm':
+            if self.monitor.height == 1080 and self.monitor.width == 1920:
+                width, height = 700, 600
+            if self.monitor.height == 1050 and self.monitor.width == 1680:
+                width, height = 1000, 600
+        if chart in ['customer_segmentation', 'rfm']:
+            charts[target]['charts'][chart]['layout']['width'] = width
+            charts[target]['charts'][chart]['layout']['height'] = height
+
     def get_trace(self, trace, chart):
         """
         fill more variables on charts dictionary. At this process, data sets are stored in the trace.
@@ -159,7 +176,7 @@ class Charts:
         :param chart: e.g. rfm, customer_segmentation, ...
         :return:
         """
-        _data = self.get_data(chart) # collect data
+        _data = self.get_data(chart)  # collect data
         # data for line chart daily(sum), weekly(sum), houry(average), monthly(sum)
         if chart in ["_".join(['orders', t]) for t in time_periods]:
             _data = _data.sort_values(by=chart.split("_")[1], ascending=True)
@@ -199,6 +216,7 @@ class Charts:
         self.graph_json['charts'] = {}
         for c in charts[target]['charts']:
             trace = self.get_trace(charts[target]['charts'][c]['trace'], c)
+            self.get_widths_heights(chart=c, target=target)
             self.graph_json['charts'][c] = json.dumps({'trace': trace,
                                                        'layout': charts[target]['charts'][c]['layout']},
                                                       cls=plotly.utils.PlotlyJSONEncoder)
