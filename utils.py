@@ -1,4 +1,6 @@
 import datetime
+from os.path import join
+import yaml
 
 
 def current_date_to_day():
@@ -69,3 +71,49 @@ def calculate_time_diff(date1, date2, period):
             division = (60 * 60 * 24 * 7)
         diff = int(abs(date1 - date2).total_seconds() / division)
     return diff
+
+
+def convert_to_day(date):
+    """
+    Convert str date to day.
+    :param date: str format; %Y-%m-%d
+    :return:
+    """
+    return datetime.datetime.strptime(str(date)[0:10], "%Y-%m-%d")
+
+
+def read_yaml(directory, filename):
+    """
+    reading yaml file with given directory
+    :param directory:
+    :param filename:
+    :return:
+    """
+    with open(join(directory, "", filename)) as file:
+        docs = yaml.full_load(file)
+    return docs
+
+
+def convert_to_iso_format(date):
+    if len(str(date)) == 10:
+        return datetime.datetime.strptime(str(date)[0:10] + ' 00:00:00', "%Y-%m-%d %H:%M:%S").isoformat()
+    if len(str(date)) == 19:
+        return datetime.datetime.strptime(str(date)[0:10] + ' ' + str(date)[11:19], "%Y-%m-%d %H:%M:%S").isoformat()
+
+
+def get_index_group(index):
+    _index = index.split("_")
+    if len(_index) == 1:
+        return 'main'
+    else:
+        return index.split("_")[-1]
+
+
+def convert_dt_to_month_str(date):
+    """
+    converting date time to str date. e.g; 2020-12-12 00:00:14  - 2020-12-12.
+    :param date: datetime format; %Y-%m-%d %H:%M:%S
+    :return: string date
+    """
+    return datetime.datetime.strptime(str(date)[0:7], "%Y-%m")
+
