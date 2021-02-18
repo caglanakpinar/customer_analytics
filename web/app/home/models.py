@@ -331,10 +331,13 @@ class RouterRequest:
         if req != {}:
             if template == 'manage-data':
                 self.manage_data_integration(self.check_for_request(req))
-            if template == 'add-data-purchase':
-                self.data_connections(self.check_for_request(req))
             if template == 'sample-data':
                 self.create_sample_data(self.check_for_request(req))
+            if template == 'add-data-purchase':
+                self.data_connections(self.check_for_request(req))
+            if template == 'add-data-action':
+                self.data_connections(self.check_for_request(req))
+
         self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
         self.message = default_message
 
