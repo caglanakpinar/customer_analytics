@@ -52,15 +52,6 @@ class RouterRequest:
         _query = _query.replace("\\", "")
         return _query
 
-    def combine_inserting_columns(self, requests, table):
-        for col in self.sqlite_queries['columns'][table]:
-            if col in list(requests.keys()):
-                if requests[col] is None:
-                    requests[col] = 'None'
-            else:
-                requests[col] = 'None'
-        return requests
-
     def check_for_table_exits(self, table, query=None):
         if table not in list(self.tables['name']):
             if query is None:
