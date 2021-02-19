@@ -59,6 +59,14 @@ class RouterRequest:
             else:
                 con.execute(query)
 
+    def check_for_sample_tables(self):
+        accept = False
+        for i in ['', 'action_']:
+            for ind in ['orders_sample_data', 'downloads_sample_data']:
+                if i + 'orders_sample_data' in list(self.tables['name']):
+                    accept = True
+        return accept
+
     def data_connections_hold_edit_connection_check(self):
         conns = pd.read_sql(
                             """ SELECT 
@@ -487,7 +495,7 @@ class RouterRequest:
                     except Exception as e:
                         print("there is no table has been created for now!")
 
-            if 'orders_sample_data' in list(self.tables['name']) or 'downloads_sample_data' in list(self.tables['name']):
+            if self.check_for_sample_tables():
                 query_editing_columns = lambda table, type, tag: """ SELECT columns
                                                                      FROM {} 
                                                                      WHERE data_type = '{}' 
