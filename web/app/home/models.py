@@ -433,13 +433,16 @@ class RouterRequest:
                 except Exception as e:
                     print("there is no table has been created for now!")
 
-            if len(pd.read_sql(
-                    """
-                    SELECT
-                    *
-                    FROM data_connection WHERE process != 'connected' AND dimension = 'sample_data'     
-                    """, con)) != 0:
-                    self.table = None
+            try:
+                if len(pd.read_sql(
+                        """
+                        SELECT
+                        *
+                        FROM data_connection WHERE process != 'connected' AND dimension = 'sample_data'     
+                        """, con)) != 0:
+                        self.table = None
+            except Exception as e:
+                print(print("there is no 'data_connection' table has been created for now!"))
 
         # page 'add-data-purchase' of receiving data
         if template == 'add-data-purchase' or template == 'add-data-action':
