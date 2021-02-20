@@ -95,6 +95,9 @@ class RouterRequest:
                 table = 'downloads_sample_data'
                 self.message['downloads_data'] = data
 
+            if is_for_action:
+                table = 'action_' + table
+
             try:
                 con.execute("DROP TABLE " + table)
             except Exception as e:
