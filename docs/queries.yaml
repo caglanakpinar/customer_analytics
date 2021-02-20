@@ -117,8 +117,6 @@ columns:
     - status
     - cpu_capacity
     - ram_capacity
-    - download_create_es
-    - download_path
     - url
 
   data_connection:
