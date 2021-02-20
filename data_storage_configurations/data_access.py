@@ -70,7 +70,7 @@ class GetData:
                                         nrows=self.nrows, index_col=None, header=0)
                 print(_data.head())
                 print(len(_data.columns))
-                if len(_data.columns) > 2:
+                if len(_data.columns) >= 2:
                     break
         except Exception as e:
             print(e)

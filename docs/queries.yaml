@@ -55,6 +55,8 @@ data_columns_integration:
   signup_date VARCHAR,
   data_type VARCHAR,
   has_purchased VARCHAR,
+  has_action VARCHAR,
+  has_action_date VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -80,6 +82,21 @@ downloads_sample_data:
   PRIMARY KEY (id)
   )
 
+action_orders_sample_data:
+  CREATE TABLE orders_sample_data (
+  id INTEGER NOT NULL,
+  order_id VARCHAR,
+  has_action VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+action_downloads_sample_data:
+  CREATE TABLE orders_sample_data (
+  id INTEGER NOT NULL,
+  client VARCHAR,
+  action_date VARCHAR,
+  PRIMARY KEY (id)
+  )
 
 data_columns:
   CREATE TABLE data_columns (
@@ -100,8 +117,6 @@ columns:
     - status
     - cpu_capacity
     - ram_capacity
-    - download_create_es
-    - download_path
     - url
 
   data_connection:
@@ -125,6 +140,9 @@ columns:
     - downloads_port
     - downloads_host
     - downloads_db
+    - is_action
+    - is_product
+    - is_promotion
 
   data_columns_integration:
     - id
@@ -140,6 +158,8 @@ columns:
     - signup_date
     - data_type
     - has_purchased
+    - has_action
+    - has_action_date
 
   orders_sample_data:
     - id
@@ -162,6 +182,17 @@ columns:
     - tag
     - data_type
     - columns
+
+  action_orders_sample_data:
+    - id
+    - order_id
+    - has_action
+
+  action_downloads_sample_data:
+    - id
+    - client
+    - action_date
+
 
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'

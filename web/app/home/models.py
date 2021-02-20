@@ -52,15 +52,6 @@ class RouterRequest:
         _query = _query.replace("\\", "")
         return _query
 
-    def combine_inserting_columns(self, requests, table):
-        for col in self.sqlite_queries['columns'][table]:
-            if col in list(requests.keys()):
-                if requests[col] is None:
-                    requests[col] = 'None'
-            else:
-                requests[col] = 'None'
-        return requests
-
     def check_for_table_exits(self, table, query=None):
         if table not in list(self.tables['name']):
             if query is None:
@@ -68,14 +59,23 @@ class RouterRequest:
             else:
                 con.execute(query)
 
+    def check_for_sample_tables(self):
+        accept = False
+        for i in ['', 'action_']:
+            for ind in ['orders_sample_data', 'downloads_sample_data']:
+                if i + 'orders_sample_data' in list(self.tables['name']):
+                    accept = True
+        return accept
+
     def data_connections_hold_edit_connection_check(self):
         conns = pd.read_sql(
                             """ SELECT 
                                     id, tag, process 
                                 FROM data_connection 
-                                WHERE process in ('hold', 'edit', 'add_dimension') """, con)
+                                WHERE process in ('hold', 'edit', 'add_dimension', 'add_action') """, con)
         if len(conns) != 0:
-            holds, edits = conns.query("process == ('hold', 'add_dimension')"), conns.query("process == 'edit'")
+            holds = conns.query("process == ('hold', 'add_dimension', 'add_action')")
+            edits = conns.query("process == 'edit'")
             if len(holds) != 0:
                 for _id in list(holds['id'].unique()):
                     con.execute(self.delete_query(table='data_connection', condition=" id = " + str(_id) + " "))
@@ -86,7 +86,7 @@ class RouterRequest:
                                                   values={"process": "connected"},
                                                   condition=" id = '" + str(_id) + "' "))
 
-    def sample_data_insert(self, is_for_orders, data=None):
+    def sample_data_insert(self, is_for_orders, is_for_action=False, data=None):
         if data is not None:
             insert_columns = list(data[0].keys())
             if is_for_orders:
@@ -95,6 +95,9 @@ class RouterRequest:
             else:
                 table = 'downloads_sample_data'
                 self.message['downloads_data'] = data
+
+            if is_for_action:
+                table = 'action_' + table
 
             try:
                 con.execute("DROP TABLE " + table)
@@ -109,14 +112,16 @@ class RouterRequest:
                 except Exception as e:
                     print(e)
 
-    def sample_data_column_insert(self, is_for_orders, tag, columns):
+    def sample_data_column_insert(self, is_for_orders, tag, columns, type=''):
         self.check_for_table_exits(table='data_columns')
         data_type = 'orders' if is_for_orders else 'downloads'
         tag = tag[data_type + '_data_source_tag']
         try:
             con.execute(self.insert_query(table='data_columns',
                                           columns=self.sqlite_queries['columns']['data_columns'][1:],
-                                          values={'tag': tag, 'data_type': data_type, 'columns': "*".join(columns.tolist())}))
+                                          values={'tag': tag,
+                                                  'data_type': type + data_type,
+                                                  'columns': "*".join(columns.tolist())}))
 
         except Exception as e:
             print(e)
@@ -218,12 +223,16 @@ class RouterRequest:
                                           columns=["process"],
                                           values=requests))
 
-        if requests.get('add_dimension', None) == 'True':
+        if requests.get('add_dimension', None) == 'True' or requests.get('add_action', None) == 'True':
             for col in self.sqlite_queries['columns']['data_connection'][1:]:
                 if col not in list(requests.keys()):
                     requests[col] = None
-            requests['process'] = 'add_dimension'
-            requests['dimension'] = 'True'
+            if requests.get('add_dimension', None) == 'True':
+                requests['process'] = 'add_dimension'
+                requests['dimension'] = 'True'
+            if requests.get('add_action', None) == 'True':
+                requests['is_action'] = 'True'
+                requests['process'] = 'add_action'
             requests['tag'] = list(pd.read_sql("SELECT tag FROM data_connection WHERE id = " + str(requests['id']),
                                                con)['tag'])[0]
             self.data_connections_hold_edit_connection_check()
@@ -234,10 +243,14 @@ class RouterRequest:
         if requests.get('delete', None) == 'True':
             con.execute(self.delete_query(table='data_connection', condition=" id = " + str(requests['id'])))
 
-        if requests.get('orders_edit', None) == 'True' or requests.get('downloads_edit', None) == 'True':
+        if requests.get('orders_edit', None) == 'True' or \
+           requests.get('downloads_edit', None) == 'True' or \
+           requests.get('actions_orders_edit', None) == 'True' or \
+           requests.get('actions_downloads_edit', None) == 'True':
             source_tag_name = 'orders_data_source_tag'
-            is_for_orders = False
-            if requests.get('orders_edit', None) == 'True':
+            is_for_orders, is_for_action = False, False
+            type_of_data_type = ''
+            if requests.get('orders_edit', None) == 'True' or requests.get('actions_orders_edit', None) == 'True':
                 source_tag_name = 'downloads_data_source_tag'
                 is_for_orders = True
             tags = pd.read_sql(
@@ -245,21 +258,32 @@ class RouterRequest:
                 SELECT
                 id, tag, process, """ + source_tag_name +
                 """
-                FROM data_connection WHERE process in ('hold', 'edit', 'add_dimension') AND dimension != 'sample_data'
+                FROM data_connection WHERE process in ('hold', 'edit', 'add_dimension', 'add_action') 
+                                          AND dimension != 'sample_data'
                 """, con).tail(1)
             id, process, tag = list(tags['id'])[0], list(tags['process'])[0], list(tags[source_tag_name])[0]
-            if list(tags[source_tag_name])[0] not in ['', 'None', None, 'Null']:
+            requests['process'] = process
+            if requests.get('actions_orders_edit', None) == 'True' or requests.get('actions_downloads_edit', None) == 'True':
+                is_for_action = True
+                type_of_data_type = 'action_'
+                requests['is_action'] = 'True'
                 requests['process'] = 'connected'
             else:
-                requests['process'] = process
+                if list(tags[source_tag_name])[0] not in ['', 'None', None, 'Null']:
+                    requests['process'] = 'connected'
+
             _columns = list(set(list(requests.keys())) & set(self.sqlite_queries['columns']['data_connection'][1:]))
             conn_status, message, data, data_columns = connection_check(request={col: requests[col] for col in _columns},
-                                                                        index='orders' if is_for_orders else 'downloads')
+                                                                        index='orders' if is_for_orders else 'downloads',
+                                                                        type=type_of_data_type)
 
             self.message['orders'] = message if is_for_orders else '....'
             self.message['downloads'] = message if not is_for_orders else '....'
             self.message['orders_columns'] = data_columns if is_for_orders else '....'
             self.message['downloads_columns'] = data_columns if not is_for_orders else '....'
+            if is_for_action:
+                self.message['action_orders'] = message if is_for_orders else '....'
+                self.message['action_downloads'] = message if not is_for_orders else '....'
 
             if conn_status:
                 try:
@@ -270,13 +294,29 @@ class RouterRequest:
                 except Exception as e:
                     print(e)
 
-                self.sample_data_insert(is_for_orders=is_for_orders, data=data)
-                self.sample_data_column_insert(is_for_orders=is_for_orders, tag=requests, columns=data_columns)
+                self.sample_data_insert(is_for_orders=is_for_orders,
+                                        is_for_action=is_for_action,
+                                        data=data)
+                self.sample_data_column_insert(is_for_orders=is_for_orders,
+                                               tag=requests,
+                                               columns=data_columns,
+                                               type=type_of_data_type)
 
-        if requests.get('orders_column_replacement', None) == 'True' or requests.get('downloads_column_replacement', None) == 'True':
+        if requests.get('orders_column_replacement', None) == 'True' or \
+           requests.get('downloads_column_replacement', None) == 'True' or \
+           requests.get('action_orders_column_replacement', None) == 'True' or \
+           requests.get('action_downloads_column_replacement', None) == 'True':
             source_tag_name, data_type, s_table = 'downloads_data_source_tag', 'downloads', 'downloads_sample_data'
+            is_for_action = False
             if requests.get('orders_column_replacement', None) == 'True':
                 source_tag_name, data_type, s_table = 'orders_data_source_tag', 'orders', 'orders_sample_data'
+            if requests.get('action_orders_column_replacement', None) == 'True' or \
+               requests.get('action_downloads_column_replacement', None) == 'True':
+                source_tag_name, data_type = 'downloads_data_source_tag', 'action_downloads'
+                s_table, is_for_action = 'action_downloads_sample_data', True
+                if requests.get('action_orders_column_replacement', None) == 'True':
+                    source_tag_name, data_type,  = 'orders_data_source_tag', 'action_orders'
+                    s_table, is_for_action = 'action_orders_sample_data', True
             id, process, requests['tag'] = self.get_holded_connection(source_tag_name)
             self.check_for_table_exits(table='data_columns_integration')
             data_columns_integration = pd.read_sql(""" SELECT id
@@ -284,7 +324,6 @@ class RouterRequest:
                                                        WHERE tag = '""" + requests['tag'] +
                                                    "'  AND data_type = '" + data_type + "' ",
                                                    con).to_dict('results')
-
             requests['data_type'] = data_type
             if len(data_columns_integration) == 0:  # insert into data_columns_integration
                 for col in self.sqlite_queries['columns']['data_columns_integration'][1:]:
@@ -303,6 +342,7 @@ class RouterRequest:
                 _sample_data_table = pd.read_sql(""" SELECT * FROM  """ + s_table, con)
                 _sample_data_table = _sample_data_table.rename(columns={requests[i]: i for i in requests})
                 self.sample_data_insert(is_for_orders=True if data_type == 'orders' else False,
+                                        is_for_action=is_for_action,
                                         data=_sample_data_table.to_dict('results'))
             except Exception as e:
                 print(e)
@@ -322,7 +362,6 @@ class RouterRequest:
                 con.execute(self.insert_query(table='data_connection',
                                               columns=self.sqlite_queries['columns']['data_connection'][1:],
                                               values=requests))
-                print()
             except Exception as e:
                 print(e)
 
@@ -331,10 +370,13 @@ class RouterRequest:
         if req != {}:
             if template == 'manage-data':
                 self.manage_data_integration(self.check_for_request(req))
-            if template == 'add-data-purchase':
-                self.data_connections(self.check_for_request(req))
             if template == 'sample-data':
                 self.create_sample_data(self.check_for_request(req))
+            if template == 'add-data-purchase':
+                self.data_connections(self.check_for_request(req))
+            if template == 'add-data-action':
+                self.data_connections(self.check_for_request(req))
+
         self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
         self.message = default_message
 
@@ -414,8 +456,8 @@ class RouterRequest:
         if template == 'manage-data':
             if 'es_connection' in list(self.tables['name']):
                 try:
-                    self.table = [pd.read_sql(""" SELECT * FROM es_connection """,
-                                              con).reset_index().tail(5).to_dict('results')]
+                    _table = pd.read_sql("""SELECT * FROM es_connection""", con)
+                    self.table = [_table.reset_index().tail(min(5, len(_table))).to_dict('results')]
                 except Exception as e:
                     print("there is no table has been created for now!")
 
@@ -430,16 +472,19 @@ class RouterRequest:
                 except Exception as e:
                     print("there is no table has been created for now!")
 
-            if len(pd.read_sql(
-                    """
-                    SELECT
-                    *
-                    FROM data_connection WHERE process != 'connected' AND dimension = 'sample_data'     
-                    """, con)) != 0:
-                    self.table = None
+            try:
+                if len(pd.read_sql(
+                        """
+                        SELECT
+                        *
+                        FROM data_connection WHERE process != 'connected' AND dimension = 'sample_data'     
+                        """, con)) != 0:
+                        self.table = None
+            except Exception as e:
+                print(print("there is no 'data_connection' table has been created for now!"))
 
         # page 'add-data-purchase' of receiving data
-        if template == 'add-data-purchase':
+        if template == 'add-data-purchase' or template == 'add-data-action':
             self.active_connections, self.hold_connection, self.recent_connection = True, True, True
             if 'es_connection' in list(self.tables['name']):
                 try:
@@ -455,7 +500,10 @@ class RouterRequest:
                                                             es.tag as tag, 
                                                             data.dimension as dimension,  
                                                             data.orders_data_source_tag, 
-                                                            data.downloads_data_source_tag
+                                                            data.downloads_data_source_tag,
+                                                            data.is_action,
+                                                            data.is_product,
+                                                            data.is_promotion
                                                      FROM es_connection es
                                                      LEFT JOIN data_connection data
                                                      ON es.tag = data.tag
@@ -472,25 +520,30 @@ class RouterRequest:
                         self.table += [pd.read_sql(""" SELECT id,
                                                               tag,
                                                               dimension, 
-                                                              orders_data_source_tag, downloads_data_source_tag, process 
+                                                              orders_data_source_tag, 
+                                                              downloads_data_source_tag, 
+                                                              process,
+                                                              is_action,
+                                                              is_product,
+                                                              is_promotion
                                                         FROM data_connection where process = 'connected' """,
                                                    con).reset_index().tail(5).to_dict('results')]
                     except Exception as e:
                         print("there is no table has been created for now!")
-
                     # check for hold  - edit - add_dimension
                     try:
                         self.table += [pd.read_sql(""" SELECT id,
                                                               tag, 
                                                               dimension, 
-                                                              orders_data_source_tag, downloads_data_source_tag process 
+                                                              orders_data_source_tag, downloads_data_source_tag, process 
                                                         FROM data_connection 
-                                                        WHERE process in ('hold', 'edit', 'add_dimension') """,
+                                                        WHERE process in ('hold', 
+                                                                          'edit', 'add_dimension', 'add_action') """,
                                        con).tail(1).to_dict('results')]
                     except Exception as e:
                         print("there is no table has been created for now!")
 
-            if 'orders_sample_data' in list(self.tables['name']) or 'downloads_sample_data' in list(self.tables['name']):
+            if self.check_for_sample_tables():
                 query_editing_columns = lambda table, type, tag: """ SELECT columns
                                                                      FROM {} 
                                                                      WHERE data_type = '{}' 
@@ -499,30 +552,37 @@ class RouterRequest:
                                                                                 FROM data_connection 
                                                                                 WHERE process in ('hold', 
                                                                                                   'edit', 
-                                                                                                  'add_dimension') LIMIT 1 
+                                                                                                  'add_dimension', 
+                                                                                                  'add_action') LIMIT 1 
                                                                                 )
                                                                 """.format(table, type, tag)
                 main_query = lambda table: """ SELECT * FROM {} """.format(table)
-                # if self.message['orders_data'] == '....':
+                args_creation = lambda type='': {ind: {
+                                                    'table': 'data_columns',
+                                                    'type': type + ind,
+                                                    'tag': ind + '_data_source_tag'} for ind in ['orders', 'downloads'] }
+                sample_data_tables = lambda type='': {'orders': type + 'orders_sample_data',
+                                                      'downloads': type + 'downloads_sample_data'}
+
+                args, sample_tables = args_creation(), sample_data_tables()
+                if template == 'add-data-action':
+                    args, sample_tables = args_creation(type="action_"), sample_data_tables()
+
                 try:
-                    _orders_table = pd.read_sql(main_query('orders_sample_data'), con)
+                    _orders_table = pd.read_sql(main_query(sample_tables['orders']), con)
                     if len(_orders_table) != 0:
                         self.message['orders_data'] = _orders_table.to_dict('results')
-                    self.message['orders_columns'] = array(list(
-                        pd.read_sql(query_editing_columns('data_columns', 'orders', 'orders_data_source_tag'),
-                                    con)['columns'])[0].split("*"))
-
+                    self.message['orders_columns'] = array(list(pd.read_sql(query_editing_columns(**args['orders']),  # 'data_columns', 'orders', 'orders_data_source_tag'
+                                                                con)['columns'])[0].split("*"))
                 except Exception as e:
                     print(e)
 
-                # if self.message['downloads_data'] == '....':
                 try:
-                    _downloads_table = pd.read_sql(main_query('downloads_sample_data'), con)
+                    _downloads_table = pd.read_sql(main_query(sample_tables['downloads']), con)
                     if len(_downloads_table) != 0:
                         self.message['downloads_data'] = _downloads_table.to_dict('results')
-                    self.message['downloads_columns'] = array(list(pd.read_sql(
-                        query_editing_columns('data_columns', 'downloads', 'downloads_data_source_tag'),
-                        con)['columns'])[0].split("*"))
+                    self.message['downloads_columns'] = array(list(pd.read_sql(query_editing_columns(**args['downloads']),
+                                                                   con)['columns'])[0].split("*"))
                 except Exception as e:
                     print(e)
 

@@ -134,7 +134,7 @@ def connection_elasticsearch_check(request):
         return False, 'Connection Failed!', elasticsearch_connection_refused_comment
 
 
-def connection_check(request, index='orders'):
+def connection_check(request, index='orders', type=''):
     """
 
     :param tag: elasticsearch connected tag name
@@ -150,7 +150,7 @@ def connection_check(request, index='orders'):
             if len(gd.data) != 0:
                 _columns = list(gd.data.columns)
                 _df = gd.data
-                if len(_columns) >= acception_column_count[index]:  # required list; order_id, client, s_start_date, amount, has_purchased
+                if len(_columns) >= acception_column_count[type + index]:  # required list; order_id, client, s_start_date, amount, has_purchased
                     # _df = check_data_integration(data=_df, index=index)
                     accept, message, data, raw_columns = True, 'Connected!', _df.to_dict('results'), gd.data.columns.values
     except Exception as e:
