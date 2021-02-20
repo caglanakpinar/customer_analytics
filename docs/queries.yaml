@@ -80,6 +80,21 @@ downloads_sample_data:
   PRIMARY KEY (id)
   )
 
+action_orders_sample_data:
+  CREATE TABLE orders_sample_data (
+  id INTEGER NOT NULL,
+  order_id VARCHAR,
+  has_action VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+action_downloads_sample_data:
+  CREATE TABLE orders_sample_data (
+  id INTEGER NOT NULL,
+  client VARCHAR,
+  action_date VARCHAR,
+  PRIMARY KEY (id)
+  )
 
 data_columns:
   CREATE TABLE data_columns (
@@ -162,6 +177,17 @@ columns:
     - tag
     - data_type
     - columns
+
+  action_orders_sample_data:
+    - id
+    - order_id
+    - has_action
+
+  action_downloads_sample_data:
+    - id
+    - client
+    - action_date
+
 
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'
