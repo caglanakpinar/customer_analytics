@@ -150,7 +150,6 @@ def connection_check(request, index='orders', type=''):
             if len(gd.data) != 0:
                 _columns = list(gd.data.columns)
                 _df = gd.data
-                asd = acception_column_count[type + index]
                 if len(_columns) >= acception_column_count[type + index]:  # required list; order_id, client, s_start_date, amount, has_purchased
                     # _df = check_data_integration(data=_df, index=index)
                     accept, message, data, raw_columns = True, 'Connected!', _df.to_dict('results'), gd.data.columns.values
