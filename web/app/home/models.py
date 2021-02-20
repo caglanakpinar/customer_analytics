@@ -243,10 +243,14 @@ class RouterRequest:
         if requests.get('delete', None) == 'True':
             con.execute(self.delete_query(table='data_connection', condition=" id = " + str(requests['id'])))
 
-        if requests.get('orders_edit', None) == 'True' or requests.get('downloads_edit', None) == 'True':
+        if requests.get('orders_edit', None) == 'True' or \
+           requests.get('downloads_edit', None) == 'True' or \
+           requests.get('actions_orders_edit', None) == 'True' or \
+           requests.get('actions_downloads_edit', None) == 'True':
             source_tag_name = 'orders_data_source_tag'
-            is_for_orders = False
-            if requests.get('orders_edit', None) == 'True':
+            is_for_orders, is_for_action = False, False
+            type_of_data_type = ''
+            if requests.get('orders_edit', None) == 'True' or requests.get('actions_orders_edit', None) == 'True':
                 source_tag_name = 'downloads_data_source_tag'
                 is_for_orders = True
             tags = pd.read_sql(
@@ -254,21 +258,32 @@ class RouterRequest:
                 SELECT
                 id, tag, process, """ + source_tag_name +
                 """
-                FROM data_connection WHERE process in ('hold', 'edit', 'add_dimension') AND dimension != 'sample_data'
+                FROM data_connection WHERE process in ('hold', 'edit', 'add_dimension', 'add_action') 
+                                          AND dimension != 'sample_data'
                 """, con).tail(1)
             id, process, tag = list(tags['id'])[0], list(tags['process'])[0], list(tags[source_tag_name])[0]
-            if list(tags[source_tag_name])[0] not in ['', 'None', None, 'Null']:
+            requests['process'] = process
+            if requests.get('actions_orders_edit', None) == 'True' or requests.get('actions_downloads_edit', None) == 'True':
+                is_for_action = True
+                type_of_data_type = 'action_'
+                requests['is_action'] = 'True'
                 requests['process'] = 'connected'
             else:
-                requests['process'] = process
+                if list(tags[source_tag_name])[0] not in ['', 'None', None, 'Null']:
+                    requests['process'] = 'connected'
+
             _columns = list(set(list(requests.keys())) & set(self.sqlite_queries['columns']['data_connection'][1:]))
             conn_status, message, data, data_columns = connection_check(request={col: requests[col] for col in _columns},
-                                                                        index='orders' if is_for_orders else 'downloads')
+                                                                        index='orders' if is_for_orders else 'downloads',
+                                                                        type=type_of_data_type)
 
             self.message['orders'] = message if is_for_orders else '....'
             self.message['downloads'] = message if not is_for_orders else '....'
             self.message['orders_columns'] = data_columns if is_for_orders else '....'
             self.message['downloads_columns'] = data_columns if not is_for_orders else '....'
+            if is_for_action:
+                self.message['action_orders'] = message if is_for_orders else '....'
+                self.message['action_downloads'] = message if not is_for_orders else '....'
 
             if conn_status:
                 try:
