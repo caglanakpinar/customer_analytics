@@ -500,7 +500,10 @@ class RouterRequest:
                                                             es.tag as tag, 
                                                             data.dimension as dimension,  
                                                             data.orders_data_source_tag, 
-                                                            data.downloads_data_source_tag
+                                                            data.downloads_data_source_tag,
+                                                            data.is_action,
+                                                            data.is_product,
+                                                            data.is_promotion
                                                      FROM es_connection es
                                                      LEFT JOIN data_connection data
                                                      ON es.tag = data.tag
