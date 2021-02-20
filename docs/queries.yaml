@@ -142,6 +142,9 @@ columns:
     - downloads_port
     - downloads_host
     - downloads_db
+    - is_action
+    - is_product
+    - is_promotion
 
   data_columns_integration:
     - id
@@ -157,6 +160,8 @@ columns:
     - signup_date
     - data_type
     - has_purchased
+    - has_action
+    - has_action_date
 
   orders_sample_data:
     - id
