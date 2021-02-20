@@ -517,20 +517,25 @@ class RouterRequest:
                         self.table += [pd.read_sql(""" SELECT id,
                                                               tag,
                                                               dimension, 
-                                                              orders_data_source_tag, downloads_data_source_tag, process 
+                                                              orders_data_source_tag, 
+                                                              downloads_data_source_tag, 
+                                                              process,
+                                                              is_action,
+                                                              is_product,
+                                                              is_promotion
                                                         FROM data_connection where process = 'connected' """,
                                                    con).reset_index().tail(5).to_dict('results')]
                     except Exception as e:
                         print("there is no table has been created for now!")
-
                     # check for hold  - edit - add_dimension
                     try:
                         self.table += [pd.read_sql(""" SELECT id,
                                                               tag, 
                                                               dimension, 
-                                                              orders_data_source_tag, downloads_data_source_tag process 
+                                                              orders_data_source_tag, downloads_data_source_tag, process 
                                                         FROM data_connection 
-                                                        WHERE process in ('hold', 'edit', 'add_dimension') """,
+                                                        WHERE process in ('hold', 
+                                                                          'edit', 'add_dimension', 'add_action') """,
                                        con).tail(1).to_dict('results')]
                     except Exception as e:
                         print("there is no table has been created for now!")
@@ -544,30 +549,37 @@ class RouterRequest:
                                                                                 FROM data_connection 
                                                                                 WHERE process in ('hold', 
                                                                                                   'edit', 
-                                                                                                  'add_dimension') LIMIT 1 
+                                                                                                  'add_dimension', 
+                                                                                                  'add_action') LIMIT 1 
                                                                                 )
                                                                 """.format(table, type, tag)
                 main_query = lambda table: """ SELECT * FROM {} """.format(table)
-                # if self.message['orders_data'] == '....':
+                args_creation = lambda type='': {ind: {
+                                                    'table': 'data_columns',
+                                                    'type': type + ind,
+                                                    'tag': ind + '_data_source_tag'} for ind in ['orders', 'downloads'] }
+                sample_data_tables = lambda type='': {'orders': type + 'orders_sample_data',
+                                                      'downloads': type + 'downloads_sample_data'}
+
+                args, sample_tables = args_creation(), sample_data_tables()
+                if template == 'add-data-action':
+                    args, sample_tables = args_creation(type="action_"), sample_data_tables()
+
                 try:
-                    _orders_table = pd.read_sql(main_query('orders_sample_data'), con)
+                    _orders_table = pd.read_sql(main_query(sample_tables['orders']), con)
                     if len(_orders_table) != 0:
                         self.message['orders_data'] = _orders_table.to_dict('results')
-                    self.message['orders_columns'] = array(list(
-                        pd.read_sql(query_editing_columns('data_columns', 'orders', 'orders_data_source_tag'),
-                                    con)['columns'])[0].split("*"))
-
+                    self.message['orders_columns'] = array(list(pd.read_sql(query_editing_columns(**args['orders']),  # 'data_columns', 'orders', 'orders_data_source_tag'
+                                                                con)['columns'])[0].split("*"))
                 except Exception as e:
                     print(e)
 
-                # if self.message['downloads_data'] == '....':
                 try:
-                    _downloads_table = pd.read_sql(main_query('downloads_sample_data'), con)
+                    _downloads_table = pd.read_sql(main_query(sample_tables['downloads']), con)
                     if len(_downloads_table) != 0:
                         self.message['downloads_data'] = _downloads_table.to_dict('results')
-                    self.message['downloads_columns'] = array(list(pd.read_sql(
-                        query_editing_columns('data_columns', 'downloads', 'downloads_data_source_tag'),
-                        con)['columns'])[0].split("*"))
+                    self.message['downloads_columns'] = array(list(pd.read_sql(query_editing_columns(**args['downloads']),
+                                                                   con)['columns'])[0].split("*"))
                 except Exception as e:
                     print(e)
 
