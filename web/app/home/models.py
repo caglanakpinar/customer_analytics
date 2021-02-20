@@ -108,7 +108,7 @@ class RouterRequest:
                 except Exception as e:
                     print(e)
 
-    def sample_data_column_insert(self, is_for_orders, tag, columns):
+    def sample_data_column_insert(self, is_for_orders, tag, columns, type=''):
         self.check_for_table_exits(table='data_columns')
         data_type = 'orders' if is_for_orders else 'downloads'
         tag = tag[data_type + '_data_source_tag']
