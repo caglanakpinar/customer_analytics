@@ -294,13 +294,29 @@ class RouterRequest:
                 except Exception as e:
                     print(e)
 
-                self.sample_data_insert(is_for_orders=is_for_orders, data=data)
-                self.sample_data_column_insert(is_for_orders=is_for_orders, tag=requests, columns=data_columns)
+                self.sample_data_insert(is_for_orders=is_for_orders,
+                                        is_for_action=is_for_action,
+                                        data=data)
+                self.sample_data_column_insert(is_for_orders=is_for_orders,
+                                               tag=requests,
+                                               columns=data_columns,
+                                               type=type_of_data_type)
 
-        if requests.get('orders_column_replacement', None) == 'True' or requests.get('downloads_column_replacement', None) == 'True':
+        if requests.get('orders_column_replacement', None) == 'True' or \
+           requests.get('downloads_column_replacement', None) == 'True' or \
+           requests.get('action_orders_column_replacement', None) == 'True' or \
+           requests.get('action_downloads_column_replacement', None) == 'True':
             source_tag_name, data_type, s_table = 'downloads_data_source_tag', 'downloads', 'downloads_sample_data'
+            is_for_action = False
             if requests.get('orders_column_replacement', None) == 'True':
                 source_tag_name, data_type, s_table = 'orders_data_source_tag', 'orders', 'orders_sample_data'
+            if requests.get('action_orders_column_replacement', None) == 'True' or \
+               requests.get('action_downloads_column_replacement', None) == 'True':
+                source_tag_name, data_type = 'downloads_data_source_tag', 'action_downloads'
+                s_table, is_for_action = 'action_downloads_sample_data', True
+                if requests.get('action_orders_column_replacement', None) == 'True':
+                    source_tag_name, data_type,  = 'orders_data_source_tag', 'action_orders'
+                    s_table, is_for_action = 'action_orders_sample_data', True
             id, process, requests['tag'] = self.get_holded_connection(source_tag_name)
             self.check_for_table_exits(table='data_columns_integration')
             data_columns_integration = pd.read_sql(""" SELECT id
@@ -308,7 +324,6 @@ class RouterRequest:
                                                        WHERE tag = '""" + requests['tag'] +
                                                    "'  AND data_type = '" + data_type + "' ",
                                                    con).to_dict('results')
-
             requests['data_type'] = data_type
             if len(data_columns_integration) == 0:  # insert into data_columns_integration
                 for col in self.sqlite_queries['columns']['data_columns_integration'][1:]:
@@ -327,6 +342,7 @@ class RouterRequest:
                 _sample_data_table = pd.read_sql(""" SELECT * FROM  """ + s_table, con)
                 _sample_data_table = _sample_data_table.rename(columns={requests[i]: i for i in requests})
                 self.sample_data_insert(is_for_orders=True if data_type == 'orders' else False,
+                                        is_for_action=is_for_action,
                                         data=_sample_data_table.to_dict('results'))
             except Exception as e:
                 print(e)
