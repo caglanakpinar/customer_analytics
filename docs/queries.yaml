@@ -55,6 +55,8 @@ data_columns_integration:
   signup_date VARCHAR,
   data_type VARCHAR,
   has_purchased VARCHAR,
+  has_action VARCHAR,
+  has_action_date VARCHAR,
   PRIMARY KEY (id)
   )
 
