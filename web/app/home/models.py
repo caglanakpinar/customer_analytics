@@ -346,7 +346,6 @@ class RouterRequest:
                 con.execute(self.insert_query(table='data_connection',
                                               columns=self.sqlite_queries['columns']['data_connection'][1:],
                                               values=requests))
-                print()
             except Exception as e:
                 print(e)
 
