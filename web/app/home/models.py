@@ -72,9 +72,10 @@ class RouterRequest:
                             """ SELECT 
                                     id, tag, process 
                                 FROM data_connection 
-                                WHERE process in ('hold', 'edit', 'add_dimension') """, con)
+                                WHERE process in ('hold', 'edit', 'add_dimension', 'add_action') """, con)
         if len(conns) != 0:
-            holds, edits = conns.query("process == ('hold', 'add_dimension')"), conns.query("process == 'edit'")
+            holds = conns.query("process == ('hold', 'add_dimension', 'add_action')")
+            edits = conns.query("process == 'edit'")
             if len(holds) != 0:
                 for _id in list(holds['id'].unique()):
                     con.execute(self.delete_query(table='data_connection', condition=" id = " + str(_id) + " "))
