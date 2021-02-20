@@ -86,7 +86,7 @@ class RouterRequest:
                                                   values={"process": "connected"},
                                                   condition=" id = '" + str(_id) + "' "))
 
-    def sample_data_insert(self, is_for_orders, data=None):
+    def sample_data_insert(self, is_for_orders, is_for_action=False, data=None):
         if data is not None:
             insert_columns = list(data[0].keys())
             if is_for_orders:
