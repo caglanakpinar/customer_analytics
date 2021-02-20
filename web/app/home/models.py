@@ -119,7 +119,9 @@ class RouterRequest:
         try:
             con.execute(self.insert_query(table='data_columns',
                                           columns=self.sqlite_queries['columns']['data_columns'][1:],
-                                          values={'tag': tag, 'data_type': data_type, 'columns': "*".join(columns.tolist())}))
+                                          values={'tag': tag,
+                                                  'data_type': type + data_type,
+                                                  'columns': "*".join(columns.tolist())}))
 
         except Exception as e:
             print(e)
@@ -420,8 +422,8 @@ class RouterRequest:
         if template == 'manage-data':
             if 'es_connection' in list(self.tables['name']):
                 try:
-                    self.table = [pd.read_sql(""" SELECT * FROM es_connection """,
-                                              con).reset_index().tail(5).to_dict('results')]
+                    _table = pd.read_sql("""SELECT * FROM es_connection""", con)
+                    self.table = [_table.reset_index().tail(min(5, len(_table))).to_dict('results')]
                 except Exception as e:
                     print("there is no table has been created for now!")
 
