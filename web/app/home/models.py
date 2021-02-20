@@ -223,12 +223,16 @@ class RouterRequest:
                                           columns=["process"],
                                           values=requests))
 
-        if requests.get('add_dimension', None) == 'True':
+        if requests.get('add_dimension', None) == 'True' or requests.get('add_action', None) == 'True':
             for col in self.sqlite_queries['columns']['data_connection'][1:]:
                 if col not in list(requests.keys()):
                     requests[col] = None
-            requests['process'] = 'add_dimension'
-            requests['dimension'] = 'True'
+            if requests.get('add_dimension', None) == 'True':
+                requests['process'] = 'add_dimension'
+                requests['dimension'] = 'True'
+            if requests.get('add_action', None) == 'True':
+                requests['is_action'] = 'True'
+                requests['process'] = 'add_action'
             requests['tag'] = list(pd.read_sql("SELECT tag FROM data_connection WHERE id = " + str(requests['id']),
                                                con)['tag'])[0]
             self.data_connections_hold_edit_connection_check()
