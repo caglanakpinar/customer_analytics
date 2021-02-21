@@ -4,14 +4,18 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from ml_process.customer_segmentation import CustomerSegmentation
-
+from ml_process.clv_prediction import CLVPrediction
 
 configs = {"date": None,
-           "segmentation": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
+           "time_period": "weekly",
+           "segmentation": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
+           "clv_prediction": {"temporary_export_path": None,
+                              "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
           }
 
 
-mls = {'segmentation': CustomerSegmentation
+mls = {'segmentation': CustomerSegmentation,
+       'clv_prediction': CLVPrediction
       }
 
 # TODO: anomaly detection for cohort
@@ -21,6 +25,7 @@ mls = {'segmentation': CustomerSegmentation
 def create_mls(configs):
     ea = {a: mls[a](**configs[a]) for a in mls}
     ea['segmentation'].execute_customer_segment(start_date=configs['date'])
+    ea['clv_prediction'].execute_clv(start_date=configs['date'], time_period=configs['time_period'])
 
 
 def query_mls(configs, queries, ea):
