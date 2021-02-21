@@ -101,6 +101,7 @@ default_message = {'orders': '....',
                    'downloads_columns': '....',
                    'action_orders': '....',
                    'action_downloads': '....',
+                   'product_orders': '....',
                    }
 
-acception_column_count = {'orders': 5, 'downloads': 2, 'action_orders': 2, 'action_downloads': 2}
+acception_column_count = {'orders': 5, 'downloads': 2, 'action_orders': 2, 'action_downloads': 2, 'product_orders': 4}

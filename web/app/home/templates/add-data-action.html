@@ -12,7 +12,6 @@
 			<h1 class="h3 mb-3">Actions Data Source</h1>
 			<div class="row">
 				<div class="col-md-3 col-xl-2">
-
 					<div class="card">
 						<div class="card-header">
 							<h5 class="card-title mb-0">Sessions & Customers Data Source</h5>
@@ -27,7 +26,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-md-9 col-xl-3">
+				<div class="col-md-8 col-xl-3">
 					<div class="tab-content">
 						<div class="tab-pane fade show active" id="orders_index" role="tabpanel">
 							{% if values['row_active_0']['tag'] != '....' %}
@@ -72,7 +71,6 @@
 																	</div>
 																</div>
 															{% endif %}
-
 															<label class="form-label" for="es_edit">Choose Connection for Editing Dimension</label>
 															{% if values['row_hold_0']['tag'] != '....' %}
 																<select name="id" id="es_edit" class="form-control" >
@@ -188,153 +186,155 @@
 															{% endif %}
 														{% endif %}
 														<div class="mb-3">
-														{% if values['row_active_0']['tag'] != '....' %}
-															<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> Status </label>
-															<label class="form-check">
-																<input class="form-check-input" type="radio" value="add_action" name="process">
-																<span class="badge bg-warning">Add New Action to Session</span>
-															</label>
-															<label class="form-check">
-																<input class="form-check-input" type="radio" value="edit" name="process">
-																<span class="badge bg-success">Edit Action on Session Connection</span>
-															</label>
-															<label class="form-check">
-																<input class="form-check-input" type="radio" value="delete" name="process">
-																<span class="badge bg-danger">Delete Sessions Action Connection</span>
-															</label>
-														{% endif %}
-														{% if values['row_active_0']['tag'] == '....' %}
-															<label class="form-label" for="inputState">Sessions Action Update Connection</label>
-															<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-																<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
-																<div class="alert-icon">
-																	<i class="far fa-fw fa-bell"></i>
+															{% if values['row_active_0']['tag'] != '....' %}
+																<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> Status </label>
+																<label class="form-check">
+																	<input class="form-check-input" type="radio" value="add_action" name="process">
+																	<span class="badge bg-warning">Add New Action to Session</span>
+																</label>
+																<label class="form-check">
+																	<input class="form-check-input" type="radio" value="edit" name="process">
+																	<span class="badge bg-success">Edit Action on Session Connection</span>
+																</label>
+																<label class="form-check">
+																	<input class="form-check-input" type="radio" value="delete" name="process">
+																	<span class="badge bg-danger">Delete Sessions Action Connection</span>
+																</label>
+															{% endif %}
+															{% if values['row_active_0']['tag'] == '....' %}
+																<label class="form-label" for="inputState">Sessions Action Update Connection</label>
+																<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+																	<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
+																	<div class="alert-icon">
+																		<i class="far fa-fw fa-bell"></i>
+																	</div>
+																	<div class="alert-message">
+																		 <strong>Create Data Source!</strong>
+																		<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+																	</div>
 																</div>
-																<div class="alert-message">
-																	 <strong>Create Data Source!</strong>
-																	<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-																</div>
-															</div>
-														{% endif %}
-													</div>
-												</div>
-										</div>
-										{% if values['row_active_0']['tag'] != '....' %}
-											<button type="submit" value="True" class="btn btn-primary">Choose</button>
-										{% endif %}
-										{% if values['row_hold_0']['tag'] != '....' %}
-											<button type="submit" value="True" name="cancel" class="btn btn-primary">Cancel</button>
-										{% endif %}
-									</form>
-								</div>
-							</div>
-								<div class="card">
-									<div class="card-body">
-										<h5 class="card-title">Create Data Source</h5>
-										{% if values['row_hold_0']['process'] == 'edit' %}
-											<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-												<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
-												<div class="alert-icon">
-													<i class="far fa-fw fa-bell"></i>
-												</div>
-												<div class="alert-message">
-													Recently
-													 <strong> UPDATE </strong>  SESSIONS OF ACTION  -<strong>{{ values['row_hold_0']['orders_data_source_tag'] }}</strong>
-													<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-												</div>
-											</div>
-										{% endif %}
-
-										{% if values['row_hold_0']['process'] == 'add_action' %}
-											<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-												<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
-												<div class="alert-icon">
-													<i class="far fa-fw fa-bell"></i>
-												</div>
-												<div class="alert-message">
-													Recently
-													 <strong> ADD SESSIONS of ACTION </strong>  ElasticSearch Connection  -<strong>{{ values['row_hold_0']['tag'] }}</strong>
-													<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-												</div>
-											</div>
-										{% endif %}
-										<form method="POST">
-											{% if values['message']['orders'] == 'Connected!' %}
-												<div class="mb-3">
-													<div class="alert alert-success alert-dismissible" role="alert">
-														<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            											  <span aria-hidden="true">&times;</span>
-            											</button>
-														<div class="alert-message">
-															<h4 class="alert-heading">{{ values['message']['orders'] }}</h4>
-															<p>Aww yeah, you successfully create the Session Of Action connection.
-																You can update your connection from Sessions of Actions Data Source Connection. You can also add new action from there.</p>
-															<hr>
-															<p class="mb-0">Make sure you have select for right Connection Main Or Dimension NOT AND ACTION in order to add new action for sessions.</p>
+															{% endif %}
 														</div>
 													</div>
 												</div>
+											</div>
+											{% if values['row_active_0']['tag'] != '....' %}
+												<button type="submit" value="True" class="btn btn-primary">Choose</button>
 											{% endif %}
-											{% if values['message']['orders'] == 'Connection Failed!' %}
-												<div class="mb-3">
-													<div class="alert alert-danger alert-dismissible" role="alert">
-														<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            											  <span aria-hidden="true">&times;</span>
-            											</button>
-														<div class="alert-message">
-															<h4 class="alert-heading">{{ values['message']['orders'] }}</h4>
-															<p>Something went wrong! Please check you connection parameters.</p>
-															<hr>
-															<p class="mb-0">You can still access the recent connection</p>
-														</div>
-													</div>
-												</div>
+											{% if values['row_hold_0']['tag'] != '....' %}
+												<button type="submit" value="True" name="cancel" class="btn btn-primary">Cancel</button>
 											{% endif %}
-											<div class="mb-3">
-												<label class="form-label" for="inputCity">name data source</label>
-												<input name="orders_data_source_tag" type="text" class="form-control" id="input_name" placeholder="tag name data source" required>
-											</div>
-											<div class="mb-4 col-md-12">
-												<label class="form-label" for="inputState">data source</label>
-												<select size="3" name="orders_data_source_type" id="inputState2"  data-show-content="true" class="form-control" required>
-													<option>postgresql</option>
-													<option>google big query</option>
-													<option>aws redshift</option>
-													<option selected>csv</option>
-													<option>parquet</option>
-													<option>hdf5</option>
-												</select>
-											</div>
-											<div class="mb-3">
-												<label class="form-label">Data Query or Path</label>
-												<textarea name="orders_data_query_path" class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="5"></textarea>
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">user</label>
-												<input name="orders_user" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew">password</label>
-												<input name="orders_password" type="password" class="form-control" id="inputPasswordNew">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">port</label>
-												<input name="orders_port" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">host</label>
-												<input name="orders_host" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">database</label>
-												<input name="orders_db" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<button name="actions_orders_edit" value="True" type="submit" class="btn btn-primary" >Connect</button>
 										</form>
 									</div>
 								</div>
+								{% if values['row_hold_0']['tag'] != '....' %}
+									<div class="card">
+										<div class="card-body">
+											<h5 class="card-title">Create Data Source</h5>
+											{% if values['row_hold_0']['process'] == 'edit' %}
+												<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+													<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
+													<div class="alert-icon">
+														<i class="far fa-fw fa-bell"></i>
+													</div>
+													<div class="alert-message">
+														Recently
+														 <strong> UPDATE </strong>  SESSIONS OF ACTION  -<strong>{{ values['row_hold_0']['orders_data_source_tag'] }}</strong>
+														<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+													</div>
+												</div>
+											{% endif %}
+											{% if values['row_hold_0']['process'] == 'add_action' %}
+												<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+													<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
+													<div class="alert-icon">
+														<i class="far fa-fw fa-bell"></i>
+													</div>
+													<div class="alert-message">
+														Recently
+														 <strong> ADD SESSIONS of ACTION </strong>  ElasticSearch Connection  -<strong>{{ values['row_hold_0']['tag'] }}</strong>
+														<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+													</div>
+												</div>
+											{% endif %}
+											<form method="POST">
+												{% if values['message']['orders'] == 'Connected!' %}
+													<div class="mb-3">
+														<div class="alert alert-success alert-dismissible" role="alert">
+															<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            												  <span aria-hidden="true">&times;</span>
+            												</button>
+															<div class="alert-message">
+																<h4 class="alert-heading">{{ values['message']['orders'] }}</h4>
+																<p>Aww yeah, you successfully create the Session Of Action connection.
+																	You can update your connection from Sessions of Actions Data Source Connection. You can also add new action from there.</p>
+																<hr>
+																<p class="mb-0">Make sure you have select for right Connection Main Or Dimension NOT AND ACTION in order to add new action for sessions.</p>
+															</div>
+														</div>
+													</div>
+												{% endif %}
+												{% if values['message']['orders'] == 'Connection Failed!' %}
+													<div class="mb-3">
+														<div class="alert alert-danger alert-dismissible" role="alert">
+															<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            												  <span aria-hidden="true">&times;</span>
+            												</button>
+															<div class="alert-message">
+																<h4 class="alert-heading">{{ values['message']['orders'] }}</h4>
+																<p>Something went wrong! Please check you connection parameters.</p>
+																<hr>
+																<p class="mb-0">You can still access the recent connection</p>
+															</div>
+														</div>
+													</div>
+												{% endif %}
+												<div class="mb-3">
+													<label class="form-label" for="inputCity">name data source</label>
+													<input name="orders_data_source_tag" type="text" class="form-control" id="input_name" placeholder="tag name data source" required>
+												</div>
+												<div class="mb-4 col-md-12">
+													<label class="form-label" for="inputState">data source</label>
+													<select size="3" name="orders_data_source_type" id="inputState2"  data-show-content="true" class="form-control" required>
+														<option>postgresql</option>
+														<option>google big query</option>
+														<option>aws redshift</option>
+														<option selected>csv</option>
+														<option>parquet</option>
+														<option>hdf5</option>
+													</select>
+												</div>
+												<div class="mb-3">
+													<label class="form-label">Data Query or Path</label>
+													<textarea name="orders_data_query_path" class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="5"></textarea>
+												</div>
+												<div class="mb-3">
+													<label class="form-label" for="inputPasswordNew2">user</label>
+													<input name="orders_user" type="text" class="form-control" id="inputPasswordNew2">
+												</div>
+												<div class="mb-3">
+													<label class="form-label" for="inputPasswordNew">password</label>
+													<input name="orders_password" type="password" class="form-control" id="inputPasswordNew">
+												</div>
+												<div class="mb-3">
+													<label class="form-label" for="inputPasswordNew2">port</label>
+													<input name="orders_port" type="text" class="form-control" id="inputPasswordNew2">
+												</div>
+												<div class="mb-3">
+													<label class="form-label" for="inputPasswordNew2">host</label>
+													<input name="orders_host" type="text" class="form-control" id="inputPasswordNew2">
+												</div>
+												<div class="mb-3">
+													<label class="form-label" for="inputPasswordNew2">database</label>
+													<input name="orders_db" type="text" class="form-control" id="inputPasswordNew2">
+												</div>
+												<button name="actions_orders_edit" value="True" type="submit" class="btn btn-primary" >Connect</button>
+											</form>
+										</div>
+									</div>
+								{% endif %}
 							{% endif %}
-							{% if values['row_active_0']['tag'] == '....' %}
+							{% if values['row_active_0']['tag'] == '....'%}
 								<label class="form-label" for="inputState">Index Update Connection</label>
 								<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
 									<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
@@ -355,199 +355,202 @@
 						<div class="tab-pane fade " id="downloads_index" role="tabpanel">
 							{% if values['row_active_0']['tag'] != '....' %}
 								<div class="card">
-								<div class="card-header">
-									<h5 class="card-title mb-0">Customers of Actions Data Source Connection</h5>
-								</div>
-								<div class="card-body">
-									<form method="POST">
-										<div class="row">
-											<div class="col-md-12">
-												<div class="mb-4 col-md-12">
-													{% if values['row_active_0']['tag'] != '....' %}
-														{% if values['message']['action_downloads'] == 'Connected!' %}
-															<div class="mb-3">
-																<div class="alert alert-success alert-dismissible" role="alert">
-																	<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            														  <span aria-hidden="true">&times;</span>
-            														</button>
-																	<div class="alert-message">
-																		<h4 class="alert-heading">{{ values['message']['downloads'] }}</h4>
-																		<p>Aww yeah, you successfully create the Sessions connection. You can update your connection from 'Data Connection' Tab. You can also add new dimension from there.</p>
-																		<hr>
-																		<p class="mb-0">Make sure you add connection for both 'Sessions' and 'Customers'.</p>
-																	</div>
-																</div>
-															</div>
-															{% endif %}
-															{% if values['message']['action_downloads'] == 'Connection Failed!' %}
+									<div class="card-header">
+										<h5 class="card-title mb-0">Customers of Actions Data Source Connection</h5>
+									</div>
+									<div class="card-body">
+										<form method="POST">
+											<div class="row">
+												<div class="col-md-12">
+													<div class="mb-4 col-md-12">
+														{% if values['row_active_0']['tag'] != '....' %}
+															{% if values['message']['action_downloads'] == 'Connected!' %}
 																<div class="mb-3">
-																	<div class="alert alert-danger alert-dismissible" role="alert">
+																	<div class="alert alert-success alert-dismissible" role="alert">
 																		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
             															  <span aria-hidden="true">&times;</span>
             															</button>
 																		<div class="alert-message">
 																			<h4 class="alert-heading">{{ values['message']['downloads'] }}</h4>
-																			<p>Something went wrong! Please check you Sessions connection parameters.</p>
+																			<p>Aww yeah, you successfully create the Sessions connection. You can update your connection from 'Data Connection' Tab. You can also add new dimension from there.</p>
 																			<hr>
-																			<p class="mb-0">You can still access the recent connection</p>
+																			<p class="mb-0">Make sure you add connection for both 'Sessions' and 'Customers'.</p>
 																		</div>
 																	</div>
 																</div>
+																{% endif %}
+																{% if values['message']['action_downloads'] == 'Connection Failed!' %}
+																	<div class="mb-3">
+																		<div class="alert alert-danger alert-dismissible" role="alert">
+																			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            																  <span aria-hidden="true">&times;</span>
+            																</button>
+																			<div class="alert-message">
+																				<h4 class="alert-heading">{{ values['message']['downloads'] }}</h4>
+																				<p>Something went wrong! Please check you Sessions connection parameters.</p>
+																				<hr>
+																				<p class="mb-0">You can still access the recent connection</p>
+																			</div>
+																		</div>
+																	</div>
+																{% endif %}
 															{% endif %}
+															<label class="form-label" for="es_edit">Choose Connection for Editing Dimension</label>
+															{% if values['row_hold_0']['tag'] != '....' %}
+																<select name="id" id="es_edit" class="form-control" >
+															{% endif %}
+															{% if values['row_hold_0']['tag'] == '....' %}
+																<select name="id" id="es_edit" class="form-control" required>
+															{% endif %}
+																<option></option>
+																{% if values['row_active_0']['tag'] != '....' %}
+																 	{% if values['row_active_0']['dimension'] != 'True' %}
+																		{% if values['row_active_0']['is_action'] == 'True' and values['row_active_0']['downloads_data_source_tag'] != 'None' and values['row_active_0']['is_product'] != 'True' and values['row_active_0']['is_promotion'] != 'True' %}
+																			<option label="ACTION / {{ values['row_active_0']['tag'] }} || DOWNLOAD : {{ values['row_active_0']['downloads_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_0']['is_action'] != 'True' and values['row_active_0']['downloads_data_source_tag'] != 'None' and values['row_active_0']['is_product'] != 'True' and values['row_active_0']['is_promotion'] != 'True' %}
+																			<option label="{{ values['row_active_0']['tag'] }} || DOWNLOAD : {{ values['row_active_0']['downloads_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																	{% if values['row_active_0']['dimension'] == 'True' %}
+																		{% if values['row_active_0']['is_action'] == 'True' and values['row_active_0']['downloads_data_source_tag'] != 'None' and values['row_active_0']['is_product'] != 'True' and values['row_active_0']['is_promotion'] != 'True' %}
+																			<option label="ACTION / DIMENSION / {{ values['row_active_0']['tag'] }} - DOWNLOAD : {{ values['row_active_0']['downloads_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_0']['is_action'] != 'True' and values['row_active_0']['downloads_data_source_tag'] != 'None' and values['row_active_0']['is_product'] != 'True' and values['row_active_0']['is_promotion'] != 'True' %}
+																			<option label="DIMENSION / {{ values['row_active_0']['tag'] }} - DOWNLOAD : {{ values['row_active_0']['downloads_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																{% endif %}
+																{% if values['row_active_1']['tag'] != '....' %}
+																 	{% if values['row_active_1']['dimension'] != 'True' %}
+																		{% if values['row_active_1']['is_action'] == 'True' and values['row_active_1']['downloads_data_source_tag'] != 'None' and values['row_active_1']['is_product'] != 'True' and values['row_active_1']['is_promotion'] != 'True'  %}
+																			<option label="ACTION / {{ values['row_active_1']['tag'] }} || DOWNLOAD : {{ values['row_active_1']['downloads_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_1']['is_action'] != 'True' and values['row_active_1']['downloads_data_source_tag'] != 'None' and values['row_active_1']['is_product'] != 'True' and values['row_active_1']['is_promotion'] != 'True' %}
+																			<option label="{{ values['row_active_1']['tag'] }} || DOWNLOAD : {{ values['row_active_1']['downloads_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																	{% if values['row_active_1']['dimension'] == 'True' %}
+																		{% if values['row_active_1']['is_action'] == 'True' and values['row_active_1']['downloads_data_source_tag'] != 'None' and values['row_active_1']['is_product'] != 'True' and values['row_active_1']['is_promotion'] != 'True' %}
+																			<option label="ACTION / DIMENSION / {{ values['row_active_1']['tag'] }} - DOWNLOAD : {{ values['row_active_1']['downloads_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_1']['is_action'] != 'True' and values['row_active_1']['downloads_data_source_tag'] != 'None' and values['row_active_1']['is_product'] != 'True' and values['row_active_1']['is_promotion'] != 'True' %}
+																			<option label="DIMENSION / {{ values['row_active_1']['tag'] }} - DOWNLOAD : {{ values['row_active_1']['downloads_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																{% endif %}
+																{% if values['row_active_2']['tag'] != '....' %}
+																 	{% if values['row_active_2']['dimension'] != 'True' %}
+																		{% if values['row_active_2']['is_action'] == 'True' and values['row_active_2']['downloads_data_source_tag'] != 'None' and values['row_active_2']['is_product'] != 'True' and values['row_active_2']['is_promotion'] != 'True' %}
+																			<option label="ACTION / {{ values['row_active_2']['tag'] }} || DOWNLOAD : {{ values['row_active_2']['downloads_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_2']['is_action'] != 'True' and values['row_active_2']['downloads_data_source_tag'] != 'None' and values['row_active_2']['is_product'] != 'True' and values['row_active_2']['is_promotion'] != 'True' %}
+																			<option label="{{ values['row_active_2']['tag'] }} || DOWNLOAD : {{ values['row_active_2']['downloads_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																	{% if values['row_active_2']['dimension'] == 'True' %}
+																		{% if values['row_active_2']['is_action'] == 'True' and values['row_active_2']['downloads_data_source_tag'] != 'None' and values['row_active_2']['is_product'] != 'True' and values['row_active_2']['is_promotion'] != 'True' %}
+																			<option label="ACTION / DIMENSION / {{ values['row_active_2']['tag'] }} - DOWNLOAD : {{ values['row_active_2']['downloads_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_2']['is_action'] != 'True' and values['row_active_2']['downloads_data_source_tag'] != 'None' and values['row_active_2']['is_product'] != 'True' and values['row_active_2']['is_promotion'] != 'True' %}
+																			<option label="DIMENSION / {{ values['row_active_2']['tag'] }} - DOWNLOAD : {{ values['row_active_2']['downloads_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																{% endif %}
+																{% if values['row_active_3']['tag'] != '....' %}
+																 	{% if values['row_active_3']['dimension'] != 'True' %}
+																		{% if values['row_active_3']['is_action'] == 'True' and values['row_active_3']['downloads_data_source_tag'] != 'None' and values['row_active_3']['is_product'] != 'True' and values['row_active_3']['is_promotion'] != 'True' %}
+																			<option label="ACTION / {{ values['row_active_3']['tag'] }} || DOWNLOAD : {{ values['row_active_3']['downloads_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_3']['is_action'] != 'True' and values['row_active_3']['downloads_data_source_tag'] != 'None' and values['row_active_3']['is_product'] != 'True' and values['row_active_3']['is_promotion'] != 'True' %}
+																			<option label="{{ values['row_active_3']['tag'] }} || DOWNLOAD : {{ values['row_active_3']['downloads_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																	{% if values['row_active_3']['dimension'] == 'True' %}
+																		{% if values['row_active_3']['is_action'] == 'True' and values['row_active_3']['downloads_data_source_tag'] != 'None' and values['row_active_3']['is_product'] != 'True' and values['row_active_3']['is_promotion'] != 'True' %}
+																			<option label="ACTION / DIMENSION / {{ values['row_active_3']['tag'] }} - DOWNLOAD : {{ values['row_active_3']['downloads_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_3']['is_action'] != 'True' and values['row_active_3']['downloads_data_source_tag'] != 'None' and values['row_active_3']['is_product'] != 'True' and values['row_active_3']['is_promotion'] != 'True' %}
+																			<option label="DIMENSION / {{ values['row_active_3']['tag'] }} - DOWNLOAD : {{ values['row_active_3']['downloads_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																{% endif %}
+																{% if values['row_active_4']['tag'] != '....' %}
+																 	{% if values['row_active_4']['dimension'] != 'True' %}
+																		{% if values['row_active_4']['is_action'] == 'True' and values['row_active_4']['downloads_data_source_tag'] != 'None' and values['row_active_4']['is_product'] != 'True' and values['row_active_4']['is_promotion'] != 'True' %}
+																			<option label="ACTION / {{ values['row_active_4']['tag'] }} || DOWNLOAD : {{ values['row_active_4']['downloads_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_4']['is_action'] != 'True' and values['row_active_4']['downloads_data_source_tag'] != 'None' and values['row_active_4']['is_product'] != 'True' and values['row_active_4']['is_promotion'] != 'True' %}
+																			<option label="{{ values['row_active_4']['tag'] }} || DOWNLOAD : {{ values['row_active_4']['downloads_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																	{% if values['row_active_4']['dimension'] == 'True' %}
+																		{% if values['row_active_4']['is_action'] == 'True' and values['row_active_4']['downloads_data_source_tag'] != 'None' and values['row_active_4']['is_product'] != 'True' and values['row_active_4']['is_promotion'] != 'True' %}
+																			<option label="ACTION / DIMENSION / {{ values['row_active_4']['tag'] }} - DOWNLOAD : {{ values['row_active_4']['downloads_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_4']['is_action'] != 'True' and values['row_active_4']['downloads_data_source_tag'] != 'None' and values['row_active_4']['is_product'] != 'True' and values['row_active_4']['is_promotion'] != 'True' %}
+																			<option label="DIMENSION / {{ values['row_active_4']['tag'] }} - DOWNLOAD : {{ values['row_active_4']['downloads_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+															</select>
 														{% endif %}
-														<label class="form-label" for="es_edit">Choose Connection for Editing Dimension</label>
-														{% if values['row_hold_0']['tag'] != '....' %}
-															<select name="id" id="es_edit" class="form-control" >
+														{% if values['row_active_0']['tag'] == '....' %}
+															<label class="form-label" for="inputState">Sessions Action Update Connection</label>
+															<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+																<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
+																<div class="alert-icon">
+																	<i class="far fa-fw fa-bell"></i>
+																</div>
+																<div class="alert-message">
+																	 <strong>CREATE Data Source!</strong>
+																	<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+																</div>
+															</div>
 														{% endif %}
-														{% if values['row_hold_0']['tag'] == '....' %}
-															<select name="id" id="es_edit" class="form-control" required>
-														{% endif %}
-															<option></option>
+														<div class="mb-3">
 															{% if values['row_active_0']['tag'] != '....' %}
-															 	{% if values['row_active_0']['dimension'] != 'True' %}
-																	{% if values['row_active_0']['is_action'] == 'True' and values['row_active_0']['downloads_data_source_tag'] != 'None' %}
-																		<option label="ACTION / {{ values['row_active_0']['tag'] }} || DOWNLOAD : {{ values['row_active_0']['downloads_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
-																	{% endif %}
-																	{% if values['row_active_0']['is_action'] != 'True' and values['row_active_0']['downloads_data_source_tag'] != 'None' %}
-																		<option label="{{ values['row_active_0']['tag'] }} || DOWNLOAD : {{ values['row_active_0']['downloads_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
-																	{% endif %}
-																{% endif %}
-																{% if values['row_active_0']['dimension'] == 'True' %}
-																	{% if values['row_active_0']['is_action'] == 'True' and values['row_active_0']['downloads_data_source_tag'] != 'None' %}
-																		<option label="ACTION / DIMENSION / {{ values['row_active_0']['tag'] }} - DOWNLOAD : {{ values['row_active_0']['downloads_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
-																	{% endif %}
-																	{% if values['row_active_0']['is_action'] != 'True' and values['row_active_0']['downloads_data_source_tag'] != 'None' %}
-																		<option label="DIMENSION / {{ values['row_active_0']['tag'] }} - DOWNLOAD : {{ values['row_active_0']['downloads_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
-																	{% endif %}
-																{% endif %}
+																<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> Status </label>
+																<label class="form-check">
+																	<input class="form-check-input" type="radio" value="add_action" name="process">
+																	<span class="badge bg-warning">Add New Action for Customers</span>
+																</label>
+																<label class="form-check">
+																	<input class="form-check-input" type="radio" value="edit" name="process">
+																	<span class="badge bg-success">Edit Action for Customers Connection</span>
+																</label>
+																<label class="form-check">
+																	<input class="form-check-input" type="radio" value="delete" name="process">
+																	<span class="badge bg-danger">Delete Customers of Action Connection</span>
+																</label>
 															{% endif %}
-															{% if values['row_active_1']['tag'] != '....' %}
-															 	{% if values['row_active_1']['dimension'] != 'True' %}
-																	{% if values['row_active_1']['is_action'] == 'True' and values['row_active_1']['downloads_data_source_tag'] != 'None' %}
-																		<option label="ACTION / {{ values['row_active_1']['tag'] }} || DOWNLOAD : {{ values['row_active_1']['downloads_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
-																	{% endif %}
-																	{% if values['row_active_1']['is_action'] != 'True' and values['row_active_1']['downloads_data_source_tag'] != 'None' %}
-																		<option label="{{ values['row_active_1']['tag'] }} || DOWNLOAD : {{ values['row_active_1']['downloads_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
-																	{% endif %}
-																{% endif %}
-																{% if values['row_active_1']['dimension'] == 'True' %}
-																	{% if values['row_active_1']['is_action'] == 'True' and values['row_active_1']['downloads_data_source_tag'] != 'None' %}
-																		<option label="ACTION / DIMENSION / {{ values['row_active_1']['tag'] }} - DOWNLOAD : {{ values['row_active_1']['downloads_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
-																	{% endif %}
-																	{% if values['row_active_1']['is_action'] != 'True' and values['row_active_1']['downloads_data_source_tag'] != 'None' %}
-																		<option label="DIMENSION / {{ values['row_active_1']['tag'] }} - DOWNLOAD : {{ values['row_active_1']['downloads_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
-																	{% endif %}
-																{% endif %}
+															{% if values['row_active_0']['tag'] == '....' %}
+																<label class="form-label" for="inputState">Sessions Action Update Connection</label>
+																<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+																	<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
+																	<div class="alert-icon">
+																		<i class="far fa-fw fa-bell"></i>
+																	</div>
+																	<div class="alert-message">
+																		 <strong>Create Data Source!</strong>
+																		<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+																	</div>
+																</div>
 															{% endif %}
-															{% if values['row_active_2']['tag'] != '....' %}
-															 	{% if values['row_active_2']['dimension'] != 'True' %}
-																	{% if values['row_active_2']['is_action'] == 'True' and values['row_active_2']['downloads_data_source_tag'] != 'None' %}
-																		<option label="ACTION / {{ values['row_active_2']['tag'] }} || DOWNLOAD : {{ values['row_active_2']['downloads_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
-																	{% endif %}
-																	{% if values['row_active_2']['is_action'] != 'True' and values['row_active_2']['downloads_data_source_tag'] != 'None' %}
-																		<option label="{{ values['row_active_2']['tag'] }} || DOWNLOAD : {{ values['row_active_2']['downloads_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
-																	{% endif %}
-																{% endif %}
-																{% if values['row_active_2']['dimension'] == 'True' %}
-																	{% if values['row_active_2']['is_action'] == 'True' and values['row_active_2']['downloads_data_source_tag'] != 'None' %}
-																		<option label="ACTION / DIMENSION / {{ values['row_active_2']['tag'] }} - DOWNLOAD : {{ values['row_active_2']['downloads_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
-																	{% endif %}
-																	{% if values['row_active_2']['is_action'] != 'True' and values['row_active_2']['downloads_data_source_tag'] != 'None' %}
-																		<option label="DIMENSION / {{ values['row_active_2']['tag'] }} - DOWNLOAD : {{ values['row_active_2']['downloads_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
-																	{% endif %}
-																{% endif %}
-															{% endif %}
-															{% if values['row_active_3']['tag'] != '....' %}
-															 	{% if values['row_active_3']['dimension'] != 'True' %}
-																	{% if values['row_active_3']['is_action'] == 'True' and values['row_active_3']['downloads_data_source_tag'] != 'None' %}
-																		<option label="ACTION / {{ values['row_active_3']['tag'] }} || DOWNLOAD : {{ values['row_active_3']['downloads_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
-																	{% endif %}
-																	{% if values['row_active_3']['is_action'] != 'True' and values['row_active_3']['downloads_data_source_tag'] != 'None' %}
-																		<option label="{{ values['row_active_3']['tag'] }} || DOWNLOAD : {{ values['row_active_3']['downloads_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
-																	{% endif %}
-																{% endif %}
-																{% if values['row_active_3']['dimension'] == 'True' %}
-																	{% if values['row_active_3']['is_action'] == 'True' and values['row_active_3']['downloads_data_source_tag'] != 'None' %}
-																		<option label="ACTION / DIMENSION / {{ values['row_active_3']['tag'] }} - DOWNLOAD : {{ values['row_active_3']['downloads_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
-																	{% endif %}
-																	{% if values['row_active_3']['is_action'] != 'True' and values['row_active_3']['downloads_data_source_tag'] != 'None' %}
-																		<option label="DIMENSION / {{ values['row_active_3']['tag'] }} - DOWNLOAD : {{ values['row_active_3']['downloads_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
-																	{% endif %}
-																{% endif %}
-															{% endif %}
-															{% if values['row_active_4']['tag'] != '....' %}
-															 	{% if values['row_active_4']['dimension'] != 'True' %}
-																	{% if values['row_active_4']['is_action'] == 'True' and values['row_active_4']['downloads_data_source_tag'] != 'None' %}
-																		<option label="ACTION / {{ values['row_active_4']['tag'] }} || DOWNLOAD : {{ values['row_active_4']['downloads_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
-																	{% endif %}
-																	{% if values['row_active_4']['is_action'] != 'True' and values['row_active_4']['downloads_data_source_tag'] != 'None' %}
-																		<option label="{{ values['row_active_4']['tag'] }} || DOWNLOAD : {{ values['row_active_4']['downloads_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
-																	{% endif %}
-																{% endif %}
-																{% if values['row_active_4']['dimension'] == 'True' %}
-																	{% if values['row_active_4']['is_action'] == 'True' and values['row_active_4']['downloads_data_source_tag'] != 'None' %}
-																		<option label="ACTION / DIMENSION / {{ values['row_active_4']['tag'] }} - DOWNLOAD : {{ values['row_active_4']['downloads_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
-																	{% endif %}
-																	{% if values['row_active_4']['is_action'] != 'True' and values['row_active_4']['downloads_data_source_tag'] != 'None' %}
-																		<option label="DIMENSION / {{ values['row_active_4']['tag'] }} - DOWNLOAD : {{ values['row_active_4']['downloads_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
-																	{% endif %}
-																{% endif %}
-														</select>
-													{% endif %}
-													{% if values['row_active_0']['tag'] == '....' %}
-														<label class="form-label" for="inputState">Sessions Action Update Connection</label>
-														<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-															<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
-															<div class="alert-icon">
-																<i class="far fa-fw fa-bell"></i>
-															</div>
-															<div class="alert-message">
-																 <strong>CREATE Data Source!</strong>
-																<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-															</div>
 														</div>
-													{% endif %}
-												<div class="mb-3">
-													{% if values['row_active_0']['tag'] != '....' %}
-														<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> Status </label>
-														<label class="form-check">
-															<input class="form-check-input" type="radio" value="add_action" name="process">
-															<span class="badge bg-warning">Add New Action for Customers</span>
-														</label>
-														<label class="form-check">
-															<input class="form-check-input" type="radio" value="edit" name="process">
-															<span class="badge bg-success">Edit Action for Customers Connection</span>
-														</label>
-														<label class="form-check">
-															<input class="form-check-input" type="radio" value="delete" name="process">
-															<span class="badge bg-danger">Delete Customers of Action Connection</span>
-														</label>
-													{% endif %}
-													{% if values['row_active_0']['tag'] == '....' %}
-														<label class="form-label" for="inputState">Sessions Action Update Connection</label>
-														<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-															<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
-															<div class="alert-icon">
-																<i class="far fa-fw fa-bell"></i>
-															</div>
-															<div class="alert-message">
-																 <strong>Create Data Source!</strong>
-																<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-															</div>
-														</div>
-													{% endif %}
+													</div>
 												</div>
 											</div>
-										</div>
-										{% if values['row_active_0']['tag'] != '....' %}
-											<button type="submit" value="True" class="btn btn-primary">Choose</button>
-										{% endif %}
-										{% if values['row_hold_0']['tag'] != '....' %}
-											<button type="submit" value="True" name="cancel" class="btn btn-primary">Cancel</button>
-										{% endif %}
-									</form>
+											{% if values['row_active_0']['tag'] != '....' %}
+												<button type="submit" value="True" class="btn btn-primary">Choose</button>
+											{% endif %}
+											{% if values['row_hold_0']['tag'] != '....' %}
+												<button type="submit" value="True" name="cancel" class="btn btn-primary">Cancel</button>
+											{% endif %}
+										</form>
+									</div>
 								</div>
-							</div>
+							{% endif %}
+							{% if values['row_hold_0']['tag'] != '....' %}
 								<div class="card">
 									<div class="card-body">
 										<h5 class="card-title">Create Data Source</h5>
@@ -674,7 +677,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-md-9 col-xl-7">
+				<div class="col-md-10 col-xl-7">
 					<div class="tab-content">
 						<div class="tab-pane fade show active" id="source" role="tabpanel">
 								<div class="card">
@@ -1083,10 +1086,9 @@
 								</div>
 							</div>
 					</div>
-				</div>
-
+				</div
 			</div>
-
+			>
 		</div>
 	</main>
 
