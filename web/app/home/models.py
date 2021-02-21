@@ -61,7 +61,7 @@ class RouterRequest:
 
     def check_for_sample_tables(self):
         accept = False
-        for i in ['', 'action_']:
+        for i in ['', 'action_', 'product_']:
             for ind in ['orders_sample_data', 'downloads_sample_data']:
                 if i + 'orders_sample_data' in list(self.tables['name']):
                     accept = True
@@ -72,9 +72,9 @@ class RouterRequest:
                             """ SELECT 
                                     id, tag, process 
                                 FROM data_connection 
-                                WHERE process in ('hold', 'edit', 'add_dimension', 'add_action') """, con)
+                                WHERE process in ('hold', 'edit', 'add_dimension', 'add_action', 'add_product') """, con)
         if len(conns) != 0:
-            holds = conns.query("process == ('hold', 'add_dimension', 'add_action')")
+            holds = conns.query("process == ('hold', 'add_dimension', 'add_action', 'add_product')")
             edits = conns.query("process == 'edit'")
             if len(holds) != 0:
                 for _id in list(holds['id'].unique()):
@@ -86,7 +86,7 @@ class RouterRequest:
                                                   values={"process": "connected"},
                                                   condition=" id = '" + str(_id) + "' "))
 
-    def sample_data_insert(self, is_for_orders, is_for_action=False, data=None):
+    def sample_data_insert(self, is_for_orders, is_for_action=False, is_for_product=False, data=None):
         if data is not None:
             insert_columns = list(data[0].keys())
             if is_for_orders:
@@ -98,6 +98,9 @@ class RouterRequest:
 
             if is_for_action:
                 table = 'action_' + table
+
+            if is_for_product:
+                table = 'product_' + table
 
             try:
                 con.execute("DROP TABLE " + table)
@@ -132,7 +135,7 @@ class RouterRequest:
             SELECT
             id, tag, process, """ + source_tag_name +
             """
-            FROM data_connection WHERE process in ('hold', 'edit', 'add_dimension') AND dimension != 'sample_data'
+            FROM data_connection WHERE process in ('hold', 'edit', 'add_dimension', 'add_action', 'add_product') AND dimension != 'sample_data'
             """, con).tail(1)
         id, process, source_tag_name = list(tags['id'])[0], list(tags['process'])[0], list(tags[source_tag_name])[0]
         return id, process, source_tag_name
@@ -223,7 +226,7 @@ class RouterRequest:
                                           columns=["process"],
                                           values=requests))
 
-        if requests.get('add_dimension', None) == 'True' or requests.get('add_action', None) == 'True':
+        if requests.get('add_dimension', None) == 'True' or requests.get('add_action', None) == 'True' or requests.get('add_product', None) == 'True':
             for col in self.sqlite_queries['columns']['data_connection'][1:]:
                 if col not in list(requests.keys()):
                     requests[col] = None
@@ -233,6 +236,9 @@ class RouterRequest:
             if requests.get('add_action', None) == 'True':
                 requests['is_action'] = 'True'
                 requests['process'] = 'add_action'
+            if requests.get('add_product', None) == 'True':
+                requests['is_product'] = 'True'
+                requests['process'] = 'add_product'
             requests['tag'] = list(pd.read_sql("SELECT tag FROM data_connection WHERE id = " + str(requests['id']),
                                                con)['tag'])[0]
             self.data_connections_hold_edit_connection_check()
@@ -246,11 +252,14 @@ class RouterRequest:
         if requests.get('orders_edit', None) == 'True' or \
            requests.get('downloads_edit', None) == 'True' or \
            requests.get('actions_orders_edit', None) == 'True' or \
-           requests.get('actions_downloads_edit', None) == 'True':
+           requests.get('actions_downloads_edit', None) == 'True' or \
+           requests.get('products_orders_edit', None) == 'True':
             source_tag_name = 'orders_data_source_tag'
-            is_for_orders, is_for_action = False, False
+            is_for_orders, is_for_action, is_for_product = False, False, False
             type_of_data_type = ''
-            if requests.get('orders_edit', None) == 'True' or requests.get('actions_orders_edit', None) == 'True':
+            if requests.get('orders_edit', None) == 'True' or \
+               requests.get('actions_orders_edit', None) == 'True' or \
+               requests.get('products_orders_edit', None) == 'True':
                 source_tag_name = 'downloads_data_source_tag'
                 is_for_orders = True
             tags = pd.read_sql(
@@ -258,7 +267,8 @@ class RouterRequest:
                 SELECT
                 id, tag, process, """ + source_tag_name +
                 """
-                FROM data_connection WHERE process in ('hold', 'edit', 'add_dimension', 'add_action') 
+                FROM data_connection 
+                WHERE process in ('hold', 'edit', 'add_dimension', 'add_action', 'add_product', 'add_promotion') 
                                           AND dimension != 'sample_data'
                 """, con).tail(1)
             id, process, tag = list(tags['id'])[0], list(tags['process'])[0], list(tags[source_tag_name])[0]
@@ -268,7 +278,12 @@ class RouterRequest:
                 type_of_data_type = 'action_'
                 requests['is_action'] = 'True'
                 requests['process'] = 'connected'
-            else:
+            if requests.get('products_orders_edit', None) == 'True':
+                is_for_product = True
+                type_of_data_type = 'product_'
+                requests['is_product'] = 'True'
+                requests['process'] = 'connected'
+            if requests.get('orders_edit', None) == 'True' or requests.get('downloads_edit', None) == 'True':
                 if list(tags[source_tag_name])[0] not in ['', 'None', None, 'Null']:
                     requests['process'] = 'connected'
 
@@ -284,6 +299,8 @@ class RouterRequest:
             if is_for_action:
                 self.message['action_orders'] = message if is_for_orders else '....'
                 self.message['action_downloads'] = message if not is_for_orders else '....'
+            if is_for_product:
+                self.message['product_orders'] = message
 
             if conn_status:
                 try:
@@ -296,6 +313,7 @@ class RouterRequest:
 
                 self.sample_data_insert(is_for_orders=is_for_orders,
                                         is_for_action=is_for_action,
+                                        is_for_product=is_for_product,
                                         data=data)
                 self.sample_data_column_insert(is_for_orders=is_for_orders,
                                                tag=requests,
@@ -305,9 +323,10 @@ class RouterRequest:
         if requests.get('orders_column_replacement', None) == 'True' or \
            requests.get('downloads_column_replacement', None) == 'True' or \
            requests.get('action_orders_column_replacement', None) == 'True' or \
-           requests.get('action_downloads_column_replacement', None) == 'True':
+           requests.get('action_downloads_column_replacement', None) == 'True' or \
+           requests.get('product_orders_column_replacement', None) == 'True':
             source_tag_name, data_type, s_table = 'downloads_data_source_tag', 'downloads', 'downloads_sample_data'
-            is_for_action = False
+            is_for_action, is_for_product = False, False
             if requests.get('orders_column_replacement', None) == 'True':
                 source_tag_name, data_type, s_table = 'orders_data_source_tag', 'orders', 'orders_sample_data'
             if requests.get('action_orders_column_replacement', None) == 'True' or \
@@ -317,6 +336,9 @@ class RouterRequest:
                 if requests.get('action_orders_column_replacement', None) == 'True':
                     source_tag_name, data_type,  = 'orders_data_source_tag', 'action_orders'
                     s_table, is_for_action = 'action_orders_sample_data', True
+            if requests.get('product_orders_column_replacement', None) == 'True':
+                source_tag_name, data_type, = 'orders_data_source_tag', 'product_orders'
+                s_table, is_for_product = 'product_orders_sample_data', True
             id, process, requests['tag'] = self.get_holded_connection(source_tag_name)
             self.check_for_table_exits(table='data_columns_integration')
             data_columns_integration = pd.read_sql(""" SELECT id
@@ -343,6 +365,7 @@ class RouterRequest:
                 _sample_data_table = _sample_data_table.rename(columns={requests[i]: i for i in requests})
                 self.sample_data_insert(is_for_orders=True if data_type == 'orders' else False,
                                         is_for_action=is_for_action,
+                                        is_for_product=is_for_product,
                                         data=_sample_data_table.to_dict('results'))
             except Exception as e:
                 print(e)
@@ -375,6 +398,8 @@ class RouterRequest:
             if template == 'add-data-purchase':
                 self.data_connections(self.check_for_request(req))
             if template == 'add-data-action':
+                self.data_connections(self.check_for_request(req))
+            if template == 'add-data-product':
                 self.data_connections(self.check_for_request(req))
 
         self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
@@ -484,7 +509,7 @@ class RouterRequest:
                 print(print("there is no 'data_connection' table has been created for now!"))
 
         # page 'add-data-purchase' of receiving data
-        if template == 'add-data-purchase' or template == 'add-data-action':
+        if template == 'add-data-purchase' or template == 'add-data-action' or template == 'add-data-product':
             self.active_connections, self.hold_connection, self.recent_connection = True, True, True
             if 'es_connection' in list(self.tables['name']):
                 try:
@@ -538,7 +563,7 @@ class RouterRequest:
                                                               orders_data_source_tag, downloads_data_source_tag, process 
                                                         FROM data_connection 
                                                         WHERE process in ('hold', 
-                                                                          'edit', 'add_dimension', 'add_action') """,
+                                                                          'edit', 'add_dimension', 'add_action', 'add_product') """,
                                        con).tail(1).to_dict('results')]
                     except Exception as e:
                         print("there is no table has been created for now!")
@@ -553,7 +578,7 @@ class RouterRequest:
                                                                                 WHERE process in ('hold', 
                                                                                                   'edit', 
                                                                                                   'add_dimension', 
-                                                                                                  'add_action') LIMIT 1 
+                                                                                                  'add_action', 'add_product') LIMIT 1 
                                                                                 )
                                                                 """.format(table, type, tag)
                 main_query = lambda table: """ SELECT * FROM {} """.format(table)
@@ -567,6 +592,9 @@ class RouterRequest:
                 args, sample_tables = args_creation(), sample_data_tables()
                 if template == 'add-data-action':
                     args, sample_tables = args_creation(type="action_"), sample_data_tables()
+
+                if template == 'add-data-product':
+                    args, sample_tables = args_creation(type="product_"), sample_data_tables(type="product_")
 
                 try:
                     _orders_table = pd.read_sql(main_query(sample_tables['orders']), con)
