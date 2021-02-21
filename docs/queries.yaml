@@ -57,6 +57,9 @@ data_columns_integration:
   has_purchased VARCHAR,
   has_action VARCHAR,
   has_action_date VARCHAR,
+  product VARCHAR,
+  price VARCHAR,
+  category VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -95,6 +98,16 @@ action_downloads_sample_data:
   id INTEGER NOT NULL,
   client VARCHAR,
   action_date VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+product_orders_sample_data:
+  CREATE TABLE orders_sample_data (
+  id INTEGER NOT NULL,
+  order_id VARCHAR,
+  product VARCHAR,
+  price VARCHAR,
+  category VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -160,6 +173,9 @@ columns:
     - has_purchased
     - has_action
     - has_action_date
+    - product
+    - price
+    - category
 
   orders_sample_data:
     - id
@@ -177,12 +193,6 @@ columns:
     - download_date
     - signup_date
 
-  data_columns:
-    - id
-    - tag
-    - data_type
-    - columns
-
   action_orders_sample_data:
     - id
     - order_id
@@ -193,6 +203,18 @@ columns:
     - client
     - action_date
 
+  product_orders_sample_data:
+    - id
+    - order_id
+    - product
+    - price
+    - category
+
+  data_columns:
+    - id
+    - tag
+    - data_type
+    - columns
 
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'
