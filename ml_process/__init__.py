@@ -29,6 +29,5 @@ def create_mls(configs):
 
 
 def query_mls(configs, queries, ea):
-    print(configs[ea])
     ea = mls[ea](**configs[ea])
     return ea.fetch(**queries)

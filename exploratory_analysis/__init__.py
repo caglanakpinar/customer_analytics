@@ -41,7 +41,6 @@ def create_exploratory_analysis(configs):
 
 
 def query_exploratory_analysis(configs, queries, ea):
-    print(configs[ea])
     ea = exploratory_analysis[ea](**configs[ea])
     return ea.fetch(**queries)
 
