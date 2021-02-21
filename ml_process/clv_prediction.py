@@ -16,7 +16,7 @@ from data_storage_configurations.query_es import QueryES
 class CLVPrediction:
     """
     Customer Lifetime Value Prediction;
-
+    For more information pls check; https://github.com/caglanakpinar/clv_prediction
 
 
     """
@@ -28,11 +28,11 @@ class CLVPrediction:
                  order_index='orders'):
         """
         ******* ******** *****
-        Dimensional Customer Segmentation:
+        Dimensional CLV Prediction:
         Descriptive Statistics must be created individually for dimensions.
         For instance, the Data set contains locations dimension.
         In this case, each location of 'orders' and 'downloads' indexes must be created individually.
-        by using 'download_index' and 'order_index' dimension can be assigned in order to create the Segmentations
+        by using 'download_index' and 'order_index' dimension can be assigned in order to create the CLV Prediction.
 
         download_index; downloads_location1 this will be the location dimension of
                         parameters in order to query downloads indexes; 'location1'.
@@ -59,7 +59,9 @@ class CLVPrediction:
 
     def get_orders_data(self, end_date):
         """
-
+        Purchased orders are collected from Orders Index.
+        Session_start_date, client, payment_amount are needed for initializing CLv Prediciton.
+        :param end_date: final date to start clv prediction
         :return:
         """
         self.query_es = QueryES(port=self.port, host=self.host)
@@ -92,6 +94,12 @@ class CLVPrediction:
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def convert_time_period(self, period):
+        """
+        clv_prediction library takes time-period as week, day, month.
+        This converts the general time-period into the clv_prediction form.
+        :param period: weekly or daily or month.
+        :return: week or day or month
+        """
         if period == 'weekly':
             return 'week'
         if period == 'daily':
@@ -100,6 +108,16 @@ class CLVPrediction:
             return 'month'
 
     def execute_clv(self, start_date, job='train', time_period='weekly'):
+        """
+        1.  train clv prediction models
+            For more details about models pls check; https://github.com/caglanakpinar/clv_prediction
+        2. predict users of feature payment amount via using built models.
+        3. Each model and stored in the directory at elasticsearch folder. After it is used, it is removed.
+
+        :param start_date: date of start for clv prediction
+        :param job: train or prediction
+        :param time_period: weekly, daily, monthly
+        """
         start_date = str(current_date_to_day())[0:10] if start_date is None else start_date
         self.get_orders_data(end_date=start_date)
         self.clv = CLV(customer_indicator="client",
@@ -130,11 +148,16 @@ class CLVPrediction:
                                        time_period=time_period,
                                        date=start_date,
                                        index=self.order_index)
+        try:
+            os.unlink(self.temp_csv_file)
+        except Exception as e:
+            print("no file is observed!!!")
 
-    def fetch(self, end_date=None, time_period='week'):
+    def fetch(self, end_date=None, time_period='weekly'):
         """
-        :param start_date:
-        :param time_period:
+        Collect CLV Prediction results with the given date.
+        :param end_date: final date to start clv prediction
+        :param time_period: weekly or daily or month.
         :return:
         """
 
