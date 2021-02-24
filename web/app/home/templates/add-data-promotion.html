@@ -109,7 +109,7 @@
 																			<option label="PROMOTION / DIMENSION / {{ values['row_active_1']['tag'] }} - ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
 																		{% endif %}
 																		{% if values['row_active_1']['is_promotion'] != 'True' and values['row_active_1']['orders_data_source_tag'] != 'None' and values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' %}
-																			<option label="PROMOTION / {{ values['row_active_1']['tag'] }} - ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
+																			<option label="DIMENSION / {{ values['row_active_1']['tag'] }} - ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
 																		{% endif %}
 																	{% endif %}
 																{% endif %}
