@@ -49,7 +49,6 @@ data_columns_integration:
   session_start_date VARCHAR,
   payment_amount VARCHAR,
   discount_amount VARCHAR,
-  promotion_id VARCHAR,
   date VARCHAR,
   download_date VARCHAR,
   signup_date VARCHAR,
@@ -60,6 +59,7 @@ data_columns_integration:
   product VARCHAR,
   price VARCHAR,
   category VARCHAR,
+  promotion_id VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -108,6 +108,14 @@ product_orders_sample_data:
   product VARCHAR,
   price VARCHAR,
   category VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+promotion_orders_sample_data:
+  CREATE TABLE orders_sample_data (
+  id INTEGER NOT NULL,
+  order_id VARCHAR,
+  promotion_id VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -165,7 +173,6 @@ columns:
     - session_start_date
     - payment_amount
     - discount_amount
-    - promotion_id
     - date
     - download_date
     - signup_date
@@ -176,6 +183,7 @@ columns:
     - product
     - price
     - category
+    - promotion_id
 
   orders_sample_data:
     - id
@@ -209,6 +217,11 @@ columns:
     - product
     - price
     - category
+
+  promotion_orders_sample_data:
+    - id
+    - order_id
+    - promotion_id
 
   data_columns:
     - id
