@@ -1,0 +1,581 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} products data connection {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h1 class="h3 mb-3">Promotion Data Source</h1>
+			<div class="row">
+				<div class="col-md-3 col-xl-2">
+					<div class="card">
+						<div class="card-header">
+							<h5 class="card-title mb-0">Promotion Data Source</h5>
+						</div>
+						<div class="list-group list-group-flush" role="tablist">
+							<a class="list-group-item list-group-item-action active" data-toggle="list" href="#orders_index" role="tab">
+							Promotion Products
+							</a>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-10 col-xl-3">
+					<div class="tab-content">
+						<div class="tab-pane fade show active" id="orders_index" role="tabpanel">
+							{% if values['row_active_0']['tag'] != '....' %}
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title mb-0">Sessions Promotions Data Source Connection</h5>
+									</div>
+									<div class="card-body">
+										<form method="POST">
+											<div class="row">
+												<div class="col-md-12">
+													<div class="mb-3 col-md-12">
+														{% if values['row_active_0']['tag'] != '....' %}
+															{% if values['message']['promotion_orders'] == 'Connected!' %}
+																<div class="mb-3">
+																	<div class="alert alert-success alert-dismissible" role="alert">
+																		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            															  <span aria-hidden="true">&times;</span>
+            															</button>
+																		<div class="alert-message">
+																			<h4 class="alert-heading">{{ values['message']['promotion_orders'] }}</h4>
+																			<p>Aww yeah, you successfully create the Session Of Promotion connection.
+																				You can update your connection from 'Sessions Promotions Data Source Connection'. You can also add new promotions data source from there.</p>
+																			<hr>
+																			<p class="mb-0">Make sure you have select for right Connection Main Or Dimension NOT AND PROMOTION in order to add new promotion data source for sessions.</p>
+																		</div>
+																	</div>
+																</div>
+															{% endif %}
+															{% if values['message']['promotion_orders'] == 'Connection Failed!' %}
+																<div class="mb-3">
+																	<div class="alert alert-danger alert-dismissible" role="alert">
+																		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+																		  <span aria-hidden="true">&times;</span>
+																		</button>
+																		<div class="alert-message">
+																			<h4 class="alert-heading">{{ values['message']['promotion_orders'] }}</h4>
+																			<p>Something went wrong! Please check you Promotion connection parameters.</p>
+																			<hr>
+																			<p class="mb-0">You can still access the recent connection</p>
+																		</div>
+																	</div>
+																</div>
+															{% endif %}
+
+															<label class="form-label" for="es_edit">Choose Connection for Editing Dimension</label>
+															{% if values['row_hold_0']['tag'] != '....' %}
+																<select name="id" id="es_edit" class="form-control" >
+															{% endif %}
+															{% if values['row_hold_0']['tag'] == '....' %}
+																<select name="id" id="es_edit" class="form-control" required>
+															{% endif %}
+																<option></option>
+																{% if values['row_active_0']['tag'] != '....' %}
+																 	{% if values['row_active_0']['dimension'] != 'True' %}
+																		{% if values['row_active_0']['is_promotion'] == 'True' and values['row_active_0']['orders_data_source_tag'] != 'None' and values['row_active_0']['is_action'] != 'True' and values['row_active_0']['is_product'] != 'True' %}
+																			<option label="ACTION / {{ values['row_active_0']['tag'] }} || ORDER : {{ values['row_active_0']['orders_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_0']['is_promotion'] != 'True' and values['row_active_0']['orders_data_source_tag'] != 'None' and values['row_active_0']['is_action'] != 'True' and values['row_active_0']['is_product'] != 'True' %}
+																			<option label="{{ values['row_active_0']['tag'] }} || ORDER : {{ values['row_active_0']['orders_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																	{% if values['row_active_0']['dimension'] == 'True' %}
+																		{% if values['row_active_0']['is_promotion'] == 'True' and values['row_active_0']['orders_data_source_tag'] != 'None' and values['row_active_0']['is_action'] != 'True' and values['row_active_0']['is_product'] != 'True' %}
+																			<option label="ACTION / DIMENSION / {{ values['row_active_0']['tag'] }} - ORDER : {{ values['row_active_0']['orders_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_0']['is_promotion'] != 'True' and values['row_active_0']['orders_data_source_tag'] != 'None' and values['row_active_0']['is_action'] != 'True' and values['row_active_0']['is_product'] != 'True' %}
+																			<option label="DIMENSION / {{ values['row_active_0']['tag'] }} - ORDER : {{ values['row_active_0']['orders_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																{% endif %}
+																{% if values['row_active_1']['tag'] != '....' %}
+																 	{% if values['row_active_1']['dimension'] != 'True' %}
+																		{% if values['row_active_1']['is_promotion'] == 'True' and values['row_active_1']['orders_data_source_tag'] != 'None'  and values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' %}
+																			<option label="PRODUCT / {{ values['row_active_1']['tag'] }} || ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_1']['is_promotion'] != 'True' and values['row_active_1']['orders_data_source_tag'] != 'None' and values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' %}
+																			<option label="{{ values['row_active_1']['tag'] }} || ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																	{% if values['row_active_1']['dimension'] == 'True' %}
+																		{% if values['row_active_1']['is_promotion'] == 'True' and values['row_active_1']['orders_data_source_tag'] != 'None' and values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' %}
+																			<option label="PRODUCT / DIMENSION / {{ values['row_active_1']['tag'] }} - ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_1']['is_promotion'] != 'True' and values['row_active_1']['orders_data_source_tag'] != 'None' and values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' %}
+																			<option label="DIMENSION / {{ values['row_active_1']['tag'] }} - ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																{% endif %}
+																{% if values['row_active_2']['tag'] != '....' %}
+																 	{% if values['row_active_2']['dimension'] != 'True' %}
+																		{% if values['row_active_2']['is_promotion'] == 'True' and values['row_active_2']['orders_data_source_tag'] != 'None' and values['row_active_2']['is_action'] != 'True' and values['row_active_2']['is_product'] != 'True' %}
+																			<option label="PRODUCT / {{ values['row_active_2']['tag'] }} || ORDER : {{ values['row_active_2']['orders_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_2']['is_promotion'] != 'True' and values['row_active_2']['orders_data_source_tag'] != 'None' and values['row_active_2']['is_action'] != 'True' and values['row_active_2']['is_product'] != 'True' %}
+																			<option label="{{ values['row_active_2']['tag'] }} || ORDER : {{ values['row_active_2']['orders_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																	{% if values['row_active_2']['dimension'] == 'True' %}
+																		{% if values['row_active_2']['is_promotion'] == 'True' and values['row_active_2']['orders_data_source_tag'] != 'None' and values['row_active_2']['is_action'] != 'True' and values['row_active_2']['is_product'] != 'True' %}
+																			<option label="PRODUCT / DIMENSION / {{ values['row_active_2']['tag'] }} - ORDER : {{ values['row_active_2']['orders_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_2']['is_promotion'] != 'True' and values['row_active_2']['orders_data_source_tag'] != 'None' and values['row_active_2']['is_action'] != 'True' and values['row_active_2']['is_product'] != 'True' %}
+																			<option label="DIMENSION / {{ values['row_active_2']['tag'] }} - ORDER : {{ values['row_active_2']['orders_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																{% endif %}
+																{% if values['row_active_3']['tag'] != '....' %}
+																 	{% if values['row_active_3']['dimension'] != 'True' %}
+																		{% if values['row_active_3']['is_promotion'] == 'True' and values['row_active_3']['orders_data_source_tag'] != 'None' and values['row_active_3']['is_action'] != 'True' and values['row_active_3']['is_product'] != 'True' %}
+																			<option label="PRODUCT / {{ values['row_active_3']['tag'] }} || ORDER : {{ values['row_active_3']['orders_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_3']['is_promotion'] != 'True' and values['row_active_3']['orders_data_source_tag'] != 'None' and values['row_active_3']['is_action'] != 'True' and values['row_active_3']['is_product'] != 'True' %}
+																			<option label="{{ values['row_active_3']['tag'] }} || ORDER : {{ values['row_active_3']['orders_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																	{% if values['row_active_3']['dimension'] == 'True' %}
+																		{% if values['row_active_3']['is_promotion'] == 'True' and values['row_active_3']['orders_data_source_tag'] != 'None' and values['row_active_3']['is_action'] != 'True' and values['row_active_3']['is_product'] != 'True' %}
+																			<option label="PRODUCT / DIMENSION / {{ values['row_active_3']['tag'] }} - ORDER : {{ values['row_active_3']['orders_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_3']['is_promotion'] != 'True' and values['row_active_3']['orders_data_source_tag'] != 'None' and values['row_active_3']['is_action'] != 'True' and values['row_active_3']['is_product'] != 'True' %}
+																			<option label="DIMENSION / {{ values['row_active_3']['tag'] }} - ORDER : {{ values['row_active_3']['orders_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																{% endif %}
+																{% if values['row_active_4']['tag'] != '....' %}
+																 	{% if values['row_active_4']['dimension'] != 'True' %}
+																		{% if values['row_active_4']['is_promotion'] == 'True' and values['row_active_4']['orders_data_source_tag'] != 'None' and values['row_active_4']['is_action'] != 'True' and values['row_active_4']['is_product'] != 'True' %}
+																			<option label="PRODUCT / {{ values['row_active_4']['tag'] }} || ORDER : {{ values['row_active_4']['orders_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_4']['is_promotion'] != 'True' and values['row_active_4']['orders_data_source_tag'] != 'None' and values['row_active_4']['is_action'] != 'True' and values['row_active_4']['is_product'] != 'True' %}
+																			<option label="{{ values['row_active_4']['tag'] }} || ORDER : {{ values['row_active_4']['orders_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+																	{% if values['row_active_4']['dimension'] == 'True' %}
+																		{% if values['row_active_4']['is_promotion'] == 'True' and values['row_active_4']['orders_data_source_tag'] != 'None' and values['row_active_4']['is_action'] != 'True' and values['row_active_4']['is_product'] != 'True' %}
+																			<option label="PRODUCT / DIMENSION / {{ values['row_active_4']['tag'] }} - ORDER : {{ values['row_active_4']['orders_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
+																		{% endif %}
+																		{% if values['row_active_4']['is_promotion'] != 'True' and values['row_active_4']['orders_data_source_tag'] != 'None' and values['row_active_4']['is_action'] != 'True' and values['row_active_4']['is_product'] != 'True' %}
+																			<option label="DIMENSION / {{ values['row_active_4']['tag'] }} - ORDER : {{ values['row_active_4']['orders_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
+																		{% endif %}
+																	{% endif %}
+
+																</select>
+															{% endif %}
+															{% if values['row_active_0']['tag'] == '....' %}
+																<label class="form-label" for="inputState">Sessions Products Update Connection</label>
+																<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+																	<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
+																	<div class="alert-icon">
+																		<i class="far fa-fw fa-bell"></i>
+																	</div>
+																	<div class="alert-message">
+																		 <strong>CREATE Data Source!</strong>
+																		<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+																	</div>
+																</div>
+															{% endif %}
+														{% endif %}
+														<div class="mb-3">
+														{% if values['row_active_0']['tag'] != '....' %}
+															<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> Status </label>
+															<label class="form-check">
+																<input class="form-check-input" type="radio" value="add_promotion" name="process">
+																<span class="badge bg-warning">Add Promotions to Sessions</span>
+															</label>
+															<label class="form-check">
+																<input class="form-check-input" type="radio" value="edit" name="process">
+																<span class="badge bg-success">Edit Promotions on Session Connection</span>
+															</label>
+															<label class="form-check">
+																<input class="form-check-input" type="radio" value="delete" name="process">
+																<span class="badge bg-danger">Delete Promotions Sessions Connection</span>
+															</label>
+														{% endif %}
+														{% if values['row_active_0']['tag'] == '....' %}
+															<label class="form-label" for="inputState">Promotions Update Connection</label>
+															<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+																<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
+																<div class="alert-icon">
+																	<i class="far fa-fw fa-bell"></i>
+																</div>
+																<div class="alert-message">
+																	 <strong>Create Data Source!</strong>
+																	<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+																</div>
+															</div>
+														{% endif %}
+													</div>
+												</div>
+										</div>
+
+										<div class="col">
+										{% if values['row_active_0']['tag'] != '....' %}
+											<button type="submit" value="True" class="btn btn-primary" style="width:30%;">Choose</button>
+										{% endif %}
+										{% if values['row_hold_0']['tag'] != '....' %}
+											<button type="submit" value="True" name="cancel" class="btn btn-primary" style="width:30%;">Cancel</button>
+										{% endif %}
+										</div>
+									</form>
+								</div>
+								</div>
+								{% if values['row_hold_0']['tag'] != '....' %}
+								<div class="card">
+									<div class="card-body">
+										<h5 class="card-title">Create Data Source</h5>
+										{% if values['row_hold_0']['process'] == 'edit' %}
+											<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+												<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
+												<div class="alert-icon">
+													<i class="far fa-fw fa-bell"></i>
+												</div>
+												<div class="alert-message">
+													Recently
+													 <strong> UPDATE </strong>  PROMOTIONS  -<strong>{{ values['row_hold_0']['orders_data_source_tag'] }}</strong>
+													<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+												</div>
+											</div>
+										{% endif %}
+
+										{% if values['row_hold_0']['process'] == 'add_promotion' %}
+											<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+												<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
+												<div class="alert-icon">
+													<i class="far fa-fw fa-bell"></i>
+												</div>
+												<div class="alert-message">
+													Recently
+													 <strong> ADD PROMOTION </strong>  ElasticSearch Connection  -<strong>{{ values['row_hold_0']['tag'] }}</strong>
+													<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+												</div>
+											</div>
+										{% endif %}
+										<form method="POST">
+											{% if values['message']['orders'] == 'Connected!' %}
+												<div class="mb-3">
+													<div class="alert alert-success alert-dismissible" role="alert">
+														<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            											  <span aria-hidden="true">&times;</span>
+            											</button>
+														<div class="alert-message">
+															<h4 class="alert-heading">{{ values['message']['orders'] }}</h4>
+															<p>Aww yeah, you successfully create the Session Of Promotion connection.
+																You can update your connection from 'Sessions Promotions Data Source Connection'. You can also add new promotions data source from there.</p>
+															<hr>
+															<p class="mb-0">Make sure you have select for right Connection Main Or Dimension NOT AND PROMOTION in order to add new promotion data source for sessions.</p>
+														</div>
+													</div>
+												</div>
+											{% endif %}
+											{% if values['message']['orders'] == 'Connection Failed!' %}
+												<div class="mb-3">
+													<div class="alert alert-danger alert-dismissible" role="alert">
+														<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            											  <span aria-hidden="true">&times;</span>
+            											</button>
+														<div class="alert-message">
+															<h4 class="alert-heading">{{ values['message']['orders'] }}</h4>
+															<p>Something went wrong! Please check you connection parameters.</p>
+															<hr>
+															<p class="mb-0">You can still access the recent connection</p>
+														</div>
+													</div>
+												</div>
+											{% endif %}
+											<div class="mb-3">
+												<label class="form-label" for="inputCity">name data source</label>
+												<input name="orders_data_source_tag" type="text" class="form-control" id="input_name" placeholder="tag name data source" required>
+											</div>
+											<div class="mb-4 col-md-12">
+												<label class="form-label" for="inputState">data source</label>
+												<select size="3" name="orders_data_source_type" id="inputState2"  data-show-content="true" class="form-control" required>
+													<option>postgresql</option>
+													<option>google big query</option>
+													<option>aws redshift</option>
+													<option selected>csv</option>
+													<option>parquet</option>
+													<option>hdf5</option>
+												</select>
+											</div>
+											<div class="mb-3">
+												<label class="form-label">Data Query or Path</label>
+												<textarea name="orders_data_query_path" class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="5"></textarea>
+											</div>
+											<div class="mb-3">
+												<label class="form-label" for="inputPasswordNew2">user</label>
+												<input name="orders_user" type="text" class="form-control" id="inputPasswordNew2">
+											</div>
+											<div class="mb-3">
+												<label class="form-label" for="inputPasswordNew">password</label>
+												<input name="orders_password" type="password" class="form-control" id="inputPasswordNew">
+											</div>
+											<div class="mb-3">
+												<label class="form-label" for="inputPasswordNew2">port</label>
+												<input name="orders_port" type="text" class="form-control" id="inputPasswordNew2">
+											</div>
+											<div class="mb-3">
+												<label class="form-label" for="inputPasswordNew2">host</label>
+												<input name="orders_host" type="text" class="form-control" id="inputPasswordNew2">
+											</div>
+											<div class="mb-3">
+												<label class="form-label" for="inputPasswordNew2">database</label>
+												<input name="orders_db" type="text" class="form-control" id="inputPasswordNew2">
+											</div>
+											<button name="promotions_orders_edit" value="True" type="submit" class="btn btn-primary" >Connect</button>
+										</form>
+									</div>
+								</div>
+								{% endif %}
+							{% endif %}
+							{% if values['row_active_0']['tag'] == '....' %}
+								<label class="form-label" for="inputState">Index Update Connection</label>
+								<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
+									<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
+									<div class="alert-icon">
+										<i class="far fa-fw fa-bell"></i>
+									</div>
+									<div class="alert-message">
+										 <strong>Create Data Source!</strong>
+										<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
+										<small>
+											<a href="add-data-purchase">ElasticSearch Configurations</a>
+										</small>
+									</div>
+								</div>
+								<small><a  href="add-data-purchase">ElasticSearch Configurations</a></small>
+
+
+								{% if values['row_hold_0']['tag'] != '....'  %}
+									<div class="col">
+									{% if values['row_active_0']['tag'] != '....' %}
+										<button type="submit" value="True" class="btn btn-primary" style="width:30%;">Choose</button>
+									{% endif %}
+									{% if values['row_hold_0']['tag'] != '....' %}
+										<button type="submit" value="True" name="cancel" class="btn btn-primary" style="width:30%;">Cancel</button>
+									{% endif %}
+									</div>
+								{% endif %}
+							{% endif %}
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-10 col-xl-7">
+					<div class="tab-content">
+						<div class="tab-pane fade show active" id="orders_index" role="tabpanel">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Products Table</h5>
+
+										{% if values['row_hold_0']['tag'] == '....' %}
+											<h6 class="card-subtitle text-muted">recently <code>Sessions of Products</code> raw data</h6>
+										{% endif %}
+										{% if values['row_hold_0']['tag'] != '....' %}
+											<h6 class="card-subtitle text-muted"> <strong>EDIT -  <code>{{ values['row_hold_0']['tag'] }}</code> raw data</strong>  </h6>
+										{% endif %}
+									</div>
+									{% if values['row_hold_0']['tag'] == '....' %}
+										<div class="card-header" style="width:100%; height:100%">
+											<button class="btn btn-outline-primary" style="width:20%; height:20%" data-toggle="modal" data-target="#please_choose_connection" >Assigned</button>
+											<div class="modal fade" id="please_choose_connection" tabindex="-1" role="dialog" aria-hidden="true">
+												<div class="modal-dialog modal-dialog-centered" role="document">
+													<div class="modal-content">
+														<div class="modal-header">
+															<h5 class="modal-title">Please Connect / Edit Data Source!</h5>
+															<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    										  <span aria-hidden="true">&times;</span>
+                    										</button>
+																</div>
+																<div class="modal-body m-3">
+																	<p class="mb-0">You may not see the correct data in the same columns.
+																					In order to edit the data table, from 'Sessions Products Data Source Connection', choose the connected data source and edit table names.
+																					Don`t forget to press 'Confirm'. Otherwise, you may lose your edited version.
+																					After the updated table is confirmed, 'Cancel' from 'Sessions Products Data Source Connection'. </p>
+																</div>
+																<div class="modal-footer">
+															<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									{% endif %}
+									<form method="POST">
+										{% if values['row_hold_0']['tag'] != '....' %}
+											<div class="card-header" style="width:100%; height:100%">
+												<button name="promotion_orders_column_replacement" value="True" type="submit" class="btn btn-outline-danger" style="width:20%; height:20%" >Confirm</button>
+												<div class="spinner-border spinner-border-sm text-danger mr-10" role="status">
+													<span class="sr-only">Loading...</span>
+												</div>
+											</div>
+										{% endif %}
+										<table class="table table-striped">
+											<thead>
+											<tr>
+											<th style="width:10%;">
+												{% if values['row_hold_0']['tag'] == '....' %}
+													order ID
+												{% endif %}
+												{% if values['row_hold_0']['tag'] != '....' %}
+													<h5 class="modal-title" style="color: green; font-size:16px">order Id</h5>
+													<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_order_id"></i></a>
+													<div class="modal fade" id="update_order_id" tabindex="-1" role="dialog" aria-hidden="true">
+													<div class="modal-dialog" role="document">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h4 class="card-subtitle text-muted"></h4>
+																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+															</div>
+															<div class="modal-body m-3">
+																<div class="card">
+																	<div class="card-body">
+																		<h5 class="card-title">Edit Order-Id Column</h5>
+																			<div class="mb-3">
+																				<select name="order_id" id="order_id_selection" class="form-control" required>
+																					<option value=""><strong>Choose column from Promotions Data Source</strong></option>
+                																	{% for col in values['message']['orders_columns'] %}
+                																	  <option value= "{{ col }}">{{ col }}</option>"
+                																	{% endfor %}
+																				</select>
+																			</div>
+																	</div>
+																</div>
+															</div>
+															<div class="modal-footer">
+																<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
+															</div>
+														</div>
+													</div>
+												</div>
+												{% endif %}
+											</th>
+											<th style="width:10%;">
+												{% if values['row_hold_0']['tag'] == '....' %}
+													Promotion ID
+												{% endif %}
+												{% if values['row_hold_0']['tag'] != '....' %}
+													<h5 class="modal-title" style="color: green; font-size:16px">promotion_id</h5>
+													<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_promotion_id"></i></a>
+													<div class="modal fade" id="update_promotion_id" tabindex="-1" role="dialog" aria-hidden="true">
+													<div class="modal-dialog" role="document">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h4 class="card-subtitle text-muted"></h4>
+																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+															</div>
+															<div class="modal-body m-3">
+																<div class="card">
+																	<div class="card-body">
+																		<h5 class="card-title">Edit Promotion ID Column</h5>
+																			<div class="mb-3">
+																				<select name="promotion_id" id="client_selection" class="form-control" required>
+																					<option value=""><strong>Choose column from Promotions Data Source</strong></option>
+																					{% for col in values['message']['orders_columns'] %}
+																					  <option value= "{{ col }}">{{ col }}</option>"
+																					{% endfor %}
+																				</select>
+																			</div>
+																	</div>
+																</div>
+															</div>
+															<div class="modal-footer">
+																<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
+															</div>
+														</div>
+													</div>
+												</div>
+												{% endif %}
+											</th>
+										</tr>
+											</thead>
+												<tbody>
+										<tr>
+											{% if values['orders_data'] == '....' %}
+												<td>230320403</td>
+												<td>Buy_One_Get_One_free_1</td>
+											{% endif %}
+											{% if values['orders_data'] != '....' %}
+												<td>{{ values['orders_data']['row_orders_data_0']['order_id'] }}</td>
+												<td>{{ values['orders_data']['row_orders_data_0']['promotion_id'] }}</td>
+											{% endif %}
+										</tr>
+										<tr>
+											{% if values['orders_data'] == '....' %}
+												<td>230320400</td>
+												<td>Buy_One_Get_One_free_1_30_discount</td>
+											{% endif %}
+											{% if values['orders_data'] != '....' %}
+												<td>{{ values['orders_data']['row_orders_data_0']['order_id'] }}</td>
+												<td>{{ values['orders_data']['row_orders_data_0']['promotion_id'] }}</td>
+											{% endif %}
+										</tr>
+										<tr>
+											{% if values['orders_data'] == '....' %}
+												<td>230320000</td>
+												<td>20%_discount</td>
+											{% endif %}
+											{% if values['orders_data'] != '....' %}
+												<td>{{ values['orders_data']['row_orders_data_0']['order_id'] }}</td>
+												<td>{{ values['orders_data']['row_orders_data_0']['promotion_id'] }}</td>
+											{% endif %}
+										</tr>
+										<tr>
+											{% if values['orders_data'] == '....' %}
+												<td>277320403</td>
+												<td>Buy_One_Get_One_free_V2</td>
+											{% endif %}
+											{% if values['orders_data'] != '....' %}
+												<td>{{ values['orders_data']['row_orders_data_0']['order_id'] }}</td>
+												<td>{{ values['orders_data']['row_orders_data_0']['promotion_id'] }}</td>
+											{% endif %}
+										</tr>
+										<tr>
+											{% if values['orders_data'] == '....' %}
+												<td>236660403</td>
+												<td>5%_discount</td>
+											{% endif %}
+											{% if values['orders_data'] != '....' %}
+												<td>{{ values['orders_data']['row_orders_data_0']['order_id'] }}</td>
+												<td>{{ values['orders_data']['row_orders_data_0']['promotion_id'] }}</td>
+											{% endif %}
+										</tr>
+										</tbody>
+										</table>
+									</form>
+								</div>
+							</div>
+					</div>
+				</div>
+
+			</div>
+
+
+		</div>
+	</main>
+
+{% endblock content %}
+
+<script>
+function myFunction() {
+  // Get the checkbox
+  var checkBox = document.getElementById("myCheck");
+  // Get the output text
+  var text = document.getElementById("text");
+
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+  } else {
+    text.style.display = "none";
+  }
+}
+</script>
+{% block javascripts %}{% endblock javascripts %}
