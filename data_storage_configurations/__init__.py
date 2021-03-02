@@ -52,8 +52,8 @@ def create_connection_columns(index='orders'):
                                 '_data_query_path', '_password', '_user', '_port', '_host', '_db']]
 
 
-def create_data_access_parameters(connection, index='orders', date=None, test=False):
-    return {'data_source': connection[index + '_data_source_type'],
+def create_data_access_parameters(connection, index='orders', date=None, test=False, columns=None):
+    _ds = {'data_source': connection[index + '_data_source_type'],
             'date': date,
             'data_query_path': connection[index + '_data_query_path'],
             'test': test,
