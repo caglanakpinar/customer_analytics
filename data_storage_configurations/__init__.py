@@ -150,7 +150,8 @@ def get_data_connection_arguments(es_tag, data_config):
     conn = read_sql(
         """
         SELECT  * FROM data_connection  WHERE tag =  '""" + es_tag + "' and process = 'connected'", con)
-    data_config = create_date_structure(conn, data_config)
+    columns = read_sql("SELECT  *  FROM data_columns_integration", con)
+    data_config = create_date_structure(conn, columns, data_config)
     return data_config
 
 
