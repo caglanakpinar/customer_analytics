@@ -122,16 +122,28 @@ def dimension_connection_table_to_dictionary(data_config, main, index, columns):
         data_config[index[1]]['dimensions'].append({m['orders_data_source_tag']: _conn})
     return data_config
 
-            _query = "process == 'connected'"
-            if type[0] == 'dimension':
-                _query += " and "
 
-            for add in datasets:
-                acts = []
-                for a in add[1].to_dict('results'):
-                    acts.append(create_data_access_parameters(a, index=index[1], date=None, test=False))
-                data_config[index[1]][type[0]][add[0]] = acts
-        return data_config
+def create_date_structure(es_tag_connections, columns, data_config):
+    for index in [("orders_data_source_tag", "orders"), ("downloads_data_source_tag", "downloads")]:
+        print()
+        conns = es_tag_connections.query(index[0] + " == " + index[0])
+        _columns = create_connection_columns(index=index[1])
+        _query = " process == 'connected' "
+        main = conns.query(_query + " and dimension == 'None' ")# [_columns]
+        dimensions = conns.query(_query + " and dimension != 'None' ") # [_columns]
+
+        # main connections
+        try:
+            data_config = main_connection_table_to_dictionary(data_config, main, index, columns)
+        except Exception as e:
+            print(e)
+        # dimension connections
+        if len(dimensions) != 0:
+            try:
+                data_config = dimension_connection_table_to_dictionary(data_config, dimensions, index, columns)
+            except Exception as e:
+                print(e)
+    return data_config
 
 
 def get_data_connection_arguments(es_tag, data_config):
