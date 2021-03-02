@@ -17,7 +17,7 @@ elasticsearch_settings = {
                                             "properties": {"date": {"type": "date"},
                                                            "session_start_date": {"type": "date"},
                                                            "discount_amount": {"type": "float"},
-                                                           "purchase_amount": {"type": "float"},
+                                                           "payment_amount": {"type": "float"},
                                                            "actions": {
                                                                "properties": {
                                                                               "has_sessions": {"type": "boolean"},
@@ -102,7 +102,20 @@ default_message = {'orders': '....',
                    'action_orders': '....',
                    'action_downloads': '....',
                    'product_orders': '....',
+                   'schedule': '...',
+                   'schedule_columns': '...',
+                   'schedule_tags': '....',
+                   'logs': '....',
+                   'last_log': '....'
                    }
 
 acception_column_count = {'orders': 5, 'downloads': 2, 'action_orders': 2, 'action_downloads': 2,
                           'product_orders': 4, 'promotion_orders': 2}
+
+schedule_columns = ["ID", "ElasticSearch Tag Name", "Is Dimension Connection", "Process",
+                    "Sessions Connection Tag Name", "Sessions Connection Data Source", "Sessions Connection Data Query/Path",
+                    "Customers Connection Tag Name", "Customers Connection Data Source", "Customers Connection Data Query/Path",
+                    "Is Connection Data Source Of An Action of Sessions/Customers",
+                    "Is Connection Data Source Of Products of Sessions",
+                    "Is Connection Data Source Of Promotions of Sessions",
+                    "Last Time Triggered Scheduling Job", "Schedule Time Period", "Schedule Status", "Has Columns been assigned yet"]

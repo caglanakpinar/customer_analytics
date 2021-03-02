@@ -12,7 +12,8 @@ sys.path.insert(0, parentdir)
 
 from data_storage_configurations.data_access import GetData
 from data_storage_configurations.sample_data import CreateSampleIndex
-from data_storage_configurations.es_create_index import CreateOrderIndex, CreateDownloadIndex
+from data_storage_configurations.es_create_index import CreateIndex
+from data_storage_configurations.schedule_data_integration import Scheduler
 from configs import elasticsearch_connection_refused_comment, query_path, acception_column_count
 from utils import read_yaml
 
@@ -24,31 +25,35 @@ sample_data_columns = read_yaml(query_path, "queries.yaml")['columns']
 
 data_config = {'orders': {'main':
                               {'connection': {},
-                               'actions': {},
-                               'products': {},
-                               'promotion': {}
+                               'action': [],
+                               'product': [],
+                               'promotion': []
                                },
-                          'dimensions': {'connection': {},
-                                         'actions': {},
-                                         'products': {},
-                                         'promotion': {}
-                                         }
+                          'dimensions': [{'connection': {},
+                                          'action': [],
+                                          'product': [],
+                                          'promotion': []
+                                          }
+                                         ]
                           },
                'downloads': {'main': {'connection': {},
-                                      'actions': {}
+                                      'action': []
                                       },
-                             'dimensions': {'connection': {},
-                                            'actions': {}}}}
+                             'dimensions': [{'connection': {},
+                                             'action': []
+                                             }
+                                            ]
+                             }
+               }
 
 
 def create_connection_columns(index='orders'):
-    return zip([index + i for i in ['_data_source_tag', '_data_source_type',
-                                    '_data_query_path', '_password', '_user', '_port', '_host', '_db']],
-               )
+    return [index + i for i in ['_data_source_tag', '_data_source_type',
+                                '_data_query_path', '_password', '_user', '_port', '_host', '_db']]
 
 
-def create_data_access_parameters(connection, index='orders', date=None, test=False):
-    return {'data_source': connection[index + '_data_source_type'],
+def create_data_access_parameters(connection, index='orders', date=None, test=False, columns=None):
+    _ds = {'data_source': connection[index + '_data_source_type'],
             'date': date,
             'data_query_path': connection[index + '_data_query_path'],
             'test': test,
@@ -57,47 +62,96 @@ def create_data_access_parameters(connection, index='orders', date=None, test=Fa
                        'password': connection[index + '_password'],
                        'user': connection[index + '_user'], 'db': connection[index + '_db']}
             }
+    if columns is not None:
+        _ds['columns'] = columns
+    return _ds
 
 
-def create_date_structure(es_tag_connections, data_config):
+def main_connection_table_to_dictionary(data_config, main, index, columns):
+    for m in main.to_dict('results'):
+        try:
+            _cols = columns[columns['tag'] == m[index[0]]].to_dict('results')[-1]
+        except Exception as e:
+            _cols = []
+        if len(_cols) != 0:
+            if 'True' not in [m[i] for i in ['is_action', 'is_product', 'is_promotion']]:
+                data_config[index[1]]['main']['connection'] = create_data_access_parameters(m,
+                                                                                            index=index[1], date=None,
+                                                                                            test=False, columns=_cols)
+            else:
+                _type = None
+                if m['is_action'] == 'True':
+                    _type = 'action'
+                if m['is_product'] == 'True' and index[1] == 'orders':
+                    _type = 'product'
+                if m['is_promotion'] == 'True' and index[1] == 'orders':
+                    _type = 'promotion'
+                if _type:
+                    data_config[index[1]]['main'][_type].append(create_data_access_parameters(m,
+                                                                                              index=index[1],
+                                                                                              date=None,
+                                                                                              test=False,
+                                                                                              columns=_cols))
+    return data_config
+
+
+def dimension_connection_table_to_dictionary(data_config, main, index, columns):
+    dimension_main = main.query("is_action == 'None' and is_product == 'None' and is_promotion == 'None'")
+    additional_ds = {'action': main.query("is_action == 'True'"), 'product': main.query("is_action == 'True'"),
+                     'promotion': main.query("is_promotion == 'True'")}
+    _conn_default = data_config[index[1]]['dimensions'][0]
+    data_config[index[1]]['dimensions'] = []
+    for m in dimension_main.to_dict('results'):
+        _conn = _conn_default
+        _cols_dim = columns[columns['tag'] == m[index[0]]].to_dict('results')[-1]
+        _conn['connection'] = create_data_access_parameters(m, index=index[1], date=None, test=False, columns=_cols_dim)
+        # additional data sources
+        for add in additional_ds:
+            if index[1] == 'orders':
+                _add_ds = additional_ds[add]
+            else:
+                _add_ds = additional_ds[add] if add == 'action' else []
+            if len(_add_ds) != 0:
+                _c = _add_ds[_add_ds['dimension'] == m['id']].to_dict('results')
+                if len(_c) != 0:
+                    _conn[add] = []
+                    for _a in _c:
+                        _cols_dim_add = columns[columns['tag'] == m[index[0]]].to_dict('results')[-1]
+                        _conn[add].append(create_data_access_parameters(_a, index=index[1],
+                                                                        date=None, test=False, columns=_cols_dim_add))
+        data_config[index[1]]['dimensions'].append({m['orders_data_source_tag']: _conn})
+    return data_config
+
+
+def create_date_structure(es_tag_connections, columns, data_config):
     for index in [("orders_data_source_tag", "orders"), ("downloads_data_source_tag", "downloads")]:
+        print()
         conns = es_tag_connections.query(index[0] + " == " + index[0])
         _columns = create_connection_columns(index=index[1])
-        _query = " and ".join(
-            " == ".join(zip(["is_action", "dimension", "is_product", "is_promotion"], ["'None'"] * 4)))
-        _query_dimension = _query + "process == 'add_dimension'"
-        main = conns.query(_query)[_columns]
-        dimensions = conns.query(_query_dimension)[_columns]
-        actions = conns.query("is_action == 'True'")[_columns]
-        products = conns.query("is_product == 'True'")[_columns]
-        promotions = conns.query("is_promotion == 'True'")[_columns]
+        _query = " process == 'connected' "
+        main = conns.query(_query + " and dimension == 'None' ")# [_columns]
+        dimensions = conns.query(_query + " and dimension != 'None' ") # [_columns]
 
-        for type in [('main', 0)] + list(zip(['dimension'] * len(dimensions), list(range(len(dimensions))))):
-            _data = main.to_dict('results')[0] if type[1] == 'main' else dimensions.to_dict('results')[type[1]]
-            data_config[index[1]][type[0]]['connection'] = create_data_access_parameters(_data,
-                                                                                      index=index[1], date=None,
-                                                                                      test=False)
-            datasets = [('actions', actions.query(_query))]
-            if index[1] == 'orders':
-                datasets += [('products', products.query(_query)), ('promotions', promotions.query(_query))]
-
-            _query = "process == 'connected'"
-            if type[0] == 'dimension':
-                _query += " and "
-
-            for add in datasets:
-                acts = []
-                for a in add[1].to_dict('results'):
-                    acts.append(create_data_access_parameters(a, index=index[1], date=None, test=False))
-                data_config[index[1]][type[0]][add[0]] = acts
-        return data_config
+        # main connections
+        try:
+            data_config = main_connection_table_to_dictionary(data_config, main, index, columns)
+        except Exception as e:
+            print(e)
+        # dimension connections
+        if len(dimensions) != 0:
+            try:
+                data_config = dimension_connection_table_to_dictionary(data_config, dimensions, index, columns)
+            except Exception as e:
+                print(e)
+    return data_config
 
 
 def get_data_connection_arguments(es_tag, data_config):
     conn = read_sql(
         """
         SELECT  * FROM data_connection  WHERE tag =  '""" + es_tag + "' and process = 'connected'", con)
-    data_config = create_date_structure(conn, data_config)
+    columns = read_sql("SELECT  *  FROM data_columns_integration", con)
+    data_config = create_date_structure(conn, columns, data_config)
     return data_config
 
 
@@ -106,7 +160,8 @@ def create_index(tag):
 
     :return:
     """
-
+    s = Scheduler(es_tag=tag, data_connection_structure=get_data_connection_arguments(tag, data_config))
+    s.run_schedule_on_thread()
 
 def create_sample_data(tag):
     """

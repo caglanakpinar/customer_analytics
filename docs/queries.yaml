@@ -63,6 +63,19 @@ data_columns_integration:
   PRIMARY KEY (id)
   )
 
+schedule_data:
+  CREATE TABLE schedule_data (
+  id INTEGER NOT NULL,
+  tag VARCHAR,
+  schedule_tag VARCHAR,
+  time_period VARCHAR,
+  status VARCHAR,
+  is_mlworks VARCHAR,
+  is_exploratory VARCHAR,
+  max_date_of_order_data VARCHAR,
+  PRIMARY KEY (id)
+  )
+
 orders_sample_data:
   CREATE TABLE orders_sample_data (
   id INTEGER NOT NULL,
@@ -125,6 +138,15 @@ data_columns:
   tag VARCHAR,
   data_type VARCHAR,
   columns VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+logs:
+  CREATE TABLE logs (
+  id INTEGER NOT NULL,
+  page VARCHAR,
+  color VARCHAR,
+  info VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -228,6 +250,22 @@ columns:
     - tag
     - data_type
     - columns
+
+  schedule_data:
+    - id
+    - tag
+    - schedule_tag
+    - time_period
+    - status
+    - is_mlworks
+    - is_exploratory
+    - max_date_of_order_data
+
+  logs:
+    - id
+    - page
+    - color
+    - info
 
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'
