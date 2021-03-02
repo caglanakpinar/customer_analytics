@@ -67,29 +67,60 @@ def create_data_access_parameters(connection, index='orders', date=None, test=Fa
     return _ds
 
 
+def main_connection_table_to_dictionary(data_config, main, index, columns):
+    for m in main.to_dict('results'):
+        try:
+            _cols = columns[columns['tag'] == m[index[0]]].to_dict('results')[-1]
+        except Exception as e:
+            _cols = []
+        if len(_cols) != 0:
+            if 'True' not in [m[i] for i in ['is_action', 'is_product', 'is_promotion']]:
+                data_config[index[1]]['main']['connection'] = create_data_access_parameters(m,
+                                                                                            index=index[1], date=None,
+                                                                                            test=False, columns=_cols)
+            else:
+                _type = None
+                if m['is_action'] == 'True':
+                    _type = 'action'
+                if m['is_product'] == 'True' and index[1] == 'orders':
+                    _type = 'product'
+                if m['is_promotion'] == 'True' and index[1] == 'orders':
+                    _type = 'promotion'
+                if _type:
+                    data_config[index[1]]['main'][_type].append(create_data_access_parameters(m,
+                                                                                              index=index[1],
+                                                                                              date=None,
+                                                                                              test=False,
+                                                                                              columns=_cols))
+    return data_config
 
 
-def create_date_structure(es_tag_connections, data_config):
-    for index in [("orders_data_source_tag", "orders"), ("downloads_data_source_tag", "downloads")]:
-        conns = es_tag_connections.query(index[0] + " == " + index[0])
-        _columns = create_connection_columns(index=index[1])
-        _query = " and ".join(
-            " == ".join(zip(["is_action", "dimension", "is_product", "is_promotion"], ["'None'"] * 4)))
-        _query_dimension = _query + "process == 'add_dimension'"
-        main = conns.query(_query)[_columns]
-        dimensions = conns.query(_query_dimension)[_columns]
-        actions = conns.query("is_action == 'True'")[_columns]
-        products = conns.query("is_product == 'True'")[_columns]
-        promotions = conns.query("is_promotion == 'True'")[_columns]
-
-        for type in [('main', 0)] + list(zip(['dimension'] * len(dimensions), list(range(len(dimensions))))):
-            _data = main.to_dict('results')[0] if type[1] == 'main' else dimensions.to_dict('results')[type[1]]
-            data_config[index[1]][type[0]]['connection'] = create_data_access_parameters(_data,
-                                                                                      index=index[1], date=None,
-                                                                                      test=False)
-            datasets = [('actions', actions.query(_query))]
+def dimension_connection_table_to_dictionary(data_config, main, index, columns):
+    dimension_main = main.query("is_action == 'None' and is_product == 'None' and is_promotion == 'None'")
+    additional_ds = {'action': main.query("is_action == 'True'"), 'product': main.query("is_action == 'True'"),
+                     'promotion': main.query("is_promotion == 'True'")}
+    _conn_default = data_config[index[1]]['dimensions'][0]
+    data_config[index[1]]['dimensions'] = []
+    for m in dimension_main.to_dict('results'):
+        _conn = _conn_default
+        _cols_dim = columns[columns['tag'] == m[index[0]]].to_dict('results')[-1]
+        _conn['connection'] = create_data_access_parameters(m, index=index[1], date=None, test=False, columns=_cols_dim)
+        # additional data sources
+        for add in additional_ds:
             if index[1] == 'orders':
-                datasets += [('products', products.query(_query)), ('promotions', promotions.query(_query))]
+                _add_ds = additional_ds[add]
+            else:
+                _add_ds = additional_ds[add] if add == 'action' else []
+            if len(_add_ds) != 0:
+                _c = _add_ds[_add_ds['dimension'] == m['id']].to_dict('results')
+                if len(_c) != 0:
+                    _conn[add] = []
+                    for _a in _c:
+                        _cols_dim_add = columns[columns['tag'] == m[index[0]]].to_dict('results')[-1]
+                        _conn[add].append(create_data_access_parameters(_a, index=index[1],
+                                                                        date=None, test=False, columns=_cols_dim_add))
+        data_config[index[1]]['dimensions'].append({m['orders_data_source_tag']: _conn})
+    return data_config
 
             _query = "process == 'connected'"
             if type[0] == 'dimension':
