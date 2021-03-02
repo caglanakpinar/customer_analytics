@@ -17,7 +17,7 @@ elasticsearch_settings = {
                                             "properties": {"date": {"type": "date"},
                                                            "session_start_date": {"type": "date"},
                                                            "discount_amount": {"type": "float"},
-                                                           "purchase_amount": {"type": "float"},
+                                                           "payment_amount": {"type": "float"},
                                                            "actions": {
                                                                "properties": {
                                                                               "has_sessions": {"type": "boolean"},
