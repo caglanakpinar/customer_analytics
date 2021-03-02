@@ -62,6 +62,11 @@ def create_data_access_parameters(connection, index='orders', date=None, test=Fa
                        'password': connection[index + '_password'],
                        'user': connection[index + '_user'], 'db': connection[index + '_db']}
             }
+    if columns is not None:
+        _ds['columns'] = columns
+    return _ds
+
+
 
 
 def create_date_structure(es_tag_connections, data_config):
