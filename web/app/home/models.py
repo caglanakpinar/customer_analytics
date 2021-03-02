@@ -5,12 +5,12 @@ sys.path.insert(0, parentdir)
 
 from sqlalchemy import create_engine, MetaData
 from os.path import abspath, join
-from utils import read_yaml
-from configs import query_path, default_es_port, default_es_host, default_message
+from utils import read_yaml, rgb_to_hex, current_date_to_day
+from configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
 import pandas as pd
-from numpy import array
+from numpy import array, random
 
-from data_storage_configurations import connection_check
+from data_storage_configurations import connection_check, create_index
 
 
 engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
@@ -28,6 +28,7 @@ class RouterRequest:
         self.hold_connection = False
         self.recent_connection = False
         self.message = default_message
+        self.colors = ["color:" + rgb_to_hex(tuple(random.choice(range(256) , size=3))) + ";" for i in range(100)]
 
     def insert_query(self, table, columns, values):
         values = [values[col] for col in columns]
@@ -66,6 +67,69 @@ class RouterRequest:
                 if i + 'orders_sample_data' in list(self.tables['name']):
                     accept = True
         return accept
+
+    def logs_update(self, logs):
+        self.check_for_table_exits(table='logs')
+        con.execute(self.insert_query(table='logs',
+                                      columns=self.sqlite_queries['columns']['logs'][1:],
+                                      values=logs
+                                      ))
+
+    def query_data_connection(self, requests):
+        data_type, type_of_data_type, conn_values = None, '', {}
+        if requests.get('orders_data_query_path', None) is not None:
+            data_type = 'orders'
+        if requests.get('downloads_data_query_path', None) is not None:
+            data_type = 'downloads'
+        if data_type is not None:
+            conn_values = pd.read_sql(""" SELECT
+                                             id,
+                                             %(data_type)s_data_source_tag,
+                                             %(data_type)s_data_source_type,
+                                             %(data_type)s_data_query_path,
+                                             %(data_type)s_password,
+                                             %(data_type)s_user,
+                                             %(data_type)s_port,
+                                             %(data_type)s_host,
+                                             is_action,
+                                             is_product,
+                                             is_promotion
+                                          FROM data_connection
+                                          WHERE %(data_type)s_data_source_tag = '""" % {'data_type': data_type} +
+                                      str(requests['resent_tag']) + "' ", con).to_dict('results')[0]
+            conn_values[data_type + '_data_query_path'] = requests[data_type + '_data_query_path']
+
+        type_of_data_type = data_type
+        for types in ['is_action', 'is_product', 'is_promotion']:
+            if conn_values[types]:
+                type_of_data_type = types
+        return conn_values, data_type, type_of_data_type
+
+    def columns_matching_decision(self, row):
+        decision = 'not assigned'
+        if row['is_action'] == 'True':
+            if row['orders_id'] != '....' or row['downloads_id'] != '....':
+                decision = 'assigned'
+        if row['is_product'] == 'True' or row['is_promotion'] == 'True':
+            if row['orders_id'] == row['orders_id']:
+                decision = 'assigned'
+        if row['is_product'] != 'True' and row['is_promotion'] != 'True' and row['is_action'] != 'True':
+            total_assigned = sum([1 for i in [row['orders_id'], row['downloads_id']] if i not in ['....', 'None', None]])
+            if total_assigned == 2:
+                decision = 'assigned'
+            if total_assigned == 0:
+                decision = 'not assigned'
+            if total_assigned == 1:
+                if row['orders_id'] == row['orders_id']:
+                    decision = 'not assigned - customers'
+                else: decision = 'not assigned - sessions'
+        return decision
+
+    def assign_color_for_es_tag(self, data):
+        _unique_es_tags = list(data['tag'].unique())
+        data = pd.merge(data, pd.DataFrame(zip(_unique_es_tags, self.colors[0:len(_unique_es_tags)])).rename(
+            columns={0: "tag", 1: "color"}), on='tag', how='left')
+        return data
 
     def data_connections_hold_edit_connection_check(self):
         conns = pd.read_sql(
@@ -256,12 +320,28 @@ class RouterRequest:
             if requests.get('add_promotion', None) == 'True':
                 requests['is_promotion'] = 'True'
                 requests['process'] = 'add_promotion'
-            requests['tag'] = list(pd.read_sql("SELECT tag FROM data_connection WHERE id = " + str(requests['id']),
-                                               con)['tag'])[0]
-            self.data_connections_hold_edit_connection_check()
-            con.execute(self.insert_query(table='data_connection',
-                                          columns=self.sqlite_queries['columns']['data_connection'][1:],
-                                          values=requests))
+            recent_connection = pd.read_sql("""
+                                            SELECT tag, dimension
+                                            FROM data_connection WHERE id = 
+                                            """ + str(requests['id']),
+                                               con).to_dict('results')[0]
+
+            insert_available = True
+            requests['tag'] = recent_connection['tag']
+            if 'True' in [requests.get('add_action', None),
+                          requests.get('is_product', None),
+                          requests.get('is_promotion', None)]:
+                if recent_connection['dimension'] != 'None':
+                    requests['dimension'] = requests['id']
+            else:
+                if recent_connection['dimension'] != 'None':
+                    insert_available = False
+
+            if insert_available:
+                self.data_connections_hold_edit_connection_check()
+                con.execute(self.insert_query(table='data_connection',
+                                              columns=self.sqlite_queries['columns']['data_connection'][1:],
+                                              values=requests))
 
         if requests.get('delete', None) == 'True':
             con.execute(self.delete_query(table='data_connection', condition=" id = " + str(requests['id'])))
@@ -283,7 +363,7 @@ class RouterRequest:
             tags = pd.read_sql(
                 """
                 SELECT
-                id, tag, process, """ + source_tag_name +
+                id, tag, process, dimension, """ + source_tag_name +
                 """
                 FROM data_connection 
                 WHERE process in ('hold', 'edit', 'add_dimension', 'add_action', 'add_product', 'add_promotion') 
@@ -424,6 +504,66 @@ class RouterRequest:
             except Exception as e:
                 print(e)
 
+    def data_execute(self, requests):
+        logs = {'page': 'data-execute', 'color': 'red', 'info': 'Failed!'}
+        if requests.get('schedule', None) == 'True':
+            self.check_for_table_exits(table='schedule_data')
+            prev_schedule = pd.DataFrame()
+            try:
+                prev_schedule = pd.read_sql(""" SELECT * FROM schedule_data  WHERE tag = '""" + requests['tag'] + "' ",
+                                            con).to_dict('results')
+            except Exception as e:
+                print(e)
+
+            if len(prev_schedule) == 0:
+                for r in self.sqlite_queries['columns']['schedule_data'][1:]:
+                    if r not in list(requests.keys()):
+                        requests[r] = None
+                requests['status'] = 'on'
+                requests['max_date_of_order_data'] = str(current_date_to_day())[0:19]
+                try:
+                    con.execute(self.insert_query(table='schedule_data',
+                                                  columns=self.sqlite_queries['columns']['schedule_data'][1:],
+                                                  values=requests))
+                    create_index(tag=requests['tag'])
+                except Exception as e:
+                    print(e)
+            else:
+                con.execute(self.update_query(table='schedule_data',
+                                              condition=" tag = '" + requests['tag'] + "' ",
+                                              columns=["status"],
+                                              values={'status': 'on'}))
+                create_index(tag=requests['tag'])
+
+
+
+        if requests.get('delete', None) == 'True':
+            con.execute(self.delete_query(table='schedule_data', condition=" tag = '" + requests['tag'] + "' "))
+
+        if requests.get('edit', None) == 'True':
+            logs = {'page': 'data-execute', 'color': 'red', 'info': 'Failed!'}
+            conn, data_type, type_of_data_type = self.query_data_connection(requests=requests)
+            if len(conn) != 0:
+                conn_status, message, data, data_columns = connection_check(
+                    request=conn,
+                    index=data_type,
+                    type=type_of_data_type)
+                if conn_status:
+                    try:
+                        con.execute(self.update_query(table='data_connection',
+                                                      condition=" id = " + str(conn['id']) + " ",
+                                                      columns=[data_type + '_data_query_path'],
+                                                      values={data_type + '_data_query_path':
+                                                                  requests[data_type + '_data_query_path']}))
+                        logs['color'], logs['info'] = 'green', "Connected Successfully!! Data Query/Path is updated."
+                    except Exception as e:
+                        print(e)
+                else:
+                    logs['color'], logs['info'] = 'red', "Not Connected!! Data Query/Path is not updated."
+            self.message['last_log'] = logs
+            self.message['last_log']['color'] = "color:" + self.message['last_log']['color'] + ";"
+            self.logs_update(self, logs)
+
     def execute_request(self, req, template):
         print("template :", template, "request :", req)
         if req != {}:
@@ -439,6 +579,8 @@ class RouterRequest:
                 self.data_connections(self.check_for_request(req))
             if template == 'add-data-promotion':
                 self.data_connections(self.check_for_request(req))
+            if template == 'data-execute':
+                self.data_execute(self.check_for_request(req))
 
         self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
         self.message = default_message
@@ -447,7 +589,8 @@ class RouterRequest:
                                          tables=None,
                                          active_connections=False,
                                          hold_connection=False,
-                                         recent_connection=False):
+                                         recent_connection=False,
+                                         schedule_connection=False):
         """
         tables are the list of tables where you want to fill into values
         :param tables:
@@ -469,6 +612,7 @@ class RouterRequest:
             for row in range(5):
                 values['row_connect_' + str(row)] = {cols: "...." for cols in
                                                     self.sqlite_queries['columns']['data_connection']}
+
         values['orders_data'] = '....'
         values['downloads_data'] = '....'
         values['message'] = self.message
@@ -531,7 +675,7 @@ class RouterRequest:
                                                   FROM es_connection as e 
                                                   LEFT JOIN data_connection as d ON e.tag = d.tag 
                                                   WHERE d.process is NULL and e.status = 'on' """,
-                                              con).reset_index().tail(5).to_dict('results')]
+                                              con).reset_index().to_dict('results')]
                 except Exception as e:
                     print("there is no table has been created for now!")
 
@@ -548,12 +692,12 @@ class RouterRequest:
 
         # page 'add-data-purchase' of receiving data
         if template == 'add-data-purchase' or template == 'add-data-action' or \
-           template == 'add-data-product' or template == 'add-data-promotion':
+           template == 'add-data-product' or template == 'add-data-promotion' or template == 'data-execute':
             self.active_connections, self.hold_connection, self.recent_connection = True, True, True
             if 'es_connection' in list(self.tables['name']):
                 try:
                     self.table = [pd.read_sql(""" SELECT tag FROM es_connection where status = 'on' """,
-                                              con).reset_index().tail(5).to_dict('results')]
+                                              con).reset_index().to_dict('results')]
                 except Exception as e:
                     print("there is no table has been created for now!")
 
@@ -576,7 +720,7 @@ class RouterRequest:
                                                                         FROM data_connection 
                                                                         WHERE process = 'connected') 
                                                   """,
-                                                  con).reset_index().tail(5).to_dict('results')]
+                                                  con).reset_index().to_dict('results')]
                     except Exception as e:
                         print("there is no table has been created for now!")
 
@@ -591,7 +735,7 @@ class RouterRequest:
                                                               is_product,
                                                               is_promotion
                                                         FROM data_connection where process = 'connected' """,
-                                                   con).reset_index().tail(5).to_dict('results')]
+                                                   con).reset_index().to_dict('results')]
                     except Exception as e:
                         print("there is no table has been created for now!")
                     # check for hold  - edit - add_dimension
@@ -657,6 +801,76 @@ class RouterRequest:
                         self.message['downloads_data'] = _downloads_table.to_dict('results')
                     self.message['downloads_columns'] = array(list(pd.read_sql(query_editing_columns(**args['downloads']),
                                                                    con)['columns'])[0].split("*"))
+                except Exception as e:
+                    print(e)
+
+            if template == 'data-execute':
+                self.recent_connection = True
+                data_connection, schedules, data_columns = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+                try:
+                    data_connection = pd.read_sql(""" SELECT * FROM data_connection """, con)
+                except Exception as e:
+                    print("there is no table has been created for now!")
+                try:
+                    schedules = pd.read_sql(""" SELECT tag, max_date_of_order_data, 
+                                                time_period, status FROM schedule_data """, con)
+                except Exception as e:
+                    print("there is no table has been created for now!")
+
+                try:
+                    data_columns = pd.read_sql(""" SELECT id, tag FROM data_columns_integration """, con)
+                except Exception as e:
+                    print("there is no table has been created for now!")
+
+                if len(data_connection) != 0:
+                    for guery in ['orders_data_query_path', 'downloads_data_query_path']:
+                        data_connection[guery] = data_connection[guery].apply(lambda x: '....' if x is None else x)
+                        data_connection[guery] = data_connection[guery].apply(
+                            lambda x: x[:5] + '....' + x[-5:] if len(x) > 40 else x)
+                    data_connection = self.assign_color_for_es_tag(data_connection)
+                    if len(schedules) != 0:
+                        data_connection = pd.merge(data_connection, schedules, on='tag', how='left')  # .fillna('....')
+                    else:
+                        for col in ['max_date_of_order_data', 'time_period']:
+                            data_connection[col] = '....'
+                        data_connection['status'] = 'off'
+                    if len(data_columns) != 0:
+                        renaming = lambda _type: {"tag": _type + "_data_source_tag", "id": _type + '_id'}
+                        data_columns = data_columns.sort_values('id', ascending=True).groupby(
+                            "tag").agg({"id": "max"}).reset_index()
+                        data_connection = pd.merge(data_connection,
+                                                   data_columns.rename(columns=renaming('orders')),
+                                                   on='orders_data_source_tag', how='left').fillna('....')
+                        data_connection = pd.merge(data_connection,
+                                                   data_columns.rename(columns=renaming('downloads')),
+                                                   on='downloads_data_source_tag', how='left').fillna('....')
+                        data_connection['columns_matching'] = data_connection.apply(
+                            lambda row: self.columns_matching_decision(row), axis=1)
+                    else:
+                        data_connection['columns_matching'] = 'not assigned'
+                        data_connection['color'] = '#FFFFFF'
+                    check_for_status = lambda col, x: 'off' if col == 'status' and x == '....' else x
+                    convert_nulls = lambda col, x: check_for_status(col, '....') if x in ['None', None] else x
+                    cols = list(data_connection.columns)
+                    data_connection[cols] = data_connection.apply(
+                        lambda row: pd.Series([convert_nulls(col, row[col]) for col in cols]),axis=1)
+                    schedule_tags = data_connection.query("status != 'on' and process == 'connected'")
+                    self.message['schedule_tags'] = array(
+                            list(set(list(schedule_tags.query("columns_matching == 'assigned'")['tag'].unique())) -
+                                 set(list(schedule_tags.query("columns_matching != 'assigned'")['tag'].unique()))))
+                    self.message['schedule'] = data_connection.to_dict('results')
+                    self.message['schedule_columns'] = array(schedule_columns)
+                else:
+                    self.message['schedule_columns'] = self.sqlite_queries['columns']['data_connection'] + \
+                                                       ['max_date_of_order_data', 'time_period', 'status']
+                    self.message['schedule'] = [{cols: "...." for cols in
+                                                 self.sqlite_queries['columns']['data_connection']}]
+
+                # collect logs
+                try:
+                   logs = pd.read_sql("SELECT * FROM logs", con)
+                   logs['color'] = logs['color'].apply(lambda x: "color:" + x + ";")
+                   self.message['logs'] = logs.to_dict('results')[-max(10, len(logs)):]
                 except Exception as e:
                     print(e)
 
