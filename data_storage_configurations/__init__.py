@@ -159,7 +159,8 @@ def create_index(tag):
 
     :return:
     """
-
+    s = Scheduler(es_tag=tag, data_connection_structure=get_data_connection_arguments(tag, data_config))
+    s.run_schedule_on_thread()
 
 def create_sample_data(tag):
     """
