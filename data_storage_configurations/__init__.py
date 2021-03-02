@@ -25,21 +25,26 @@ sample_data_columns = read_yaml(query_path, "queries.yaml")['columns']
 
 data_config = {'orders': {'main':
                               {'connection': {},
-                               'actions': {},
-                               'products': {},
-                               'promotion': {}
+                               'action': [],
+                               'product': [],
+                               'promotion': []
                                },
-                          'dimensions': {'connection': {},
-                                         'actions': {},
-                                         'products': {},
-                                         'promotion': {}
-                                         }
+                          'dimensions': [{'connection': {},
+                                          'action': [],
+                                          'product': [],
+                                          'promotion': []
+                                          }
+                                         ]
                           },
                'downloads': {'main': {'connection': {},
-                                      'actions': {}
+                                      'action': []
                                       },
-                             'dimensions': {'connection': {},
-                                            'actions': {}}}}
+                             'dimensions': [{'connection': {},
+                                             'action': []
+                                             }
+                                            ]
+                             }
+               }
 
 
 def create_connection_columns(index='orders'):
