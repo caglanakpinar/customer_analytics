@@ -48,9 +48,8 @@ data_config = {'orders': {'main':
 
 
 def create_connection_columns(index='orders'):
-    return zip([index + i for i in ['_data_source_tag', '_data_source_type',
-                                    '_data_query_path', '_password', '_user', '_port', '_host', '_db']],
-               )
+    return [index + i for i in ['_data_source_tag', '_data_source_type',
+                                '_data_query_path', '_password', '_user', '_port', '_host', '_db']]
 
 
 def create_data_access_parameters(connection, index='orders', date=None, test=False):
