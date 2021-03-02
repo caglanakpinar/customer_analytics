@@ -12,7 +12,8 @@ sys.path.insert(0, parentdir)
 
 from data_storage_configurations.data_access import GetData
 from data_storage_configurations.sample_data import CreateSampleIndex
-from data_storage_configurations.es_create_index import CreateOrderIndex, CreateDownloadIndex
+from data_storage_configurations.es_create_index import CreateIndex
+from data_storage_configurations.schedule_data_integration import Scheduler
 from configs import elasticsearch_connection_refused_comment, query_path, acception_column_count
 from utils import read_yaml
 
