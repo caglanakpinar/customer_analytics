@@ -93,7 +93,8 @@ elasticsearch_connection_refused_comment = """
             ElasticSearch default port is 9200. If you running on local computer pls assign default host is 'localhost.' 
             """
 
-default_message = {'orders': '....',
+default_message = {'es_connection': '....',
+                   'orders': '....',
                    'orders_data': '....',
                    'orders_columns': '....',
                    'downloads': '....',
@@ -109,7 +110,7 @@ default_message = {'orders': '....',
                    'last_log': '....'
                    }
 
-acception_column_count = {'orders': 5, 'downloads': 2, 'action_orders': 2, 'action_downloads': 2,
+acception_column_count = {'orders': 5, 'downloads': 2, 'action_orders': 1, 'action_downloads': 1,
                           'product_orders': 4, 'promotion_orders': 2}
 
 schedule_columns = ["ID", "ElasticSearch Tag Name", "Is Dimension Connection", "Process",
@@ -119,3 +120,27 @@ schedule_columns = ["ID", "ElasticSearch Tag Name", "Is Dimension Connection", "
                     "Is Connection Data Source Of Products of Sessions",
                     "Is Connection Data Source Of Promotions of Sessions",
                     "Last Time Triggered Scheduling Job", "Schedule Time Period", "Schedule Status", "Has Columns been assigned yet"]
+
+
+orders_index_obj = {'id': 74915741,
+   'date': None,
+   'actions': {},
+   'client': None,
+   'promotion_id': None,
+   'payment_amount': 0,
+   'discount_amount': 0,
+   'basket': {'p_10': {'price': 6.12, 'category': 'p_c_8', 'rank': 109},
+    'p_145': {'price': 12.0, 'category': 'p_c_9', 'rank': 175},
+    'p_168': {'price': 13.12, 'category': 'p_c_10', 'rank': 82},
+    'p_9': {'price': 0.52, 'category': 'p_c_3', 'rank': 9},
+    'p_4': {'price': 3.72, 'category': 'p_c_8', 'rank': 69},
+    'p_104': {'price': 8.88, 'category': 'p_c_10', 'rank': 97},
+    'p_74': {'price': 8.395, 'category': 'p_c_10', 'rank': 35}},
+   'total_products': 7,
+   'session_start_date': '2020-12-16T09:39:11'}
+
+
+downloads_index_obj = {'id': 89481673,
+                       'download_date': '2021-01-01T21:23:15',
+                       'signup_date': '2021-01-14T09:22:15',
+                       'client': 'u_100006'}
