@@ -133,6 +133,7 @@ class Cohorts:
                 self.query_es.query_builder(fields=self.download_field_data)
                 self.downloads = self.query_es.get_data_from_es(index=self.download_index)
                 self.downloads = self.get_time_period(pd.DataFrame(self.downloads), 'download_date')
+                self.downloads['download_date'] = self.downloads['download_date'].apply(lambda x: convert_to_date(x))
 
     def convert_cohort_to_readable_form(self, cohort, time_period, time_period_back=None):
         """
