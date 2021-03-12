@@ -257,7 +257,7 @@ class ABTests:
             3.  Filter out products data for 'before' data-frame
             4.  Collect the customers who has transaction on 'before' data-frame ('before' clients)
             5.  Filter out products data for 'after' data-frame with 'before' clients
-        :return: concatenate products pf data-frames.
+        :return: concatenate products pf data-frames
         """
         self.get_unique_products()
         get_product_data = lambda x, p: x.query("products == @p")
@@ -280,9 +280,7 @@ class ABTests:
                     afters.append(_data.query(
                         "session_start_date >= product_date and client in @_b_clients").drop('product_date', axis=1))
                     befores.append(_b)
-        print(len(befores), len(afters))
         return pd.concat(befores), pd.concat(afters)
-        # 0: "id", 1: "session_start_date", 2: "products"}
 
     def execute_test_grouping(self, data, metric, feature=None):
         """
@@ -298,13 +296,13 @@ class ABTests:
 
     def create_groups(self, metric, periods=None, feature=None, data=None, before_after_test=True):
         """
-
-        :param metric:
-        :param periods:
-        :param feature:
-        :param data:
-        :param before_after_test:
-        :return:
+        This process is the creation of AB Test of A nd B groups
+        :param metric: amount of order_count
+        :param periods: if there is periodic AB Test such as Daily, Monthly, Weekly
+        :param feature: products or promotions
+        :param data: if there is data to manipulate
+        :param before_after_test: if is before after test
+        :return: ooncatenate data-frame
         """
         if before_after_test:
             if periods in ['daily', 'weekly', 'monthly']:
@@ -333,12 +331,12 @@ class ABTests:
 
     def decision_of_test(self, feature, groups, time_periods, comparison=False):
         """
+        Creating a column of decision that any increase on A to B
 
-        :param feature:
-        :param groups:
-        :param time_periods:
-        :param comparison:
-        :return:
+        :param feature:amount or order_count
+        :param groups: products, promotions
+        :param time_periods: days, weeks, months
+        :param comparison: if only comparing for before and after
         """
         if groups in ['promotions', 'products', 'segments']:
             self.decision = self.decision.groupby(groups).agg({"accept_Ratio": "mean",
@@ -366,9 +364,9 @@ class ABTests:
 
     def decision_of_test_promo_comparison(self, decision, groups):
         """
-
-        :param decision:
-        :param groups:
+        Creating a column of decision that any increase on A to B (only for promotion comparison)
+        :param decision: data-frame
+        :param groups: (promotion_1, promotion_2)
         :return:
         """
         decision = pd.DataFrame([{
@@ -385,10 +383,10 @@ class ABTests:
     def name_of_test(self, is_before_after, fetaure, group, time_period):
         """
 
-        :param is_before_after:
-        :param fetaure:
-        :param group:
-        :param time_period:
+        :param is_before_after: True/False
+        :param fetaure: amount, order_count
+        :param group: promotion, product
+        :param time_period: day, week, month
         :return:
         """
         name = ''
@@ -408,8 +406,9 @@ class ABTests:
 
     def create_before_after_test(self, date):
         """
-
-        :param date:
+        BEFORE - AFTER TEST:
+            collect data from before the event and test with after the eevnt
+        :param date: recent date
         :return:
         """
         self.results['customer_before_after'] = {}
@@ -436,9 +435,9 @@ class ABTests:
 
     def execute_promotion_comparison_test(self, p):
         """
-
-        :param p:
-        :return:
+        Comparing all combination of Promotions
+        :param p: promotion id
+        :return: data-frame
         """
         ab = ABTest(data=self.create_groups(data=self.data[self.data['promotion_id'].isin([p[0], p[1]])],
                                             metric='amount',
@@ -455,8 +454,8 @@ class ABTests:
 
     def create_promotion_comparison_test(self, date):
         """
-
-        :param date:
+        Comparing all combination of Promotions
+        :param date: recent date
         :return:
         """
         self.get_unique_promotions()
@@ -470,7 +469,6 @@ class ABTests:
                                        date,
                                        abtest_type='promotion_comparison',
                                        index=self.order_index)
-        # self.promotion_comparison.to_csv(join(self.path, "promotion_comparison.csv"), index=False)
 
     def insert_into_reports_index(self,
                                   abtest,
@@ -481,23 +479,16 @@ class ABTests:
         via query_es.py, each report can be inserted into the reports index with the given format.
         {"id": unique report id,
          "report_date": start_date or current date,
-         "report_name": "cohort",
+         "report_name": "abtest",
          "index": "main",
-         "report_types": {"time_period": weekly, daily, hourly (only for customers_journey)
-                          "type": orders, downloads,
-                          "_from": 0 (only for downlods), 1, 2, 3
-                          "_to": 1, 2, 3, 4
-                          },
-         "data": cohort.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
+         "report_types": {"abtest_type":  promotion_comparison || segments_change_monthly_before_after_amount, etc},
+         "data": abtest.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
          }
          !!! null values are assigned to 0.
 
-        :param cohort: data set, data frame
+        :param abtest: data set, data frame
         :param start_date: data start date
-        :param time_period: daily, weekly
-        :param _from: which order is cohort created from?
-        :param _to: which order is cohort created to?
-        :param cohort_type: orders, downloads, customer_journeys
+        :param abtest_type: orders, downloads, customer_journeys
         :param index: dimensionality of data index orders_location1 ;  dimension = location1
         """
         list_of_obj = [{"id": np.random.randint(200000000),
@@ -510,8 +501,8 @@ class ABTests:
 
     def build_in_tests(self, date):
         """
-
-        :param date:
+        execute AB Test for given orders index
+        :param date: recent date for query data
         :return:
         """
         date = str(current_date_to_day())[0:10] if date is None else date
@@ -542,6 +533,20 @@ class ABTests:
         promotion_usage_before_after_orders
 
         Directly, these arguments are sent to elasticsearch reports index in order to fetch related reports.
+
+        Example AB Test Result;
+
+            	segments	accept_Ratio	mean_control	mean_validation	is_amount_increased_per_segments_per_monthly
+           0	lost	    0.633333	    24.180795	    23.996087	    False
+           1	at risk	    0.616667	    23.587849	    23.914558	    True
+           2	new customers	0.433333	31.431178	    31.835731	    True
+           3	champions	0.233333	    18.990791	    20.332927	    True
+           4	potential loyalist	0.133333	40.590746	39.738574	    False
+           5	can`t lose them	0.066667	24.448692	    16.543292	    False
+           6	need attention	0.016667	30.248727	    26.593158	    False
+           7	loyal customers	0.000000	28.847650	    29.915854	    True
+           8	others	   0.000000	        33.230453	    38.482046	    True
+           9	promising	0.000000	    42.453413	    24.186591	    False
 
         :param abtest_name: e.g. promotion_comparison
         :param start_date: directly sending start_date to report_date in reports index.
