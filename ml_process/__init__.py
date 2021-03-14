@@ -8,7 +8,14 @@ from ml_process.clv_prediction import CLVPrediction
 from ml_process.ab_test import ABTests
 
 configs = {"date": None,
-           "time_period": "weekly",
+           "segmentation": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
+           "clv_prediction": {"temporary_export_path": None,
+                              "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
+           "abtest": {"temporary_export_path": None,
+                      "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
+          }
+
+schedule_configs = {"date": None,
            "segmentation": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
            "clv_prediction": {"temporary_export_path": None,
                               "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},

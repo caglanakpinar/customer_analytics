@@ -298,23 +298,38 @@ class Cohorts:
             average 2 orders, 1st orders avg 30.3£, 2nd orders avg 33.3£
         4.  Calculate average recent hours customers last order to a recent date.
             """
+        # convert session start date to datetime format
+        self.orders['session_start_date'] = self.orders['session_start_date'].apply(lambda x: convert_to_date(x))
         # e.g. the average is 3; customers of 1st, 2nd 3rd orders have involved the process.
         avg_order_count = int(np.mean(self.orders['order_seq_num']))
         # max date for calculate average recency value (hour).
         max_date = max(self.orders['session_start_date'])
-        self.orders['hourly'] = self.orders['session_start_date'].apply(lambda x: convert_str_to_hour(x))
-        self.orders = pd.merge(self.orders.drop(self.time_periods, axis=1),
-                               self.downloads.drop('id', axis=1),
-                               on='client',
-                               how='left')
-        self.orders['download_to_first_order_hourly'] = self.orders.apply(
-            lambda row: calculate_time_diff(row['download_date'], row['hourly'], 'hourly'), axis=1)
+        # first orders per customer
+        self.orders['first_order_date'] = self.orders['session_start_date']
+        self.orders['last_order_date'] = self.orders['session_start_date']
+        first_last_orders = self.orders.groupby("client").agg(
+            {"first_order_date": "min", "last_order_date": "max", "order_seq_num": "max"}).reset_index().rename(
+            columns={"order_seq_num": "max_order_seq"})
+        first_last_orders = pd.merge(self.downloads.drop('id', axis=1), first_last_orders,
+                                     on='client',
+                                     how='left')
+        first_last_orders = first_last_orders.query("first_order_date == first_order_date")
+        self.orders = pd.merge(self.orders, first_last_orders[['client', 'max_order_seq']], on='client', how='left')
 
-        self.orders['diff_hours_recency'] = self.orders.apply(
-            lambda row: calculate_time_diff(row['hourly'], max_date, 'hourly'), axis=1)
+        first_last_orders = pd.merge(first_last_orders,
+                                     self.orders.query("order_seq_num == 1").groupby(
+                                         "client").agg({"payment_amount": 'mean'}).reset_index().rename(
+                                         columns={"payment_amount": "first_order_amount"})
+                                     , on='client', how='left')
 
-        x_axis, y_axis = [0, np.mean(self.orders['download_to_first_order_hourly'])], [0, np.mean(
-            self.orders['payment_amount'])]
+        first_last_orders['download_to_first_order_hourly'] = first_last_orders.apply(
+            lambda row: calculate_time_diff(row['download_date'], row['first_order_date'], 'hourly'), axis=1)
+
+        first_last_orders['diff_hours_recency'] = first_last_orders.apply(
+            lambda row: calculate_time_diff(row['last_order_date'], max_date, 'hourly'), axis=1)
+
+        x_axis, y_axis = [0, np.mean(first_last_orders['download_to_first_order_hourly'])], [0, np.mean(
+            first_last_orders['first_order_amount'])]
         for o in range(1, avg_order_count):  # iterate each order and calculate hour difference and avg. payment amount.
             _orders = self.orders.query("order_seq_num == @o and next_order_date == next_order_date")
             y_axis.append(np.mean(_orders['payment_amount']))
@@ -322,7 +337,7 @@ class Cohorts:
                 {"id": "count"}).reset_index().sort_values(by='id', ascending=False)['diff_hours'])[0])
             x_axis.append(x_val)
         # recency value is added as the last point on the x-axis
-        x_axis += [x_axis[-1] + np.mean(self.orders['diff_hours_recency'])]
+        x_axis += [x_axis[-1] + np.mean(first_last_orders['diff_hours_recency'])]
         y_axis += [0]
         self.cohorts['customers_journey']['hourly'] = pd.DataFrame(
             zip(x_axis, y_axis)).rename(columns={0: "hourly order differences", 1: "customers` average Purchase Value"})

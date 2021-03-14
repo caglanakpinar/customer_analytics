@@ -328,7 +328,8 @@ class CustomerSegmentation:
         :return:
         """
         boolean_queries, date_queries = [], []
-        boolean_queries = [{"term": {"report_name": "segmentation"}}]
+        boolean_queries = [{"term": {"report_name": "segmentation"}},
+                           {"term": {"index": get_index_group(self.order_index)}}]
 
         if start_date is not None:
             date_queries = [{"range": {"report_date": {"gte": convert_to_iso_format(start_date)}}}]
