@@ -286,7 +286,10 @@ class Stats:
         :return: data-frame
         """
 
-        boolean_queries, date_queries = [{"term": {"report_name": "stats"}}, {"term": {"report_types.type": stats}}], []
+        boolean_queries = [{"term": {"report_name": "stats"}},
+                           {"term": {"report_types.type": stats}},
+                           {"term": {"index": get_index_group(self.order_index)}}]
+        date_queries = []
         if start_date is not None:
             date_queries = [{"range": {"report_date": {"gte": convert_to_iso_format(start_date)}}}]
 

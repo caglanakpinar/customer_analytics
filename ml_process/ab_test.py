@@ -555,7 +555,8 @@ class ABTests:
 
         boolean_queries, date_queries = [], []
         boolean_queries = [{"term": {"report_name": "abtest"}},
-                           {"term": {"report_types.abtest_type": abtest_name}}]
+                           {"term": {"report_types.abtest_type": abtest_name}},
+                           {"term": {"index": get_index_group(self.order_index)}}]
 
         if start_date is not None:
             date_queries = [{"range": {"report_date": {"gte": convert_to_iso_format(start_date)}}}]

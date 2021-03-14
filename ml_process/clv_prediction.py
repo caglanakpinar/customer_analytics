@@ -163,7 +163,8 @@ class CLVPrediction:
 
         boolean_queries, date_queries = [], []
         boolean_queries = [{"term": {"report_name": "clv_prediction"}},
-                           {"term": {"report_types.time_period": time_period}}]
+                           {"term": {"report_types.time_period": time_period}},
+                           {"term": {"index": get_index_group(self.order_index)}}]
 
         if end_date is not None:
             date_queries = [{"range": {"report_date": {"lt": convert_to_iso_format(end_date)}}}]

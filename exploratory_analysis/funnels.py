@@ -327,7 +327,7 @@ class Funnels:
             list_of_obj.append(insert_obj)
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
-    def fetch(self, funnel_name, start_date=None, end_date=None, index='main'):
+    def fetch(self, funnel_name, start_date=None, end_date=None):
         """
         This allows us to query the created funnels.
         funnel_name is crucial for us to collect the correct filters.
@@ -357,7 +357,7 @@ class Funnels:
         report_name, funnel_type, time_period = funnel_name.split("_")
         boolean_queries, date_queries = [], []
         boolean_queries = [{"term": {"report_name": report_name}},
-                           {"term": {"index": index}},
+                           {"term": {"index": get_index_group(self.order_index)}},
                            {"term": {"report_types.time_period": time_period}},
                            {"term": {"report_types.type": funnel_type}}]
 
