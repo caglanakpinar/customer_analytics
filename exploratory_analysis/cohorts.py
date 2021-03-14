@@ -470,6 +470,7 @@ class Cohorts:
         _time_period = cohort_name.split("_")[-1]
         boolean_queries, date_queries = [], []
         boolean_queries = [{"term": {"report_name": "cohort"}},
+                           {"term": {"index": get_index_group(self.order_index)}},
                            {"term": {"report_types.time_period": _time_period}},
                            {"term": {"report_types.type": _cohort_type}},
                            {"term": {"report_types.from": _from}},
