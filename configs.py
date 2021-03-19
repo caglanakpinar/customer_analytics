@@ -107,7 +107,8 @@ default_message = {'es_connection': '....',
                    'schedule_columns': '...',
                    'schedule_tags': '....',
                    'logs': '....',
-                   'last_log': '....'
+                   'last_log': '....',
+                   'active_connections': '....'
                    }
 
 acception_column_count = {'orders': 5, 'downloads': 2, 'action_orders': 1, 'action_downloads': 1,
@@ -138,9 +139,13 @@ orders_index_obj = {'id': 74915741,
     'p_74': {'price': 8.395, 'category': 'p_c_10', 'rank': 35}},
    'total_products': 7,
    'session_start_date': '2020-12-16T09:39:11'}
+orders_index_columns = ["id", "date", "actions", "client", "promotion_id",
+                        "payment_amount", "basket", "total_products", "session_start_date"]
 
+downloads_index_columns = ["id", "download_date", "signup_date", "client"]
 
 downloads_index_obj = {'id': 89481673,
                        'download_date': '2021-01-01T21:23:15',
                        'signup_date': '2021-01-14T09:22:15',
                        'client': 'u_100006'}
+
