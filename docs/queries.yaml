@@ -53,8 +53,6 @@ data_columns_integration:
   download_date VARCHAR,
   signup_date VARCHAR,
   data_type VARCHAR,
-  has_purchased VARCHAR,
-  has_action VARCHAR,
   has_action_date VARCHAR,
   product VARCHAR,
   price VARCHAR,
@@ -200,8 +198,6 @@ columns:
     - signup_date
     - data_type
     - has_purchased
-    - has_action
-    - has_action_date
     - product
     - price
     - category
