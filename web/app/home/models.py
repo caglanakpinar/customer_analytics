@@ -10,7 +10,7 @@ from configs import query_path, default_es_port, default_es_host, default_messag
 import pandas as pd
 from numpy import array, random
 
-from data_storage_configurations import connection_check, create_index
+from data_storage_configurations import connection_check, create_index, check_elasticsearch, create_sample_data
 
 
 engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
@@ -111,7 +111,7 @@ class RouterRequest:
             if row['orders_id'] != '....' or row['downloads_id'] != '....':
                 decision = 'assigned'
         if row['is_product'] == 'True' or row['is_promotion'] == 'True':
-            if row['orders_id'] == row['orders_id']:
+            if row['orders_id'] == row['orders_id'] and row['orders_id'] not in ['....', 'None', None]:
                 decision = 'assigned'
         if row['is_product'] != 'True' and row['is_promotion'] != 'True' and row['is_action'] != 'True':
             total_assigned = sum([1 for i in [row['orders_id'], row['downloads_id']] if i not in ['....', 'None', None]])
@@ -246,22 +246,33 @@ class RouterRequest:
             requests['port'] = str(default_es_port) if requests['port'] is None else requests['port']
             requests['host'] = str(default_es_host) if requests['host'] is None else requests['host']
             requests['status'] = 'on'
+            status, self.message['es_connection'] = check_elasticsearch(port=requests['port'],
+                                                                        host=requests['host'],
+                                                                        directory=requests['directory'])
 
-            try:
-                con.execute(self.insert_query(table='es_connection',
-                                              columns=self.sqlite_queries['columns']['es_connection'][1:],
-                                              values=requests))
-            except Exception as e:
-                print(e)
+            if status:
+                try:
+                    con.execute(self.insert_query(table='es_connection',
+                                                  columns=self.sqlite_queries['columns']['es_connection'][1:],
+                                                  values=requests))
+                except Exception as e:
+                    print(e)
 
         if requests.get('edit', None) == 'True':
-            try:
-                con.execute(self.update_query(table='es_connection',
-                                              condition=" tag = '" + requests['recent_tag'] + "' ",
-                                              columns=["status", "port", "host", "tag"],
-                                              values=requests))
-            except Exception as e:
-                print(e)
+            conn = pd.read_sql("SELECT * es_connection FROM WHERE tag = '" + requests['recent_tag'] + "'", con)
+            args = {a: list(conn[a])[0] for a in ['port', 'host', 'directory']}
+            for a in ['port', 'host', 'directory']:
+                if requests.get(a, None) not in [None, 'None', '....']:
+                    args[a] = requests[a]
+            status, self.message['es_connection'] = check_elasticsearch(**args)
+            if status:
+                try:
+                    con.execute(self.update_query(table='es_connection',
+                                                  condition=" tag = '" + requests['recent_tag'] + "' ",
+                                                  columns=["status", "port", "host", "tag"],
+                                                  values=requests))
+                except Exception as e:
+                    print(e)
 
         if requests.get('delete', None) == 'True':
             try:
@@ -501,6 +512,7 @@ class RouterRequest:
                 con.execute(self.insert_query(table='data_connection',
                                               columns=self.sqlite_queries['columns']['data_connection'][1:],
                                               values=requests))
+                create_sample_data(requests['tag'])
             except Exception as e:
                 print(e)
 
@@ -604,6 +616,8 @@ class RouterRequest:
             for row in range(5):
                 values['row_active_' + str(row)] = {cols: "...." for cols in
                                                     self.sqlite_queries['columns']['data_connection']}
+            values['active_connections'] = self.message['active_connections']
+
         if hold_connection:
             for row in range(5):
                 values['row_hold_' + str(row)] = {cols: "...." for cols in
@@ -626,6 +640,12 @@ class RouterRequest:
                         values['row_active_' + str(row)] = tables[1][row]
                 except Exception as e:
                     print(e)
+
+                try:
+                    values['active_connections'] = tables[1]
+                except Exception as e:
+                    print(e)
+
             if hold_connection:
                 try:
                     for row in range(len(tables[2])):
@@ -855,9 +875,10 @@ class RouterRequest:
                     data_connection[cols] = data_connection.apply(
                         lambda row: pd.Series([convert_nulls(col, row[col]) for col in cols]),axis=1)
                     schedule_tags = data_connection.query("status != 'on' and process == 'connected'")
-                    self.message['schedule_tags'] = array(
-                            list(set(list(schedule_tags.query("columns_matching == 'assigned'")['tag'].unique())) -
-                                 set(list(schedule_tags.query("columns_matching != 'assigned'")['tag'].unique()))))
+                    if len(schedule_tags) != 0:
+                        self.message['schedule_tags'] = array(
+                                list(set(list(schedule_tags.query("columns_matching == 'assigned'")['tag'].unique())) -
+                                     set(list(schedule_tags.query("columns_matching != 'assigned'")['tag'].unique()))))
                     self.message['schedule'] = data_connection.to_dict('results')
                     self.message['schedule_columns'] = array(schedule_columns)
                 else:
@@ -870,7 +891,7 @@ class RouterRequest:
                 try:
                    logs = pd.read_sql("SELECT * FROM logs", con)
                    logs['color'] = logs['color'].apply(lambda x: "color:" + x + ";")
-                   self.message['logs'] = logs.to_dict('results')[-max(10, len(logs)):]
+                   self.message['logs'] = logs.to_dict('results')[-min(10, len(logs)):]
                 except Exception as e:
                     print(e)
 
