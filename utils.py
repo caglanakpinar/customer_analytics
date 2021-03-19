@@ -102,11 +102,10 @@ def convert_to_iso_format(date):
 
 
 def get_index_group(index):
-    _index = index.split("_")
-    if len(_index) == 1:
+    if index in ['orders', 'downloads']:
         return 'main'
     else:
-        return index.split("_")[-1]
+        return index
 
 
 def convert_dt_to_month_str(date):
