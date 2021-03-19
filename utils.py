@@ -99,6 +99,8 @@ def convert_to_iso_format(date):
         return datetime.datetime.strptime(str(date)[0:10] + ' 00:00:00', "%Y-%m-%d %H:%M:%S").isoformat()
     if len(str(date)) == 19:
         return datetime.datetime.strptime(str(date)[0:10] + ' ' + str(date)[11:19], "%Y-%m-%d %H:%M:%S").isoformat()
+    if len(str(date)) != 10 and len(str(date)) != 19:
+        return date.isoformat()
 
 
 def get_index_group(index):
