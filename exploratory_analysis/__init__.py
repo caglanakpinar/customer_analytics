@@ -10,32 +10,19 @@ from exploratory_analysis.rfm import RFM
 from exploratory_analysis.descriptive_statistics import Stats
 
 
-configs = {"date": None,
-           "funnel": {"actions": ["download", "signup"],
-                      "purchase_actions": ["has_basket", "order_screen"],
-                      "host": 'localhost',
-                      "port": '9200',
-                      'download_index': 'downloads',
-                      'order_index': 'orders'},
-           "cohort": {"has_download": True, "host": 'localhost', "port": '9200'},
-           "products": {"has_download": True, "host": 'localhost', "port": '9200'},
-           "rfm": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
-           "stats": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
-          }
+ea_configs = {"date": None,
+              "funnel": {"actions": ["download", "signup"],
+                         "purchase_actions": ["has_basket", "order_screen"],
+                         "host": 'localhost',
+                         "port": '9200',
+                         'download_index': 'downloads',
+                         'order_index': 'orders'},
+              "cohort": {"has_download": True, "host": 'localhost', "port": '9200'},
+              "products": {"has_download": True, "host": 'localhost', "port": '9200'},
+              "rfm": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
+              "stats": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
+             }
 
-
-schedule_configs = {"date": None,
-           "funnel": {"actions": [],
-                      "purchase_actions": [],
-                      "host": 'localhost',
-                      "port": '9200',
-                      'download_index': 'downloads',
-                      'order_index': 'orders'},
-           "cohort": {"has_download": True, "host": 'localhost', "port": '9200'},
-           "products": {"has_download": True, "host": 'localhost', "port": '9200'},
-           "rfm": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
-           "stats": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
-          }
 
 exploratory_analysis = {'funnel': Funnels,
                         'cohort': Cohorts,
