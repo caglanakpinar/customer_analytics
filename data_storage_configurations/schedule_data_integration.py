@@ -200,7 +200,7 @@ class Scheduler:
         process = threading.Thread(target=function, kwargs={} if args is None else args)
         process.daemon = True
         process.start()
-        process.join()
+        # process.join()
         print("scheduling is triggered!!")
 
 

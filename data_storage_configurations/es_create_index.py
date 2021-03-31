@@ -81,7 +81,6 @@ class CreateIndex:
         self.latest_session_transaction_date = None
         self.result_data = pd.DataFrame()
         self.job_start_date = None
-        self.job_end_date = None
 
     def insert_query(self, table, columns, values):
         values = [values[col] for col in columns]
@@ -377,7 +376,6 @@ class CreateIndex:
                                    "info": "indexes Creation is failed!  - " + str(e),
                                    "color": "red"})
 
-
     def execute_index(self):
         """
 
@@ -385,7 +383,7 @@ class CreateIndex:
         self.job_start_date = current_date_to_day()
         self.get_schedule_data()
         self.get_end_date()
-        _start_date = current_date_to_day()
+
         try:
             for _data_type in ['orders', 'downloads']:
                 if _data_type == 'orders':
@@ -404,7 +402,7 @@ class CreateIndex:
 
             self.end_date = current_date_to_day()
 
-            spent_hour = round(abs(_start_date - self.end_date).total_seconds() / 60 / 60, 2)
+            spent_hour = round(abs(self.job_start_date - self.end_date).total_seconds() / 60 / 60, 2)
             comment = "indexes are created safely. Total spent time : " + str(spent_hour) + " hr. "
             self.logs_update(logs={"page": "data-execute",
                                    "info": comment,
