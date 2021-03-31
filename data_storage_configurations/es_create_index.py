@@ -119,7 +119,7 @@ class CreateIndex:
         self.check_for_table_exits(table='schedule_data')
         try:
             con.execute(self.update_query(table='schedule_data',
-                                          condition=" id == 1",
+                                          condition=" id = 1",
                                           columns=['max_date_of_order_data'],
                                           values= {'max_date_of_order_data': date}
                                           ))
