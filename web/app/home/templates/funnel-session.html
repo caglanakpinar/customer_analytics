@@ -1,0 +1,108 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} actions data connection {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Sessions Of Actions Funnel</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title"><strong>Sessions of Action & Customers of Action</strong> </h5>
+					</div>
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Sessions of Action</h5>
+										<h6 class="card-subtitle text-muted">
+											Please select to main or dimension data source in order to add Action connection and enter the connection information.
+											We only need <strong style="color:green;">Session IDs</strong> which have the action that you will assing on 'Session of Action Name'.
+											<strong style="color:green;">Session IDs must be unique IDs and can match with related Session Data Source of Session IDs.</strong>
+										</h6>
+									</div>
+									<div class="card-body">
+
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Customers of Action</h5>
+										<h6 class="card-subtitle text-muted">
+											Please see the instruction related to Sessions of Action.
+											We only need <strong style="color:green;">Customers IDs</strong> which have the action that you will assigning on 'Customers of Action Name'
+											<strong style="color:green;">Customer IDs must be unique IDs and and can match with related Customer Data Source of Customers IDs</strong>
+										</h6>
+									</div>
+									<div class="card-body">
+
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Sessions of Action</h5>
+										<h6 class="card-subtitle text-muted">
+											Please select to main or dimension data source in order to add Action connection and enter the connection information.
+											We only need <strong style="color:green;">Session IDs</strong> which have the action that you will assing on 'Session of Action Name'.
+											<strong style="color:green;">Session IDs must be unique IDs and can match with related Session Data Source of Session IDs.</strong>
+										</h6>
+									</div>
+									<div class="card-body">
+
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Customers of Action</h5>
+										<h6 class="card-subtitle text-muted">
+											Please see the instruction related to Sessions of Action.
+											We only need <strong style="color:green;">Customers IDs</strong> which have the action that you will assigning on 'Customers of Action Name'
+											<strong style="color:green;">Customer IDs must be unique IDs and and can match with related Customer Data Source of Customers IDs</strong>
+										</h6>
+									</div>
+									<div class="card-body">
+
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<script>
+function myFunction() {
+  // Get the checkbox
+  var checkBox = document.getElementById("myCheck");
+  // Get the output text
+  var text = document.getElementById("text");
+
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+  } else {
+    text.style.display = "none";
+  }
+}
+</script>
+{% block javascripts %}{% endblock javascripts %}
