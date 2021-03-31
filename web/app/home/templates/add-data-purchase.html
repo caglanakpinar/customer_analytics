@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} data connection {% endblock %}
+{% block title %} sessions & customers data connection {% endblock %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
@@ -9,1243 +9,366 @@
 
 	<main class="content">
 		<div class="container-fluid p-0">
-
-			<h1 class="h3 mb-3">Data Source</h1>
-
-			<div class="row">
-				<div class="col-md-3 col-xl-2">
-
-					<div class="card">
-						<div class="card-header">
-							<h5 class="card-title mb-0">Sessions & Customers Data Source</h5>
+			<h5 class="h3 mb-3">Sessions & Customers Data Source</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title"><strong>Sessions Data Source</strong> </h5>
+						<div class="row">
+							<h6 class="card-subtitle text-muted mb-1">
+								<strong style="color:green;"> Sessions : </strong> This is a data source that includes All transactions
+							from the session start action to the last action that is purchased.</h6>
 						</div>
-
-						<div class="list-group list-group-flush" role="tablist">
-							<a class="list-group-item list-group-item-action " data-toggle="list" href="#connection" role="tab">
-							Data Connection
-							</a>
-							<a class="list-group-item list-group-item-action" data-toggle="list" href="#orders_index" role="tab">
-							Sessions Index
-							</a>
-							<a class="list-group-item list-group-item-action" data-toggle="list" href="#downloads_index" role="tab">
-							Customers Index
-							</a>
+						<div class="row">
+							<h6 class="card-subtitle text-muted mb-3">
+								<strong style="color:green;"> Customers : </strong>Unique customers with their unique actions such as download, signup, e.g</h6>
 						</div>
-					</div>
-				</div>
+						<div class="row ">
+							<h6 class="card-subtitle text-muted">
 
-				<div class="col-md-9 col-xl-3">
-					<div class="tab-content">
-						<div class="tab-pane fade show active" id="connection" role="tabpanel">
-							<div class="card">
-								<div class="card-header">
-									<h5 class="card-title mb-0">Sessions & Customers Index</h5>
-								</div>
-								<div class="card-body">
-									<form method="POST">
-										<div class="row">
-											<div class="col-md-12">
-												<div class="mb-4 col-md-12">
-													{% if values['row_0']['tag'] != '....' %}
-														<label class="form-label" for="es_con">ElasticSearch Connection</label>
-													{% if values['row_hold_0']['tag'] == '....' %}
-														<select name="connect" id="es_con" class="form-control" required>
-													{% endif %}
-													{% if values['row_hold_0']['tag'] != '....' %}
-														<select name="connect" id="es_con" class="form-control" >
-													{% endif %}
-															<option></option>
-															<option> {{ values['row_0']['tag'] }} </option>
-															{% if values['row_1']['tag'] != '....' %}
-																<option> {{ values['row_1']['tag'] }} </option>
-															{% endif %}
-															{% if values['row_2']['tag'] != '....' %}
-																<option> {{ values['row_2']['tag'] }} </option>
-															{% endif %}
-															{% if values['row_3']['tag'] != '....' %}
-																<option> {{ values['row_3']['tag'] }} </option>
-															{% endif %}
-															{% if values['row_4']['tag'] != '....' %}
-																<option> {{ values['row_4']['tag'] }} </option>
-															{% endif %}
-														</select>
-													{% endif %}
-													{% if values['row_0']['tag'] == '....' %}
-														<label class="form-label" for="inputState">Elastic Search Connection</label>
-														<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-															<button type="submit" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
-															<div class="alert-icon">
-																<i class="far fa-fw fa-bell"></i>
-															</div>
-															<div class="alert-message">
-																 <strong>CREATE ElasticSearch Connection!</strong>
-																<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-																<small>
-																	<a href="manage-data">ElasticSearch Configurations</a>
-																</small>
-															</div>
-														</div>
-														<small><a  href="manage-data">ElasticSearch Configurations</a></small>
-													{% endif %}
-												</div>
-											</div>
-										</div>
-										{% if values['row_0']['tag'] != '....' %}
-											<button type="submit" value="True" class="btn btn-primary">Connect</button>
-											{% if values['row_hold_0']['tag'] != '....' %}
-												<button type="submit" value="True" name="cancel" class="btn btn-primary">Cancel</button>
-											{% endif %}
-										{% endif %}
-									</form>
-								</div>
-							</div>
-							<div class="card">
-								<div class="card-header">
-									<h5 class="card-title mb-0">Sessions & Customers Index Edit Data Source Connection</h5>
-								</div>
-								<div class="card-body">
-									<form method="POST">
-										<div class="row">
-											<div class="col-md-12">
-												<div class="mb-4 col-md-12">
-													{% if values['row_active_0']['tag'] != '....' %}
-														{% if values['message']['orders'] == 'Connected!' %}
-															<div class="mb-3">
-																<div class="alert alert-success alert-dismissible" role="alert">
-																	<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            														  <span aria-hidden="true">&times;</span>
-            														</button>
-																	<div class="alert-message">
-																		<h4 class="alert-heading">{{ values['message']['orders'] }}</h4>
-																		<p>Aww yeah, you successfully create the Sessions connection. You can update your connection from 'Data Connection' Tab. You can also add new dimension from there.</p>
-																		<hr>
-																		<p class="mb-0">Make sure you add connection for both 'Sessions' and 'Customers'.</p>
-																	</div>
-																</div>
-															</div>
-															{% endif %}
-															{% if values['message']['orders'] == 'Connection Failed!' %}
-																<div class="mb-3">
-																	<div class="alert alert-danger alert-dismissible" role="alert">
-																		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            															  <span aria-hidden="true">&times;</span>
-            															</button>
-																		<div class="alert-message">
-																			<h4 class="alert-heading">{{ values['message']['orders'] }}</h4>
-																			<p>Something went wrong! Please check you Sessions connection parameters.</p>
-																			<hr>
-																			<p class="mb-0">You can still access the recent connection</p>
-																		</div>
-																	</div>
-																</div>
-															{% endif %}
-															{% if values['message']['downloads'] == 'Connected!' %}
-																<div class="mb-3">
-																	<div class="alert alert-success alert-dismissible" role="alert">
-																		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            															  <span aria-hidden="true">&times;</span>
-            															</button>
-																		<div class="alert-message">
-																			<h4 class="alert-heading">{{ values['message']['downloads'] }}</h4>
-																			<p>Aww yeah, you successfully create the Customers connection. You can update your connection from 'Data Connection' Tab. You can also add new dimension from there.</p>
-																			<hr>
-																			<p class="mb-0">Make sure you add connection for both 'Sessions' and 'Customers'.</p>
-																		</div>
-																	</div>
-																</div>
-															{% endif %}
-															{% if values['message']['downloads'] == 'Connection Failed!' %}
-																<div class="mb-3">
-																	<div class="alert alert-danger alert-dismissible" role="alert">
-																		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            															  <span aria-hidden="true">&times;</span>
-            															</button>
-																		<div class="alert-message">
-																			<h4 class="alert-heading">{{ values['message']['Downloads'] }}</h4>
-																			<p>Something went wrong! Please check you Customers connection parameters.</p>
-																			<hr>
-																			<p class="mb-0">You can still access the recent connection</p>
-																		</div>
-																	</div>
-																</div>
-															{% endif %}
-														<label class="form-label" for="es_edit">Choose Connection for Editing Dimension</label>
-														{% if values['row_hold_0']['tag'] != '....' %}
-															<select name="id" id="es_edit" class="form-control" >
-														{% endif %}
-														{% if values['row_hold_0']['tag'] == '....' %}
-															<select name="id" id="es_edit" class="form-control" required>
-														{% endif %}
-															<option></option>
-															{% if values['row_active_0']['tag'] != '....' %}
-															 	{% if values['row_active_0']['dimension'] != 'True' and  values['row_active_0']['is_action'] != 'True' and values['row_active_0']['is_product'] != 'True' and values['row_active_0']['is_promotion'] != 'True' %}
-																	<option label="{{ values['row_active_0']['tag'] }} || SESSION : {{ values['row_active_0']['orders_data_source_tag'] }} - CUSTOMER : {{ values['row_active_0']['downloads_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
-																{% endif %}
-																{% if values['row_active_0']['dimension'] == 'True' and  values['row_active_0']['is_action'] != 'True' and values['row_active_0']['is_product'] != 'True' and values['row_active_0']['is_promotion'] != 'True' %}
-																	<option label="DIMENSION / {{ values['row_active_0']['tag'] }} - SESSION : {{ values['row_active_0']['orders_data_source_tag'] }} - CUSTOMER : {{ values['row_active_0']['downloads_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
-																{% endif %}
-															{% endif %}
-															{% if values['row_active_1']['tag'] != '....' %}
-															 	{% if values['row_active_1']['dimension'] != 'True' and  values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' and values['row_active_1']['is_promotion'] != 'True' %}
-																	<option label="{{ values['row_active_1']['tag'] }} || SESSION : {{ values['row_active_1']['orders_data_source_tag'] }} - CUSTOMER : {{ values['row_active_1']['downloads_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
-																{% endif %}
-																{% if values['row_active_1']['dimension'] == 'True' and  values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' and values['row_active_1']['is_promotion'] != 'True' %}
-																	<option label="DIMENSION / {{ values['row_active_1']['tag'] }} - SESSION : {{ values['row_active_1']['orders_data_source_tag'] }} - CUSTOMER : {{ values['row_active_1']['downloads_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
-																{% endif %}
-															{% endif %}
-															{% if values['row_active_2']['tag'] != '....' %}
-															 	{% if values['row_active_2']['dimension'] != 'True' and  values['row_active_2']['is_action'] != 'True' and values['row_active_2']['is_product'] != 'True' and values['row_active_2']['is_promotion'] != 'True' %}
-																	<option label="{{ values['row_active_2']['tag'] }} || SESSION : {{ values['row_active_2']['orders_data_source_tag'] }} - CUSTOMER : {{ values['row_active_2']['downloads_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
-																{% endif %}
-																{% if values['row_active_2']['dimension'] == 'True' and  values['row_active_2']['is_action'] != 'True' and values['row_active_2']['is_product'] != 'True' and values['row_active_2']['is_promotion'] != 'True' %}
-																	<option label="DIMENSION / {{ values['row_active_2']['tag'] }} - SESSION : {{ values['row_active_2']['orders_data_source_tag'] }} - CUSTOMER : {{ values['row_active_2']['downloads_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
-																{% endif %}
-															{% endif %}
-															{% if values['row_active_3']['tag'] != '....' %}
-															 	{% if values['row_active_3']['dimension'] != 'True' and  values['row_active_3']['is_action'] != 'True' and values['row_active_3']['is_product'] != 'True' and values['row_active_3']['is_promotion'] != 'True' %}
-																	<option label="{{ values['row_active_3']['tag'] }} || SESSION : {{ values['row_active_3']['orders_data_source_tag'] }} - CUSTOMER : {{ values['row_active_3']['downloads_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
-																{% endif %}
-																{% if values['row_active_3']['dimension'] == 'True' and  values['row_active_3']['is_action'] != 'True' and values['row_active_3']['is_product'] != 'True' and values['row_active_3']['is_promotion'] != 'True' %}
-																	<option label="DIMENSION / {{ values['row_active_3']['tag'] }} - SESSION : {{ values['row_active_3']['orders_data_source_tag'] }} - CUSTOMER : {{ values['row_active_3']['downloads_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
-																{% endif %}
-															{% endif %}
-															{% if values['row_active_4']['tag'] != '....' %}
-															 	{% if values['row_active_4']['dimension'] != 'True' and  values['row_active_4']['is_action'] != 'True' and values['row_active_4']['is_product'] != 'True' and values['row_active_4']['is_promotion'] != 'True' %}
-																	<option label="{{ values['row_active_4']['tag'] }} || SESSION : {{ values['row_active_4']['orders_data_source_tag'] }} - CUSTOMER : {{ values['row_active_4']['downloads_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
-																{% endif %}
-																{% if values['row_active_4']['dimension'] == 'True' and  values['row_active_4']['is_action'] != 'True' and values['row_active_4']['is_product'] != 'True' and values['row_active_4']['is_promotion'] != 'True' %}
-																	<option label="DIMENSION / {{ values['row_active_4']['tag'] }} - SESSION : {{ values['row_active_4']['orders_data_source_tag'] }} - CUSTOMER : {{ values['row_active_4']['downloads_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
-																{% endif %}
-															{% endif %}
-														</select>
-													{% endif %}
-													{% if values['row_active_0']['tag'] == '....' %}
-														<label class="form-label" for="inputState">Index Update Connection</label>
-														<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-															<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
-															<div class="alert-icon">
-																<i class="far fa-fw fa-bell"></i>
-															</div>
-															<div class="alert-message">
-																 <strong>CREATE Data Source!</strong>
-																<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-															</div>
-														</div>
-													{% endif %}
-												</div>
-												<div class="mb-3">
-													{% if values['row_active_0']['tag'] != '....' %}
-														<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> Status </label>
-														<label class="form-check">
-															<input class="form-check-input" type="radio" value="add_dimension" name="process">
-															<span class="badge bg-warning">Add Dimension</span>
-														</label>
-														<label class="form-check">
-															<input class="form-check-input" type="radio" value="edit" name="process">
-															<span class="badge bg-success">Edit connection</span>
-														</label>
-														<label class="form-check">
-															<input class="form-check-input" type="radio" value="delete" name="process">
-															<span class="badge bg-danger">Delete Connection</span>
-														</label>
-													{% endif %}
-													{% if values['row_active_0']['tag'] == '....' %}
-														<label class="form-label" for="inputState">Index Update Connection</label>
-														<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-															<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
-															<div class="alert-icon">
-																<i class="far fa-fw fa-bell"></i>
-															</div>
-															<div class="alert-message">
-																 <strong>Create Data Source!</strong>
-																<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-															</div>
-														</div>
-													{% endif %}
-												</div>
-											</div>
-										</div>
-										{% if values['row_active_0']['tag'] != '....' %}
-											<button type="submit" value="True" class="btn btn-primary">Choose</button>
-										{% endif %}
-										{% if values['row_hold_0']['tag'] != '....' %}
-											<button type="submit" value="True" name="cancel" class="btn btn-primary">Cancel</button>
-										{% endif %}
-									</form>
-								</div>
-							</div>
-						</div>
-						<div class="tab-pane fade" id="orders_index" role="tabpanel">
-							{% if values['row_hold_0']['tag'] != '....' %}
-								<div class="card">
-									<div class="card-body">
-										<h5 class="card-title">Create Data Source</h5>
-										{% if values['row_hold_0']['process'] == 'hold' %}
-											<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-												<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
-												<div class="alert-icon">
-													<i class="far fa-fw fa-bell"></i>
-												</div>
-												<div class="alert-message">
-													Recently
-													 <strong> CONNECTED </strong>  ElasticSearch Connection  -<strong>{{ values['row_hold_0']['tag'] }}</strong>
-													<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-												</div>
-											</div>
-										{% endif %}
-										{% if values['row_hold_0']['process'] == 'edit' %}
-											<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-												<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
-												<div class="alert-icon">
-													<i class="far fa-fw fa-bell"></i>
-												</div>
-												<div class="alert-message">
-													Recently
-													 <strong> UPDATING </strong>  ElasticSearch Connection  -<strong>{{ values['row_hold_0']['tag'] }}</strong>
-													<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-												</div>
-											</div>
-										{% endif %}
-
-										{% if values['row_hold_0']['process'] == 'add_dimension' %}
-											<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-												<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
-												<div class="alert-icon">
-													<i class="far fa-fw fa-bell"></i>
-												</div>
-												<div class="alert-message">
-													Recently
-													 <strong> DIMENSIONAL </strong>  ElasticSearch Connection  -<strong>{{ values['row_hold_0']['tag'] }}</strong>
-													<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-												</div>
-											</div>
-										{% endif %}
-										<form method="POST">
-											{% if values['message']['orders'] == 'Connected!' %}
-												<div class="mb-3">
-													<div class="alert alert-success alert-dismissible" role="alert">
-														<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            											  <span aria-hidden="true">&times;</span>
-            											</button>
-														<div class="alert-message">
-															<h4 class="alert-heading">{{ values['message']['orders'] }}</h4>
-															<p>Aww yeah, you successfully create the Sessions connection. You can update your connection from 'Data Connection' Tab. You can also add new dimension from there.</p>
-															<hr>
-															<p class="mb-0">Make sure you add connection for both 'Sessions' and 'Customers'.</p>
-														</div>
-													</div>
-												</div>
-											{% endif %}
-											{% if values['message']['orders'] == 'Connection Failed!' %}
-												<div class="mb-3">
-													<div class="alert alert-danger alert-dismissible" role="alert">
-														<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            											  <span aria-hidden="true">&times;</span>
-            											</button>
-														<div class="alert-message">
-															<h4 class="alert-heading">{{ values['message']['orders'] }}</h4>
-															<p>Something went wrong! Please check you connection parameters.</p>
-															<hr>
-															<p class="mb-0">You can still access the recent connection</p>
-														</div>
-													</div>
-												</div>
-											{% endif %}
-											<div class="mb-3">
-												<label class="form-label" for="inputCity">name data source</label>
-												<h6 class="form-label muted" for="inputCity" style="color:green;">Sessions data source name will be your dimension of Tag Name</h6>
-												<input name="orders_data_source_tag" type="text" class="form-control" id="input_name" placeholder="tag name data source" required>
-											</div>
-											<div class="mb-4 col-md-12">
-												<label class="form-label" for="inputState">data source</label>
-												<select size="3" name="orders_data_source_type" id="inputState2"  data-show-content="true" class="form-control" required>
-													<option>postgresql</option>
-													<option>google big query</option>
-													<option>aws redshift</option>
-													<option selected>csv</option>
-													<option>parquet</option>
-													<option>hdf5</option>
-												</select>
-											</div>
-											<div class="mb-3">
-												<label class="form-label">Data Query or Path</label>
-												<textarea name="orders_data_query_path" class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="5"></textarea>
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">user</label>
-												<input name="orders_user" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew">password</label>
-												<input name="orders_password" type="password" class="form-control" id="inputPasswordNew">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">port</label>
-												<input name="orders_port" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">host</label>
-												<input name="orders_host" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">database</label>
-												<input name="orders_db" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<button name="orders_edit" value="True" type="submit" class="btn btn-primary" >Connect</button>
-										</form>
-									</div>
-								</div>
-							{% endif %}
-							{% if values['row_hold_0']['tag'] == '....' %}
-								<label class="form-label" for="inputState">Index Update Connection</label>
-								<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-									<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
-									<div class="alert-icon">
-										<i class="far fa-fw fa-bell"></i>
-									</div>
-									<div class="alert-message">
-										 <strong>Create Data Source!</strong>
-										<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-										<small>
-											<a href="add-data-purchase">ElasticSearch Configurations</a>
-										</small>
-									</div>
-								</div>
-								<small><a  href="add-data-purchase">ElasticSearch Configurations</a></small>
-							{% endif %}
-						</div>
-						<div class="tab-pane fade" id="downloads_index" role="tabpanel">
-							{% if values['row_hold_0']['tag'] != '....' %}
-								{% if values['message']['downloads'] == 'Connection Failed!' %}
-									<div class="mb-3">
-										<div class="alert alert-danger alert-dismissible" role="alert">
-											<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-											  <span aria-hidden="true">&times;</span>
-											</button>
-											<div class="alert-message">
-												<h4 class="alert-heading">{{ values['message']['downloads'] }}</h4>
-												<p>Something went wrong! Please check you Downloads connection parameters.</p>
-												<hr>
-												<p class="mb-0">You can still access the recent connection</p>
-											</div>
-										</div>
-									</div>
+								{% if values['data_source_con_check'] == 'Connected' %}
+									{% if values['s_c_p_connection_check'] == 'False_False_False' %}
+										<strong style="color:green;">There isn`t any connection detected for Sessions and Customers.</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'True_True_True' %}
+										<strong style="color:green;">connected successfully!</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'False_False_True' %}
+										<strong style="color:green;">There isn`t any connection detected for Sessions and Customers But There is a connection for Baskets.</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'False_True_True' or  values['s_c_p_connection_check'] == 'False_True_False' %}
+										<strong style="color:green;">There is a connection detected for Customers.</strong>
+										<strong style="color:red;">But There isn`t any connection detected for Sessions. Don`t forget to add Session connection.</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'True_False_True' or  values['s_c_p_connection_check'] == 'True_False_False' %}
+										<strong style="color:green;">There is a connection detected for Sessions.</strong>
+										<strong style="color:red;">But There isn`t any connection detected for Customers. Don`t forget to add Customers connection.</strong>
+									{% endif %}
 								{% endif %}
-								{% if values['message']['downloads'] == 'Connected!' %}
-									<div class="mb-3">
-										<div class="alert alert-success alert-dismissible" role="alert">
-											<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-											  <span aria-hidden="true">&times;</span>
-											</button>
-											<div class="alert-message">
-												<h4 class="alert-heading">{{ values['message']['downloads'] }}</h4>
-												<p>Aww yeah, you successfully create the Customers connection. You can update your connection from 'Data Connection' Tab. You can also add new dimension from there.</p>
-												<hr>
-												<p class="mb-0">Make sure you add connection for both 'Sessions' and 'Customers'.</p>
-											</div>
-										</div>
-									</div>
+								{% if values['data_source_con_check'] != 'Connected' and values['data_source_con_check'] != '....' %}
+										<strong style="color:red;">Connection is failed! .</strong>
 								{% endif %}
-								<div class="card">
-									<div class="card-body">
-										<h5 class="card-title">Create Data Source</h5>
-										{% if values['row_hold_0']['process'] == 'hold' %}
-											<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-												<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
-												<div class="alert-icon">
-													<i class="far fa-fw fa-bell"></i>
-												</div>
-												<div class="alert-message">
-													Recently
-													 <strong> CONNECTED </strong>  ElasticSearch Connection  -<strong>{{ values['row_hold_0']['tag'] }}</strong>
-													<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-												</div>
-											</div>
-										{% endif %}
-										{% if values['row_hold_0']['process'] == 'edit' %}
-											<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-												<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
-												<div class="alert-icon">
-													<i class="far fa-fw fa-bell"></i>
-												</div>
-												<div class="alert-message">
-													Recently
-													 <strong> UPDATING </strong>  ElasticSearch Connection  -<strong>{{ values['row_hold_0']['tag'] }}</strong>
-													<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-												</div>
-											</div>
-										{% endif %}
-
-										{% if values['row_hold_0']['process'] == 'add_dimension' %}
-											<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-												<button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
-												<div class="alert-icon">
-													<i class="far fa-fw fa-bell"></i>
-												</div>
-												<div class="alert-message">
-													Recently
-													 <strong> DIMENSIONAL </strong>  ElasticSearch Connection  -<strong>{{ values['row_hold_0']['tag'] }}</strong>
-													<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-												</div>
-											</div>
-										{% endif %}
-										<form method="POST">
-											<div class="mb-3">
-												<label class="form-label" for="inputCity">name data source</label>
-												<input name="downloads_data_source_tag" type="text" class="form-control" id="inputCity" placeholder="tag download data source" required>
-											</div>
-											<div class="mb-4 col-md-12">
-												<label class="form-label" for="inputState">data source</label>
-												<select size="3" name="downloads_data_source_type" id="inputState2" class="form-control" required>
-													<option>postgresql</option>
-													<option>google big query</option>
-													<option>aws redshift</option>
-													<option selected>csv</option>
-													<option>parquet</option>
-													<option>hdf5</option>
-												</select>
-											</div>
-											<div class="mb-3">
-												<label class="form-label">Data Query or Path</label>
-												<textarea name="downloads_data_query_path" class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="5"></textarea>
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">user</label>
-												<input name="downloads_user" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew">password</label>
-												<input name="downloads_password" type="password" class="form-control" id="inputPasswordNew">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">port</label>
-												<input name="downloads_port" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">host</label>
-												<input name="downloads_host" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<div class="mb-3">
-												<label class="form-label" for="inputPasswordNew2">database</label>
-												<input name="downloads_db" type="text" class="form-control" id="inputPasswordNew2">
-											</div>
-											<button  name="downloads_edit" value="True" type="submit" class="btn btn-primary">Connect</button>
-										</form>
-									</div>
-								</div>
-							{% endif %}
-							{% if values['row_hold_0']['tag'] == '....' %}
-								<label class="form-label" for="inputState">Index Update Connection</label>
-								<div class="alert alert-primary alert-dismissible"  id="alert" role="alert">
-									<button type="submit" class="btn-close" href="#manage-data" data-dismiss="alert" aria-label="Close"></button>
-									<div class="alert-icon">
-										<i class="far fa-fw fa-bell"></i>
-									</div>
-									<div class="alert-message">
-										 <strong>Create Data Source!</strong>
-										<i class="align-middle" data-feather="arrow-right-circle" data-toggle="modal" data-target="#delete_tag"></i>
-										<small>
-											<a href="add-data-purchase">ElasticSearch Configurations</a>
-										</small>
-									</div>
-								</div>
-								<small><a  href="add-data-purchase">ElasticSearch Configurations</a></small>
-							{% endif %}
+								{% if values['data_source_con_check'] == '....' %}
+									{% if values['s_c_p_connection_check'] == 'True_False_False' or values['s_c_p_connection_check'] == 'True_False_True' %}
+										<strong style="color:green;">There is a connection detected for Sessions.</strong>
+										<strong style="color:red;">But There isn`t any connection detected for Customers. Don`t forget to add Customers connection.</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'False_True_False' or values['s_c_p_connection_check'] == 'False_True_True' %}
+										<strong style="color:green;">There is a connection detected for Customers.</strong>
+										<strong style="color:red;">But There isn`t any connection detected for Sessions. Don`t forget to add Session connection.</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'True_True_False' or values['s_c_p_connection_check'] == 'True_True_True' %}
+										<strong style="color:green;">Both Sessions and Customers data Sources are detected.</strong>
+									{% endif %}
+								{% endif %}
+							</h6>
 						</div>
+
 					</div>
-				</div>
-				<div class="col-md-9 col-xl-7">
-					<div class="tab-content">
-							<div class="tab-pane fade show active" id="source" role="tabpanel">
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Sessions Table</h5>
+										<h5 class="card-title"><strong style="color:green;">Sessions</strong></h5>
+										<h6 class="card-subtitle text-muted">
+											<div class="row">
+												- Each session ID must be unique. Sessions must cover both non purchased and purchase transactions.
+											</div>
+											<div class="row">
+												- Session Start Date (Whatever you will give as column) must be convinient date format.
+											</div>
+											<div class="row">
+												- Payment Amount must for each session transaction must be assigned as Null value.
+											</div>
+											<div class="row">
+												- There must be Purchased (True/False) column which is required.
+											</div>
+											<div class="row">
+												-  Discount Amount and session end date columns are optional.
+											</div>
+											<div class="row">
+												-  Make sure client IDs are also in data set for Customers Data Source.
+											</div>
+											<div class="row">
+												-  Actions are optional. But It is good to be added. Funnels, Anomaly are related to Action
+											</div>
+											<div class="row">
+												-  Each action names must be assigned. No need to add as action for 'Has Session' and 'Has Purchase'.
+											</div>
+										</h6>
+									</div>
+									<div class="card-body">
 
-										{% if values['row_hold_0']['tag'] == '....' %}
-											<h6 class="card-subtitle text-muted">recently <code>Sessions</code> raw data</h6>
+
+										{% if values['es_connection'] != '....' %}
+											<form method="POST">
+												<div class="mb-4 col-md-12">
+													{% if values['es_connection']['url'] == 'None' %}
+														<td>  <a href="{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a></td>
+													{% endif %}
+												</div>
+
+												<div class="mb-4 col-md-12">
+													<label class="form-label mb-2" for="input_name">Session Connection Tag Name</label>
+													<input name="orders_data_source_tag" type="text" class="form-control mb-3" id="input_name" placeholder="main_session connection" required>
+												</div>
+
+												<table class="table table-striped">
+													<thead>
+														<tr>
+
+														<th  style="width:16%;">
+															order ID
+														</th>
+														<th style="width:15%;">
+															client
+														</th>
+
+														<th style="width:15%;">
+															start_date
+														</th>
+
+														<th style="width:15%;">
+															end_date
+														</th>
+														<th style="width:15%;">
+															amount
+														</th>
+														<th style="width:15%;">
+															discount
+														</th>
+														<th style="width:15%;">
+															purchase
+														</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td> <input name="order_id" type="text" class="form-control mb-3" id="order_id" required> </td>
+															<td> <input name="client" type="text" class="form-control mb-3" id="client" required> </td>
+															<td> <input name="session_start_date" type="text" class="form-control mb-3" id="session_start_date" required> </td>
+															<td> <input name="date" type="text" class="form-control mb-3" id="end_date" required> </td>
+															<td> <input name="payment_amount" type="text" class="form-control mb-3" id="payment_amount" required> </td>
+															<td> <input name="discount_amount" type="text" class="form-control mb-3" id="discount_amount" required> </td>
+															<td> <input name="has_purchased" type="text" class="form-control mb-3" id="has_purchased" required> </td>
+														</tr>
+
+													</tbody>
+												</table>
+
+												<div class="row">
+													<div class="mb-4 col-md-6">
+														<label class="form-label mb-2" for="order_id_tag">Dimensional Column Name in Data Source</label>
+														<div class="mb-2">
+															<h10 class="text-muted">
+																Dimensional Column will be you grouping column in Exploratory Analysis, Machine Learning Processes, Dashboard and Charts
+																This will also create new ElasticSearch Index per unique Dimension on that column of values.
+															</h10>
+														</div>
+														<input name="dimension" type="text" class="form-control mb-3" id="actions" placeholder="has_basket, has_order_screen, e.g.">
+													</div>
+
+													<div class="mb-4 col-md-6">
+														<label class="form-label mb-2" for="order_id_tag">Promotion Column </label>
+														<div class="mb-2">
+															<h10 class="text-muted">
+																If Data Source has Promotion, please add as promotion IDs column
+															</h10>
+														</div>
+														<input name="promotion_id" type="text" class="form-control mb-3" id="promotion_id" placeholder="has_basket, has_order_screen, e.g.">
+													</div>
+												</div>
+
+												<div class="row">
+													<div class="mb-4 col-md-12">
+														<label class="form-label mb-2" for="order_id_tag">Action Column Names in Data Source </label>
+														<div class="mb-2">
+															<h10 class="text-muted">
+																Action Columns are typed below with comma seperated form. These action names must be the exact column name on data set.
+																Each Action column must have values with True/False. More actions means more understanding of Customers
+															</h10>
+														</div>
+														<input name="actions" type="text" class="form-control mb-3" id="actions" placeholder="has_basket, has_order_screen, e.g.">
+													</div>
+												</div>
+
+												<div class="row">
+													<div class="col-md-6">
+														<label class="form-label" for="inputState">data source</label>
+														<select size="3" name="orders_data_source_type" id="inputState2"  data-show-content="true" class="form-control mb-3" required>
+															<option>postgresql</option>
+															<option>google big query</option>
+															<option>aws redshift</option>
+															<option selected>csv</option>
+															<option>parquet</option>
+															<option>hdf5</option>
+														</select>
+														<label class="form-label">Data Query or Path</label>
+														<textarea name="orders_data_query_path" class="form-control mb-3" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+													</div>
+													<div class="col-md-6">
+														<label class="form-label" for="inputPasswordNew2">user</label>
+														<input name="orders_user" type="text" class="form-control mb-3" id="inputPasswordNew2">
+														<label class="form-label" for="inputPasswordNew">password</label>
+														<input name="orders_password" type="password" class="form-control mb-3" id="inputPasswordNew">
+														<label class="form-label" for="inputPasswordNew2">port</label>
+														<input name="orders_port" type="text" class="form-control mb-3" id="inputPasswordNew2">
+														<label class="form-label" for="inputPasswordNew2">host</label>
+														<input name="orders_host" type="text" class="form-control mb-3" id="inputPasswordNew2">
+														<label class="form-label" for="inputPasswordNew2">database</label>
+														<input name="orders_db" type="text" class="form-control" id="inputPasswordNew2">
+													</div>
+												</div>
+												<button name="connect" value="orders" type="submit" class="btn btn-primary" >Connect</button>
+											</form>
 										{% endif %}
-										{% if values['row_hold_0']['tag'] != '....' %}
-											<h6 class="card-subtitle text-muted"> <strong>EDIT -  <code>{{ values['row_hold_0']['tag'] }}</code> raw data</strong>  </h6>
+
+										{% if values['es_connection'] == '....' %}
+											<strong style="color:red;">Please add ElasticSearch Connection</strong>
 										{% endif %}
 									</div>
-									{% if values['row_hold_0']['tag'] == '....' %}
-										<div class="card-header" style="width:100%; height:100%">
-											<button class="btn btn-outline-primary" style="width:20%; height:20%" data-toggle="modal" data-target="#please_choose_connection" >Assigned</button>
-											<div class="modal fade" id="please_choose_connection" tabindex="-1" role="dialog" aria-hidden="true">
-												<div class="modal-dialog modal-dialog-centered" role="document">
-													<div class="modal-content">
-														<div class="modal-header">
-															<h5 class="modal-title">Please Connect / Edit Data Source!</h5>
-															<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    										  <span aria-hidden="true">&times;</span>
-                    										</button>
-																</div>
-																<div class="modal-body m-3">
-																	<p class="mb-0">You may not see the correct data in the same columns.
-																					In order to edit the data table, from 'Sessions & Download Index Edit Data Source Connection', choose the connected data source and edit table names.
-																					Don`t forget to press 'Confirm'. Otherwise, you may lose your edited version.
-																					After the updated table is confirmed, 'Cancel' editing from 'Sessions & Download Index Edit Data Source Connection'. </p>
-																</div>
-																<div class="modal-footer">
-															<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									{% endif %}
-									<form method="POST">
-										{% if values['row_hold_0']['tag'] != '....' %}
-											<div class="card-header" style="width:100%; height:100%">
-												<button name="orders_column_replacement" value="True" type="submit" class="btn btn-outline-danger" style="width:20%; height:20%" >Confirm</button>
-												<div class="spinner-border spinner-border-sm text-danger mr-10" role="status">
-													<span class="sr-only">Loading...</span>
-												</div>
-
-											</div>
-										{% endif %}
-										<table class="table table-striped">
-											<thead>
-											<tr>
-											<th  style="width:10%;">
-												{% if values['row_hold_0']['tag'] == '....' %}
-													order Id
-												{% endif %}
-												{% if values['row_hold_0']['tag'] != '....' %}
-													<h5 class="modal-title" style="color: green; font-size:16px">order Id</h5>
-													<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_order_id"></i></a>
-													<div class="modal fade" id="update_order_id" tabindex="-1" role="dialog" aria-hidden="true">
-													<div class="modal-dialog" role="document">
-														<div class="modal-content">
-															<div class="modal-header">
-																<h4 class="card-subtitle text-muted"></h4>
-																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-															</div>
-															<div class="modal-body m-3">
-																<div class="card">
-																	<div class="card-body">
-																		<h5 class="card-title">Edit Order-Id Column</h5>
-																			<div class="mb-3">
-																				<select name="order_id" id="order_id_selection" class="form-control" required>
-																					<option value=""><strong>Choose column from Sessions Data Source</strong></option>
-                																	{% for col in values['message']['orders_columns'] %}
-                																	  <option value= "{{ col }}">{{ col }}</option>"
-                																	{% endfor %}
-																				</select>
-																			</div>
-																	</div>
-																</div>
-															</div>
-															<div class="modal-footer">
-																<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
-															</div>
-														</div>
-													</div>
-												</div>
-												{% endif %}
-											</th>
-											<th style="width:10%;">
-												{% if values['row_hold_0']['tag'] == '....' %}
-													client
-												{% endif %}
-												{% if values['row_hold_0']['tag'] != '....' %}
-													<h5 class="modal-title" style="color: green; font-size:16px">client</h5>
-													<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_client"></i></a>
-													<div class="modal fade" id="update_client" tabindex="-1" role="dialog" aria-hidden="true">
-													<div class="modal-dialog" role="document">
-														<div class="modal-content">
-															<div class="modal-header">
-																<h4 class="card-subtitle text-muted"></h4>
-																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-															</div>
-															<div class="modal-body m-3">
-																<div class="card">
-																	<div class="card-body">
-																		<h5 class="card-title">Edit Client Column</h5>
-
-																			<div class="mb-3">
-																				<select name="client" id="client_selection" class="form-control" required>
-																					<option value=""><strong>Choose column from Sessions Data Source</strong></option>
-																					{% for col in values['message']['orders_columns'] %}
-																					  <option value= "{{ col }}">{{ col }}</option>"
-																					{% endfor %}
-																				</select>
-																			</div>
-																	</div>
-																</div>
-															</div>
-															<div class="modal-footer">
-																<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
-															</div>
-														</div>
-													</div>
-												</div>
-												{% endif %}
-											</th>
-
-											<th style="width:15%;">
-												{% if values['row_hold_0']['tag'] == '....' %}
-													start_date
-												{% endif %}
-												{% if values['row_hold_0']['tag'] != '....' %}
-													<h5 class="modal-title" style="color: green; font-size:16px">start_date</h5>
-													<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_start_date"></i></a>
-													<div class="modal fade" id="update_start_date" tabindex="-1" role="dialog" aria-hidden="true">
-													<div class="modal-dialog" role="document">
-														<div class="modal-content">
-															<div class="modal-header">
-																<h4 class="card-subtitle text-muted"></h4>
-																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-															</div>
-															<div class="modal-body m-3">
-																<div class="card">
-																	<div class="card-body">
-																		<h5 class="card-title">Edit Start Date Column</h5>
-
-																			<div class="mb-3">
-																				<select name="session_start_date" id="start_date_selection" class="form-control" required>
-																					<option value=""><strong>Choose column from Sessions Data Source</strong></option>
-                																	{% for col in values['message']['orders_columns'] %}
-                																	  <option value="{{ col }}" >{{ col }}</option>"
-                																	{% endfor %}
-																				</select>
-																			</div>
-																	</div>
-																</div>
-															</div>
-															<div class="modal-footer">
-																<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
-															</div>
-														</div>
-													</div>
-												</div>
-												{% endif %}
-											</th>
-
-											<th style="width:15%;">
-												{% if values['row_hold_0']['tag'] == '....' %}
-													end_date
-												{% endif %}
-												{% if values['row_hold_0']['tag'] != '....' %}
-													<h5 class="modal-title" style="color: green; font-size:16px">end_date</h5>
-													<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_end_date"></i></a>
-													<div class="modal fade" id="update_end_date" tabindex="-1" role="dialog" aria-hidden="true">
-													<div class="modal-dialog" role="document">
-														<div class="modal-content">
-															<div class="modal-header">
-																<h4 class="card-subtitle text-muted"></h4>
-																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-															</div>
-															<div class="modal-body m-3">
-																<div class="card">
-																	<div class="card-body">
-																		<h5 class="card-title">Edit End Date Column</h5>
-
-																			<div class="mb-3">
-																				<select name="date" id="end_date_selection" class="form-control" required>
-																					<option value=""><strong>Choose column from Sessions Data Source</strong></option>
-                																	{% for col in values['message']['orders_columns'] %}
-                																	  <option value= "{{ col }}">{{ col }}</option>"
-                																	{% endfor %}
-																				</select>
-																			</div>
-																	</div>
-																</div>
-															</div>
-															<div class="modal-footer">
-																<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
-															</div>
-														</div>
-													</div>
-												</div>
-												{% endif %}
-											</th>
-											<th style="width:10%;">
-												{% if values['row_hold_0']['tag'] == '....' %}
-													amount
-												{% endif %}
-												{% if values['row_hold_0']['tag'] != '....' %}
-													<h5 class="modal-title" style="color: green; font-size:16px">amount</h5>
-													<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_amount"></i></a>
-													<div class="modal fade" id="update_amount" tabindex="-1" role="dialog" aria-hidden="true">
-													<div class="modal-dialog" role="document">
-														<div class="modal-content">
-															<div class="modal-header">
-																<h4 class="card-subtitle text-muted"></h4>
-																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-															</div>
-															<div class="modal-body m-3">
-																<div class="card">
-																	<div class="card-body">
-																		<h5 class="card-title">Edit Payment Amount Column</h5>
-																			<div class="mb-3">
-																				<select name="payment_amount" id="payment_amount_selection" class="form-control" required>
-																					<option value=""><strong>Choose column from Sessions Data Source</strong></option>
-                																	{% for col in values['message']['orders_columns'] %}
-                																	  <option value= "{{ col }}">{{ col }}</option>"
-                																	{% endfor %}
-																				</select>
-																			</div>
-																	</div>
-																</div>
-															</div>
-															<div class="modal-footer">
-																<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
-															</div>
-														</div>
-													</div>
-												</div>
-												{% endif %}
-											</th>
-											<th style="width:10%;">
-												{% if values['row_hold_0']['tag'] == '....' %}
-													discount
-												{% endif %}
-												{% if values['row_hold_0']['tag'] != '....' %}
-													<h5 class="modal-title" style="color: green; font-size:16px">discount</h5>
-													<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_discount"></i></a>
-													<div class="modal fade" id="update_discount" tabindex="-1" role="dialog" aria-hidden="true">
-													<div class="modal-dialog" role="document">
-														<div class="modal-content">
-															<div class="modal-header">
-																<h4 class="card-subtitle text-muted"></h4>
-																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-															</div>
-															<div class="modal-body m-3">
-																<div class="card">
-																	<div class="card-body">
-																		<h5 class="card-title">Edit Discount Amount Column</h5>
-																			<div class="mb-3">
-																				<select name="discount_amount" id="discount_amount_selection" class="form-control">
-																					<option value=""><strong>Choose column from Sessions Data Source</strong></option>
-                																	{% for col in values['message']['orders_columns'] %}
-                																	  <option value= "{{ col }}">{{ col }}</option>"
-                																	{% endfor %}
-																				</select>
-																			</div>
-																	</div>
-																</div>
-															</div>
-															<div class="modal-footer">
-																<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
-															</div>
-														</div>
-													</div>
-												</div>
-												{% endif %}
-											</th>
-											<th style="width:10%;">
-												{% if values['row_hold_0']['tag'] == '....' %}
-													purchase
-												{% endif %}
-												{% if values['row_hold_0']['tag'] != '....' %}
-													<h5 class="modal-title" style="color: green; font-size:16px">purchase</h5>
-													<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_has_purchased"></i></a>
-													<div class="modal fade" id="update_has_purchased" tabindex="-1" role="dialog" aria-hidden="true">
-													<div class="modal-dialog" role="document">
-														<div class="modal-content">
-															<div class="modal-header">
-																<h4 class="card-subtitle text-muted"></h4>
-																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-															</div>
-															<div class="modal-body m-3">
-																<div class="card">
-																	<div class="card-body">
-																		<h5 class="card-title">Edit Purchased Column</h5>
-																			<div class="mb-3">
-																				<select name="has_purchased" id="has_purchased" class="form-control" required>
-																					<option value=""><strong>Choose column from Sessions Data Source</strong></option>
-                																	{% for col in values['message']['orders_columns'] %}
-                																	  <option value= "{{ col }}">{{ col }}</option>"
-                																	{% endfor %}
-																				</select>
-																			</div>
-																	</div>
-																</div>
-															</div>
-															<div class="modal-footer">
-																<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
-															</div>
-														</div>
-													</div>
-												</div>
-												{% endif %}
-											</th>
-										</tr>
-											</thead>
-												<tbody>
-										<tr>
-											{% if values['orders_data'] == '....' %}
-												<td>230320403</td>
-												<td>10000023232</td>
-												<td>2021-01-12 12:10:00</td>
-												<td>2021-01-12 12:13:00</td>
-												<td>25.3</td>
-												<td>0.3</td>
-												<td><span class="badge bg-success">True</span></td>
-											{% endif %}
-											{% if values['orders_data'] != '....' %}
-												<td>{{ values['orders_data']['row_orders_data_0']['order_id'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_0']['client'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_0']['session_start_date'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_0']['date'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_0']['payment_amount'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_0']['discount_amount'] }}</td>
-												{% if values['orders_data']['row_orders_data_0']['has_purchased'] == 'True' %}
-													<td><span class="badge bg-success">True</span></td>
-												{% endif %}
-												{% if values['orders_data']['row_orders_data_0']['has_purchased'] != 'True' %}
-													<td><span class="badge bg-danger">False</span></td>
-												{% endif %}
-											{% endif %}
-										</tr>
-										<tr>
-											{% if values['orders_data'] == '....' %}
-												<td>230320403</td>
-												<td>10000023232</td>
-												<td>2021-01-12 12:10:00</td>
-												<td>2021-01-12 12:13:00</td>
-												<td>25.3</td>
-												<td>0.3</td>
-												<td><span class="badge bg-success">True</span></td>
-											{% endif %}
-											{% if values['orders_data'] != '....' %}
-												<td>{{ values['orders_data']['row_orders_data_1']['order_id'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_1']['client'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_1']['session_start_date'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_1']['date'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_1']['payment_amount'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_1']['discount_amount'] }}</td>
-												{% if values['orders_data']['row_orders_data_1']['has_purchased'] == 'True' %}
-													<td><span class="badge bg-success">True</span></td>
-												{% endif %}
-												{% if values['orders_data']['row_orders_data_1']['has_purchased'] != 'True' %}
-													<td><span class="badge bg-danger">False</span></td>
-												{% endif %}
-											{% endif %}
-										</tr>
-										<tr>
-											{% if values['orders_data'] == '....' %}
-												<td>230320403</td>
-												<td>10000023232</td>
-												<td>2021-01-12 12:10:00</td>
-												<td>2021-01-12 12:13:00</td>
-												<td>25.3</td>
-												<td>0.3</td>
-												<td><span class="badge bg-success">True</span></td>
-											{% endif %}
-											{% if values['orders_data'] != '....' %}
-												<td>{{ values['orders_data']['row_orders_data_2']['order_id'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_2']['client'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_2']['session_start_date'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_2']['date'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_2']['payment_amount'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_2']['discount_amount'] }}</td>
-												{% if values['orders_data']['row_orders_data_2']['has_purchased'] == 'True' %}
-													<td><span class="badge bg-success">True</span></td>
-												{% endif %}
-												{% if values['orders_data']['row_orders_data_2']['has_purchased'] != 'True' %}
-													<td><span class="badge bg-danger">False</span></td>
-												{% endif %}
-											{% endif %}
-										</tr>
-										<tr>
-											{% if values['orders_data'] == '....' %}
-												<td>230320403</td>
-												<td>10000023232</td>
-												<td>2021-01-12 12:10:00</td>
-												<td>2021-01-12 12:13:00</td>
-												<td>25.3</td>
-												<td>0.3</td>
-												<td><span class="badge bg-success">True</span></td>
-											{% endif %}
-											{% if values['orders_data'] != '....' %}
-												<td>{{ values['orders_data']['row_orders_data_3']['order_id'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_3']['client'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_3']['session_start_date'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_3']['date'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_3']['payment_amount'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_3']['discount_amount'] }}</td>
-												{% if values['orders_data']['row_orders_data_3']['has_purchased'] == 'True' %}
-													<td><span class="badge bg-success">True</span></td>
-												{% endif %}
-												{% if values['orders_data']['row_orders_data_3']['has_purchased'] != 'True' %}
-													<td><span class="badge bg-danger">False</span></td>
-												{% endif %}
-											{% endif %}
-										</tr>
-
-										<tr>
-											{% if values['orders_data'] == '....' %}
-												<td>230320403</td>
-												<td>10000023232</td>
-												<td>2021-01-12 12:10:00</td>
-												<td>2021-01-12 12:13:00</td>
-												<td>25.3</td>
-												<td>0.3</td>
-												<td><span class="badge bg-success">True</span></td>
-											{% endif %}
-											{% if values['orders_data'] != '....' %}
-												<td>{{ values['orders_data']['row_orders_data_4']['order_id'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_4']['client'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_4']['session_start_date'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_4']['date'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_4']['payment_amount'] }}</td>
-												<td>{{ values['orders_data']['row_orders_data_4']['discount_amount'] }}</td>
-												{% if values['orders_data']['row_orders_data_4']['has_purchased'] == 'True' %}
-													<td><span class="badge bg-success">True</span></td>
-												{% endif %}
-												{% if values['orders_data']['row_orders_data_4']['has_purchased'] != 'True' %}
-													<td><span class="badge bg-danger">False</span></td>
-												{% endif %}
-											{% endif %}
-										</tr>
-										</tbody>
-										</table>
-									</form>
-
 								</div>
 							</div>
-					</div>
-					<div class="tab-content">
-							<div class="tab-pane fade show active" id="source" role="tabpanel">
-								<div class="card">
+							<div class="col-md-6">
+								<div class="card-mb-6">
 									<div class="card-header">
-										<h5 class="card-title">Customers Table</h5>
+										<h5 class="card-title"><strong style="color:green;">Customers</strong></h5>
 
-										{% if values['row_hold_0']['tag'] == '....' %}
-											<h6 class="card-subtitle text-muted">recently <code>Customers</code> raw data</h6>
+
+										<h6 class="card-subtitle text-muted mb-4">
+											<div class="row">
+												- Each customer ID must be unique. Customer IDs are eligible to join with Session of client IDs.
+											</div>
+											<div class="row">
+												- Download Date is required.
+											</div>
+											<div class="row">
+												- At Least signup Date or Download Date must be assigned.
+											</div>
+											<div class="row">
+												- Even there is no download date is available please make sure assign any date valuable for the business
+											</div>
+											<div class="row">
+												-  Actions must be date rather than True/False columns just like Sessions Data Source of Actions.
+											</div>
+											<div class="row">
+												-  Actions are optional. But It is good to be added. Funnels, Anomaly are related to Actions.
+											</div>
+											<div class="row">
+												-  If there is an assigned dimensional column on Session Data Source, make sure customers Data Source includes the clients for all dimension.
+											</div>
+										</h6>
+
+									</div>
+
+									<div class="mb-4 col-md-12">
+										{% if values['es_connection'] != '....' %}
+											<form method="POST">
+												<div class="mb-4 col-md-12">
+													{% if values['es_connection']['url'] == 'None' %}
+														<td>  <a href="{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a></td>
+													{% endif %}
+												</div>
+
+												<div class="mb-4 col-md-12">
+													<label class="form-label mb-2" for="input_name">Customers Connection Tag Name</label>
+													<input name="downloads_data_source_tag" type="text" class="form-control mb-3" id="input_name" placeholder="main_customer connection" required>
+												</div>
+
+												<table class="table table-striped">
+													<thead>
+														<tr>
+															<th  style="width:33%;">
+																Client ID
+															</th>
+
+															<th style="width:33%;">
+																Download Date
+															</th>
+
+															<th style="width:33%;">
+																Signup Date
+															</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td> <input name="client_2" type="text" class="form-control mb-3" id="client_2" required> </td>
+															<td> <input name="download_date" type="text" class="form-control mb-3" id="download_date" required> </td>
+															<td> <input name="signup_date" type="text" class="form-control mb-3" id="signup_date"> </td>
+														</tr>
+
+													</tbody>
+												</table>
+												<div class="row">
+
+													<div class="mb-7 col-md-12">
+													</div>
+													<div class="mb-7 col-md-12">
+													</div>
+
+												</div>
+
+												<div class="row">
+
+													<div class="mb-3 col-md-12">
+														<label class="form-label mb-2" for="order_id_tag">Action Column Names in Data Source </label>
+														<div class="mb-3">
+															<h10 class="text-muted">
+																Action Columns are typed below with comma seperated form. These action names must be the exact column name on data set.
+																Each Action column must have values with True/False. More actions means more understanding of Customers
+															</h10>
+														</div>
+
+														<textarea name="actions" class="form-control mb-3" placeholder="first_session_start_date, first_order_date, e.g." rows="1"></textarea>
+													</div>
+												</div>
+
+												<div class="card-body">
+													<div class="row">
+														<div class="col-md-6">
+															<label class="form-label" for="inputState">data source</label>
+															<select size="3" name="downloads_data_source_type" id="inputState2"  data-show-content="true" class="form-control mb-3" required>
+																<option>postgresql</option>
+																<option>google big query</option>
+																<option>aws redshift</option>
+																<option selected>csv</option>
+																<option>parquet</option>
+																<option>hdf5</option>
+															</select>
+															<label class="form-label">Data Query or Path</label>
+															<textarea name="downloads_data_query_path" class="form-control mb-3" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+														</div>
+														<div class="col-md-6">
+															<label class="form-label" for="inputPasswordNew2">user</label>
+															<input name="downloads_user" type="text" class="form-control mb-3" id="inputPasswordNew2">
+															<label class="form-label" for="inputPasswordNew">password</label>
+															<input name="downloads_password" type="password" class="form-control mb-3" id="inputPasswordNew">
+															<label class="form-label" for="inputPasswordNew2">port</label>
+															<input name="downloads_port" type="text" class="form-control mb-3" id="inputPasswordNew2">
+															<label class="form-label" for="inputPasswordNew2">host</label>
+															<input name="downloads_host" type="text" class="form-control mb-3" id="inputPasswordNew2">
+															<label class="form-label" for="inputPasswordNew2">database</label>
+															<input name="downloads_db" type="text" class="form-control" id="inputPasswordNew2">
+														</div>
+													</div>
+													<button name="connect" value="downloads" type="submit" class="btn btn-primary" >Connect</button>
+												</div>
+											</form>
 										{% endif %}
-										{% if values['row_hold_0']['tag'] != '....' %}
-											<h6 class="card-subtitle text-muted"> <strong>EDIT -  <code>{{ values['row_hold_0']['tag'] }}</code> raw data</strong>  </h6>
+										{% if values['es_connection'] == '....' %}
+											<strong style="color:red;">Please add ElasticSearch Connection</strong>
 										{% endif %}
 									</div>
-									{% if values['row_hold_0']['tag'] == '....' %}
-										<div class="card-header" style="width:100%; height:100%">
-											<button class="btn btn-outline-primary" style="width:20%; height:20%" data-toggle="modal" data-target="#please_choose_connection_d" >Assigned</button>
-											<div class="modal fade" id="please_choose_connection_d" tabindex="-1" role="dialog" aria-hidden="true">
-												<div class="modal-dialog modal-dialog-centered" role="document">
-													<div class="modal-content">
-														<div class="modal-header">
-															<h5 class="modal-title">Please Connect / Edit Data Source!</h5>
-															<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    										  <span aria-hidden="true">&times;</span>
-                    										</button>
-																</div>
-																<div class="modal-body m-3">
-																	<p class="mb-0">You may not see the correct data in the same columns.
-																					In order to edit the data table, from 'Sessions & Customers Index Edit Data Source Connection', choose the connected data source and edit table names.
-																					Don`t forget to press 'Confirm'. Otherwise, you may lose your edited version.
-																					After the updated table is confirmed, 'Cancel' editing from 'Sessions & Download Index Edit Data Source Connection'. </p>
-																</div>
-														<div class="modal-footer">
-															<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									{% endif %}
-									<form method="POST">
-										{% if values['row_hold_0']['tag'] != '....' %}
-											<div class="card-header" style="width:100%; height:100%">
-												<button name="downloads_column_replacement" value="True" type="submit" class="btn btn-outline-danger" style="width:20%; height:20%" >Confirm</button>
-												<div class="spinner-border spinner-border-sm text-danger mr-10" role="status">
-													<span class="sr-only">Loading...</span>
-												</div>
-											</div>
-										{% endif %}
-										<table class="table table-striped">
-										<thead>
-											<tr>
-											<th style="width:30%;">
-											{% if values['row_hold_0']['tag'] == '....' %}
-												client
-											{% endif %}
-											{% if values['row_hold_0']['tag'] != '....' %}
-												<h5 class="modal-title" style="color: green; font-size:16px">client</h5>
-												<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#client"></i></a>
-												<div class="modal fade" id="client" tabindex="-1" role="dialog" aria-hidden="true">
-													<div class="modal-dialog" role="document">
-														<div class="modal-content">
-															<div class="modal-header">
-																<h4 class="card-subtitle text-muted"></h4>
-																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-															</div>
-															<div class="modal-body m-3">
-																<div class="card">
-																	<div class="card-body">
-																		<h5 class="card-title">Edit Client Column</h5>
-																			<div class="mb-3">
-																				<select name="client" id="client_selection_2" class="form-control" required>
-																					<option value=""><strong>Choose column from Customers Data Source</strong></option>
-                																	{% for col in values['message']['downloads_columns'] %}
-                																	  <option value= "{{ col }}">{{ col }}</option>"
-                																	{% endfor %}
-																				</select>
-																			</div>
-																	</div>
-																</div>
-															</div>
-															<div class="modal-footer">
-																<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
-															</div>
-														</div>
-													</div>
-												</div>
-											{% endif %}
-									</th>
-											<th style="width:30%;">
-										{% if values['row_hold_0']['tag'] == '....' %}
-											Download Date
-										{% endif %}
-										{% if values['row_hold_0']['tag'] != '....' %}
-											<h5 class="modal-title" style="color: green; font-size:16px">Download Date</h5>
-											<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#download_date"></i></a>
-											<div class="modal fade" id="download_date" tabindex="-1" role="dialog" aria-hidden="true">
-											<div class="modal-dialog" role="document">
-												<div class="modal-content">
-													<div class="modal-header">
-														<h4 class="card-subtitle text-muted"></h4>
-														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-													</div>
-													<div class="modal-body m-3">
-														<div class="card">
-															<div class="card-body">
-																<h5 class="card-title">Edit Download Date Column</h5>
-
-																	<div class="mb-3">
-																		<select name="download_date" id="download_date_selection" class="form-control" required>
-																			<option value=""><strong>Choose column from Customers Data Source</strong></option>
-                															{% for col in values['message']['downloads_columns'] %}
-                															  <option value= "{{ col }}">{{ col }}</option>"
-                															{% endfor %}
-																		</select>
-																	</div>
-															</div>
-														</div>
-													</div>
-													<div class="modal-footer">
-														<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
-													</div>
-												</div>
-											</div>
-										</div>
-										{% endif %}
-									</th>
-											<th style="width:30%;">
-										{% if values['row_hold_0']['tag'] == '....' %}
-											Signup Date
-										{% endif %}
-										{% if values['row_hold_0']['tag'] != '....' %}
-											<h5 class="modal-title" style="color: green; font-size:16px">Signup Date</h5>
-											<a href="#"><i class="align-middle" data-feather="edit-2" data-toggle="modal" data-target="#update_signup_date"></i></a>
-											<div class="modal fade" id="update_signup_date" tabindex="-1" role="dialog" aria-hidden="true">
-											<div class="modal-dialog" role="document">
-												<div class="modal-content">
-													<div class="modal-header">
-														<h4 class="card-subtitle text-muted"></h4>
-														<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-													</div>
-													<div class="modal-body m-3">
-														<div class="card">
-															<div class="card-body">
-																<h5 class="card-title">Edit Signup Date Column</h5>
-																	<div class="mb-3">
-																		<select name="signup_date" id="signup_date_selection" class="form-control">
-																			<option value=""><strong>Choose column from Customers Data Source</strong></option>
-                															{% for col in values['message']['downloads_columns'] %}
-                															  <option value= "{{ col }}">{{ col }}</option>"
-                															{% endfor %}
-																		</select>
-																	</div>
-															</div>
-														</div>
-													</div>
-													<div class="modal-footer">
-														<button type="button" class="btn btn-secondary" data-dismiss="modal">Save</button>
-													</div>
-												</div>
-											</div>
-										</div>
-										{% endif %}
-									</th>
-											</tr>
-										</thead>
-										<tbody>
-								<tr>
-									{% if values['downloads_data'] == '....' %}
-										<td>10000023232</td>
-										<td>2020-12-12 12:10:00</td>
-										<td>2020-12-12 12:13:00</td>
-									{% endif %}
-									{% if values['downloads_data'] != '....' %}
-										<td>{{ values['downloads_data']['row_downloads_data_0']['client'] }}</td>
-										<td>{{ values['downloads_data']['row_downloads_data_0']['download_date'] }}</td>
-										<td>{{ values['downloads_data']['row_downloads_data_0']['signup_date'] }}</td>
-									{% endif %}
-								</tr>
-								<tr>
-									{% if values['downloads_data'] == '....' %}
-										<td>10000023232</td>
-										<td>2020-12-12 12:10:00</td>
-										<td>2020-12-12 12:13:00</td>
-									{% endif %}
-									{% if values['downloads_data'] != '....' %}
-										<td>{{ values['downloads_data']['row_downloads_data_1']['client'] }}</td>
-										<td>{{ values['downloads_data']['row_downloads_data_1']['download_date'] }}</td>
-										<td>{{ values['downloads_data']['row_downloads_data_1']['signup_date'] }}</td>
-									{% endif %}
-								</tr>
-								<tr>
-									{% if values['downloads_data'] == '....' %}
-										<td>10000023232</td>
-										<td>2020-12-12 12:10:00</td>
-										<td>2020-12-12 12:13:00</td>
-									{% endif %}
-									{% if values['downloads_data'] != '....' %}
-										<td>{{ values['downloads_data']['row_downloads_data_2']['client'] }}</td>
-										<td>{{ values['downloads_data']['row_downloads_data_2']['download_date'] }}</td>
-										<td>{{ values['downloads_data']['row_downloads_data_2']['signup_date'] }}</td>
-									{% endif %}
-								</tr>
-								<tr>
-									{% if values['downloads_data'] == '....' %}
-										<td>10000023232</td>
-										<td>2020-12-12 12:10:00</td>
-										<td>2020-12-12 12:13:00</td>
-									{% endif %}
-									{% if values['downloads_data'] != '....' %}
-										<td>{{ values['downloads_data']['row_downloads_data_3']['client'] }}</td>
-										<td>{{ values['downloads_data']['row_downloads_data_3']['download_date'] }}</td>
-										<td>{{ values['downloads_data']['row_downloads_data_3']['signup_date'] }}</td>
-									{% endif %}
-								</tr>
-
-								<tr>
-									{% if values['downloads_data'] == '....' %}
-										<td>10000023232</td>
-										<td>2020-12-12 12:10:00</td>
-										<td>2020-12-12 12:13:00</td>
-									{% endif %}
-									{% if values['downloads_data'] != '....' %}
-										<td>{{ values['downloads_data']['row_downloads_data_4']['client'] }}</td>
-										<td>{{ values['downloads_data']['row_downloads_data_4']['download_date'] }}</td>
-										<td>{{ values['downloads_data']['row_downloads_data_4']['signup_date'] }}</td>
-									{% endif %}
-								</tr>
-
-							</tbody>
-										</table>
-									</form>
 								</div>
 							</div>
+						</div>
 					</div>
-
 				</div>
+
 
 			</div>
-
 		</div>
 	</main>
 

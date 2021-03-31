@@ -1,5 +1,5 @@
 import sys, os, inspect
-from os.path import join, dirname, abspath
+from os.path import join, dirname, abspath, exists
 from sqlalchemy import create_engine, MetaData
 from pandas import read_sql, DataFrame
 import subprocess
@@ -10,12 +10,13 @@ currentdir = dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = dirname(currentdir)
 sys.path.insert(0, parentdir)
 
+from data_storage_configurations.query_es import QueryES
 from data_storage_configurations.data_access import GetData
 from data_storage_configurations.sample_data import CreateSampleIndex
 from data_storage_configurations.es_create_index import CreateIndex
 from data_storage_configurations.schedule_data_integration import Scheduler
 from configs import elasticsearch_connection_refused_comment, query_path, acception_column_count
-from utils import read_yaml
+from utils import read_yaml, sqlite_string_converter
 
 engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
 metadata = MetaData(bind=engine)
@@ -23,151 +24,104 @@ con = engine.connect()
 sample_data_columns = read_yaml(query_path, "queries.yaml")['columns']
 
 
-data_config = {'orders': {'main':
-                              {'connection': {},
-                               'action': [],
-                               'product': [],
-                               'promotion': []
-                               },
-                          'dimensions': [{'connection': {},
-                                          'action': [],
-                                          'product': [],
-                                          'promotion': []
-                                          }
-                                         ]
-                          },
-               'downloads': {'main': {'connection': {},
-                                      'action': []
-                                      },
-                             'dimensions': [{'connection': {},
-                                             'action': []
-                                             }
-                                            ]
-                             }
-               }
-
-
 def create_connection_columns(index='orders'):
     return [index + i for i in ['_data_source_tag', '_data_source_type',
                                 '_data_query_path', '_password', '_user', '_port', '_host', '_db']]
 
 
-def create_data_access_parameters(connection, index='orders', date=None, test=False, columns=None):
+def create_data_access_parameters(connection, index='orders', date=None, test=False):
     _ds = {'data_source': connection[index + '_data_source_type'],
             'date': date,
-            'data_query_path': connection[index + '_data_query_path'],
+            'data_query_path': sqlite_string_converter(connection[index + '_data_query_path'], back_to_normal=True),
             'test': test,
             'config': {'host': connection[index + '_host'],
                        'port': connection[index + '_port'],
                        'password': connection[index + '_password'],
-                       'user': connection[index + '_user'], 'db': connection[index + '_db']}
-            }
-    if columns is not None:
-        _ds['columns'] = columns
+                       'user': connection[index + '_user'], 'db': connection[index + '_db']}}
     return _ds
 
 
-def main_connection_table_to_dictionary(data_config, main, index, columns):
-    for m in main.to_dict('results'):
-        try:
-            _cols = columns[columns['tag'] == m[index[0]]].to_dict('results')[-1]
-        except Exception as e:
-            _cols = []
-        if len(_cols) != 0:
-            if 'True' not in [m[i] for i in ['is_action', 'is_product', 'is_promotion']]:
-                data_config[index[1]]['main']['connection'] = create_data_access_parameters(m,
-                                                                                            index=index[1], date=None,
-                                                                                            test=False, columns=_cols)
-            else:
-                _type = None
-                if m['is_action'] == 'True':
-                    _type = 'action'
-                if m['is_product'] == 'True' and index[1] == 'orders':
-                    _type = 'product'
-                if m['is_promotion'] == 'True' and index[1] == 'orders':
-                    _type = 'promotion'
-                if _type:
-                    data_config[index[1]]['main'][_type].append(create_data_access_parameters(m,
-                                                                                              index=index[1],
-                                                                                              date=None,
-                                                                                              test=False,
-                                                                                              columns=_cols))
-    return data_config
+def get_data_connection_arguments():
+    conn = read_sql("SELECT * FROM data_connection  ", con).to_dict('resutls')[-1]
+    columns = read_sql("SELECT  *  FROM data_columns_integration", con).to_dict('results')[-1]
+
+    data_configs = {'orders': create_data_access_parameters(conn, index='orders', date=None, test=False),
+                    'downloads': create_data_access_parameters(conn, index='downloads', date=None, test=False),
+                    'products': create_data_access_parameters(conn, index='products', date=None, test=False)
+                    }
+    return conn, columns, data_configs
 
 
-def dimension_connection_table_to_dictionary(data_config, main, index, columns):
-    dimension_main = main.query("is_action == 'None' and is_product == 'None' and is_promotion == 'None'")
-    additional_ds = {'action': main.query("is_action == 'True'"), 'product': main.query("is_action == 'True'"),
-                     'promotion': main.query("is_promotion == 'True'")}
-    _conn_default = data_config[index[1]]['dimensions'][0]
-    data_config[index[1]]['dimensions'] = []
-    for m in dimension_main.to_dict('results'):
-        _conn = _conn_default
-        _cols_dim = columns[columns['tag'] == m[index[0]]].to_dict('results')[-1]
-        _conn['connection'] = create_data_access_parameters(m, index=index[1], date=None, test=False, columns=_cols_dim)
-        # additional data sources
-        for add in additional_ds:
-            if index[1] == 'orders':
-                _add_ds = additional_ds[add]
-            else:
-                _add_ds = additional_ds[add] if add == 'action' else []
-            if len(_add_ds) != 0:
-                _c = _add_ds[_add_ds['dimension'] == m['id']].to_dict('results')
-                if len(_c) != 0:
-                    _conn[add] = []
-                    for _a in _c:
-                        _cols_dim_add = columns[columns['tag'] == m[index[0]]].to_dict('results')[-1]
-                        _conn[add].append(create_data_access_parameters(_a, index=index[1],
-                                                                        date=None, test=False, columns=_cols_dim_add))
-        data_config[index[1]]['dimensions'].append({m['orders_data_source_tag']: _conn})
-    return data_config
+def get_action_name():
+    actions = read_sql("SELECT * FROM actions ", con)
+    a_orders, a_downloads = actions.query("data_type == 'orders'"), actions.query("data_type == 'downloads'")
+    check_actions = lambda a: list(a['action_name']) if len(a) != 0 else []
+    return {'orders': check_actions(a_orders), 'downloads': check_actions(a_downloads)}
 
 
-def create_date_structure(es_tag_connections, columns, data_config):
-    for index in [("orders_data_source_tag", "orders"), ("downloads_data_source_tag", "downloads")]:
-        print()
-        conns = es_tag_connections.query(index[0] + " == " + index[0])
-        _columns = create_connection_columns(index=index[1])
-        _query = " process == 'connected' "
-        main = conns.query(_query + " and dimension == 'None' ")# [_columns]
-        dimensions = conns.query(_query + " and dimension != 'None' ") # [_columns]
+def get_ea_and_ml_config(ea_configs, ml_configs):
+    """
+        configs = {"date": None,
+               "funnel": {"actions": ["download", "signup"],
+                          "purchase_actions": ["has_basket", "order_screen"],
+                          "host": 'localhost',
+                          "port": '9200',
+                          'download_index': 'downloads',
+                          'order_index': 'orders'},
+               "cohort": {"has_download": True, "host": 'localhost', "port": '9200'},
+               "products": {"has_download": True, "host": 'localhost', "port": '9200'},
+               "rfm": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
+               "stats": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
+               }
 
-        # main connections
-        try:
-            data_config = main_connection_table_to_dictionary(data_config, main, index, columns)
-        except Exception as e:
-            print(e)
-        # dimension connections
-        if len(dimensions) != 0:
-            try:
-                data_config = dimension_connection_table_to_dictionary(data_config, dimensions, index, columns)
-            except Exception as e:
-                print(e)
-    return data_config
+        ml_configs = {"date": None,
+              "segmentation": {"host": 'localhost', "port": '9200',
+                               'download_index': 'downloads', 'order_index': 'orders'},
+              "clv_prediction": {"temporary_export_path": None,
+                                 "host": 'localhost', "port": '9200',
+                                 'download_index': 'downloads', 'order_index': 'orders'},
+              "abtest": {"temporary_export_path": None,
+                         "host": 'localhost', "port": '9200',
+                         'download_index': 'downloads', 'order_index': 'orders'}
+             }
+
+    """
+
+    conn = read_sql(" SELECT  * FROM schedule_data ", con)
+    if list(conn['max_date_of_order_data'])[0] != 'None':
+        ea_configs['date'] = list(conn['max_date_of_order_data'])[0]
+        ml_configs['date'] = list(conn['max_date_of_order_data'])[0]
+
+    es_tag_conn = read_sql(" SELECT  * FROM es_connection ", con)
+    port, host, directory = [list(es_tag_conn[i])[0] for i in ['port', 'host', 'directory']]  # list(es_tag_conn['port'])[0], list(es_tag_conn['host'])[0], list(es_tag_conn['directory'])[0]
+    actions = get_action_name()
+
+    for conf in [ea_configs, ml_configs]:
+        for ea in conf:
+            if ea != 'date':
+                conf[ea]['host'] = host
+                conf[ea]['port'] = port
+            if ea == 'funnel':
+                conf[ea]['actions'] = actions['downloads']
+                conf[ea]['purchase_actions'] = actions['orders']
+            if ea == 'abtest':
+                conf[ea]['temporary_export_path'] = directory
+    return [ea_configs], [ml_configs], actions
 
 
-def get_data_connection_arguments(es_tag, data_config):
-    conn = read_sql(
-        """
-        SELECT  * FROM data_connection  WHERE tag =  '""" + es_tag + "' and process = 'connected'", con)
-    columns = read_sql("SELECT  *  FROM data_columns_integration", con)
-    data_config = create_date_structure(conn, columns, data_config)
-    return data_config
-
-
-def create_index(tag):
+def create_index(tag, ea_configs, ml_configs):
     """
 
     :return:
     """
-    s = Scheduler(es_tag=tag, data_connection_structure=get_data_connection_arguments(tag, data_config))
-    s.run_schedule_on_thread()
-
-def create_sample_data(tag):
-    """
-
-    :return:
-    """
+    columns, data_configs = get_data_connection_arguments()[1:]
+    _ea_configs, _ml_configs, _actions = get_ea_and_ml_config(ea_configs, ml_configs)
+    s = Scheduler(es_tag=tag,
+                  data_connection_structure=data_configs,
+                  ea_connection_structure=_ea_configs,
+                  ml_connection_structure=_ml_configs, data_columns=columns, actions=_actions)
+    s.run_schedule_on_thread(function=s.execute_schedule)
+    s.run_schedule_on_thread(function=s.data_works, args={'date': tag})
 
 
 def connection_elasticsearch_check(request):
@@ -189,25 +143,54 @@ def connection_elasticsearch_check(request):
         return False, 'Connection Failed!', elasticsearch_connection_refused_comment
 
 
+def get_columns_condition(request, _columns, index):
+    desire_column_count = 0
+    if index == 'orders':
+        a_col_count, p_col_count, d_col_count = 0, 0, 0
+        if request.get('actions', None) is not None:
+            a_col_count = len(request['actions'].split(","))
+        if request.get('dimension', None) is not None:
+            d_col_count = 1
+        if request.get('promotion', None) is not None:
+            p_col_count = 1
+        desire_column_count = p_col_count + a_col_count + d_col_count + acception_column_count['orders']
+
+    if index == 'downloads':
+        a_col_count = 0
+        if request.get('actions', None) is not None:
+            a_col_count = len(request['actions'].split(","))
+        desire_column_count = a_col_count + acception_column_count['downloads']
+
+    if index == 'products':
+        desire_column_count = acception_column_count['products']
+
+    if len(_columns) >= desire_column_count:
+        return True
+    else:
+        return False
+
+
 def connection_check(request, index='orders', type=''):
     """
 
     :param tag: elasticsearch connected tag name
     :return:
     """
-    accept, message, data, raw_columns = False, "Connection Failed!", None, []
+    accept, message, data, raw_columns = False, "Connection Failed", None, []
     try:
         args = create_data_access_parameters(request, index=index, date=None, test=5)
-        print(args)
         gd = GetData(**args)
         gd.query_data_source()
         if gd.data is not None:
             if len(gd.data) != 0:
                 _columns = list(gd.data.columns)
                 _df = gd.data
-                if len(_columns) >= acception_column_count[type + index]:  # required list; order_id, client, s_start_date, amount, has_purchased
-                    # _df = check_data_integration(data=_df, index=index)
-                    accept, message, data, raw_columns = True, 'Connected!', _df.to_dict('results'), gd.data.columns.values
+                if get_columns_condition(request, _columns, index):  # required list; order_id, client, s_start_date, amount, has_purchased
+                    accept, message, data, raw_columns = True, 'Connected', _df.to_dict('results'), gd.data.columns.values
+                ## TODO: change message type according to connection
+                # else:
+                #     _m = " at least " +  str(acception_column_count[type + index]) if type != 'action' else ' must be 2'
+                #     message = "number of columns are incorrect - " + _m
     except Exception as e:
         print(e)
     return accept, message, data, raw_columns
@@ -222,8 +205,45 @@ def check_data_integration(data, index):
 
     return data
 
-def initialize_elastic_search():
+
+def check_elasticsearch(port, host, directory):
     """
 
     :return:
     """
+    message = 'connected'
+    connection = True
+    if exists(directory):
+        es = QueryES(port=port, host=host)
+        if not es.es.ping():
+            message = 'pls check the ElasticSearch connection.'
+            connection = False
+
+    else:
+        message = 'pls check the directory.'
+        connection = False
+    return connection, message
+
+
+def collect_reports(port, host, index, date):
+    query_es = QueryES(host=host, port=port)
+    res = []
+    for r in query_es.es.search(index='reports', body={"size": 1000, "from": 0})['hits']['hits']:
+        if r['_source']['index'] == index:
+            try:
+                res.append({'report_name': r['_source']['report_name'],
+                            'report_date': r['_source']['report_date'],
+                            'time_period': r['_source']['report_types'].get('time_period', None),
+                            'type': r['_source']['report_types'].get('type', None),
+                            'from': r['_source']['report_types'].get('from', None),
+                            'to': r['_source']['report_types'].get('to', None),
+                            'report_types': r['_source']['report_types'],
+                            'index': r['_source']['index'],
+                            'data': r['_source']['data']})
+            except Exception as e:
+                print(e)
+    return DataFrame(res)
+
+
+
+

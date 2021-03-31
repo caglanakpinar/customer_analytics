@@ -79,17 +79,12 @@
 																<select name="id" id="es_edit_2" class="form-control" required>
 															{% endif %}
 																<option></option>
-
-
-
-
+																	
 
 																{% if values['row_active_0']['tag'] != '....' %}
 
 
 																	{% for i in values['active_connections'] %}
-
-
 																 		{% if i['dimension'] == 'None' %}
 																			{% if i['is_action'] == 'True' and i['orders_data_source_tag'] != 'None' and i['is_product'] != 'True' and i['is_promotion'] != 'True' %}
 																				<option label="ACTION / {{ i['tag'] }} || ORDER : {{ i['orders_data_source_tag'] }}">{{ i['id'] }}</option>
@@ -108,8 +103,6 @@
 																		{% endif %}
 																	{% endfor %}
 																{% endif %}
-
-
 
 																</select>
 
@@ -351,7 +344,7 @@
 																	{% for i in values['active_connections'] %}
 
 
-																 		{% if i['dimension'] == 'None' %}
+																 		{% if i['dimension'] != 'True' %}
 																			{% if i['is_action'] == 'True' and i['downloads_data_source_tag'] != 'None' and i['is_product'] != 'True' and i['is_promotion'] != 'True' %}
 																				<option label="ACTION / {{ i['tag'] }} || DOWNLOAD : {{ i['downloads_data_source_tag'] }}">{{ i['id'] }}</option>
 																			{% endif %}
@@ -359,7 +352,7 @@
 																				<option label="{{ i['tag'] }} || DOWNLOAD : {{ i['downloads_data_source_tag'] }}">{{ i['id'] }}</option>
 																			{% endif %}
 																		{% endif %}
-																		{% if i['dimension'] != 'None' %}
+																		{% if i['dimension'] == 'True' %}
 																			{% if i['is_action'] == 'True' and i['downloads_data_source_tag'] != 'None' and i['is_product'] != 'True' and i['is_promotion'] != 'True' %}
 																				<option label="ACTION / DIMENSION / {{ i['tag'] }} - DOWNLOAD : {{ i['downloads_data_source_tag'] }}">{{ i['id'] }}</option>
 																			{% endif %}
@@ -371,7 +364,7 @@
 																	{% endfor %}
 
 
-															{% endif %}
+																{% endif %}
 															</select>
 
 														{% if values['row_active_0']['tag'] == '....' %}

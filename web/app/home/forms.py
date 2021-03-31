@@ -9,9 +9,16 @@ from os import listdir
 import plotly.graph_objs as go
 import plotly
 from screeninfo import get_monitors
+from sqlalchemy import create_engine, MetaData
 
 from utils import convert_to_day
 from configs import time_periods
+from data_storage_configurations import collect_reports
+
+engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
+metadata = MetaData(bind=engine)
+con = engine.connect()
+
 
 """
 charts Dictionary:
@@ -23,7 +30,7 @@ charts = {
     "index": {
         # charts - orders_monthly, orders_hourly, orders_weekly, orders_daily, customer_segmentation
         "charts":
-            {'orders_monthly': {'trace': go.Scatter(mode="lines+markers+text",
+            {'monthly_orders': {'trace': go.Scatter(mode="lines+markers+text",
                                                     line=dict(color='firebrick', width=4),
                                                     textposition="bottom center",
                                                     textfont=dict(
@@ -31,7 +38,7 @@ charts = {
                                                         size=30,
                                                         color="crimson")),
                                 'layout': go.Layout()},
-             'orders_hourly': {'trace': go.Scatter(mode="lines+markers+text",
+             'hourly_orders': {'trace': go.Scatter(mode="lines+markers+text",
                                                    line=dict(color='firebrick', width=4),
                                                    textposition="bottom center",
                                                    textfont=dict(
@@ -39,7 +46,7 @@ charts = {
                                                        size=30,
                                                        color="crimson")),
                                'layout': go.Layout()},
-             'orders_weekly': {'trace': go.Scatter(mode="lines+markers+text",
+             'weekly_orders': {'trace': go.Scatter(mode="lines+markers+text",
                                                    line=dict(color='firebrick', width=4),
                                                    textposition="bottom center",
                                                    textfont=dict(
@@ -47,7 +54,7 @@ charts = {
                                                        size=30,
                                                        color="crimson")),
                                'layout': go.Layout()},
-             'orders_daily': {'trace': go.Scatter(mode="lines+markers+text",
+             'daily_orders': {'trace': go.Scatter(mode="lines+markers+text",
                                                   line=dict(color='firebrick', width=4),
                                                   textposition="bottom center",
                                                   textfont=dict(
@@ -83,6 +90,22 @@ charts = {
                    },
         # not any recent KPIs for now
         "kpis": {}
+    },
+    "funnel": {
+        # charts - rfm
+        "charts": {_f: {'trace': go.Scatter(mode="lines+markers+text",
+                                                        line=dict(color='firebrick', width=4),
+                                                        textposition="bottom center",
+                                                        textfont=dict(
+                                                            family="sans serif",
+                                                            size=30,
+                                                            color="crimson")),
+                                      'layout': go.Layout()}
+                   for _f in ['daily_funnel', 'hourly_funnel', 'weekly_funnel', 'monthly_funnel',
+                              'daily_funnel_downloads', 'hourly_funnel_downloads',
+                              'weekly_funnel_downloads', 'monthly_funnel_downloads']},
+        # not any recent KPIs for now
+        "kpis": {}
     }
 }
 
@@ -93,11 +116,18 @@ class SampleData:
     These sample data comes from the sample data_folder default in the library.
     """
     kpis = {}
-    _base_path = abspath("").split(basename(abspath("")))[0]
-    _base_path = abspath("") #.split(basename(abspath("")))[0]
-    folder = join(_base_path, "exploratory_analysis", 'sample_data', '')
+    folder = join(abspath(""), "exploratory_analysis", 'sample_data', '')
     for f in listdir(dirname(folder)):
         if f.split(".")[1] == 'csv':
+            kpis["_".join(f.split(".")[0].split("_")[2:])] = None
+
+    _base_path = abspath("").split(basename(abspath("")))[0]
+    _base_path = abspath("") #.split(basename(abspath("")))[0]
+    folder = join(abspath(""), "exploratory_analysis", 'sample_data', '')
+    for f in listdir(dirname(folder)):
+        if f.split(".")[1] == 'csv':
+            _kpi_name = "_".join(f.split(".")[0].split("_")[2:])
+
             _data = pd.read_csv(join(folder, f))
             if 'date' in list(_data.columns):
                 _data['date'] = _data['date'].apply(lambda x: convert_to_day(x))
@@ -108,14 +138,55 @@ class RealData:
     """
     Just, For now, it is the same as Samples. (Work in progress)
     """
-    kpis = {}
-    ## TODO: data for all kpis will be directly from elasticsearch report index
-    _base_path = abspath("").split(basename(abspath("")))[0]
-    _base_path = abspath("") # .split(basename(abspath("")))[0]
-    folder = join(_base_path, "exploratory_analysis", 'sample_data', '')
-    for f in listdir(dirname(folder)):
-        if f.split(".")[1] == 'csv':
-            kpis["_".join(f.split(".")[0].split("_")[2:])] = pd.read_csv(join(folder, f))
+    def __init__(self):
+        self.kpis = {}
+
+    def connections(self):
+        tag = pd.read_sql("SELECT * FROM schedule_data WHERE status = 'on' ", con).to_dict('resutls')[-1]
+        es_tag = pd.read_sql("SELECT * FROM es_connection WHERE tag = '" + tag['tag'] + "' ", con).to_dict('resutls')[-1]
+        conn = pd.read_sql(
+            """
+            SELECT  * FROM data_connection  WHERE tag =  '""" + tag['tag'] + "' and process = 'connected'", con)
+        conn = conn.query("is_action == 'None' and is_product == 'None' and is_promotion == 'None'")
+
+        return tag, es_tag, conn.to_dict('results')
+
+    def get_index_names(self, c):
+        index = 'main'
+        if c['dimension'] != 'None':
+            index = c['orders_data_source_tag']
+        return index
+
+    def report_name(self, k, c):
+        if k['report_name'] == 'funnel':
+            r_name = k['time_period'] + '_funnel'
+            if k['type'] == 'downloads':
+                r_name += '_downloads'
+        if k['report_name'] == 'cohort':
+            r_name = "_".join(['cohort', k['from'], 'to', k['to'], k['time_period']])
+        if k['report_name'] == 'stats':
+            r_name = k['type']
+        if k['report_name'] not in ['cohort', 'funnel', 'stats']:
+            r_name = k
+        if c['dimension'] != 'None':
+            r_name = "_".join([r_name, c['orders_data_source_tag']])
+        return r_name
+
+    def execute_real_data(self):
+        try:
+            tag, es_tag, conn = self.connections()
+            if tag['is_exploratory'] != 'None' or tag['is_mlworks'] != 'None':
+                for c in conn:
+                    index = self.get_index_names(c)
+                    reports = collect_reports(es_tag['port'], es_tag['host'], index, tag['max_date_of_order_data'])
+
+                    for k in reports.to_dict('results'):
+                        r_name = self.report_name(k, c)
+                        self.kpis[r_name] = pd.DataFrame(k['data'])
+        except Exception as e:
+            print(e)
+
+        return self.kpis
 
 
 class Charts:
@@ -147,11 +218,15 @@ class Charts:
         :param chart: e.g. rfm, customer_segmentation, ...
         :return:
         """
-        if chart not in list(self.reals.keys()):
-            list(self.samples.keys())
+        try:
+            if chart not in list(self.reals.keys()):
+                return self.samples[chart]
+            else:
+                return self.reals[chart]
+        except Exception as e:
+            print()
             return self.samples[chart]
-        else:
-            return self.reals[chart]
+
 
     def get_widths_heights(self, target, chart):
         if chart == 'customer_segmentation':
@@ -194,7 +269,15 @@ class Charts:
             trace['y'] = list(_data['monetary'])
             trace['z'] = list(_data['frequency'])
             trace['marker']['color'] = list(_data['segments_numeric']) # segments are numerical values.
-        return [trace]
+        if 'funnel' in chart.split("_"):
+            _tp = list(set(list(_data.columns)) & set(time_periods))[0]
+            _trc = trace
+            trace = []
+            _trc['x'] = list(_data[_tp])
+            for _a in set(list(_data.columns)) - set(time_periods):
+                _trc['y'] = list(_data[_a])
+                trace.append(_trc)
+        return [trace] if 'funnel' in chart.split("_") else trace
 
     def get_values(self, kpi):
         """
