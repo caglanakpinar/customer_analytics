@@ -13,7 +13,7 @@ sys.path.insert(0, parentdir)
 from configs import default_es_port, default_es_host
 from utils import *
 from data_storage_configurations.query_es import QueryES
-from exploratory_analysis import query_exploratory_analysis, configs
+from exploratory_analysis import query_exploratory_analysis, ea_configs
 
 
 class CustomerSegmentation:
