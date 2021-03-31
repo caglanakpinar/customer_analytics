@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} promotion data connection {% endblock %}
+{% block title %} schedule data source {% endblock %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
@@ -16,7 +16,7 @@
 						<h6 class="card-subtitle text-muted">Schedule active connections</h6>
 					</div>
 					<div class="card-body">
-						{% if values['message']['schedule_tags'] != '....' %}
+						{% if values['connect_accept'] == True %}
 							<form method="POST">
 								<div class="row">
 									<div class="mb-3 col-md-3">
@@ -34,27 +34,22 @@
 									<div class="mb-3 col-md-3">
 										<label class="form-label" for="inputState">Active Connections</label>
 										<select name="tag" id="es_edit" class="form-control" required>
-											<option></option>
-												{% for i in values['message']['schedule_tags'] %}
-													<option value= "{{ i }}">{{ i }}</option>
-												{% endfor %}
+											<option value= "{{ values['es_connection']['tag'] }}" selected>{{ values['es_connection']['tag'] }}</option>
 										</select>
 									</div>
-									<div class="col-12">
-										<div class="form-check mb-1 mr-sm-2">
-											<input name="is_checkbox" type="checkbox" class="form-check-input" id="exploratory" checked>
-											<label class="form-check-label" for="exploratory" >create Exploratory Analysis</label>
-										</div>
-									</div>
-									<div class="col-12">
-										<div class="form-check mb-1 mr-sm-2">
-											<input name="is_mlworks" type="checkbox" class="form-check-input" id="ml_process" checked>
-											<label class="form-check-label" for="ml_process" >create ML Works</label>
-										</div>
-									</div>
+
 								</div>
-								<button name="schedule" type="submit" value="True" class="btn btn-primary">Create Schedule Job</button>
+
+								<button name="schedule" type="submit" value="True" class="btn btn-primary mb-1">Create Schedule Job</button>
 							</form>
+							<form method="POST">
+								<button style="background-color: #92a8d1;" name="delete" type="submit" value="True" class="btn btn-primary">Delete Create Schedule Job</button>
+							</form>
+						{% endif %}
+						{% if values['connect_accept'] != True %}
+							<div class="mb-2">
+								<strong style="color:red;">Please create Both Session & Customer Data Source</strong>
+							</div>
 						{% endif %}
 					</div>
 				</div>
@@ -80,29 +75,49 @@
 							</div>
 
 						</div>
-						{% if values['message']['last_log'] != '....' %}
+						{% if values['connect_accept'] != True %}
 							<div class="mb-2">
-								<h6 class="card-subtitle text-muted" style="color:red;">{{ values['message']['last_log']['info'] }}</h6>
+								<strong style="color:red;">Please create Both Session & Customer Data Source</strong>
 							</div>
 						{% endif %}
-						{% if values['row_active_0']['tag'] != '....' %}
+						{% if values['connect_accept'] == True %}
+							{% if values['has_product_data_source'] != True %}
+								<div class="mb-2">
+									<strong style="color:red;">You have both Session and Customer Data Source.
+										But You ay want to add Basket Data Source which covers products, prices and categories of products.
+										This might help us to create Product Anlaytics and A/B Tests based on products, e.g.</strong>
+								</div>
+							{% endif %}
+
 							<table class="table scroll">
 								<thead>
 									<tr>
-										<th style="font-size:20%;">Flag</th>
-										{% for i in values['message']['schedule_columns'] %}
-											<th style="font-size:50%;">{{ i }}</th>
+										{% for i in values['schedule_columns'] %}
+											{% if i in ['Sessions Connection Tag Name', 'Sessions Connection Data Source', 'Sessions Connection Data Query/Path'] %}
+												<th style="font-size:50%;color:#F1B600;">{{ i }}</th>
+											{% endif %}
+											{% if i in ['Customers Connection Tag Name', 'Customers Connection Data Source', 'Customers Connection Data Query/Path'] %}
+												<th style="font-size:50%;color:#40E0D0;">{{ i }}</th>
+											{% endif %}
+											{% if i in ['Baskets Connection Tag Name', 'Baskets Connection Data Source', 'Baskets Connection Data Query/Path'] %}
+												<th style="font-size:50%;color:#9797C3;">{{ i }}</th>
+											{% endif %}
+											{% if i in ['Last Time Triggered Scheduling Job', 'Schedule Time Period', 'Schedule Status'] %}
+												<th style="font-size:50%;color:#40A0E0;">{{ i }}</th>
+											{% endif %}
+
+
+
+											{% if i not in ['Sessions Connection Tag Name', 'Sessions Connection Data Source', 'Sessions Connection Data Query/Path', 'Customers Connection Tag Name', 'Customers Connection Data Source', 'Customers Connection Data Query/Path', 'Baskets Connection Tag Name', 'Baskets Connection Data Source', 'Baskets Connection Data Query/Path', 'Last Time Triggered Scheduling Job', 'Schedule Time Period', 'Schedule Status'] %}
+												<th style="font-size:50%;">{{ i }}</th>
+											{% endif %}
 										{% endfor %}
 									</tr>
 								</thead>
 								<tbody>
-									{% for i in values['message']['schedule'] %}
+									{% for i in values['schedule'] %}
 										<tr>
-											<td style="font-size:6%;">
-												<i class="align-middle mr-2" data-feather="flag" style="{{ i['color'] }}"></i>
-											</td>
-											<td style="font-size:6%;">{{ i['id'] }}</td>
-											<td style="font-size:6%;">{{ i['tag'] }}</td>
+											<td style="font-size:6%;">{{ values['es_connection']['tag'] }}</td>
 											<td style="font-size:6%;">
 												{% if i['dimension'] != '....' %}
 													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i>
@@ -111,38 +126,42 @@
 													<i class="align-middle mr-2" data-feather="x-circle" style="color:#FF0000;"></i>
 												{% endif %}
 											</td>
-											<td style="font-size:6%;">{{ i['process'] }}</td>
 											<td style="font-size:6%;">{{ i['orders_data_source_tag'] }}</td>
 											<td style="font-size:6%;">{{ i['orders_data_source_type'] }}</td>
 											<td style="font-size:6%;" >
-												<a data-toggle="modal"  data-target="#edit_query_path_{{ i['orders_data_source_tag'] }}" style="color:green;">{{ i['orders_data_query_path'] }}</a>
-												<form method="POST">
-													<div class="modal fade" id="edit_query_path_{{ i['orders_data_source_tag'] }}" tabindex="-1" role="dialog" aria-hidden="true">
-													<div class="modal-dialog" role="document">
-														<div class="modal-content">
-															<div class="modal-header">
-																<h4 class="card-subtitle text-muted"></h4>
-																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-															</div>
-															<div class="modal-body m-3">
-																<div class="card">
-																	<div class="card-body">
-																		<h5 class="card-title">Edit Query/Path for - {{ i['orders_data_source_tag'] }}</h5>
-																			<div class="mb-3">
-																				{{ i['orders_data_query_path'] }}
-																			</div>
-																			<textarea name="orders_data_query_path" class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="5" required></textarea>
+												{% if i['orders_data_query_path'] != '...' %}
+													<a data-toggle="modal"  data-target="#edit_query_path_{{ i['orders_data_source_tag'] }}" style="color:green;">{{ i['orders_data_query_path'] }}</a>
+													<form method="POST">
+														<div class="modal fade" id="edit_query_path_{{ i['orders_data_source_tag'] }}" tabindex="-1" role="dialog" aria-hidden="true">
+														<div class="modal-dialog" role="document">
+															<div class="modal-content">
+																<div class="modal-header">
+																	<h4 class="card-subtitle text-muted"></h4>
+																	<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+																</div>
+																<div class="modal-body m-3">
+																	<div class="card">
+																		<div class="card-body">
+																			<h5 class="card-title">Edit Query/Path for - {{ i['orders_data_source_tag'] }}</h5>
+																				<div class="mb-3">
+																					{{ i['orders_data_query_path'] }}
+																				</div>
+																				<textarea name="orders_data_query_path" class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="5" required></textarea>
+																		</div>
 																	</div>
 																</div>
-															</div>
-															<div class="modal-footer">
-																<button name="edit" value="{{ i['orders_data_source_tag'] }}" type="submit" class="btn btn-primary">Save changes</button>
+																<div class="modal-footer">
+																	<button name="edit" value="True" type="submit" class="btn btn-primary">Save changes</button>
 
+																</div>
 															</div>
 														</div>
 													</div>
-												</div>
-												</form>
+													</form>
+												{% endif %}
+												{% if i['orders_data_query_path'] == '....' %}
+													{{ i['orders_data_query_path'] }}
+												{% endif %}
 
 											</td>
 											<td style="font-size:6%;">{{ i['downloads_data_source_tag'] }}</td>
@@ -170,7 +189,7 @@
 																</div>
 															</div>
 															<div class="modal-footer">
-																<button name="edit" value="{{ i['downloads_data_source_tag'] }}" type="submit" class="btn btn-primary">Save changes</button>
+																<button name="edit" value="True" type="submit" class="btn btn-primary">Save changes</button>
 
 															</div>
 														</div>
@@ -183,79 +202,61 @@
 												{% endif %}
 
 											</td>
-											<td style="font-size:6%;">
-												{% if i['is_action'] == 'True' %}
-													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i>
+
+											<td style="font-size:6%;">{{ i['products_data_source_tag'] }}</td>
+											<td style="font-size:6%;">{{ i['products_data_source_type'] }}</td>
+											<td style="font-size:6%;" >
+												{% if i['products_data_query_path'] != '...' %}
+													<a data-toggle="modal"  data-target="#edit_query_path_{{ i['products_data_source_tag'] }}" style="color:green;">{{ i['products_data_query_path'] }}</a>
+													<form method="POST">
+													<div class="modal fade" id="edit_query_path_{{ i['products_data_source_tag'] }}" tabindex="-1" role="dialog" aria-hidden="true">
+													<div class="modal-dialog" role="document">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h4 class="card-subtitle text-muted"></h4>
+																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+															</div>
+															<div class="modal-body m-3">
+																<div class="card">
+																	<div class="card-body">
+																		<h5 class="card-title">Edit Query/Path for - {{ i['products_data_source_tag'] }}</h5>
+																			<div class="mb-3">
+
+																			</div>
+																			<textarea name="products_data_query_path" class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="5" required></textarea>
+																	</div>
+																</div>
+															</div>
+															<div class="modal-footer">
+																<button name="edit" value="True" type="submit" class="btn btn-primary">Save changes</button>
+
+															</div>
+														</div>
+													</div>
+													</div>
+													</form>
 												{% endif %}
-												{% if i['is_action'] != 'True' %}
-													<i class="align-middle mr-2" data-feather="x-circle" style="color:#FF0000;"></i>
+												{% if i['products_data_query_path'] == '...' %}
+													{{ i['products_data_query_path'] }}
 												{% endif %}
 											</td>
-											<td style="font-size:6%;">
-												{% if i['is_product'] == 'True' %}
-													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i>
-												{% endif %}
-												{% if i['is_product'] != 'True' %}
-													<i class="align-middle mr-2" data-feather="x-circle" style="color:#FF0000;"></i>
-												{% endif %}
-											</td>
-											<td style="font-size:6%;">
-												{% if i['is_promotion'] == 'True' %}
-													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i>
-												{% endif %}
-												{% if i['is_promotion'] != 'True' %}
-													<i class="align-middle mr-2" data-feather="x-circle" style="color:#FF0000;"></i>
-												{% endif %}
-											</td>
+
+
+											<td style="font-size:6%;">{{ i['ses_actions'] }}</td>
+											<td style="font-size:6%;">{{ i['d_actions'] }}</td>
+											<td style="font-size:6%;">{{ i['promotion_id'] }}</td>
+
+
+
 											<td style="font-size:6%;">{{ i['max_date_of_order_data'] }}</td>
 											<td style="font-size:6%;">{{ i['time_period'] }}</td>
 											<td style="font-size:6%;">
-												{% if i['status'] == 'on' %}
+												{% if i['schedule_tag'] != '....' %}
 													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i>
 												{% endif %}
-												{% if i['status'] != 'on' %}
+												{% if i['schedule_tag'] == '....' %}
 													<i class="align-middle mr-2" data-feather="x-circle" style="color:#FF0000;"></i>
 												{% endif %}
-											</td>
-											<td style="font-size:3%;">
-												{% if i['columns_matching'] == 'not assigned - customers' or i['columns_matching'] == 'not assigned - sessions' or i['columns_matching'] == 'not assigned' %}
-													<i class="align-middle mr-2" data-feather="alert-circle" style="color:#FF0000;"></i>
-													<span class="align-middle" style="color:#FF0000;">{{ i['columns_matching'] }}</span>
-												{% endif %}
-
-												{% if i['columns_matching'] == 'assigned' %}
-													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i><span class="align-middle" style="color:#008000;">{{ i['columns_matching'] }}</span>
-												{% endif %}
-											</td>
-											<td class="table-action">
-												<a href="#"><i class="align-middle" data-feather="trash" data-toggle="modal" data-target="#delete_{{ i['orders_data_source_tag'] }}"></i></a>
-												<form method="POST">
-													<div class="modal fade" id="delete_{{ i['orders_data_source_tag'] }}" tabindex="-1" role="dialog" aria-hidden="true">
-													<div class="modal-dialog" role="document">
-													<div class="modal-content">
-														<div class="modal-header">
-															<h4 class="card-subtitle text-muted"></h4>
-															<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-														</div>
-														<div class="modal-body m-3">
-															<div class="card">
-																<div class="card-body">
-																	<h5 class="card-title">Delete Schedule - {{ i['tag'] }}</h5>
-																		<div class="mb-3">
-																			Are you sure? Do you want to cancel the schedule process?
-																		</div>
-																</div>
-															</div>
-														</div>
-														<div class="modal-footer">
-															<button name="delete" value="{{ i['tag'] }}" type="submit" class="btn btn-primary">Yes</button>
-															<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
-														</div>
-													</div>
-													</div>
-													</div>
-												</form>
-
 											</td>
 										</tr>
 									{% endfor %}
@@ -263,24 +264,49 @@
 							</table>
 
 						{% endif %}
-						{% if values['row_active_0']['tag'] != '....' %}
-							<div class="card">
-								<div class="card-header">
-									<h5 class="card-title">Logs</h5>
-									<h6 class="card-subtitle text-muted">Last 10 events of logs.</h6>
+
+					</div>
+					{% if values['tag'] != '....' %}
+						<div class="card">
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<div class="card">
+										<div class="card-header">
+											<h5 class="card-title">Logs</h5>
+											<h6 class="card-subtitle text-muted">Last 10 events of logs.</h6>
+										</div>
+										<div class="card-body scroll">
+											{% if values['logs'] != '....' %}
+												{% for i in values['logs'] %}
+													<div class="mb-2">
+														<h6 class="card-subtitle" style="{{ i['color'] }}">{{ i['info'] }}</h6>
+													</div>
+												{% endfor %}
+											{% endif %}
+										</div>
+									</div>
 								</div>
-								<div class="card-body scroll">
-									{% if values['message']['logs'] != '....' %}
-										{% for i in values['message']['logs'] %}
-											<div class="mb-2">
-												<h6 class="card-subtitle text-muted" style="{{ i['color'] }}">{{ i['info'] }}</h6>
-											</div>
-										{% endfor %}
-									{% endif %}
+								<div class="col-md-6 mb-3">
+									<div class="card">
+										<div class="card-header">
+											<h5 class="card-title">Logs</h5>
+											<h6 class="card-subtitle text-muted">Last 10 events of logs.</h6>
+										</div>
+										<div class="card-body scroll">
+											{% if values['logs'] != '....' %}
+												{% for i in values['logs'] %}
+													<div class="mb-2">
+														<h6 class="card-subtitle" style="{{ i['color'] }}">{{ i['info'] }}</h6>
+													</div>
+												{% endfor %}
+											{% endif %}
+										</div>
+									</div>
 								</div>
 							</div>
-						{% endif %}
-					</div>
+						</div>
+					{% endif %}
+
 			</div>
 		</div>
 	</main>

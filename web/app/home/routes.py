@@ -15,6 +15,7 @@ from screeninfo import get_monitors
 
 samples = SampleData()
 real = RealData()
+real.execute_real_data()
 charts = Charts(samples.kpis, real.kpis)
 reqs = RouterRequest()
 
@@ -39,7 +40,7 @@ def index():
     charts.get_chart(target='index') # collect charts on index.html
     return render_template('index.html',
                            segment='index',
-                           charts=charts.graph_json['charts']['orders_daily'],
+                           charts=charts.graph_json['charts']['daily_orders'],
                            customer_segments=charts.graph_json['charts']['customer_segmentation'],
                            kpis=charts.graph_json['kpis']
                            )
@@ -63,18 +64,31 @@ def route_template(template):
 
         segment = get_segment(request)
 
+        if template in ['funnel-session.html', 'funnel-customer.html']:
+            additional_name = '' if template == 'funnel-session.html' else '_downloads'
+            charts.get_chart(target='funnel')
+            return render_template(template,
+                                   segment=segment,
+                                   daily_funnel=charts.graph_json['charts']['daily_funnel' + additional_name],
+                                   weekly_funnel=charts.graph_json['charts']['weekly_funnel' + additional_name],
+                                   monthly_funnel=charts.graph_json['charts']['monthly_funnel' + additional_name],
+                                   hourly_funnel=charts.graph_json['charts']['hourly_funnel' + additional_name]
+                                   )
+
         if template == 'index2.html':
             charts.get_chart(target='index2')
             return render_template(template, segment=segment, rfm=charts.graph_json['charts']['rfm'])
         else:
             reqs.execute_request(req=dict(request.form), template=segment)
-            values = reqs.fetch_results(segment)
+            reqs.fetch_results(segment, dict(request.form))
+            values = reqs.message
             return render_template(template, segment=segment, values=values)
 
     except TemplateNotFound:
         return render_template('page-404.html'), 404
     
-    except:
+    except Exception as e:
+        print(e)
         return render_template('page-500.html'), 500
 
 

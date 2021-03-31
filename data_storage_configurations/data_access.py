@@ -81,8 +81,16 @@ class GetData:
         # import data via pandas
         if self.data_source in ['mysql', 'postgresql', 'awsredshift']:
             self.get_connection()
-            self.data = pd.read_sql(self.data_query_path + " LIMIT " + str(self.nrows) if self.nrows else self.data_query_path, self.conn)
-
+            counter = 0
+            try_count = 10 if self.nrows else 100
+            while counter < try_count:
+                try:
+                    self.data = pd.read_sql(self.data_query_path + " LIMIT " + str(self.nrows) if self.nrows else self.data_query_path, self.conn)
+                except Exception as e:
+                    print(e)
+                if len(self.data) > 0:
+                    counter = try_count
+                counter += 1
         # import data via google
         if self.data_source == 'googlebigquery':
             self.get_connection()

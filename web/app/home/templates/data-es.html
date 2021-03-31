@@ -1,0 +1,141 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} ElasticSearch connection {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Baskets</h5>
+			<div class="col-md-12">
+				<form method="POST">
+					<div class="card">
+						<div class="card-header">
+							<h5 class="card-title"><strong>ElasticSearch Settings</strong> </h5>
+							<div class="row">
+								<h6 class="card-subtitle text-muted mb-1">
+									<strong style="color:green;"> ElasticSearch : </strong> is a search engine based on the Lucene library.
+									The reason of it is flexibility when it has been querying, data sets (Session, customer, Basket Data Sources)
+									will be stored in ElasticSearch with 2 main indexes, Orders (Sessions) and Downloads (Customers data Source)
+								</h6>
+							</div>
+
+						</div>
+						<div class="card-body">
+							<div class="row">
+								<div class="col-md-12">
+									<div class="card">
+										<div class="card-header">
+											<h5 class="card-title"><strong style="color:green;">ElasticSearch Configurations</strong></h5>
+											<h6 class="card-subtitle text-muted">
+												<div class="row">
+													- Make sure platform is eligible to query and update ElaticSearch
+												</div>
+												<div class="row">
+													- It is possible to download and use the server locally. default port is 9200.
+												</div>
+											</h6>
+										</div>
+										<div class="card-body">
+											{% if values['es_connection'] == '....' %}
+												{% if values['es_connection_check'] != '....' %}
+													<div class="mb-3">
+														<strong style="color:red;">Can not connect to ElasticSearch. {{ values['es_connection_check'] }}</strong>
+													</div>
+												{% endif %}
+												<div class="mb-3">
+													<label class="form-label" for="inputUsername">tag ElasticSearch connection</label>
+													<input name="tag" type="text" class="form-control" id="inputUsername" placeholder="assign a name to connection" required>
+												</div>
+
+												<div class="mb-3">
+													<label class="form-label" for="inputUsername">host</label>
+													<input name="host" type="text" class="form-control" id="inputHost" placeholder="host" required>
+												</div>
+
+												<div class="mb-3">
+													<label class="form-label" for="inputUsername">port</label>
+													<input name="port" type="text" class="form-control" id="inputPort" placeholder="port" required>
+												</div>
+
+												<div class="mb-3">
+													<label class="form-label" for="inputUsername">ElasticSearch directory</label>
+													<input name="directory" type="text" class="form-control" id="esDirectory" placeholder="elasticsearch directory" required>
+												</div>
+
+												<div class="mb-3">
+													<label class="form-label" for="inputUsername">Download ElasticSearch</label>
+												</div>
+												<div class="mb-3">
+													<a href="https://www.elastic.co/elasticsearch/" target="_blank">Download ElasticSearch! https://www.elastic.co/elasticsearch/</a>
+												</div>
+												<div class="row">
+													<div class="mb-1 col-md-12">
+														<label class="form-label" for="inputFirstName">CPU Max Capacity And RAM Max Capacity</label>
+														<h5 class="mb-3" style="color:green;"> It is important to run ElasticSearch server with;
+														</h5>
+													</div>
+													<div class="mb-1 col-order-10">
+														<h5 class="mb-3" style="color:blue;"> "ES_JAVA_OPTS="-Xms4g -Xmx4g" </h5>
+													</div>
+													<div class="mb-1 col-md-12">
+														<h5 class="mb-3" style="color:green;">
+															This will  help us to improve capacity of ElasticSearch that is able to use.
+														</h5>
+													</div>
+												</div>
+												<div class="mb-3">
+													<label class="form-label" for="inputCity">URL</label>
+													<input name="url" type="text"  class="form-control" id="port" placeholder="http://localhost:9200">
+													<small> Optional - generated with host and port</small>
+												</div>
+												<button name="connect" type="submit"  value="True" class="btn btn-primary">Connect</button>
+											{% endif %}
+											{% if values['es_connection'] != '....' %}
+												<div class="mb-3">
+													<h5 class="mb-3" style="color:green;">connected ElasticSearch!</h5>
+													<a href="{{ values['es_connection']['tag'] }} - {{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ values['es_connection']['tag'] }} - {{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a>
+
+												</div>
+												<div class="mb-3">
+													<button name="delete" type="submit"  value="True" class="btn btn-primary">Delete Connection</button>
+												</div>
+
+
+
+
+
+											{% endif %}
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<script>
+function myFunction() {
+  // Get the checkbox
+  var checkBox = document.getElementById("myCheck");
+  // Get the output text
+  var text = document.getElementById("text");
+
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+  } else {
+    text.style.display = "none";
+  }
+}
+</script>
+{% block javascripts %}{% endblock javascripts %}

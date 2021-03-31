@@ -127,16 +127,16 @@ class CreateSampleIndex:
 
     def create_index(self):
         """
-        creating ElasticSearch Indexes. These are 'orders' and 'downloads'
+        creating ElasticSearch Indexes. These are 'orders_location_1' and 'downloads'
         If these have already been created, skip processes.
         """
         try:
-            self.es.indices.create('orders', body=self.es_settings)
+            self.es.indices.create('orders_location_1', body=self.es_settings)
         except Exception as e:
             print("index already exists !!!")
 
         try:
-            self.es.indices.create('downloads', body=self.es_settings_downloads)
+            self.es.indices.create('downloads_location_1', body=self.es_settings_downloads)
         except Exception as e:
             print("index already exists !!!")
 
@@ -473,7 +473,7 @@ class CreateSampleIndex:
                   "_source": True
                   }
         res = []
-        for r in self.es.search(index='orders', body=match)['hits']['hits']:
+        for r in self.es.search(index='orders_location_1', body=match)['hits']['hits']:
             res.append({
                         'id': r['fields']['id'][0],
                         'date': r['fields']['session_start_date'][0],
@@ -494,7 +494,7 @@ class CreateSampleIndex:
                       "fields": ["client"],
                       "_source": True
                       }
-            for r in self.es.search(index='downloads', body=match)['hits']['hits']:
+            for r in self.es.search(index='downloads_location_1', body=match)['hits']['hits']:
                 self.prev_downloads.append(r['fields']['client'][0])
         except Exception as e:
             print(e)
@@ -556,7 +556,7 @@ class CreateSampleIndex:
             _download_obj["client"] = c['client']
             downloads.append(_download_obj)
         print("number of download insert :",  len(downloads))
-        helpers.bulk(self.es, self.get_insert_obj(downloads, 'downloads'))
+        helpers.bulk(self.es, self.get_insert_obj(downloads, 'downloads_location_1'))
         self.downloads_df = pd.DataFrame(downloads)
         self.rest_of_clients = list(set(self.client_active) - set(list(self.orders_df_pv['client'])))
         print("rest of clients :", len(self.rest_of_clients))
@@ -576,7 +576,7 @@ class CreateSampleIndex:
         """
         self.get_customer_order_to_detected_downloads()
         self.get_ordered_users_of_downloads()
-        print(self.es.cat.count('orders', params={"format": "json"}))
+        print(self.es.cat.count('orders_location_1', params={"format": "json"}))
         query_str = "day_parts == @day_part and day_str == @_day_str"
         for d in self.days:
             downloads = []
@@ -668,7 +668,7 @@ class CreateSampleIndex:
                                     if random.sample(self.has_seen_basket_after_session, 1)[0]:
                                         _ses_obj["actions"]["order_screen"] = True
                                 sessions.append(_ses_obj)
-                                helpers.bulk(self.es, self.get_insert_obj([_ses_obj], 'orders'))
+                                helpers.bulk(self.es, self.get_insert_obj([_ses_obj], 'orders_location_1'))
                             downloads.append({"id": np.random.randint(200000000),
                                               "download_date": download_date,
                                               "signup_date": signup_date,
@@ -679,13 +679,13 @@ class CreateSampleIndex:
             if len(downloads) != 0:
                 print("number of download insert :", len(downloads))
                 print(downloads[0:10])
-                helpers.bulk(self.es, self.get_insert_obj(downloads, 'downloads'))
+                helpers.bulk(self.es, self.get_insert_obj(downloads, 'downloads_location_1'))
             if len(sessions) != 0:
                 print("number of sessions insert :", len(sessions))
                 print([obj['id'] for obj in sessions[0:10]])
-                helpers.bulk(self.es, self.get_insert_obj(sessions, 'orders'))
-            print(self.es.cat.count('orders', params={"format": "json"}))
-            print(self.es.cat.count('downloads', params={"format": "json"}))
+                helpers.bulk(self.es, self.get_insert_obj(sessions, 'orders_location_1'))
+            print(self.es.cat.count('orders_location_1', params={"format": "json"}))
+            print(self.es.cat.count('downloads_location_1', params={"format": "json"}))
 
     def execute_sampling(self):
         """
@@ -921,7 +921,7 @@ class CreateSampleIndex:
 
                             if random.sample(self.has_seen_basket_after_session, 1)[0]:
                                 _ses_obj["actions"]["order_screen"] = True
-                        helpers.bulk(self.es, self.get_insert_obj([_ses_obj], 'orders'))
+                        helpers.bulk(self.es, self.get_insert_obj([_ses_obj], 'orders_location_1'))
                     daily_active_clients += active_clients
                     orders.append(_order_obj)
                 # del _order_obj
@@ -973,7 +973,7 @@ class CreateSampleIndex:
 
                         if random.sample(self.has_seen_basket_after_session, 1)[0]:
                             _ses_obj["actions"]["order_screen"] = True
-                    helpers.bulk(self.es, self.get_insert_obj([_ses_obj], 'orders'))
+                    helpers.bulk(self.es, self.get_insert_obj([_ses_obj], 'orders_location_1'))
 
             if d in self.weeks:
                 _newcomer_list = self.customer_newcomer_list(random.sample(self.customer_newcomer_ratio, 1)[0],
@@ -998,7 +998,7 @@ class CreateSampleIndex:
                 self.weekly_customers = []
 
             print(orders[0]['date'])
-            helpers.bulk(self.es, self.get_insert_obj(orders, 'orders'))
+            helpers.bulk(self.es, self.get_insert_obj(orders, 'orders_location_1'))
             del orders
 
 

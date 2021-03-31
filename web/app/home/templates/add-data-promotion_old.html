@@ -78,94 +78,36 @@
 															{% endif %}
 																<option></option>
 																{% if values['row_active_0']['tag'] != '....' %}
-																 	{% if values['row_active_0']['dimension'] != 'True' %}
-																		{% if values['row_active_0']['is_promotion'] == 'True' and values['row_active_0']['orders_data_source_tag'] != 'None' and values['row_active_0']['is_action'] != 'True' and values['row_active_0']['is_product'] != 'True' %}
-																			<option label="PROMOTION / {{ values['row_active_0']['tag'] }} || ORDER : {{ values['row_active_0']['orders_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
+
+
+																																		{% for i in values['active_connections'] %}
+
+
+																 		{% if i['dimension'] == 'None' %}
+																			{% if i['is_promotion'] == 'True' and i['orders_data_source_tag'] != 'None' and i['is_action'] != 'True' and i['is_product'] != 'True' %}
+																				<option label="PROMOTION / {{ i['tag'] }} || SESSION : {{ i['orders_data_source_tag'] }}">{{ i['id'] }}</option>
+																			{% endif %}
+																			{% if i['is_promotion'] != 'True' and i['orders_data_source_tag'] != 'None' and i['is_action'] != 'True' and i['is_product'] != 'True' %}
+																				<option label="{{ i['tag'] }} || SESSION : {{ i['orders_data_source_tag'] }}">{{ i['id'] }}</option>
+																			{% endif %}
 																		{% endif %}
-																		{% if values['row_active_0']['is_promotion'] != 'True' and values['row_active_0']['orders_data_source_tag'] != 'None' and values['row_active_0']['is_action'] != 'True' and values['row_active_0']['is_product'] != 'True' %}
-																			<option label="{{ values['row_active_0']['tag'] }} || ORDER : {{ values['row_active_0']['orders_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
+																		{% if i['dimension'] != 'None' %}
+																			{% if i['is_promotion'] == 'True' and i['orders_data_source_tag'] != 'None' and i['is_action'] != 'True' and i['is_product'] != 'True' %}
+																				<option label="PROMOTION / DIMENSION / {{ i['tag'] }} - SESSION : {{ i['orders_data_source_tag'] }}">{{ i['id'] }}</option>
+																			{% endif %}
+																			{% if i['is_promotion'] != 'True' and i['orders_data_source_tag'] != 'None' and i['is_action'] != 'True' and i['is_product'] != 'True' %}
+																				<option label="DIMENSION / {{ i['tag'] }} - SESSION : {{ i['orders_data_source_tag'] }}">{{ i['id'] }}</option>
+																			{% endif %}
 																		{% endif %}
-																	{% endif %}
-																	{% if values['row_active_0']['dimension'] == 'True' %}
-																		{% if values['row_active_0']['is_promotion'] == 'True' and values['row_active_0']['orders_data_source_tag'] != 'None' and values['row_active_0']['is_action'] != 'True' and values['row_active_0']['is_product'] != 'True' %}
-																			<option label="PROMOTION / DIMENSION / {{ values['row_active_0']['tag'] }} - ORDER : {{ values['row_active_0']['orders_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
-																		{% endif %}
-																		{% if values['row_active_0']['is_promotion'] != 'True' and values['row_active_0']['orders_data_source_tag'] != 'None' and values['row_active_0']['is_action'] != 'True' and values['row_active_0']['is_product'] != 'True' %}
-																			<option label="DIMENSION / {{ values['row_active_0']['tag'] }} - ORDER : {{ values['row_active_0']['orders_data_source_tag'] }}">{{ values['row_active_0']['id'] }}</option>
-																		{% endif %}
-																	{% endif %}
-																{% endif %}
-																{% if values['row_active_1']['tag'] != '....' %}
-																 	{% if values['row_active_1']['dimension'] != 'True' %}
-																		{% if values['row_active_1']['is_promotion'] == 'True' and values['row_active_1']['orders_data_source_tag'] != 'None'  and values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' %}
-																			<option label="PROMOTION / {{ values['row_active_1']['tag'] }} || ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
-																		{% endif %}
-																		{% if values['row_active_1']['is_promotion'] != 'True' and values['row_active_1']['orders_data_source_tag'] != 'None' and values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' %}
-																			<option label="{{ values['row_active_1']['tag'] }} || ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
-																		{% endif %}
-																	{% endif %}
-																	{% if values['row_active_1']['dimension'] == 'True' %}
-																		{% if values['row_active_1']['is_promotion'] == 'True' and values['row_active_1']['orders_data_source_tag'] != 'None' and values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' %}
-																			<option label="PROMOTION / DIMENSION / {{ values['row_active_1']['tag'] }} - ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
-																		{% endif %}
-																		{% if values['row_active_1']['is_promotion'] != 'True' and values['row_active_1']['orders_data_source_tag'] != 'None' and values['row_active_1']['is_action'] != 'True' and values['row_active_1']['is_product'] != 'True' %}
-																			<option label="DIMENSION / {{ values['row_active_1']['tag'] }} - ORDER : {{ values['row_active_1']['orders_data_source_tag'] }}">{{ values['row_active_1']['id'] }}</option>
-																		{% endif %}
-																	{% endif %}
-																{% endif %}
-																{% if values['row_active_2']['tag'] != '....' %}
-																 	{% if values['row_active_2']['dimension'] != 'True' %}
-																		{% if values['row_active_2']['is_promotion'] == 'True' and values['row_active_2']['orders_data_source_tag'] != 'None' and values['row_active_2']['is_action'] != 'True' and values['row_active_2']['is_product'] != 'True' %}
-																			<option label="PROMOTION / {{ values['row_active_2']['tag'] }} || ORDER : {{ values['row_active_2']['orders_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
-																		{% endif %}
-																		{% if values['row_active_2']['is_promotion'] != 'True' and values['row_active_2']['orders_data_source_tag'] != 'None' and values['row_active_2']['is_action'] != 'True' and values['row_active_2']['is_product'] != 'True' %}
-																			<option label="{{ values['row_active_2']['tag'] }} || ORDER : {{ values['row_active_2']['orders_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
-																		{% endif %}
-																	{% endif %}
-																	{% if values['row_active_2']['dimension'] == 'True' %}
-																		{% if values['row_active_2']['is_promotion'] == 'True' and values['row_active_2']['orders_data_source_tag'] != 'None' and values['row_active_2']['is_action'] != 'True' and values['row_active_2']['is_product'] != 'True' %}
-																			<option label="PROMOTION / DIMENSION / {{ values['row_active_2']['tag'] }} - ORDER : {{ values['row_active_2']['orders_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
-																		{% endif %}
-																		{% if values['row_active_2']['is_promotion'] != 'True' and values['row_active_2']['orders_data_source_tag'] != 'None' and values['row_active_2']['is_action'] != 'True' and values['row_active_2']['is_product'] != 'True' %}
-																			<option label="DIMENSION / {{ values['row_active_2']['tag'] }} - ORDER : {{ values['row_active_2']['orders_data_source_tag'] }}">{{ values['row_active_2']['id'] }}</option>
-																		{% endif %}
-																	{% endif %}
-																{% endif %}
-																{% if values['row_active_3']['tag'] != '....' %}
-																 	{% if values['row_active_3']['dimension'] != 'True' %}
-																		{% if values['row_active_3']['is_promotion'] == 'True' and values['row_active_3']['orders_data_source_tag'] != 'None' and values['row_active_3']['is_action'] != 'True' and values['row_active_3']['is_product'] != 'True' %}
-																			<option label="PROMOTION / {{ values['row_active_3']['tag'] }} || ORDER : {{ values['row_active_3']['orders_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
-																		{% endif %}
-																		{% if values['row_active_3']['is_promotion'] != 'True' and values['row_active_3']['orders_data_source_tag'] != 'None' and values['row_active_3']['is_action'] != 'True' and values['row_active_3']['is_product'] != 'True' %}
-																			<option label="{{ values['row_active_3']['tag'] }} || ORDER : {{ values['row_active_3']['orders_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
-																		{% endif %}
-																	{% endif %}
-																	{% if values['row_active_3']['dimension'] == 'True' %}
-																		{% if values['row_active_3']['is_promotion'] == 'True' and values['row_active_3']['orders_data_source_tag'] != 'None' and values['row_active_3']['is_action'] != 'True' and values['row_active_3']['is_product'] != 'True' %}
-																			<option label="PROMOTION / DIMENSION / {{ values['row_active_3']['tag'] }} - ORDER : {{ values['row_active_3']['orders_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
-																		{% endif %}
-																		{% if values['row_active_3']['is_promotion'] != 'True' and values['row_active_3']['orders_data_source_tag'] != 'None' and values['row_active_3']['is_action'] != 'True' and values['row_active_3']['is_product'] != 'True' %}
-																			<option label="DIMENSION / {{ values['row_active_3']['tag'] }} - ORDER : {{ values['row_active_3']['orders_data_source_tag'] }}">{{ values['row_active_3']['id'] }}</option>
-																		{% endif %}
-																	{% endif %}
-																{% endif %}
-																{% if values['row_active_4']['tag'] != '....' %}
-																 	{% if values['row_active_4']['dimension'] != 'True' %}
-																		{% if values['row_active_4']['is_promotion'] == 'True' and values['row_active_4']['orders_data_source_tag'] != 'None' and values['row_active_4']['is_action'] != 'True' and values['row_active_4']['is_product'] != 'True' %}
-																			<option label="PROMOTION / {{ values['row_active_4']['tag'] }} || ORDER : {{ values['row_active_4']['orders_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
-																		{% endif %}
-																		{% if values['row_active_4']['is_promotion'] != 'True' and values['row_active_4']['orders_data_source_tag'] != 'None' and values['row_active_4']['is_action'] != 'True' and values['row_active_4']['is_product'] != 'True' %}
-																			<option label="{{ values['row_active_4']['tag'] }} || ORDER : {{ values['row_active_4']['orders_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
-																		{% endif %}
-																	{% endif %}
-																	{% if values['row_active_4']['dimension'] == 'True' %}
-																		{% if values['row_active_4']['is_promotion'] == 'True' and values['row_active_4']['orders_data_source_tag'] != 'None' and values['row_active_4']['is_action'] != 'True' and values['row_active_4']['is_product'] != 'True' %}
-																			<option label="PROMOTION / DIMENSION / {{ values['row_active_4']['tag'] }} - ORDER : {{ values['row_active_4']['orders_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
-																		{% endif %}
-																		{% if values['row_active_4']['is_promotion'] != 'True' and values['row_active_4']['orders_data_source_tag'] != 'None' and values['row_active_4']['is_action'] != 'True' and values['row_active_4']['is_product'] != 'True' %}
-																			<option label="DIMENSION / {{ values['row_active_4']['tag'] }} - ORDER : {{ values['row_active_4']['orders_data_source_tag'] }}">{{ values['row_active_4']['id'] }}</option>
-																		{% endif %}
-																	{% endif %}
+
+																	{% endfor %}
+
+
+
+
+
+
+
 
 																</select>
 															{% endif %}

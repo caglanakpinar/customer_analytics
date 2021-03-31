@@ -1,0 +1,134 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} elasticsearch configuration {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+
+			<h1 class="h3 mb-3">ElasticSearch Settings</h1>
+
+			<div class="row">
+				<div class="col-md-3 col-xl-2">
+
+					<div class="card">
+						<div class="card-header">
+							<h5 class="card-title mb-0">Profile Settings</h5>
+						</div>
+
+						<div class="list-group list-group-flush" role="tablist">
+							<a class="list-group-item list-group-item-action active" data-toggle="list" href="#account" role="tab">
+							Account
+							</a>
+							<a class="list-group-item list-group-item-action" data-toggle="list" href="#password" role="tab">
+							Edit account
+							</a>
+							<a class="list-group-item list-group-item-action" data-toggle="list" href="#delete" role="tab">
+							Delete account
+							</a>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-9 col-xl-5">
+					<div class="tab-content">
+						<div class="tab-pane fade show active" id="account" role="tabpanel">
+							<form method="POST">
+								<div class="col-md-12">
+								<div class="card">
+								<div class="card-header">
+									<h5 class="card-title mb-0">Connection Info</h5>
+								</div>
+
+								<div class="card-body">
+									<div class="row">
+										<div class="col-md-10">
+											<div class="mb-3">
+												{% if values['es_connection'] != '....' %}
+													<h5 class="mb-3" style="color:green;">connected ElasticSearch -  {{ values['es_connection']['tag'] }} - {{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</h5>
+												{% endif %}
+											</div>
+											<div class="mb-3">
+												<label class="form-label" for="inputUsername">tag ElasticSearch connection</label>
+												<input name="tag" type="text" class="form-control" id="inputUsername" placeholder="assign a name to connection" required>
+											</div>
+
+											<div class="mb-3">
+												<label class="form-label" for="inputUsername">host</label>
+												<input name="host" type="text" class="form-control" id="inputHost" placeholder="host" required>
+											</div>
+
+											<div class="mb-3">
+												<label class="form-label" for="inputUsername">port</label>
+												<input name="port" type="text" class="form-control" id="inputPort" placeholder="port" required>
+											</div>
+
+											<div class="mb-3">
+												<label class="form-label" for="inputUsername">ElasticSearch directory</label>
+												<input name="directory" type="text" class="form-control" id="esDirectory" placeholder="elasticsearch directory" required>
+											</div>
+
+											<div class="mb-3">
+												<label class="form-label" for="inputUsername">Download ElasticSearch</label>
+											</div>
+											<div class="mb-3">
+												<a href="https://www.elastic.co/elasticsearch/" target="_blank">Download ElasticSearch! https://www.elastic.co/elasticsearch/</a>
+											</div>
+											<div class="row">
+												<div class="mb-1 col-md-12">
+													<label class="form-label" for="inputFirstName">CPU Max Capacity And RAM Max Capacity</label>
+													<h5 class="mb-3" style="color:green;"> It is important to run ElasticSearch server with;
+													</h5>
+												</div>
+												<div class="mb-1 col-order-10">
+													<h5 class="mb-3" style="color:blue;"> "ES_JAVA_OPTS="-Xms4g -Xmx4g" </h5>
+												</div>
+												<div class="mb-1 col-md-12">
+													<h5 class="mb-3" style="color:green;">
+														This will  help us to improve capacity of ElasticSearch that is able to use.
+													</h5>
+												</div>
+											</div>
+											<div class="mb-3">
+												<label class="form-label" for="inputCity">URL</label>
+												<input name="url" type="text"  class="form-control" id="port" placeholder="http://localhost:9200">
+												<small> Optional - generated with host and port</small>
+											</div>
+										</div>
+									</div>
+									<button name="connect" type="submit"  value="True" class="btn btn-primary">Connect</button>
+								</div>
+								</div>
+
+
+
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+<script type="text/javascript">
+
+document.getElementById("filepicker").addEventListener("change", function(event) {
+  let output = document.getElementById("listing");
+  let files = event.target.files;
+
+  for (let i=0; i<files.length; i++) {
+    let item = document.createElement("li");
+    item.innerHTML = files[i].webkitRelativePath;
+    output.appendChild(item);
+  };
+}, false);
+
+</script>
+{% block javascripts %}{% endblock javascripts %}

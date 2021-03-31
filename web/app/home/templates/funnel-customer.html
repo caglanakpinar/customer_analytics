@@ -1,0 +1,276 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Funnel - Customers {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Actions Data Source</h5>
+			<div class="col-md-12">
+				<form method="POST">
+					<div class="card">
+						<div class="card-header">
+							<h5 class="card-title"><strong>Sessions of Action & Customers of Action</strong> </h5>
+							<div class="row">
+								<h6 class="card-subtitle text-muted mb-1">
+									<strong style="color:green;"> Sessions of Action : </strong> Has Session transaction had purchase-screen action?
+								Or, Is there any Add-to-basket Action on the Session Transaction.
+								Add action data source as much as you like. Each action can be added as datasource individually.</h6>
+							</div>
+							<div class="row">
+								<h6 class="card-subtitle text-muted">
+									<strong style="color:green;"> Customers of Action : </strong>Have Customers had Signup Action?
+									Or, Have customers had 'add the payment method' action?
+								Add action data source as much as you like. Each action can be added as datasource individually.</h6>
+							</div>
+
+						</div>
+						<div class="card-body">
+							<div class="row">
+								<div class="col-md-6">
+									<div class="card">
+										<div class="card-header">
+											<h5 class="card-title">Sessions of Action</h5>
+											<h6 class="card-subtitle text-muted">
+												Please select to main or dimension data source in order to add Action connection and enter the connection information.
+												We only need <strong style="color:green;">Session IDs</strong> which have the action that you will assing on 'Session of Action Name'.
+												<strong style="color:green;">Session IDs must be unique IDs and can match with related Session Data Source of Session IDs.</strong>
+											</h6>
+										</div>
+										<div class="card-body">
+											<label class="form-label" for="es_edit">Choose Connection for Editing Dimension (ONLY FOR SESSIONs)</label>
+											{% if values['holds'] == '....' %}
+												Connection Selected!
+											{% endif %}
+											{% if values['holds'] != '....' %}
+												<select name="id" id="es_edit_2" class="form-control mb-3" required>
+													<option></option>
+													{% for i in values['actives'] %}
+														{% if i['is_action'] == 'True' and i['orders_data_source_tag'] != 'None' and i['is_product'] != 'True' and i['is_promotion'] != 'True' %}
+															<option label="ACTION || ES Tag: {{ i['tag'] }} || SESSIONs Tag : {{ i['orders_data_source_tag'] }}">{{ i['id'] }}</option>
+														{% endif %}
+														{% if i['dimension'] == 'True' and i['is_action'] != 'True' and i['orders_data_source_tag'] != 'None' and i['is_product'] != 'True' and i['is_promotion'] != 'True' %}
+															<option label="DIMENSION || ES Tag: {{ i['tag'] }} || SESSIONs Tag : {{ i['orders_data_source_tag'] }}">{{ i['id'] }}</option>
+														{% endif %}
+														{% if i['dimension'] != 'True' and i['is_action'] != 'True' and i['orders_data_source_tag'] != 'None' and i['is_product'] != 'True' and i['is_promotion'] != 'True' %}
+															<option label="MAIN || ES Tag: {{ i['tag'] }} || SESSIONs Tag : {{ i['orders_data_source_tag'] }}">{{ i['id'] }}</option>
+														{% endif %}
+													{% endfor %}
+												</select>
+
+												<div class="row">
+													<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> Status </label>
+													<div class="col-md-4">
+														<label class="form-check">
+															<input class="form-check-input" type="radio" value="add_action" name="process">
+															<span class="badge bg-warning">Add New Action to Session</span>
+														</label>
+													</div>
+													<div class="col-md-4">
+														<label class="form-check">
+															<input class="form-check-input" type="radio" value="edit" name="process">
+															<span class="badge bg-success">Edit Action on Session Connection</span>
+														</label>
+													</div>
+													<div class="col-md-4">
+														<label class="form-check mb-3">
+															<input class="form-check-input" type="radio" value="delete" name="process">
+															<span class="badge bg-danger">Delete Sessions Action Connection</span>
+														</label>
+													</div>
+												</div>
+
+											{% endif %}
+											<div class="row">
+													<div class="mb-4 col-md-6">
+														<label class="form-label mb-2" for="input_name">Session of Action Name</label>
+														<div class="mb-2">
+															<h10 class="text-muted">
+																Name will represent the action name. Assigned name will be shown at Funnels and stored in to the ElasticSearch Session index
+															</h10>
+														</div>
+														<input name="orders_data_source_tag" type="text" class="form-control mb-3" id="input_name" placeholder="has_add_to_basket, has_purchase_order_screen, .. etc" required>
+													</div>
+													<div class="mb-4 col-md-6">
+														<label class="form-label mb-2" for="order_id_tag">Session ID Column Name</label>
+														<div class="mb-2">
+															<h10 class="text-muted">
+																Assign the Customer ID column name in order to initialize the matching Customers to Actions related to the ID.
+															</h10>
+														</div>
+														<input name="order_id" type="text" class="form-control mb-3" id="order_id_tag" placeholder="assign column name of Session ID" required>
+													</div>
+
+
+												</div>
+
+											<div class="row">
+												<div class="col-md-6">
+													<label class="form-label" for="inputState">data source</label>
+													<select size="3" name="orders_data_source_type" id="inputState2"  data-show-content="true" class="form-control mb-3" required>
+														<option>postgresql</option>
+														<option>google big query</option>
+														<option>aws redshift</option>
+														<option selected>csv</option>
+														<option>parquet</option>
+														<option>hdf5</option>
+													</select>
+													<label class="form-label">Data Query or Path</label>
+													<textarea name="orders_data_query_path" class="form-control mb-3" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+												</div>
+												<div class="col-md-6">
+													<label class="form-label" for="inputPasswordNew2">user</label>
+													<input name="orders_user" type="text" class="form-control mb-3" id="inputPasswordNew2">
+													<label class="form-label" for="inputPasswordNew">password</label>
+													<input name="orders_password" type="password" class="form-control mb-3" id="inputPasswordNew">
+													<label class="form-label" for="inputPasswordNew2">port</label>
+													<input name="orders_port" type="text" class="form-control mb-3" id="inputPasswordNew2">
+													<label class="form-label" for="inputPasswordNew2">host</label>
+													<input name="orders_host" type="text" class="form-control mb-3" id="inputPasswordNew2">
+													<label class="form-label" for="inputPasswordNew2">database</label>
+													<input name="orders_db" type="text" class="form-control" id="inputPasswordNew2">
+												</div>
+											</div>
+											<button name="actions_orders_edit" value="True" type="submit" class="btn btn-primary" >Connect</button>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="card">
+										<div class="card-header">
+											<h5 class="card-title">Customers of Action</h5>
+											<h6 class="card-subtitle text-muted">
+												Please see the instruction related to Sessions of Action.
+												We only need <strong style="color:green;">Customers IDs</strong> which have the action that you will assigning on 'Customers of Action Name'
+												<strong style="color:green;">Customer IDs must be unique IDs and and can match with related Customer Data Source of Customers IDs</strong>
+											</h6>
+										</div>
+										<div class="card-body">
+											<label class="form-label" for="es_edit">Choose Connection for Editing Dimension (ONLY FOR CUSTOMERs)</label>
+											{% if values['holds'] == '....' %}
+												Connection Selected!
+											{% endif %}
+											{% if values['holds'] != '....' %}
+
+
+
+												<select name="id" id="es_edit_2" class="form-control mb-3" required>
+													<option></option>
+													{% for i in values['actives'] %}
+														{% if i['is_action'] == 'True' and i['downloads_data_source_tag'] != 'None' and i['is_product'] != 'True' and i['is_promotion'] != 'True' %}
+															<option label="ACTION || ES Tag: {{ i['tag'] }} || CUSTOMERs Tag : {{ i['downloads_data_source_tag'] }}">{{ i['id'] }}</option>
+														{% endif %}
+														{% if i['dimension'] == 'True' and i['is_action'] != 'True' and i['downloads_data_source_tag'] != 'None' and i['is_product'] != 'True' and i['is_promotion'] != 'True' %}
+															<option label="DIMENSION || ES Tag: {{ i['tag'] }} || CUSTOMERs Tag : {{ i['downloads_data_source_tag'] }}">{{ i['id'] }}</option>
+														{% endif %}
+														{% if i['dimension'] != 'True' and i['is_action'] != 'True' and i['orders_data_source_tag'] != 'None' and i['is_product'] != 'True' and i['is_promotion'] != 'True' %}
+															<option label="MAIN || ES Tag: {{ i['tag'] }} || CUSTOMERs Tag : {{ i['downloads_data_source_tag'] }}">{{ i['id'] }}</option>
+														{% endif %}
+													{% endfor %}
+												</select>
+												<div class="row">
+													<label class="form-label" for="inputPasswordCurrent"><strong>NEW</strong> Status </label>
+													<div class="col-md-3">
+														<label class="form-check">
+															<input class="form-check-input" type="radio" value="add_action" name="process">
+															<span class="badge bg-warning">Add New Cust. of Action</span>
+														</label>
+													</div>
+													<div class="col-md-4">
+														<label class="form-check">
+															<input class="form-check-input" type="radio" value="edit" name="process">
+															<span class="badge bg-success">Edit Customers of Action Connection</span>
+														</label>
+													</div>
+													<div class="col-md-3">
+														<label class="form-check mb-3">
+															<input class="form-check-input" type="radio" value="delete" name="process">
+															<span class="badge bg-danger">Delete Customers of Action Connection</span>
+														</label>
+													</div>
+												</div>
+											{% endif %}
+											<div class="row">
+												<div class="mb-4 col-md-6">
+														<label class="form-label mb-2" for="input_name_2">Customers of Action Name</label>
+														<div class="mb-2">
+															<h10 class="text-muted">
+																Name will represent the action name. Assigned name will be shown at Funnels and stored in to the ElasticSearch Customer index
+															</h10>
+														</div>
+														<input name="downloads_data_source_tag" type="text" class="form-control mb-3" id="input_name_2" placeholder="has_payment_method_create, has_first_order, .. etc" required>
+													</div>
+
+													<div class="mb-4 col-md-6">
+														<label class="form-label mb-2" for="download_id_tag">Customer ID Column Name</label>
+														<div class="mb-2">
+															<h10 class="text-muted">
+																Assign the Customer ID column name in order to initialize the matching Customer to Actions related to the ID.
+															</h10>
+														</div>
+														<input name="client" type="text" class="form-control mb-3" id="download_id_tag" placeholder="assign column name of Customer ID" required>
+													</div>
+												</div>
+
+											<div class="row">
+												<div class="col-md-6">
+													<label class="form-label" for="inputState">data source</label>
+													<select size="3" name="orders_data_source_type" id="inputState2"  data-show-content="true" class="form-control mb-3" required>
+														<option>postgresql</option>
+														<option>google big query</option>
+														<option>aws redshift</option>
+														<option selected>csv</option>
+														<option>parquet</option>
+														<option>hdf5</option>
+													</select>
+													<label class="form-label">Data Query or Path</label>
+													<textarea name="downloads_data_query_path" class="form-control mb-3" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+												</div>
+												<div class="col-md-6">
+													<label class="form-label" for="inputPasswordNew2">user</label>
+													<input name="downloads_user" type="text" class="form-control mb-3" id="inputPasswordNew2">
+													<label class="form-label" for="inputPasswordNew">password</label>
+													<input name="downloads_password" type="password" class="form-control mb-3" id="inputPasswordNew">
+													<label class="form-label" for="inputPasswordNew2">port</label>
+													<input name="downloads_port" type="text" class="form-control mb-3" id="inputPasswordNew2">
+													<label class="form-label" for="inputPasswordNew2">host</label>
+													<input name="downloads_host" type="text" class="form-control mb-3" id="inputPasswordNew2">
+													<label class="form-label" for="inputPasswordNew2">database</label>
+													<input name="downloads_db" type="text" class="form-control" id="inputPasswordNew2">
+												</div>
+											</div>
+											<button name="actions_downloads_edit" value="True" type="submit" class="btn btn-primary" >Connect</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<script>
+function myFunction() {
+  // Get the checkbox
+  var checkBox = document.getElementById("myCheck");
+  // Get the output text
+  var text = document.getElementById("text");
+
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+  } else {
+    text.style.display = "none";
+  }
+}
+</script>
+{% block javascripts %}{% endblock javascripts %}

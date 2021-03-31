@@ -85,8 +85,8 @@ def convert_to_day(date):
 def read_yaml(directory, filename):
     """
     reading yaml file with given directory
-    :param directory:
-    :param filename:
+    :param directory: path
+    :param filename: file name with .yaml format
     :return:
     """
     with open(join(directory, "", filename)) as file:
@@ -95,18 +95,26 @@ def read_yaml(directory, filename):
 
 
 def convert_to_iso_format(date):
+    """
+    converting iso-format to timestamp Ex: from  2021-01-01T00:00:00 to 2021-01-01 00:00:00
+    """
     if len(str(date)) == 10:
         return datetime.datetime.strptime(str(date)[0:10] + ' 00:00:00', "%Y-%m-%d %H:%M:%S").isoformat()
     if len(str(date)) == 19:
         return datetime.datetime.strptime(str(date)[0:10] + ' ' + str(date)[11:19], "%Y-%m-%d %H:%M:%S").isoformat()
+    if len(str(date)) != 10 and len(str(date)) != 19:
+        return date.isoformat()
 
 
 def get_index_group(index):
-    _index = index.split("_")
-    if len(_index) == 1:
+    """
+    when Exploraty Analysis or Ml Processes work on dimension this will hep us to get exact dimension name.
+    If it is calculating for aLL data, this will return 'main'.
+    """
+    if index in ['orders', 'downloads']:
         return 'main'
     else:
-        return index.split("_")[-1]
+        return index
 
 
 def convert_dt_to_month_str(date):
@@ -118,12 +126,11 @@ def convert_dt_to_month_str(date):
     return datetime.datetime.strptime(str(date)[0:7], "%Y-%m")
 
 
-def rgb_to_hex(rgb):
-    return '#%02x%02x%02x' % rgb
-
-
-def hex_to_rgb(value):
-    value = value.lstrip('#')
-    lv = len(value)
-    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
-
+def sqlite_string_converter(_str, back_to_normal=False):
+    """
+    when query or path is inserted into the sqlite db, it is need to be convert ''' and removing back slashes.
+    """
+    if back_to_normal:
+        return _str.replace("#&_5", "'").replace("+", " ") + ' '
+    else:
+        return _str.replace("'", "#&_5").replace("\r", " ").replace("\n", " ").replace(" ", "+")

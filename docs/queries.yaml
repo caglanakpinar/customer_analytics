@@ -5,9 +5,6 @@ es_connection:
   host VARCHAR,
   port VARCHAR,
   directory VARCHAR,
-  status VARCHAR,
-  cpu_capacity VARCHAR,
-  ram_capacity VARCHAR,
   url VARCHAR,
   PRIMARY KEY (id)
   )
@@ -15,9 +12,6 @@ es_connection:
 data_connection:
   CREATE TABLE data_connection (
   id INTEGER NOT NULL,
-  tag VARCHAR,
-  dimension VARCHAR,
-  process VARCHAR,
   orders_data_source_tag VARCHAR,
   orders_data_source_type VARCHAR,
   orders_data_query_path VARCHAR,
@@ -34,16 +28,22 @@ data_connection:
   downloads_port VARCHAR,
   downloads_host VARCHAR,
   downloads_db VARCHAR,
-  is_action VARCHAR,
-  is_product VARCHAR,
-  is_promotion VARCHAR,
+  products_data_source_tag VARCHAR,
+  products_data_source_type VARCHAR,
+  products_data_query_path VARCHAR,
+  products_password VARCHAR,
+  products_user VARCHAR,
+  products_port VARCHAR,
+  products_host VARCHAR,
+  products_db VARCHAR,
+  dimension VARCHAR,
+  promotion_id VARCHAR,
   PRIMARY KEY (id)
   )
 
 data_columns_integration:
   CREATE TABLE data_columns_integration (
   id INTEGER NOT NULL,
-  tag VARCHAR,
   order_id VARCHAR,
   client VARCHAR,
   session_start_date VARCHAR,
@@ -54,12 +54,13 @@ data_columns_integration:
   signup_date VARCHAR,
   data_type VARCHAR,
   has_purchased VARCHAR,
-  has_action VARCHAR,
-  has_action_date VARCHAR,
   product VARCHAR,
   price VARCHAR,
   category VARCHAR,
   promotion_id VARCHAR,
+  actions VARCHAR,
+  dimension VARCHAR,
+  client_2 VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -76,77 +77,20 @@ schedule_data:
   PRIMARY KEY (id)
   )
 
-orders_sample_data:
-  CREATE TABLE orders_sample_data (
-  id INTEGER NOT NULL,
-  order_id VARCHAR,
-  client VARCHAR,
-  session_start_date VARCHAR,
-  payment_amount VARCHAR,
-  discount_amount VARCHAR,
-  date VARCHAR,
-  has_purchased VARCHAR,
-  PRIMARY KEY (id)
-  )
-
-downloads_sample_data:
-  CREATE TABLE downloads_sample_data (
-  id INTEGER NOT NULL,
-  client VARCHAR,
-  download_date VARCHAR,
-  signup_date VARCHAR,
-  PRIMARY KEY (id)
-  )
-
-action_orders_sample_data:
-  CREATE TABLE orders_sample_data (
-  id INTEGER NOT NULL,
-  order_id VARCHAR,
-  has_action VARCHAR,
-  PRIMARY KEY (id)
-  )
-
-action_downloads_sample_data:
-  CREATE TABLE orders_sample_data (
-  id INTEGER NOT NULL,
-  client VARCHAR,
-  action_date VARCHAR,
-  PRIMARY KEY (id)
-  )
-
-product_orders_sample_data:
-  CREATE TABLE orders_sample_data (
-  id INTEGER NOT NULL,
-  order_id VARCHAR,
-  product VARCHAR,
-  price VARCHAR,
-  category VARCHAR,
-  PRIMARY KEY (id)
-  )
-
-promotion_orders_sample_data:
-  CREATE TABLE orders_sample_data (
-  id INTEGER NOT NULL,
-  order_id VARCHAR,
-  promotion_id VARCHAR,
-  PRIMARY KEY (id)
-  )
-
-data_columns:
-  CREATE TABLE data_columns (
-  id INTEGER NOT NULL,
-  tag VARCHAR,
-  data_type VARCHAR,
-  columns VARCHAR,
-  PRIMARY KEY (id)
-  )
-
 logs:
   CREATE TABLE logs (
   id INTEGER NOT NULL,
   page VARCHAR,
   color VARCHAR,
   info VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+actions:
+  CREATE TABLE actions (
+  id INTEGER NOT NULL,
+  data_type VARCHAR,
+  action_name VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -157,16 +101,10 @@ columns:
     - host
     - port
     - directory
-    - status
-    - cpu_capacity
-    - ram_capacity
     - url
 
   data_connection:
     - id
-    - tag
-    - dimension
-    - process
     - orders_data_source_tag
     - orders_data_source_type
     - orders_data_query_path
@@ -183,13 +121,19 @@ columns:
     - downloads_port
     - downloads_host
     - downloads_db
-    - is_action
-    - is_product
-    - is_promotion
+    - products_data_source_tag
+    - products_data_source_type
+    - products_data_query_path
+    - products_password
+    - products_user
+    - products_port
+    - products_host
+    - products_db
+    - dimension
+    - promotion_id
 
   data_columns_integration:
     - id
-    - tag
     - order_id
     - client
     - session_start_date
@@ -200,63 +144,19 @@ columns:
     - signup_date
     - data_type
     - has_purchased
-    - has_action
-    - has_action_date
     - product
     - price
     - category
     - promotion_id
-
-  orders_sample_data:
-    - id
-    - order_id
-    - client
-    - session_start_date
-    - date
-    - payment_amount
-    - discount_amount
-    - has_purchased
-
-  downloads_sample_data:
-    - id
-    - client
-    - download_date
-    - signup_date
-
-  action_orders_sample_data:
-    - id
-    - order_id
-    - has_action
-
-  action_downloads_sample_data:
-    - id
-    - client
-    - action_date
-
-  product_orders_sample_data:
-    - id
-    - order_id
-    - product
-    - price
-    - category
-
-  promotion_orders_sample_data:
-    - id
-    - order_id
-    - promotion_id
-
-  data_columns:
-    - id
-    - tag
-    - data_type
-    - columns
+    - actions
+    - dimension
+    - client_2
 
   schedule_data:
     - id
     - tag
     - schedule_tag
     - time_period
-    - status
     - is_mlworks
     - is_exploratory
     - max_date_of_order_data
@@ -266,6 +166,11 @@ columns:
     - page
     - color
     - info
+
+  actions:
+    - id
+    - data_type
+    - action_name
 
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'
