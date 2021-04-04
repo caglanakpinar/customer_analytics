@@ -268,12 +268,16 @@ class Charts:
         """
         _data = self.get_data(chart)  # collect data
         # data for line chart daily(sum), weekly(sum), houry(average), monthly(sum)
-        if chart in ["_".join(['orders', t]) for t in time_periods]:
-            _data = _data.sort_values(by=chart.split("_")[1], ascending=True)
-            trace['x'] = list(_data[chart.split("_")[1]])
-            trace['y'] = list(_data['orders'])
-            if chart.split("_")[1] not in ['daily', 'weekly']:
-                trace['text'] = list(_data['orders'])
+        if chart in ["_".join([t, 'orders']) for t in time_periods]:
+            try:
+                _t = 'date' if chart.split("_")[0] not in list(_data.columns) else chart.split("_")[0]
+                _data = _data.sort_values(by=_t, ascending=True)
+                trace['x'] = list(_data[_t])
+                trace['y'] = list(_data['orders'])
+                if _t not in ['daily', 'weekly']:
+                    trace['text'] = list(_data['orders'])
+            except Exception as e:
+                print(e)
         # from the customer segmentation Human readable segments with their sizes
         if chart == 'customer_segmentation':
             trace['labels'] = list(_data['segments'])
@@ -315,12 +319,15 @@ class Charts:
         for c in charts[target]['charts']:
             trace = self.get_trace(charts[target]['charts'][c]['trace'], c)
             self.get_widths_heights(chart=c, target=target)
-            self.graph_json['charts'][c] = json.dumps({'trace': trace,
-                                                       'layout': charts[target]['charts'][c]['layout']},
-                                                      cls=plotly.utils.PlotlyJSONEncoder)
+            self.graph_json['charts'][c] = {'trace': trace,
+                                                       'layout': charts[target]['charts'][c]['layout']}
         # collecting KPIs
         self.graph_json['kpis'] = {}
         for k in charts[target]['kpis']:
             _obj = self.get_values(k)
             for _k in charts[target]['kpis'][k]:
                 self.graph_json['kpis'][_k] = '{:,}'.format(int(_obj[_k])).replace(",", ".")
+        return self.graph_json
+
+    def get_json_format(self, chart):
+        return json.dumps({'trace': chart['trace'], 'layout': chart['layout']}, cls=plotly.utils.PlotlyJSONEncoder)

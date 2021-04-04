@@ -7,6 +7,7 @@ from web.app.home import blueprint
 from flask import render_template, request
 from flask_login import login_required
 from jinja2 import TemplateNotFound
+import json
 
 from web.app.home.models import RouterRequest
 from web.app.home.forms import SampleData, RealData, Charts, charts
@@ -37,12 +38,14 @@ def index():
     When logged In, Platform start with General Dashboard running on index.html
     :return: render_template
     """
-    charts.get_chart(target='index') # collect charts on index.html
+    graph_json = charts.get_chart(target='index') # collect charts on index.html
+    print()
+    asd = charts.get_json_format(graph_json['charts']['daily_orders'])
     return render_template('index.html',
                            segment='index',
-                           charts=charts.graph_json['charts']['daily_orders'],
-                           customer_segments=charts.graph_json['charts']['customer_segmentation'],
-                           kpis=charts.graph_json['kpis']
+                           charts=charts.get_json_format(graph_json['charts']['daily_orders']),
+                           customer_segments=charts.get_json_format(graph_json['charts']['customer_segmentation']),
+                           kpis=graph_json['kpis']
                            )
 
 
@@ -79,10 +82,11 @@ def route_template(template):
             charts.get_chart(target='index2')
             return render_template(template, segment=segment, rfm=charts.graph_json['charts']['rfm'])
         else:
-            reqs.execute_request(req=dict(request.form), template=segment)
-            reqs.fetch_results(segment, dict(request.form))
-            values = reqs.message
-            return render_template(template, segment=segment, values=values)
+            if template != 'index':
+                reqs.execute_request(req=dict(request.form), template=segment)
+                reqs.fetch_results(segment, dict(request.form))
+                values = reqs.message
+                return render_template(template, segment=segment, values=values)
 
     except TemplateNotFound:
         return render_template('page-404.html'), 404

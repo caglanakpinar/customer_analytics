@@ -87,12 +87,12 @@
 
 						</div>
 
-						<div name="monthly" class="card-body py-3" >
+						<div class="card-body py-3" >
 							<!--<div class="chart chart-sm">
 									<canvas id="chartjs-dashboard-line"></canvas>
 							</div>
 							-->
-							<div id="chart_asd" class="chart" style="height:200px;"></div>
+							<div id="chart_asd2" class="chart" style="height:200px;"></div>
 						</div>
 					</div>
 				</div>
@@ -138,7 +138,7 @@
 							<h5 class="card-title mb-0">Customer Segmentation</h5>
 						</div>
 						<div class="card-body px-5" style="height:400px;">
-							<div name="cust_segment" id="segmentation" style="height:400px;"></div>
+							<div  id="segmentation" class="chart" style="height:400px;"></div>
 
 						</div>
 					</div>
@@ -220,13 +220,13 @@
 
 		var graphs = {{charts | safe}};
 
-        Plotly.plot('chart_asd', // the ID of the div, created above
+        Plotly.plot('chart_asd2', // the ID of the div, created above
 					graphs.trace,
 					graphs.layout, {displayModeBar: false} || {});
 
 		var segments = {{customer_segments | safe}};
 
-		Plotly.plot('segmentation', // the ID of the div, created above
+		Plotly.plot('cust_segment', // the ID of the div, created above
 					segments.trace,
 					segments.layout, {displayModeBar: false} || {});
 

@@ -83,9 +83,9 @@ class Stats:
                       "total_visitors", "last_week_visitors",
                       "total_discount", "last_week_discount",
                       "average_basket_value_per_user",
-                      "daily_orders", "weekly_orders", "monthly_orders"]
+                      "hourly_orders", "daily_orders", "weekly_orders", "monthly_orders", "hourly_orders"]
         self.last_week = None
-        self.time_periods = ["daily", "weekly", 'monthly']
+        self.time_periods = time_periods# ["daily", "weekly", 'monthly']
         self.orders = pd.DataFrame()
         self.results = {}
 
@@ -118,7 +118,7 @@ class Stats:
         final data; data set with time periods
         """
         for p in list(zip(self.time_periods,
-                     [convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
+                     [convert_str_to_hour, convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
             self.orders[p[0]] = self.orders["date"].apply(lambda x: p[1](x))
 
     def total_orders(self):
@@ -188,13 +188,22 @@ class Stats:
         return np.mean(self.orders[(self.orders['actions.purchased'] == True)].groupby("client").agg(
             {"payment_amount": "mean"}).reset_index()['payment_amount'])
 
+    def hourly_orders(self):
+        """
+        total number of orders per day
+        :return: data-frame
+        """
+        return self.orders[(self.orders['actions.purchased'] == True)].groupby('hourly').agg(
+            {'id': 'count'}).reset_index().rename(columns={'id': 'orders'}).groupby('hourly').agg(
+            {'orders': 'mean'}).reset_index()
+
     def daily_orders(self):
         """
         total number of orders per day
         :return: data-frame
         """
         return self.orders[(self.orders['actions.purchased'] == True)].groupby("daily").agg(
-            {"id": "count"}).reset_index().rename(columns={"id": "order_count"})
+            {"id": "count"}).reset_index().rename(columns={"id": "orders"})
 
     def weekly_orders(self):
         """
@@ -202,7 +211,7 @@ class Stats:
         :return: data-frame
         """
         return self.orders[(self.orders['actions.purchased'] == True)].groupby("weekly").agg(
-            {"id": "count"}).reset_index().rename(columns={"id": "order_count"})
+            {"id": "count"}).reset_index().rename(columns={"id": "orders"})
 
     def monthly_orders(self):
         """
@@ -210,7 +219,7 @@ class Stats:
         :return:
         """
         return self.orders[(self.orders['actions.purchased'] == True)].groupby("monthly").agg(
-            {"id": "count"}).reset_index().rename(columns={"id": "order_count"})
+            {"id": "count"}).reset_index().rename(columns={"id": "orders"})
 
     def execute_descriptive_stats(self, start_date=None):
         """
@@ -230,6 +239,7 @@ class Stats:
                                             self.total_visitors, self.last_week_visitors,
                                             self.total_discount, self.last_week_discount,
                                             self.average_basket_value_per_user,
+                                            self.hourly_orders,
                                             self.daily_orders,
                                             self.weekly_orders,
                                             self.monthly_orders])):
@@ -277,7 +287,7 @@ class Stats:
         query format;
             queries = {"stats": "overall"}
             queries = {"stats": "weekly_orders"}
-            	weekly	            order_count
+            	weekly	            orders
             0	2020-12-07T00:00:00	3
             1	2020-12-14T00:00:00	36687
             2	2020-12-21T00:00:00	38166
