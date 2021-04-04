@@ -39,8 +39,6 @@ def index():
     :return: render_template
     """
     graph_json = charts.get_chart(target='index') # collect charts on index.html
-    print()
-    asd = charts.get_json_format(graph_json['charts']['daily_orders'])
     return render_template('index.html',
                            segment='index',
                            charts=charts.get_json_format(graph_json['charts']['daily_orders']),
@@ -69,24 +67,26 @@ def route_template(template):
 
         if template in ['funnel-session.html', 'funnel-customer.html']:
             additional_name = '' if template == 'funnel-session.html' else '_downloads'
-            charts.get_chart(target='funnel')
+            graph_json = charts.get_chart(target='funnel')
             return render_template(template,
                                    segment=segment,
-                                   daily_funnel=charts.graph_json['charts']['daily_funnel' + additional_name],
-                                   weekly_funnel=charts.graph_json['charts']['weekly_funnel' + additional_name],
-                                   monthly_funnel=charts.graph_json['charts']['monthly_funnel' + additional_name],
-                                   hourly_funnel=charts.graph_json['charts']['hourly_funnel' + additional_name]
+                                   daily_funnel=charts.get_json_format(graph_json['charts']['daily_funnel' + additional_name]),
+                                   weekly_funnel=charts.get_json_format(graph_json['charts']['weekly_funnel' + additional_name]),
+                                   monthly_funnel=charts.get_json_format(graph_json['charts']['monthly_funnel' + additional_name]),
+                                   hourly_funnel=charts.get_json_format(graph_json['charts']['hourly_funnel' + additional_name])
                                    )
 
         if template == 'index2.html':
-            charts.get_chart(target='index2')
-            return render_template(template, segment=segment, rfm=charts.graph_json['charts']['rfm'])
-        else:
-            if template != 'index':
-                reqs.execute_request(req=dict(request.form), template=segment)
-                reqs.fetch_results(segment, dict(request.form))
-                values = reqs.message
-                return render_template(template, segment=segment, values=values)
+            graph_json = charts.get_chart(target='index2')
+            return render_template(template, segment=segment, rfm=charts.get_json_format(graph_json['charts']['rfm']))
+        if template in ['funnel-customer.html', 'funnel-customer.html']:
+            graph_json = charts.get_chart(target='funnel')
+            return render_template(template, segment=segment, funnel=charts.get_json_format(graph_json['charts']['rfm']))
+        if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html']:
+            reqs.execute_request(req=dict(request.form), template=segment)
+            reqs.fetch_results(segment, dict(request.form))
+            values = reqs.message
+            return render_template(template, segment=segment, values=values)
 
     except TemplateNotFound:
         return render_template('page-404.html'), 404

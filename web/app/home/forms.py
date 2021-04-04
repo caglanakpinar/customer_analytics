@@ -320,7 +320,7 @@ class Charts:
             trace = self.get_trace(charts[target]['charts'][c]['trace'], c)
             self.get_widths_heights(chart=c, target=target)
             self.graph_json['charts'][c] = {'trace': trace,
-                                                       'layout': charts[target]['charts'][c]['layout']}
+                                            'layout': charts[target]['charts'][c]['layout']}
         # collecting KPIs
         self.graph_json['kpis'] = {}
         for k in charts[target]['kpis']:
@@ -330,4 +330,4 @@ class Charts:
         return self.graph_json
 
     def get_json_format(self, chart):
-        return json.dumps({'trace': chart['trace'], 'layout': chart['layout']}, cls=plotly.utils.PlotlyJSONEncoder)
+        return json.dumps({"trace": [chart['trace']], "layout": chart['layout']}, cls=plotly.utils.PlotlyJSONEncoder)

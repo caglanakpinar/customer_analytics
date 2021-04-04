@@ -19,7 +19,7 @@ except Exception as e:
 
 try:
     # Load the configuration using the default values 
-    app_config = config_dict['Production']
+    app_config = config_dict['Debug']
 except KeyError:
     exit('Error: Invalid <config_mode>. Expected values [Debug, Production] ')
 
