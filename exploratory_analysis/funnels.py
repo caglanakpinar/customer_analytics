@@ -95,7 +95,7 @@ class Funnels:
             transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
         return transactions
 
-    def get_purchase_action_funnel_data(self, action, date_column, index=None):
+    def get_purchase_action_funnel_data(self, action, date_column):
         """
         Each action has been calculated related to time periods.
         This process is an aggregation of related order id or client according to time periods.
@@ -113,7 +113,7 @@ class Funnels:
         :param index: action from orders / downloads
         """
 
-        transactions = pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index if index is None else index))
+        transactions = pd.DataFrame(self.query_es.get_data_from_es())
         transactions = self.get_time_period(transactions=transactions, date_column=date_column)
         # hourly orders
         funnels = {'hourly': transactions.groupby(["daily", "hourly"]).agg({"id": "count"}).reset_index()}
@@ -261,14 +261,14 @@ class Funnels:
                 self.query_es.date_queries_builder({_date_column: {"gte": start_date}})
                 self.query_es.query_builder(fields=self.action_funnel_fields)
                 self.action_funnel_data[a] = self.get_purchase_action_funnel_data(action=a,
-                                                                                  date_column=_date_column,
-                                                                                  index=self.download_index)
+                                                                                  date_column=_date_column)
         # merge actions related to time periods
         self.download_funnels = self.merge_actions(self.action_funnel_data)
         # insert into the reports index
-        self.insert_into_reports_index(self.download_funnels, start_date, funnel_type='downloads', index=self.order_index)
+        self.insert_into_reports_index(self.download_funnels, current_date_to_day().isoformat(),
+                                       funnel_type='downloads', index=self.order_index)
 
-    def overall_funnel(self, start_date=None, index=None):
+    def overall_funnel(self, start_date=None):
         """
         All actions are combined into a dictionary. Total values are calculated via monthly funnels.
         1 row of the data frame is created.
@@ -277,6 +277,7 @@ class Funnels:
         :param start_date:
         :param index: refers the dimensionality of the whole data.
         """
+        start_date = default_query_date if start_date is None else start_date
         if start_date is not None:  # filter monthly column for each actions
             dfs = []
             for df in [self.purchase_funnels['monthly'], self.download_funnels['monthly']]:
@@ -295,8 +296,8 @@ class Funnels:
         self.time_periods = ['yearly']
         # insert into the reports index
         self.insert_into_reports_index({"yearly": pd.DataFrame([self.overall_funnels])},
-                                       start_date, funnel_type='overall',
-                                       index=self.order_index if index is None else index)
+                                       current_date_to_day().isoformat(), funnel_type='overall',
+                                       index=self.order_index)
         self.time_periods = time_periods
 
     def insert_into_reports_index(self, funnel, start_date, funnel_type='orders', index='orders'):

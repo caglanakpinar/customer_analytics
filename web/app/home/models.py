@@ -5,7 +5,7 @@ sys.path.insert(0, parentdir)
 
 from sqlalchemy import create_engine, MetaData
 from os.path import abspath, join
-from utils import read_yaml, current_date_to_day
+from utils import read_yaml, current_date_to_day, abspath_for_sample_data
 from configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
 import pandas as pd
 from numpy import array, random
@@ -15,10 +15,12 @@ from exploratory_analysis import ea_configs
 from ml_process import ml_configs
 from utils import sqlite_string_converter
 
-
-engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
+                       connect_args={'check_same_thread': False})
 metadata = MetaData(bind=engine)
 con = engine.connect()
+
+
 
 
 class RouterRequest:
@@ -320,7 +322,7 @@ class RouterRequest:
         # for orders index choose ElasticSearch Connection from es_connection table (only status == 'on')
         if requests.get('connect', None) is not None:
             self.check_for_table_exits(table='data_connection')
-
+            self.check_for_table_exits(table='data_columns_integration')
             _columns = self.get_intersect_columns_with_request(requests, 'data_connection')
             _columns_2 = self.get_intersect_columns_with_request(requests, 'data_columns_integration')
             conn_status, self.message['data_source_con_check'], data, data_columns = self.check_for_data_source_connection(requests, _columns)
@@ -371,7 +373,7 @@ class RouterRequest:
         if req != {}:
             if template == 'data-es':
                 self.manage_data_integration(self.check_for_request(req))
-            if template in ['add-data-purchase_2', 'add-data-product_2']:
+            if template in ['add-data-purchase', 'add-data-product']:
                 self.data_connections(self.check_for_request(req))
             if template == 'data-execute':
                 self.data_execute(self.check_for_request(req))

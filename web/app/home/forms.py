@@ -1,3 +1,7 @@
+import sys, os, inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
 from flask_wtf import FlaskForm
 from wtforms import TextField, PasswordField
 from wtforms.validators import InputRequired, Email, DataRequired
@@ -11,11 +15,12 @@ import plotly
 from screeninfo import get_monitors
 from sqlalchemy import create_engine, MetaData
 
-from utils import convert_to_day
+from utils import convert_to_day, abspath_for_sample_data
 from configs import time_periods
 from data_storage_configurations import collect_reports
 
-engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
+                       connect_args={'check_same_thread': False})
 metadata = MetaData(bind=engine)
 con = engine.connect()
 
@@ -92,16 +97,29 @@ charts = {
         "kpis": {}
     },
     "funnel": {
-        # charts - rfm
+        # charts - Funnel Daily, Monthly, Weekly
         "charts": {_f: {'trace': go.Scatter(mode="lines+markers+text",
-                                                        line=dict(color='firebrick', width=4),
-                                                        textposition="bottom center",
-                                                        textfont=dict(
-                                                            family="sans serif",
-                                                            size=30,
-                                                            color="crimson")),
+                                            line=dict(color='firebrick', width=4),
+                                            textposition="bottom center",
+                                            textfont=dict(
+                                                family="sans serif",
+                                                size=30,
+                                                color="crimson")),
                                       'layout': go.Layout()}
                    for _f in ['daily_funnel', 'hourly_funnel', 'weekly_funnel', 'monthly_funnel',
+                              'daily_funnel_downloads', 'hourly_funnel_downloads',
+                              'weekly_funnel_downloads', 'monthly_funnel_downloads']},
+        # not any recent KPIs for now
+        "kpis": {}
+    },
+    "cohort": {
+        # charts - Cohorts From 1, 2, 3 to 2, 3 ,4 Downloads to 1st Orders, daily, Weekly
+        "charts": {_c: {'trace': go.Heatmap(z=[], x=[], y=[], colorscale='Viridis', opacity=0.9,
+                                            showlegend=False, ygap=2, xgap=2, hoverongaps=True),
+                        'annotations': go.Annotation(text=[], x=[], y=[], xref='x1', yref='y1', showarrow=False),
+                        'layout': go.Layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                                            annotations=[])}
+                   for _c in ['daily_funnel', 'hourly_funnel', 'weekly_funnel', 'monthly_funnel',
                               'daily_funnel_downloads', 'hourly_funnel_downloads',
                               'weekly_funnel_downloads', 'monthly_funnel_downloads']},
         # not any recent KPIs for now
@@ -116,14 +134,12 @@ class SampleData:
     These sample data comes from the sample data_folder default in the library.
     """
     kpis = {}
-    folder = join(abspath(""), "exploratory_analysis", 'sample_data', '')
+    folder = join(abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
     for f in listdir(dirname(folder)):
         if f.split(".")[1] == 'csv':
             kpis["_".join(f.split(".")[0].split("_")[2:])] = None
 
-    _base_path = abspath("").split(basename(abspath("")))[0]
-    _base_path = abspath("") #.split(basename(abspath("")))[0]
-    folder = join(abspath(""), "exploratory_analysis", 'sample_data', '')
+    folder = join(abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
     for f in listdir(dirname(folder)):
         if f.split(".")[1] == 'csv':
             _kpi_name = "_".join(f.split(".")[0].split("_")[2:])
@@ -226,7 +242,6 @@ class Charts:
         except Exception as e:
             print()
             return self.samples[chart]
-
 
     def get_widths_heights(self, target, chart):
         if chart == 'customer_segmentation':

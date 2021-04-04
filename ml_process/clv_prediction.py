@@ -68,7 +68,9 @@ class CLVPrediction:
         self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
         self.query_es.boolean_queries_buildier({"actions.purchased": True})
         self.query_es.query_builder(fields=self.clv_fields)
-        pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index)).to_csv(self.temp_csv_file, index=False)
+        _data = pd.DataFrame(self.query_es.get_data_from_es())
+        _data['session_start_date'] = _data['session_start_date'].apply(lambda x: str(convert_to_date(x)))
+        _data.query("session_start_date == session_start_date").to_csv(self.temp_csv_file, index=False)
 
     def insert_into_reports_index(self, clv_predictions, time_period, date=None, index='orders'):
         """

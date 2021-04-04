@@ -20,7 +20,7 @@ from tensorflow.keras.optimizers import RMSprop
 
 from configs import default_es_port, default_es_host
 from data_storage_configurations.query_es import QueryES
-from data_storage_configurations import collect_reports
+# from data_storage_configurations import collect_reports
 from utils import current_date_to_day, convert_to_date, calculate_time_diff, get_index_group, convert_to_iso_format
 
 

@@ -1,4 +1,6 @@
 import datetime
+import os
+import inspect
 from os.path import join
 import yaml
 
@@ -134,3 +136,15 @@ def sqlite_string_converter(_str, back_to_normal=False):
         return _str.replace("#&_5", "'").replace("+", " ") + ' '
     else:
         return _str.replace("'", "#&_5").replace("\r", " ").replace("\n", " ").replace(" ", "+")
+
+
+def abspath_for_sample_data():
+    """
+    get customer_analytics path. Ex: ....../customer_analytics
+    """
+    currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    base_name = os.path.basename(currentdir)
+    while base_name != 'customer_analytics':
+        currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        base_name = os.path.basename(currentdir)
+    return currentdir

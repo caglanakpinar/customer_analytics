@@ -6,17 +6,25 @@ import schedule
 import threading
 import time
 import pandas as pd
+from numpy import unique
 from sqlalchemy import create_engine, MetaData
 from os.path import abspath, join
 from data_storage_configurations.es_create_index import CreateIndex
-from data_storage_configurations.sample_data import CreateSampleIndex
-from exploratory_analysis import create_exploratory_analysis
-from ml_process import create_mls
-from utils import current_date_to_day, convert_to_day
+from data_storage_configurations.query_es import QueryES
+try:
+    from exploratory_analysis.__init__ import create_exploratory_analysis
+except Exception as e:
+    from exploratory_analysis import create_exploratory_analysis
+try:
+    from ml_process.__init__ import create_mls
+except Exception as e:
+    from ml_process import create_mls
 
-engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'),
-                       convert_unicode=True,
-                       connect_args={'check_same_thread': False})
+from utils import current_date_to_day, convert_to_day, abspath_for_sample_data
+
+
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
+                       convert_unicode=True, connect_args={'check_same_thread': False})
 metadata = MetaData(bind=engine)
 con = engine.connect()
 
@@ -106,8 +114,11 @@ class Scheduler:
         self.data_connection_structure = data_connection_structure
         self.ea_connection_structure = ea_connection_structure
         self.ml_connection_structure = ml_connection_structure
+        self.es_con = pd.read_sql("select * from es_connection", con).to_dict('results')[-1]
         self.create_index = CreateIndex(data_connection_structure=data_connection_structure,
                                         data_columns=data_columns, actions=actions)
+        self.query_es = QueryES(host=self.es_con['host'], port=self.es_con['port'])
+        self.unique_dimensions = []
         self.schedule = True
 
     def query_schedule_status(self):
@@ -115,6 +126,23 @@ class Scheduler:
         When the process is scheduled for daily, '12 hours', before it starts, checks scheduling is still 'on' or not deleted.
         """
         return pd.read_sql("SELECT * FROM schedule_data ", con)
+
+    def collect_dimensions_for_data_works(self):
+        """
+
+        """
+        self.unique_dimensions = unique([r['fields']['dimension'][0] for r in self.query_es.es.search(index='orders',
+                                                                                                 body={
+                                                                                                     "size": self.query_es.query_size,
+                                                                                                     "from": 0,
+                                                                                                     "fields": [
+                                                                                                         "dimension"]})[
+            'hits']['hits']]).tolist()
+
+    def check_number_of_days(self):
+        """
+
+        """
 
     def create_schedule(self):
         tag = self.query_schedule_status()
@@ -157,12 +185,19 @@ class Scheduler:
                 if int(time_diff) == 0:
                     accept = False
         if accept:
-            if tag['is_exploratory'] != 'None':
-                for _conf in self.ea_connection_structure:
-                    create_exploratory_analysis(_conf)
-            if tag['is_mlworks'] != 'None':
-                for _conf in self.ml_connection_structure:
-                    create_mls(_conf)
+            create_exploratory_analysis(self.ea_connection_structure)
+            create_mls(self.ml_connection_structure)
+
+            if len(self.unique_dimensions) > 1:
+                for dim in self.unique_dimensions:
+                    for i in [{"executor": create_exploratory_analysis,
+                               "config": self.ea_connection_structure},
+                              {"executor": create_mls,
+                               "config": self.ml_connection_structure}]:
+                        for ea in i['config']:
+                            if ea not in ['date', 'time_period']:
+                                i['executor'][ea]['order_index'], i['config'][ea]['download_index'] = dim, dim
+                    i['executor'](i['config'])
 
     def execute_schedule(self):
         """

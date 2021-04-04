@@ -101,7 +101,7 @@ class Stats:
             self.query_es = QueryES(port=self.port, host=self.host)
             self.query_es.query_builder(fields=self.orders_field_data,
                                         date_queries=[{"range": {"session_start_date": {"gte": start_date}}}])
-            self.orders = pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index))
+            self.orders = pd.DataFrame(self.query_es.get_data_from_es())
             self.orders['date'] = self.orders['session_start_date'].apply(lambda x: convert_to_date(x))
 
     def get_last_week(self):

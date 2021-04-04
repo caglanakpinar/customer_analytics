@@ -15,14 +15,20 @@ from dateutil.parser import parse
 from sqlalchemy import create_engine, MetaData
 
 from utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format
-from configs import query_path, default_es_port, default_es_host, orders_index_columns, downloads_index_columns
+from configs import query_path, default_es_port, default_es_host
+from configs import orders_index_columns, downloads_index_columns, not_required_columns, not_required_default_values
 from os.path import abspath, join
 from data_storage_configurations.query_es import QueryES
 from data_storage_configurations.data_access import GetData
 
-engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
-con = engine.connect()
+try:
+    engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
+    metadata = MetaData(bind=engine)
+    con = engine.connect()
+except Exception as e:
+    engine = create_engine('sqlite://///' + join(parentdir, "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
+    metadata = MetaData(bind=engine)
+    con = engine.connect()
 
 
 class CreateIndex:
@@ -99,14 +105,20 @@ class CreateIndex:
         return _query
 
     def check_for_table_exits(self, table, query=None):
-        if table not in list(self.tables['name']):
-            if query is None:
-                con.execute(self.sqlite_queries[table])
-            else:
-                con.execute(query)
+        try:
+            if table not in list(self.tables['name']):
+                if query is None:
+                    con.execute(self.sqlite_queries[table])
+                else:
+                    con.execute(query)
+        except Exception as e:
+            print(e)
 
     def logs_update(self, logs):
-        self.check_for_table_exits(table='logs')
+        try:
+            self.check_for_table_exits(table='logs')
+        except Exception as e:
+            print(e)
         try:
             con.execute(self.insert_query(table='logs',
                                           columns=self.sqlite_queries['columns']['logs'][1:],
@@ -163,7 +175,6 @@ class CreateIndex:
             result = {}
             for i in x:
                 for p in list(i.keys()):
-                    print(i[p])
                     result[p] = i[p]
             return result
         except Exception as e:
@@ -232,6 +243,13 @@ class CreateIndex:
                 renaming[self.data_columns[col]] = col if col != 'client_2' else 'client'
         return data.rename(columns=renaming)
 
+    def check_for_not_required_columns(self, data, data_source_type):
+        _columns = list(data.columns)
+        for col in not_required_columns[data_source_type]:
+            if col not in _columns:
+                data[col] = not_required_default_values[col]
+        return data
+
     def get_data(self, conf, data_source_type):
         """
         {'data_source': connection[index + '_data_source_type'],
@@ -253,6 +271,7 @@ class CreateIndex:
         data = self.match_data_columns(data=gd.data)
         data = self.change_columns_format(data, data_source_type)
         data = self.filter_dates(data, data_source_type)
+        data = self.check_for_not_required_columns(data, data_source_type)
         return data
 
     def merge_orders(self, order_source, product_source):
@@ -273,6 +292,7 @@ class CreateIndex:
                                                          lambda x: self.design_order_basket(x)}).reset_index()
                     products['total_products'] = products['basket'].apply(lambda x: len(x.keys()))
                     orders = pd.merge(orders, products, on='order_id', how='left')
+                    orders['basket'] = orders['basket'].fillna({})
             except Exception as e:
                 print(e)
         return orders
@@ -310,9 +330,13 @@ class CreateIndex:
                 for i in data.to_dict('results'):
                     _obj = {i: None for i in orders_index_columns}
                     _keys = list(i.keys())
-                    if index == 'orders':
-                        if len(self.actions[index]) != 0:
-                            _obj['actions'] = {_a: False for _a in self.actions[index]}
+                    _has_purchased = True if i['has_purchased'] in ['True', True] else False
+                    if len(self.actions[index]) != 0:
+                        _obj['actions'] = {_a: False for _a in self.actions[index]}
+                        _obj['actions']['purchased'] = _has_purchased
+                        _obj['actions']['has_sessions'] = True
+                    else:
+                        _obj['actions'] = {'purchased': _has_purchased, 'has_sessions': True}
                     for k in _obj:
                         if k in _keys:
                             if k in ['date', 'session_start_date']:
@@ -323,8 +347,7 @@ class CreateIndex:
                             if k == 'id':
                                 _obj['id'] = i['order_id']
                             if k == 'basket':
-                                if i['basket'] == i['basket']:
-                                    _obj['basket'] = {}
+                                _obj['basket'] = i['basket'] if i['basket'] == i['basket'] else {}
                             if k == 'actions':
                                 for a in self.actions[index]:
                                     if a in _keys:
@@ -332,11 +355,23 @@ class CreateIndex:
                                             _obj['actions'][a] = True
                     _insert.append(_obj)
                     del _obj
-                    if len(_insert) >= 1000000:
+                    if len(_insert) >= 10:
                         self.query_es.insert_data_to_index(_insert, index)
+                        #try:
+                        #    self.query_es.insert_data_to_index(_insert, index)
+                        #except Exception as e:
+                        #    for ins in _insert:
+                        #        self.query_es.insert_data_to_index([ins], index)
+#
                         _insert = []
                 if len(_insert) != 0:
                     self.query_es.insert_data_to_index(_insert, index)
+                    # try:
+                    #     self.query_es.insert_data_to_index(_insert, index)
+                    # except Exception as e:
+                    #     for ins in _insert:
+                    #         self.query_es.insert_data_to_index([ins], index)
+#
                 self.logs_update(logs={"page": "data-execute",
                                        "info": " SESSIONS index Done! - ",
                                        "color": "green"})
@@ -360,11 +395,21 @@ class CreateIndex:
                             _obj[_a] = convert_to_iso_format(i[_a])
 
                     _insert.append(_obj)
-                    if len(_insert) >= 100000:
+                    if len(_insert) >= 10000:
                         self.query_es.insert_data_to_index(_insert, index)
+                        #try:
+                        #    self.query_es.insert_data_to_index(_insert, index)
+                        #except Exception as e:
+                        #    for ins in _insert:
+                        #        self.query_es.insert_data_to_index([ins], index)
                         _insert = []
                 if len(_insert) != 0:
                     self.query_es.insert_data_to_index(_insert, index)
+                    #try:
+                    #    self.query_es.insert_data_to_index(_insert, index)
+                    #except Exception as e:
+                    #    for ins in _insert:
+                    #        self.query_es.insert_data_to_index([ins], index)
 
             self.logs_update(logs={"page": "data-execute",
                                    "info": " CUSTOMERS index Done! - ",
@@ -373,7 +418,7 @@ class CreateIndex:
         except Exception as e:
             print(e)
             self.logs_update(logs={"page": "data-execute",
-                                   "info": "indexes Creation is failed!  - " + str(e),
+                                   "info": "indexes Creation is failed! While " + index + " is creating. - " + str(e).replace("'", " "),
                                    "color": "red"})
 
     def execute_index(self):
@@ -410,7 +455,7 @@ class CreateIndex:
 
         except Exception as e:
             self.logs_update(logs={"page": "data-execute",
-                                   "info": "indexes Creation is failed!  - " + str(e),
+                                   "info": "indexes Creation is failed!  - " + str(e).replace("'", " "),
                                    "color": "red"})
 
 

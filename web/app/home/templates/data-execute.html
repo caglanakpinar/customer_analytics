@@ -76,17 +76,27 @@
 
 						</div>
 						{% if values['connect_accept'] != True %}
-							<div class="mb-2">
-								<strong style="color:red;">Please create Both Session & Customer Data Source</strong>
+							<div class="card-header">
+								<div class="mb-2">
+									<strong style="color:red;">Please create Both Session & Customer Data Source</strong>
+								</div>
 							</div>
 						{% endif %}
 						{% if values['connect_accept'] == True %}
 							{% if values['has_product_data_source'] != True %}
-								<div class="mb-2">
-									<strong style="color:red;">You have both Session and Customer Data Source.
-										But You ay want to add Basket Data Source which covers products, prices and categories of products.
-										This might help us to create Product Anlaytics and A/B Tests based on products, e.g.</strong>
+								<div class="card-header">
+									<div class="mb-1">
+										<h6 class="card-subtitle text-muted">
+											<strong style="color:red;">You have both Session and Customer Data Source.
+												                       But You may want to add Basket Data Source which covers products, prices and categories of products.
+												                       This might help us to create Product Analytics and A/B Tests based on products, e.g.
+											</strong>
+										</h6>
+
 								</div>
+
+								</div>
+
 							{% endif %}
 
 							<table class="table scroll">
@@ -336,6 +346,11 @@ function myFunction() {
   .card {
     flex: 0 0 auto;
   }
+}
+
+.scroll {
+    max-height: 100px;
+    overflow-y: auto;
 }
 
 </script>

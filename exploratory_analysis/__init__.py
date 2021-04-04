@@ -18,7 +18,7 @@ ea_configs = {"date": None,
                          'download_index': 'downloads',
                          'order_index': 'orders'},
               "cohort": {"has_download": True, "host": 'localhost', "port": '9200'},
-              "products": {"has_download": True, "host": 'localhost', "port": '9200'},
+              # "products": {"has_download": True, "host": 'localhost', "port": '9200'},
               "rfm": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
               "stats": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
              }
@@ -26,7 +26,7 @@ ea_configs = {"date": None,
 
 exploratory_analysis = {'funnel': Funnels,
                         'cohort': Cohorts,
-                        'products': ProductAnalytics,
+                        # 'products': ProductAnalytics,
                         'rfm': RFM,
                         'stats': Stats}
 

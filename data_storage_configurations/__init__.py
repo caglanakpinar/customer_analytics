@@ -16,11 +16,15 @@ from data_storage_configurations.sample_data import CreateSampleIndex
 from data_storage_configurations.es_create_index import CreateIndex
 from data_storage_configurations.schedule_data_integration import Scheduler
 from configs import elasticsearch_connection_refused_comment, query_path, acception_column_count
-from utils import read_yaml, sqlite_string_converter
+from utils import read_yaml, sqlite_string_converter, abspath_for_sample_data
 
-engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
+
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
+                       convert_unicode=True, connect_args={'check_same_thread': False})
 metadata = MetaData(bind=engine)
 con = engine.connect()
+
+
 sample_data_columns = read_yaml(query_path, "queries.yaml")['columns']
 
 
@@ -96,9 +100,10 @@ def get_ea_and_ml_config(ea_configs, ml_configs):
     port, host, directory = [list(es_tag_conn[i])[0] for i in ['port', 'host', 'directory']]  # list(es_tag_conn['port'])[0], list(es_tag_conn['host'])[0], list(es_tag_conn['directory'])[0]
     actions = get_action_name()
 
+    configs = []
     for conf in [ea_configs, ml_configs]:
         for ea in conf:
-            if ea != 'date':
+            if ea not in ['date', 'time_period']:
                 conf[ea]['host'] = host
                 conf[ea]['port'] = port
             if ea == 'funnel':
@@ -106,7 +111,8 @@ def get_ea_and_ml_config(ea_configs, ml_configs):
                 conf[ea]['purchase_actions'] = actions['orders']
             if ea == 'abtest':
                 conf[ea]['temporary_export_path'] = directory
-    return [ea_configs], [ml_configs], actions
+        configs += [conf]
+    return configs + actions
 
 
 def create_index(tag, ea_configs, ml_configs):

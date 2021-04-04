@@ -4,7 +4,6 @@ import numpy as np
 from itertools import product
 
 from ab_test_platform.executor import ABTest
-from utils import get_iter_sample, execute_parallel_run
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -85,7 +84,7 @@ class ABTests:
         self.query_es = QueryES(port=self.port, host=self.host)
         self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
         self.query_es.query_builder(fields=self.fields)
-        self.data = pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index))
+        self.data = pd.DataFrame(self.query_es.get_data_from_es())
 
     def get_products(self, end_date):
         """
@@ -106,9 +105,12 @@ class ABTests:
         self.query_es = QueryES(port=self.port, host=self.host)
         self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
         self.query_es.boolean_queries_buildier({"actions.has_basket": True})
-        self.query_es.query_builder(fields=self.fields_products)
-        self.products = pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index))
-        self.products['products'] = self.products['basket'].apply(lambda x: list(x.keys()))  # get product_ids
+        self.query_es.query_builder(fields=None, _source=True)
+        self.products = self.query_es.get_data_from_es()
+        self.products = pd.DataFrame([{col: r['_source'][col] for col in self.fields_products} for r in self.products])
+        self.products = self.products.query('basket == basket')
+        self.products['products'] = self.products['basket'].apply(lambda x: list(x.keys()) if x == x else None)  # get product_ids
+        self.products = self.products.query('products == products')
         # get prices
         self.products['price'] = self.products.apply(
             lambda row: [row['basket'][i]['price'] for i in row['products']], axis=1)
