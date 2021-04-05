@@ -63,20 +63,17 @@
 						<a data-target="#funnel" data-toggle="collapse" class="sidebar-link collapsed">
               				<i class="align-middle" data-feather="briefcase"></i> <span class="align-middle">Funnels</span>
             			</a>
-						<ul id="funnel" class="sidebar-dropdown list-unstyled collapse {% if 'funnel' in segment%} show {% endif %}" data-parent="#sidebar">
-							<li class="sidebar-item {% if 'session' in segment %} active {% endif %}"><a class="sidebar-link" href="funnel-session">Session of Actions Funnel</a></li>
-							<li class="sidebar-item {% if 'customer' in segment %} active {% endif %}"><a class="sidebar-link" href="funnel-customer">Customer of Actions Funnel</a></li>
+						<ul id="funnel" class="sidebar-dropdown list-unstyled collapse {% if 'funnel-session' in segment or 'funnel-session-customer' in segment %} show {% endif %}" data-parent="#sidebar">
+							<li class="sidebar-item {% if 'funnel-session' in segment %} active {% endif %}"><a class="sidebar-link" href="funnel-session">Session of Actions Funnel</a></li>
+							<li class="sidebar-item {% if 'funnel-customer' in segment %} active {% endif %}"><a class="sidebar-link" href="funnel-customer">Customer of Actions Funnel</a></li>
 						</ul>
 					</li>
 					<li class="sidebar-item">
 						<a data-target="#cohort" data-toggle="collapse" class="sidebar-link collapsed">
               				<i class="align-middle" data-feather="briefcase"></i> <span class="align-middle">Cohorts</span>
             			</a>
-						<ul id="cohort" class="sidebar-dropdown list-unstyled collapse " data-parent="#sidebar">
-							<li class="sidebar-item"><a class="sidebar-link" href="ui-alerts.html">Download to Signup Cohorts</a></li>
-							<li class="sidebar-item"><a class="sidebar-link" href="ui-alerts.html">1st to 2nd Order Cohorts</a></li>
-							<li class="sidebar-item"><a class="sidebar-link" href="ui-alerts.html">2nd to 3rd Order Cohorts</a></li>
-							<li class="sidebar-item"><a class="sidebar-link" href="ui-alerts.html">3rd to 4th Order Cohorts</a></li>
+						<ul id="cohort" class="sidebar-dropdown list-unstyled collapse {% if 'cohorts' in segment %} show {% endif %}" data-parent="#sidebar">
+							<li class="sidebar-item {% if 'cohorts' in segment %} active {% endif %}"><a class="sidebar-link" href="cohorts.html">From Download to Purchase Cohorts</a></li>
 						</ul>
 					</li>
 

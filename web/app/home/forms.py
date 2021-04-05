@@ -6,6 +6,7 @@ from flask_wtf import FlaskForm
 from wtforms import TextField, PasswordField
 from wtforms.validators import InputRequired, Email, DataRequired
 import pandas as pd
+from numpy import array
 import json
 
 from os.path import abspath, join, dirname, basename
@@ -105,7 +106,13 @@ charts = {
                                                 family="sans serif",
                                                 size=30,
                                                 color="crimson")),
-                                      'layout': go.Layout()}
+                                      'layout': go.Layout(legend=dict(
+                                                          orientation="h",
+                                                          yanchor="bottom",
+                                                          y=1.02,
+                                                          xanchor="right",
+                                                          x=1
+                                                      ))}
                    for _f in ['daily_funnel', 'hourly_funnel', 'weekly_funnel', 'monthly_funnel',
                               'daily_funnel_downloads', 'hourly_funnel_downloads',
                               'weekly_funnel_downloads', 'monthly_funnel_downloads']},
@@ -116,12 +123,13 @@ charts = {
         # charts - Cohorts From 1, 2, 3 to 2, 3 ,4 Downloads to 1st Orders, daily, Weekly
         "charts": {_c: {'trace': go.Heatmap(z=[], x=[], y=[], colorscale='Viridis', opacity=0.9,
                                             showlegend=False, ygap=2, xgap=2, hoverongaps=True),
-                        'annotations': go.Annotation(text=[], x=[], y=[], xref='x1', yref='y1', showarrow=False),
+                        'annotation': go.Annotation(text=[], x=[], y=[], xref='x1', yref='y1', showarrow=False),
                         'layout': go.Layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
                                             annotations=[])}
-                   for _c in ['daily_funnel', 'hourly_funnel', 'weekly_funnel', 'monthly_funnel',
-                              'daily_funnel_downloads', 'hourly_funnel_downloads',
-                              'weekly_funnel_downloads', 'monthly_funnel_downloads']},
+                   for _c in ['daily_cohort_downloads', 'daily_cohort_from_1_to_2',
+                              'daily_cohort_from_2_to_3', 'daily_cohort_from_3_to_4',
+                              'weekly_cohort_downloads', 'weekly_cohort_from_1_to_2',
+                              'weekly_cohort_from_2_to_3', 'weekly_cohort_from_3_to_4']},
         # not any recent KPIs for now
         "kpis": {}
     }
@@ -203,6 +211,20 @@ class RealData:
             print(e)
 
         return self.kpis
+
+
+def cohort_human_readable_form(cohort, tp):
+    cohort_updated = pd.DataFrame()
+    cohort_days = [int(i) for i in list(set(list(cohort.columns)) - set([tp]))]
+    days_back = 30
+    while len(cohort_updated) == 0:
+        try:
+            if days_back <= max(cohort_days):
+                cohort_updated = cohort[[tp] + [str(i) for i in list(range(days_back+1))]]
+        except Exception as e:
+            print(e)
+        days_back -= 1
+    return cohort_updated
 
 
 class Charts:
@@ -290,13 +312,42 @@ class Charts:
             trace['marker']['color'] = list(_data['segments_numeric']) # segments are numerical values.
         if 'funnel' in chart.split("_"):
             _tp = list(set(list(_data.columns)) & set(time_periods))[0]
-            _trc = trace
             trace = []
-            _trc['x'] = list(_data[_tp])
             for _a in set(list(_data.columns)) - set(time_periods):
-                _trc['y'] = list(_data[_a])
-                trace.append(_trc)
-        return [trace] if 'funnel' in chart.split("_") else trace
+                trace += [go.Scatter(x=list(_data[_tp]),
+                                     y=list(_data[_a]),
+                                     mode="lines+markers+text",
+                                     name=_a,
+                                     line=dict( width=4),
+                                     textposition="bottom center",
+                                     textfont=dict(
+                                         family="sans serif",
+                                         size=30))]
+        if 'cohort' in chart.split("_"):
+            _t = chart.split("_")[0]
+            z = array(_data[_data.columns[1:]]).tolist()
+            x = [str(col) + ' ' + _t[:-2] for col in _data.columns][1:]
+            y = [str(ts)[0:10] for ts in list(_data[_data.columns[0]])]
+            trace['z'], trace['x'], trace['y'] = z, x, y
+
+        return [trace] if 'funnel' not in chart.split("_") else trace
+
+    def get_layout(self, layout, chart, annotation=None):
+        _data = self.get_data(chart)
+        if 'cohort' in chart.split("_"):
+            _t = chart.split("_")[0]
+            _data = cohort_human_readable_form(_data, _t)
+            z = array(_data[_data.columns[1:]]).tolist()
+            x = [str(col[1]) + ' ' + _t[:-2] for col in _data.columns][1:],
+            y = [str(ts)[0:10] for ts in list(_data[_data.columns[0]])]
+
+            annotations = []
+            for n, row in enumerate(z):
+                for m, val in enumerate(row):
+                    annotation['text'], annotation['x'], annotation['y'] = str(z[n][m]), x[m], y[n]
+                    annotations.append(annotation)
+            layout['annotations'] = annotations
+        return layout
 
     def get_values(self, kpi):
         """
@@ -319,8 +370,10 @@ class Charts:
         for c in charts[target]['charts']:
             trace = self.get_trace(charts[target]['charts'][c]['trace'], c)
             self.get_widths_heights(chart=c, target=target)
+            layout = self.get_layout(charts[target]['charts'][c]['layout'], c,
+                                     annotation=charts[target]['charts'][c]['annotation'] if target == 'cohort' else None)
             self.graph_json['charts'][c] = {'trace': trace,
-                                            'layout': charts[target]['charts'][c]['layout']}
+                                            'layout': layout}
         # collecting KPIs
         self.graph_json['kpis'] = {}
         for k in charts[target]['kpis']:
@@ -330,4 +383,5 @@ class Charts:
         return self.graph_json
 
     def get_json_format(self, chart):
-        return json.dumps({"trace": [chart['trace']], "layout": chart['layout']}, cls=plotly.utils.PlotlyJSONEncoder)
+        return json.dumps({"trace": chart['trace'],
+                           "layout": chart['layout']}, cls=plotly.utils.PlotlyJSONEncoder)

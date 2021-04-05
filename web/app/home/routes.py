@@ -75,13 +75,31 @@ def route_template(template):
                                    monthly_funnel=charts.get_json_format(graph_json['charts']['monthly_funnel' + additional_name]),
                                    hourly_funnel=charts.get_json_format(graph_json['charts']['hourly_funnel' + additional_name])
                                    )
+        if template == 'cohorts.html':
+            graph_json = charts.get_chart(target='cohort')
+            return render_template(template,
+                                   segment=segment,
+                                   daily_cohort_downloads=charts.get_json_format(
+                                       graph_json['charts']['daily_cohort_downloads']),
+                                   daily_cohort_from_1_to_2=charts.get_json_format(
+                                       graph_json['charts']['daily_cohort_from_1_to_2']),
+                                   daily_cohort_from_2_to_3=charts.get_json_format(
+                                       graph_json['charts']['daily_cohort_from_2_to_3']),
+                                   daily_cohort_from_3_to_4=charts.get_json_format(
+                                       graph_json['charts']['daily_cohort_from_3_to_4']),
+                                   weekly_cohort_downloads=charts.get_json_format(
+                                       graph_json['charts']['weekly_cohort_downloads']),
+                                   weekly_cohort_from_1_to_2=charts.get_json_format(
+                                       graph_json['charts']['weekly_cohort_from_1_to_2']),
+                                   weekly_cohort_from_2_to_3=charts.get_json_format(
+                                       graph_json['charts']['weekly_cohort_from_2_to_3']),
+                                   weekly_cohort_from_3_to_4=charts.get_json_format(
+                                       graph_json['charts']['weekly_cohort_from_3_to_4'])
+                                   )
 
         if template == 'index2.html':
             graph_json = charts.get_chart(target='index2')
             return render_template(template, segment=segment, rfm=charts.get_json_format(graph_json['charts']['rfm']))
-        if template in ['funnel-customer.html', 'funnel-customer.html']:
-            graph_json = charts.get_chart(target='funnel')
-            return render_template(template, segment=segment, funnel=charts.get_json_format(graph_json['charts']['rfm']))
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html']:
             reqs.execute_request(req=dict(request.form), template=segment)
             reqs.fetch_results(segment, dict(request.form))
