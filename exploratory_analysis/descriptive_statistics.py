@@ -83,7 +83,9 @@ class Stats:
                       "total_visitors", "last_week_visitors",
                       "total_discount", "last_week_discount",
                       "average_basket_value_per_user",
-                      "hourly_orders", "daily_orders", "weekly_orders", "monthly_orders", "hourly_orders"]
+                      "hourly_orders", "daily_orders", "weekly_orders", "monthly_orders", "hourly_orders",
+                      'overall_payment_distribution', 'weekly_average_order_per_user',
+                      'weekly_average_session_per_user', 'weekly_average_payment_amount']
         self.last_week = None
         self.time_periods = time_periods# ["daily", "weekly", 'monthly']
         self.orders = pd.DataFrame()
@@ -221,6 +223,49 @@ class Stats:
         return self.orders[(self.orders['actions.purchased'] == True)].groupby("monthly").agg(
             {"id": "count"}).reset_index().rename(columns={"id": "orders"})
 
+    def purchase_amount_distribution(self):
+        """
+        Payment values (purchased orders) of Distribution
+        :return: data-frame; payment_bins, orders
+        """
+        _orders = self.orders[(self.orders['actions.purchased'] == True)]
+        _amount = list(_orders['payment_amount'])
+        _min_amount, _max_amount = min(_amount), max(_amount)
+        _range = (_max_amount - _min_amount) / 20
+
+        bins = {}
+        for i in range(0, 20):
+            bins[i] = {"min": _min_amount + (_range * i), "max": _min_amount + (_range * (i + 1))}
+
+        _orders['payment_bins'] = _orders['payment_amount'].apply(
+            lambda x: str(round(_min_amount + (int((x - _min_amount) / _range) * _range), 2)) if x == x else '-')
+        _orders = _orders.groupby("payment_bins").agg({"id": "count"}).reset_index().rename(columns={"id": "orders"})
+        _orders['orders'] = _orders['orders'].apply(lambda x: str(x))
+        return _orders.to_dict('results')
+
+    def weekly_average_order_per_user(self):
+        """
+        Weekly average order per user
+        """
+        _orders = self.orders[(self.orders['actions.purchased'] == True)].groupby(["weekly", "client"]).agg(
+            {"id": "count"}).reset_index().rename(columns={"id": "orders"})
+        return _orders.groupby("weekly").agg({"orders": "mean"}).reset_index().to_dict('results')
+
+    def weekly_average_session_per_user(self):
+        """
+        Weekly average session per user
+        """
+        _orders = self.orders.groupby(["weekly", "client"]).agg(
+            {"id": "count"}).reset_index().rename(columns={"id": "sessions"})
+        return _orders.groupby("weekly").agg({"sessions": "mean"}).reset_index().to_dict('results')
+
+    def weekly_average_payment_amount(self):
+        """
+        Weekly average payment amount
+        """
+        return self.orders[(self.orders['actions.purchased'] == True)].groupby("weekly").agg(
+            {"payment_amount": "mean"}).reset_index().to_dict('results')
+
     def execute_descriptive_stats(self, start_date=None):
         """
         1.  Get order data from the order index.
@@ -242,7 +287,9 @@ class Stats:
                                             self.hourly_orders,
                                             self.daily_orders,
                                             self.weekly_orders,
-                                            self.monthly_orders])):
+                                            self.monthly_orders, self.purchase_amount_distribution,
+                                            self.weekly_average_order_per_user, self.weekly_average_session_per_user,
+                                            self.weekly_average_payment_amount])):
             print("stat name :", metric[0])
             if metric[0] in ["weekly_orders", "monthly_orders", "daily_orders"]:
                 self.insert_into_reports_index(metric[1]().to_dict('results'),
