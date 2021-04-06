@@ -70,13 +70,19 @@ def route_template(template):
             graph_json = charts.get_chart(target='funnel')
             return render_template(template,
                                    segment=segment,
-                                   daily_funnel=charts.get_json_format(graph_json['charts']['daily_funnel' + additional_name]),
-                                   weekly_funnel=charts.get_json_format(graph_json['charts']['weekly_funnel' + additional_name]),
-                                   monthly_funnel=charts.get_json_format(graph_json['charts']['monthly_funnel' + additional_name]),
-                                   hourly_funnel=charts.get_json_format(graph_json['charts']['hourly_funnel' + additional_name])
+                                   daily_funnel=charts.get_json_format(
+                                       graph_json['charts']['daily_funnel' + additional_name]),
+                                   weekly_funnel=charts.get_json_format(
+                                       graph_json['charts']['weekly_funnel' + additional_name]),
+                                   monthly_funnel=charts.get_json_format(
+                                       graph_json['charts']['monthly_funnel' + additional_name]),
+                                   hourly_funnel=charts.get_json_format(
+                                       graph_json['charts']['hourly_funnel' + additional_name])
                                    )
         if template == 'cohorts.html':
             graph_json = charts.get_chart(target='cohort')
+            asd = charts.get_json_format(
+                                       graph_json['charts']['daily_cohort_downloads'])
             return render_template(template,
                                    segment=segment,
                                    daily_cohort_downloads=charts.get_json_format(
@@ -96,6 +102,26 @@ def route_template(template):
                                    weekly_cohort_from_3_to_4=charts.get_json_format(
                                        graph_json['charts']['weekly_cohort_from_3_to_4'])
                                    )
+
+        if template == 'stats-purchase.html':
+            graph_json = charts.get_chart(target='stats')
+            return render_template(template,
+                                   segment=segment,
+                                   daily_orders=charts.get_json_format(graph_json['charts']['daily_orders']),
+                                   weekly_orders=charts.get_json_format(graph_json['charts']['weekly_orders']),
+                                   monthly_orders=charts.get_json_format(graph_json['charts']['monthly_orders']),
+                                   hourly_orders=charts.get_json_format(graph_json['charts']['hourly_orders'])
+                                   )
+        if template == 'stats-desc.html':
+            graph_json = charts.get_chart(target='descriptive')
+            return render_template(template,
+                                   segment=segment,
+                                   daily_orders=charts.get_json_format(graph_json['charts']['daily_orders']),
+                                   weekly_orders=charts.get_json_format(graph_json['charts']['weekly_orders']),
+                                   monthly_orders=charts.get_json_format(graph_json['charts']['monthly_orders']),
+                                   hourly_orders=charts.get_json_format(graph_json['charts']['hourly_orders'])
+                                   )
+
 
         if template == 'index2.html':
             graph_json = charts.get_chart(target='index2')

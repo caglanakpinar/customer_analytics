@@ -17,18 +17,18 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Daily Funnel</h5>
+										<h5 class="card-title">Daily Download to 1st Order Cohort</h5>
 									</div>
-									<div  id="d_funnel" class="plotly-gra ph-div" style="height:400px;"></div>
+									<div  id="d_cohort_d_id" class="plotly-gra ph-div" style="height:400px;"></div>
 								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Weekly Funnel</h5>
+										<h5 class="card-title">Daily From 1st to 2nd Order Cohort</h5>
 									</div>
 									<div class="card-body">
-										<div  id="w_funnel" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="d_cohort_from_1_to_2_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
@@ -37,28 +37,66 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Monthly Funnel</h5>
+										<h5 class="card-title">Daily From 2nd to 3rd Order Cohort</h5>
 									</div>
 									<div class="card-body">
-										<div  id="m_funnel" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="d_cohort_from_2_to_3_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Hourly Funnel</h5>
+										<h5 class="card-title">Daily From 3rd to 4th Order Cohort</h5>
 									</div>
 									<div class="card-body">
-										<div  id="h_funnel" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="d_cohort_from_3_to_4_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Weekly Download to 1st Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="w_cohort_d_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Weekly From 1st to 2nd Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="w_cohort_from_1_to_2_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Weekly From 2nd to 3rd Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="w_cohort_from_2_to_3_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Weekly From 3rd to 4th Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="w_cohort_from_3_to_4_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-
-
 			</div>
 		</div>
 	</main>
@@ -71,25 +109,47 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 	<script>
 
-			var d_f = {{daily_funnel | safe}};
+			var d_c_d = {{daily_cohort_downloads | safe}};
 
-	        Plotly.plot('d_funnel', // the ID of the div, created above
-						d_f.trace, d_f.layout, {});
+	        Plotly.plot('d_cohort_d_id', // the ID of the div, created above
+						d_c_d.trace, d_c_d.layout, {});
 
-			var w_f = {{weekly_funnel | safe}};
+			var d_c_f_1_t_2 = {{daily_cohort_from_1_to_2 | safe}};
 
-	        Plotly.plot('w_funnel', // the ID of the div, created above
-						w_f.trace, w_f.layout, {});
+	        Plotly.plot('d_cohort_from_1_to_2_id', // the ID of the div, created above
+						d_c_f_1_t_2.trace, d_c_f_1_t_2.layout, {});
 
-			var m_f = {{monthly_funnel | safe}};
+			var d_c_f_2_t_3 = {{daily_cohort_from_2_to_3 | safe}};
 
-	        Plotly.plot('m_funnel', // the ID of the div, created above
-						m_f.trace, m_f.layout, {});
+	        Plotly.plot('d_cohort_from_2_to_3_id', // the ID of the div, created above
+						d_c_f_2_t_3.trace, d_c_f_2_t_3.layout, {});
 
-			var h_f = {{hourly_funnel | safe}};
+			var d_c_f_3_t_4 = {{daily_cohort_from_2_to_3 | safe}};
 
-	        Plotly.plot('h_funnel', // the ID of the div, created above
-						h_f.trace, h_f.layout, {});
+	        Plotly.plot('d_cohort_from_3_to_4_id', // the ID of the div, created above
+						d_c_f_3_t_4.trace, d_c_f_3_t_4.layout, {});
+
+			var w_c_d = {{weekly_cohort_downloads | safe}};
+
+	        Plotly.plot('w_cohort_d_id', // the ID of the div, created above
+						w_c_d.trace, w_c_d.layout, {});
+
+			var w_c_f_1_t_2 = {{weekly_cohort_from_1_to_2 | safe}};
+
+	        Plotly.plot('w_cohort_from_1_to_2_id', // the ID of the div, created above
+						w_c_f_1_t_2.trace, w_c_f_1_t_2.layout, {});
+
+			var w_c_f_2_t_3 = {{weekly_cohort_from_2_to_3 | safe}};
+
+	        Plotly.plot('w_cohort_from_2_to_3_id', // the ID of the div, created above
+						w_c_f_2_t_3.trace, w_c_f_2_t_3.layout, {});
+
+			var w_c_f_3_t_4 = {{weekly_cohort_from_3_to_4 | safe}};
+
+	        Plotly.plot('w_cohort_from_3_to_4_id', // the ID of the div, created above
+						w_c_f_3_t_4.trace, w_c_f_3_t_4.layout, {});
+
+
 
 
 

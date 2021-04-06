@@ -122,9 +122,11 @@ charts = {
     "cohort": {
         # charts - Cohorts From 1, 2, 3 to 2, 3 ,4 Downloads to 1st Orders, daily, Weekly
         "charts": {_c: {'trace': go.Heatmap(z=[], x=[], y=[], colorscale='Viridis', opacity=0.9,
-                                            showlegend=False, ygap=2, xgap=2, hoverongaps=True),
+                                            showlegend=False, ygap=2, xgap=2, hoverongaps=None, showscale=False),
                         'annotation': go.Annotation(text=[], x=[], y=[], xref='x1', yref='y1', showarrow=False),
-                        'layout': go.Layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                        'layout': go.Layout(paper_bgcolor='rgba(0,0,0,0)',
+                                            plot_bgcolor='rgba(0,0,0,0)',
+                                            width=1000, margin=dict(l=1, r=1, t=1, b=1), height=600,
                                             annotations=[])}
                    for _c in ['daily_cohort_downloads', 'daily_cohort_from_1_to_2',
                               'daily_cohort_from_2_to_3', 'daily_cohort_from_3_to_4',
@@ -132,7 +134,49 @@ charts = {
                               'weekly_cohort_from_2_to_3', 'weekly_cohort_from_3_to_4']},
         # not any recent KPIs for now
         "kpis": {}
-    }
+    },
+    "stats": {
+        # Descriptive Statistics
+        "charts": {_f: {'trace': go.Scatter(mode="lines+markers+text",
+                                            line=dict(color='firebrick', width=4),
+                                            textposition="bottom center",
+                                            textfont=dict(
+                                                family="sans serif",
+                                                size=30,
+                                                color="crimson")),
+                        'layout': go.Layout(legend=dict(
+                            orientation="h",
+                            yanchor="bottom",
+                            y=1.02,
+                            xanchor="right",
+                            x=1
+                        ))}
+                   for _f in ['daily_orders', 'weekly_orders', 'monthly_orders', 'hourly_orders']},
+        # not any recent KPIs for now
+        "kpis": {}
+    },
+    "descriptive": {
+        # Descriptive Statistics
+        "charts": {_f: {'trace': go.Scatter(mode="lines+markers+text",
+                                            line=dict(color='firebrick', width=4),
+                                            textposition="bottom center",
+                                            textfont=dict(
+                                                family="sans serif",
+                                                size=30,
+                                                color="crimson")),
+                        'layout': go.Layout(legend=dict(
+                            orientation="h",
+                            yanchor="bottom",
+                            y=1.02,
+                            xanchor="right",
+                            x=1
+                        ))}
+                   for _f in ['daily_orders', 'weekly_orders', 'monthly_orders', 'hourly_orders']},
+        # not any recent KPIs for now
+        "kpis": {}
+    },
+
+
 }
 
 
@@ -216,14 +260,17 @@ class RealData:
 def cohort_human_readable_form(cohort, tp):
     cohort_updated = pd.DataFrame()
     cohort_days = [int(i) for i in list(set(list(cohort.columns)) - set([tp]))]
-    days_back = 30
+
+    dates = list(zip(list(range(len(list(cohort[tp])))), reversed(list(cohort[tp]))))
+    days_back = 15
     while len(cohort_updated) == 0:
-        try:
-            if days_back <= max(cohort_days):
-                cohort_updated = cohort[[tp] + [str(i) for i in list(range(days_back+1))]]
-        except Exception as e:
-            print(e)
+        if days_back <= max(cohort_days):
+            cohort_updated = cohort[[tp] + [str(i) for i in list(range(days_back+1))]]
+            _days = list(map(lambda x: x[1], filter(lambda x: x[0] <= days_back, dates)))
+            cohort_updated = cohort_updated[cohort_updated[tp].isin(_days)]
         days_back -= 1
+
+    cohort_updated = cohort_updated.sort_values(by=tp, ascending=True)
     return cohort_updated
 
 
@@ -325,8 +372,10 @@ class Charts:
                                          size=30))]
         if 'cohort' in chart.split("_"):
             _t = chart.split("_")[0]
+            _t_str = ' day' if _t == 'daily' else ' week'
+            _data = cohort_human_readable_form(_data, _t)
             z = array(_data[_data.columns[1:]]).tolist()
-            x = [str(col) + ' ' + _t[:-2] for col in _data.columns][1:]
+            x = [str(col) + _t_str for col in list(_data.columns)][1:]
             y = [str(ts)[0:10] for ts in list(_data[_data.columns[0]])]
             trace['z'], trace['x'], trace['y'] = z, x, y
 
@@ -336,18 +385,24 @@ class Charts:
         _data = self.get_data(chart)
         if 'cohort' in chart.split("_"):
             _t = chart.split("_")[0]
+            _t_str = ' day' if _t == 'daily' else ' week'
             _data = cohort_human_readable_form(_data, _t)
             z = array(_data[_data.columns[1:]]).tolist()
-            x = [str(col[1]) + ' ' + _t[:-2] for col in _data.columns][1:],
+            x = [str(col) + _t_str for col in list(_data.columns)][1:]
             y = [str(ts)[0:10] for ts in list(_data[_data.columns[0]])]
-
             annotations = []
             for n, row in enumerate(z):
                 for m, val in enumerate(row):
-                    annotation['text'], annotation['x'], annotation['y'] = str(z[n][m]), x[m], y[n]
+                    annotation['text'] = str(z[n][m])
+                    try:
+                        asd = x[m]
+                        annotation['x'] = x[m]
+                    except Exception as e:
+                        print(e)
+                    annotation['y'] = y[n]
                     annotations.append(annotation)
             layout['annotations'] = annotations
-        return layout
+        return [layout]
 
     def get_values(self, kpi):
         """

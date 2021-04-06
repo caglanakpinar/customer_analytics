@@ -73,7 +73,17 @@
               				<i class="align-middle" data-feather="briefcase"></i> <span class="align-middle">Cohorts</span>
             			</a>
 						<ul id="cohort" class="sidebar-dropdown list-unstyled collapse {% if 'cohorts' in segment %} show {% endif %}" data-parent="#sidebar">
-							<li class="sidebar-item {% if 'cohorts' in segment %} active {% endif %}"><a class="sidebar-link" href="cohorts.html">From Download to Purchase Cohorts</a></li>
+							<li class="sidebar-item {% if 'cohorts' in segment %} active {% endif %}"><a class="sidebar-link" href="cohorts.html">Daily/Weekly Order Cohorts</a></li>
+						</ul>
+					</li>
+
+					<li class="sidebar-item">
+						<a data-target="#stats" data-toggle="collapse" class="sidebar-link collapsed">
+              				<i class="align-middle" data-feather="briefcase"></i> <span class="align-middle">Descriptive Stats</span>
+            			</a>
+						<ul id="stats" class="sidebar-dropdown list-unstyled collapse {% if 'stats' in segment %} show {% endif %}" data-parent="#sidebar">
+							<li class="sidebar-item {% if 'stats-purchase' in segment %} active {% endif %}"><a class="sidebar-link" href="stats-purchase.html">Stats Purchase</a></li>
+							<li class="sidebar-item {% if 'stats-desc' in segment %} active {% endif %}"><a class="sidebar-link" href="stats-desc.html">Descriptive Statistics</a></li>
 						</ul>
 					</li>
 
