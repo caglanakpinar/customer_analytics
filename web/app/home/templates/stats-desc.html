@@ -9,7 +9,7 @@
 
 	<main class="content">
 		<div class="container-fluid p-0">
-			<h5 class="h3 mb-3">Sessions Of Actions Funnel</h5>
+			<h5 class="h3 mb-3">Descriptive Statistics</h5>
 			<div class="col-md-12">
 				<div class="card">
 					<div class="card-body">
@@ -17,18 +17,18 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Daily Orders</h5>
+										<h5 class="card-title">Weekly Average Session Count per Customer</h5>
 									</div>
-									<div  id="d_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									<div  id="w_ses_per_user_id" class="plotly-gra ph-div" style="height:400px;"></div>
 								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Hourly Orders</h5>
+										<h5 class="card-title">Weekly Average Purchase Count per Customer</h5>
 									</div>
 									<div class="card-body">
-										<div  id="h_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="w_order_per_user_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
@@ -37,20 +37,20 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Weekly Orders</h5>
+										<h5 class="card-title">Payment Amount Distribution</h5>
 									</div>
 									<div class="card-body">
-										<div  id="w_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="p_a_d_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Monthly Orders</h5>
+										<h5 class="card-title">Weekly Average Payment Amount</h5>
 									</div>
 									<div class="card-body">
-										<div  id="m_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="w_avg_p_a_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
@@ -69,25 +69,31 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 	<script>
 
-			var d_orders = {{daily_orders | safe}};
+			var w_ses_per_user = {{weekly_average_session_per_user | safe}};
 
-	        Plotly.plot('d_orders_id', // the ID of the div, created above
-						d_orders.trace, d_orders.layout, {});
+	        Plotly.plot('w_ses_per_user_id', // the ID of the div, created above
+						w_ses_per_user.trace, w_ses_per_user.layout, {});
 
-			var h_orders = {{hourly_orders | safe}};
+			var w_order_per_user = {{weekly_average_order_per_user | safe}};
 
-	        Plotly.plot('h_orders_id', // the ID of the div, created above
-						h_orders.trace, h_orders.layout, {});
+	        Plotly.plot('w_order_per_user_id', // the ID of the div, created above
+						w_order_per_user.trace, w_order_per_user.layout, {});
 
-			var w_orders = {{weekly_orders | safe}};
+			var p_a_d = {{purchase_amount_distribution | safe}};
 
-	        Plotly.plot('w_orders_id', // the ID of the div, created above
-						w_orders.trace, w_orders.layout, {});
+	        Plotly.plot('p_a_d_id', // the ID of the div, created above
+						p_a_d.trace, p_a_d.layout, {});
 
-			var m_orders = {{monthly_orders | safe}};
+			var w_avg_p_a = {{weekly_average_payment_amount | safe}};
 
-	        Plotly.plot('m_orders_id', // the ID of the div, created above
-						m_orders.trace, m_orders.layout, {});
+	        Plotly.plot('w_avg_p_a_id', // the ID of the div, created above
+						w_avg_p_a.trace, w_avg_p_a.layout, {});
+
+
+
+
+
+
 
 
 	function myFunction() {

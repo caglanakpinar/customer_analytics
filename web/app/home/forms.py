@@ -159,10 +159,9 @@ charts = {
         # Descriptive Statistics
         "charts": {_f: {'trace': go.Scatter(mode="lines+markers+text",
                                             line=dict(color='firebrick', width=4),
-                                            textposition="bottom center",
                                             textfont=dict(
                                                 family="sans serif",
-                                                size=30,
+                                                size=8,
                                                 color="crimson")),
                         'layout': go.Layout(legend=dict(
                             orientation="h",
@@ -170,9 +169,13 @@ charts = {
                             y=1.02,
                             xanchor="right",
                             x=1
-                        ))}
-                   for _f in ['daily_orders', 'weekly_orders', 'monthly_orders', 'hourly_orders']},
-        # not any recent KPIs for now
+                        ))} if _f.split("_")[0] == 'weekly' else
+                        {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()}
+                   for _f in ["weekly_average_session_per_user",
+                              "weekly_average_order_per_user", "purchase_amount_distribution",
+                              "weekly_average_payment_amount"]},
+
+
         "kpis": {}
     },
 
@@ -378,8 +381,24 @@ class Charts:
             x = [str(col) + _t_str for col in list(_data.columns)][1:]
             y = [str(ts)[0:10] for ts in list(_data[_data.columns[0]])]
             trace['z'], trace['x'], trace['y'] = z, x, y
+        if chart in ["weekly_average_session_per_user", "weekly_average_order_per_user",
+                     "purchase_amount_distribution", "weekly_average_payment_amount"]:
+            if 'distribution' in chart.split("_"):
+                _data['payment_bins'] = _data['payment_bins'].apply(lambda x: round(float(x), 2))
+                _data['orders'] = _data['orders'].apply(lambda x: int(x))
+                _trace_updated = []
+                for _bin in _data.to_dict('results'):
+                    _trace_updated.append(go.Bar(x=[_bin['payment_bins']], y=[_bin['orders']], showlegend=False))
+                trace = _trace_updated
+            else:
+                _t = 'weekly'
+                indicator = list(set(list(_data.columns)) - set([_t]))[0]
+                _data = _data.sort_values(by=_t, ascending=True)
+                trace['x'] = list(_data[_t])
+                trace['y'] = list(_data[indicator])
+                trace['text'] = list(_data[indicator])
 
-        return [trace] if 'funnel' not in chart.split("_") else trace
+        return [trace] if len(set(['funnel', 'distribution']) & set(chart.split("_"))) == 0 else trace
 
     def get_layout(self, layout, chart, annotation=None):
         _data = self.get_data(chart)

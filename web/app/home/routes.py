@@ -116,12 +116,11 @@ def route_template(template):
             graph_json = charts.get_chart(target='descriptive')
             return render_template(template,
                                    segment=segment,
-                                   daily_orders=charts.get_json_format(graph_json['charts']['daily_orders']),
-                                   weekly_orders=charts.get_json_format(graph_json['charts']['weekly_orders']),
-                                   monthly_orders=charts.get_json_format(graph_json['charts']['monthly_orders']),
-                                   hourly_orders=charts.get_json_format(graph_json['charts']['hourly_orders'])
+                                   weekly_average_session_per_user=charts.get_json_format(graph_json['charts']['weekly_average_session_per_user']),
+                                   weekly_average_order_per_user=charts.get_json_format(graph_json['charts']['weekly_average_order_per_user']),
+                                   purchase_amount_distribution=charts.get_json_format(graph_json['charts']['purchase_amount_distribution']),
+                                   weekly_average_payment_amount=charts.get_json_format(graph_json['charts']['weekly_average_payment_amount'])
                                    )
-
 
         if template == 'index2.html':
             graph_json = charts.get_chart(target='index2')
