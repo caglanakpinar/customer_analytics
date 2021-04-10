@@ -1,0 +1,197 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} A/B Test Promotion {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">A/B Test Promotion</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title mb-1">Promotion Comparison</h5>
+																			<div class="row">
+										<h6 class="card-subtitle text-muted mb-1">- Y-axis represents total number Test Accepted Count.</h6>
+									</div>
+									<div class="row">
+										<h6 class="card-subtitle text-muted mb-1">- X-axis represents Test Reject Ratio.</h6>
+									</div>
+									<div class="row">
+										<h6 class="card-subtitle text-muted mb-1">- Each dot on scatter plot represents each promotion.</h6>
+									</div>
+									<div class="row">
+										<h6 class="card-subtitle text-muted mb-1">- This is a comparison of each promotion pairs. Each promotion pair is tested and  Each dot represents 1st promotion of each promotion pairs.</h6>
+									</div>
+									<div class="row">
+										<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> More valuable Promotions are the dots which have less Reject Ratio and the more number of Accept Count. </strong></h6>
+									</div>
+									</div>
+
+									<div  id="promo_compare_id" class="plotly-gra ph-div" style="height:400px;"></div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header mb-1">
+										<h5 class="card-title">Order And Payment Amount Difference for Before And After Promotion Usage</h5>
+									<div class="row">
+										<h6 class="card-subtitle text-muted mb-1">- Y-axis represents difference of Average Payment Amount per customers.</h6>
+									</div>
+									<div class="row">
+										<h6 class="card-subtitle text-muted mb-1">- X-axis represents difference of Average Purchase Count per customers.</h6>
+									</div>
+									<div class="row">
+										<h6 class="card-subtitle text-muted mb-1">- Differences are calculated per user and per promotion.</h6>
+									</div>
+
+									<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- Differences are calculated between customers of purchase before and using the promotion.</h6>
+									</div>
+
+
+
+									</div>
+
+									<div class="card-body">
+										<div  id="o_pa_diff_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Before After Customers of Average Purchase <strong> Payment Amount</strong> Test (Test Accepted!)</h5>
+									</div>
+									<div class="card-body">
+										<div id="promo_usage_ba_a_accept_id" class="plotly-gra ph-div" style="height:400px;"></div>
+
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Before After Customers of Average Purchase <strong> Payment Amount</strong> Test (Test Rejected!)</h5>
+									</div>
+									<div class="card-body">
+										<div  id="promo_usage_ba_a_reject_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Before After Customers of Average <strong> Purchase Count</strong> Test (Test Accepted!)</h5>
+									</div>
+									<div class="card-body">
+										<div id="promo_usage_ba_o_accept_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Before After Customers of Average  <strong> Purchase Count</strong> Test (Test Rejected!)</h5>
+									</div>
+									<div class="card-body">
+										<div  id="promo_usage_ba_o_reject_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+
+			var promo_compare = {{promotion_comparison | safe}};
+
+	        Plotly.plot('promo_compare_id', // the ID of the div, created above
+						promo_compare.trace, promo_compare.layout, {});
+
+			var o_pa_diff_var = {{o_pa_diff | safe}};
+
+	        Plotly.plot('o_pa_diff_id', // the ID of the div, created above
+						o_pa_diff_var.trace, o_pa_diff_var.layout, {});
+
+
+
+			var promo_usage_ba_a_a = {{promo_use_ba_a_accept | safe}};
+
+	        Plotly.plot('promo_usage_ba_a_accept_id', // the ID of the div, created above
+						promo_usage_ba_a_a.trace, promo_usage_ba_a_a.layout, {});
+
+
+			var promo_usage_ba_a_r = {{promo_use_ba_a_reject | safe}};
+
+	        Plotly.plot('promo_usage_ba_a_reject_id', // the ID of the div, created above
+						promo_usage_ba_a_r.trace, promo_usage_ba_a_r.layout, {});
+
+
+			var promo_usage_ba_o_a = {{promo_use_ba_o_accept | safe}};
+
+	        Plotly.plot('promo_usage_ba_o_accept_id', // the ID of the div, created above
+						promo_usage_ba_o_a.trace, promo_usage_ba_o_a.layout, {});
+
+
+			var promo_usage_ba_o_r = {{promo_use_ba_o_reject | safe}};
+
+	        Plotly.plot('promo_usage_ba_o_reject_id', // the ID of the div, created above
+						promo_usage_ba_o_r.trace, promo_usage_ba_o_r.layout, {});
+
+
+
+
+
+
+
+
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}
