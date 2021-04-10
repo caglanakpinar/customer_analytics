@@ -1,0 +1,118 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} A/B Test Product {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">A/B Test Product</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Daily Orders</h5>
+									</div>
+									<div  id="d_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Hourly Orders</h5>
+									</div>
+									<div class="card-body">
+										<div  id="h_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Weekly Orders</h5>
+									</div>
+									<div class="card-body">
+										<div  id="w_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Monthly Orders</h5>
+									</div>
+									<div class="card-body">
+										<div  id="m_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+			var d_orders = {{daily_orders | safe}};
+
+	        Plotly.plot('d_orders_id', // the ID of the div, created above
+						d_orders.trace, d_orders.layout, {});
+
+			var h_orders = {{hourly_orders | safe}};
+
+	        Plotly.plot('h_orders_id', // the ID of the div, created above
+						h_orders.trace, h_orders.layout, {});
+
+			var w_orders = {{weekly_orders | safe}};
+
+	        Plotly.plot('w_orders_id', // the ID of the div, created above
+						w_orders.trace, w_orders.layout, {});
+
+			var m_orders = {{monthly_orders | safe}};
+
+	        Plotly.plot('m_orders_id', // the ID of the div, created above
+						m_orders.trace, m_orders.layout, {});
+
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}
