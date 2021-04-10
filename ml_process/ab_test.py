@@ -375,11 +375,14 @@ class ABTests:
                  i: np.mean(decision[i]) for i in ['accept_Ratio', 'mean_control', 'mean_validation']
             }])
         decision['promotion_comparison'] = groups[0] + '_' + groups[1]
+        decision['1st promo'], decision['2nd promo'] = groups[0], groups[1]
         column = 'promo_1st_vs_promo_2nd'
 
         decision[column] = decision.apply(
             lambda row: True if row['mean_validation'] > row['mean_control'] and
                                 row['mean_validation'] > 0.5 else False, axis=1)
+        decision['total_positive_effects'] = decision['promo_1st_vs_promo_2nd'].apply(
+            lambda x: 1 if x in ['True', True] else 0)
         return decision
 
     def name_of_test(self, is_before_after, fetaure, group, time_period):
@@ -467,7 +470,7 @@ class ABTests:
         for p in self.promotion_combinations:
             self.promotion_comparison = pd.concat([self.promotion_comparison,
                                                    self.execute_promotion_comparison_test(p)])
-        self.insert_into_reports_index(self.decision,
+        self.insert_into_reports_index(self.promotion_comparison,
                                        date,
                                        abtest_type='promotion_comparison',
                                        index=self.order_index)
