@@ -42,8 +42,8 @@
 						<a data-target="#integration" data-toggle="collapse" class="sidebar-link collapsed">
               				<i class="align-middle" data-feather="database"></i> <span class="align-middle">Create Data Source</span>
             			</a>
-						<ul id="integration" class="sidebar-dropdown list-unstyled collapse {% if 'add' in segment or 'manage' in segment or 'es' in segment %} show {% endif %}" data-parent="#sidebar">
-							<li class="sidebar-item {% if 'es' in segment %} active {% endif %}"><a class="sidebar-link" href="data-es">ElasticSearch Configurations</a></li>
+						<ul id="integration" class="sidebar-dropdown list-unstyled collapse {% if 'add' in segment or 'manage' in segment or 'data-es' in segment %} show {% endif %}" data-parent="#sidebar">
+							<li class="sidebar-item {% if 'data-es' in segment %} active {% endif %}"><a class="sidebar-link" href="data-es">ElasticSearch Configurations</a></li>
 							<li class="sidebar-item {% if 'purchase' in segment %} active {% endif %}"><a class="sidebar-link" href="add-data-purchase">Session & Customers</a></li>
 							<li class="sidebar-item {% if 'product' in segment %} active {% endif %}"><a class="sidebar-link" href="add-data-product">Baskets</a></li>
 
@@ -97,15 +97,19 @@
 						</ul>
 					</li>
 
-
 					<li class="sidebar-header">
-						Plugins & Addons
+						ML Works
 					</li>
 
-					<li class="sidebar-item {% if 'charts' in segment %} active {% endif %}">
-						<a class="sidebar-link" href="index2">
-              				<i class="align-middle" data-feather="bar-chart-2"></i> <span class="align-middle">Charts</span>
+					<li class="sidebar-item">
+						<a data-target="#abtest" data-toggle="collapse" class="sidebar-link collapsed">
+              				<i class="align-middle" data-feather="briefcase"></i> <span class="align-middle">A/B Tests</span>
             			</a>
+						<ul id="abtest" class="sidebar-dropdown list-unstyled collapse {% if 'abtest' in segment %} show {% endif %}" data-parent="#sidebar">
+							<li class="sidebar-item {% if 'abtest-promotion' in segment %} active {% endif %}"><a class="sidebar-link" href="abtest-promotion.html">A/B Test Promotion</a></li>
+							<li class="sidebar-item {% if 'abtest-product' in segment %} active {% endif %}"><a class="sidebar-link" href="abtest-product.html">A/B Test Product</a></li>
+							<li class="sidebar-item {% if 'abtest-segments' in segment %} active {% endif %}"><a class="sidebar-link" href="abtest-segments.html">A/B Test Customer Segment Change</a></li>
+						</ul>
 					</li>
 
 
