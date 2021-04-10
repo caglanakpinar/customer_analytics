@@ -112,6 +112,7 @@ def route_template(template):
                                    monthly_orders=charts.get_json_format(graph_json['charts']['monthly_orders']),
                                    hourly_orders=charts.get_json_format(graph_json['charts']['hourly_orders'])
                                    )
+
         if template == 'stats-desc.html':
             graph_json = charts.get_chart(target='descriptive')
             return render_template(template,
@@ -120,6 +121,24 @@ def route_template(template):
                                    weekly_average_order_per_user=charts.get_json_format(graph_json['charts']['weekly_average_order_per_user']),
                                    purchase_amount_distribution=charts.get_json_format(graph_json['charts']['purchase_amount_distribution']),
                                    weekly_average_payment_amount=charts.get_json_format(graph_json['charts']['weekly_average_payment_amount'])
+                                   )
+
+        if template in ['abtest-products.html', 'abtest-promotion.html', 'abtest-segments.html']:
+            graph_json = charts.get_chart(target='abtest-promotion')
+            return render_template(template,
+                                   segment=segment,
+                                   o_pa_diff=charts.get_json_format(
+                                       graph_json['charts']['order_and_payment_amount_differences']),
+                                   promotion_comparison=charts.get_json_format(
+                                       graph_json['charts']['promotion_comparison']),
+                                   promo_use_ba_a_accept=charts.get_json_format(
+                                       graph_json['charts']['promotion_usage_before_after_amount_accept']),
+                                   promo_use_ba_a_reject=charts.get_json_format(
+                                       graph_json['charts']['promotion_usage_before_after_amount_reject']),
+                                   promo_use_ba_o_accept=charts.get_json_format(
+                                       graph_json['charts']['promotion_usage_before_after_orders_accept']),
+                                   promo_use_ba_o_reject=charts.get_json_format(
+                                       graph_json['charts']['promotion_usage_before_after_orders_reject']),
                                    )
 
         if template == 'index2.html':

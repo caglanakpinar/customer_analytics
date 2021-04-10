@@ -178,6 +178,25 @@ charts = {
 
         "kpis": {}
     },
+    "abtest-promotion": {
+        # Descriptive Statistics
+        "charts": {_f: {'trace': go.Bar(),
+                        'layout': go.Layout(
+                            legend=dict(
+                                    orientation="h",
+                                    yanchor="bottom",
+                                    y=1.02,
+                                    xanchor="right",
+                                    x=1),
+                            margin=dict(r=1, t=1))} if _f not in ["order_and_payment_amount_differences",
+                                                                       "promotion_comparison"] else
+                       {'trace': go.Scatter(x=[], y=[], marker=dict(size=[], color=[]), mode='markers', name='markers'),
+                        'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))}
+                   for _f in ["order_and_payment_amount_differences", "promotion_comparison",
+                              "promotion_usage_before_after_amount_accept", "promotion_usage_before_after_amount_reject",
+                              "promotion_usage_before_after_orders_accept", "promotion_usage_before_after_orders_reject"]},
+        "kpis": {}
+    },
 
 
 }
@@ -299,6 +318,14 @@ class Charts:
         self.reals = reals
         self.graph_json = {}
         self.monitor = get_monitors()[0]
+        self.descriptive_stats = ["weekly_average_session_per_user", "weekly_average_order_per_user",
+                                  "purchase_amount_distribution", "weekly_average_payment_amount"]
+        self.abtest_promotions = ["order_and_payment_amount_differences",
+                                  "promotion_comparison",
+                                  "promotion_usage_before_after_amount_accept",
+                                  "promotion_usage_before_after_amount_reject",
+                                  "promotion_usage_before_after_orders_accept",
+                                  "promotion_usage_before_after_orders_reject"]
 
     def get_data(self, chart):
         """
@@ -329,6 +356,48 @@ class Charts:
         if chart in ['customer_segmentation', 'rfm']:
             charts[target]['charts'][chart]['layout']['width'] = width
             charts[target]['charts'][chart]['layout']['height'] = height
+
+    def decide_trace_type(self, trace, chart):
+        if len(set(['funnel', 'distribution']) & set(chart.split("_"))) != 0:
+            return trace
+        else:
+            if type(trace) == list:
+                return trace
+            else:
+                return [trace]
+
+    def ab_test_of_trace(self, data, chart):
+        """
+        "order_and_payment_amount_differences",
+                                  "promotion_comparison",
+                                  "promotion_usage_before_after_amount_accept",
+                                  "promotion_usage_before_after_amount_reject",
+                                  "promotion_usage_before_after_orders_accept",
+                                  "promotion_usage_before_after_orders_reject"
+        """
+        _trace = []
+        if chart.split("_")[1] == 'usage':
+            _name = 'order count' if chart.split("_")[-2] == 'orders' else 'purchase amount'
+            names = ["before average "+_name+"  per c.", "after average "+_name+" per c."]
+            _trace = [
+                go.Bar(name=names[0], x=data['promotions'], y=data['mean_control']),
+                go.Bar(name=names[1], x=data['promotions'], y=data['mean_validation'])
+                ]
+        if chart == 'order_and_payment_amount_differences':
+            data = data.rename(columns={"diff": "Difference of Order (Before Vs After)",
+                                 "diff_amount": "Difference of Payment Amount (Before Vs After)"})
+            _trace = go.Scatter(x=data['Difference of Order (Before Vs After)'],
+                                y=data['Difference of Payment Amount (Before Vs After)'], mode='markers',
+                                marker=dict(color=list(range(len(data))), colorscale='Rainbow'))
+        if chart == 'promotion_comparison':
+            _trace = go.Scatter(x=data['accept_Ratio'],
+                                y=data['total_effects'],
+                                text=data['1st promo'],
+                                marker=dict(size=data['total_negative_effects'],
+                                            color=list(range(len(data))), colorscale='Rainbow'),
+                           mode='markers',
+                           name='markers')
+        return _trace
 
     def get_trace(self, trace, chart):
         """
@@ -381,8 +450,7 @@ class Charts:
             x = [str(col) + _t_str for col in list(_data.columns)][1:]
             y = [str(ts)[0:10] for ts in list(_data[_data.columns[0]])]
             trace['z'], trace['x'], trace['y'] = z, x, y
-        if chart in ["weekly_average_session_per_user", "weekly_average_order_per_user",
-                     "purchase_amount_distribution", "weekly_average_payment_amount"]:
+        if chart in self.descriptive_stats:
             if 'distribution' in chart.split("_"):
                 _data['payment_bins'] = _data['payment_bins'].apply(lambda x: round(float(x), 2))
                 _data['orders'] = _data['orders'].apply(lambda x: int(x))
@@ -397,8 +465,9 @@ class Charts:
                 trace['x'] = list(_data[_t])
                 trace['y'] = list(_data[indicator])
                 trace['text'] = list(_data[indicator])
-
-        return [trace] if len(set(['funnel', 'distribution']) & set(chart.split("_"))) == 0 else trace
+        if chart in self.abtest_promotions:
+            trace = self.ab_test_of_trace(_data, chart)
+        return self.decide_trace_type(chart=chart, trace=trace)
 
     def get_layout(self, layout, chart, annotation=None):
         _data = self.get_data(chart)
@@ -414,14 +483,19 @@ class Charts:
                 for m, val in enumerate(row):
                     annotation['text'] = str(z[n][m])
                     try:
-                        asd = x[m]
                         annotation['x'] = x[m]
                     except Exception as e:
                         print(e)
                     annotation['y'] = y[n]
                     annotations.append(annotation)
             layout['annotations'] = annotations
-        return [layout]
+
+        if 'usage' in chart.split("_"):
+            layout['yaxis'] = {"range": [
+                round(max(0, min(min(_data['mean_control']), min(_data['mean_validation'])) - 0.02), 2),
+                round(max(0, max(max(_data['mean_control']), max(_data['mean_validation'])) - 0.02), 2)]}
+
+        return [layout] if 'usage' not in chart.split("_") else layout
 
     def get_values(self, kpi):
         """
