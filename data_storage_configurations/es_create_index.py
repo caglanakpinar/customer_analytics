@@ -357,23 +357,12 @@ class CreateIndex:
                     del _obj
                     if len(_insert) >= 10:
                         self.query_es.insert_data_to_index(_insert, index)
-                        #try:
-                        #    self.query_es.insert_data_to_index(_insert, index)
-                        #except Exception as e:
-                        #    for ins in _insert:
-                        #        self.query_es.insert_data_to_index([ins], index)
-#
                         _insert = []
+
                 if len(_insert) != 0:
                     self.query_es.insert_data_to_index(_insert, index)
-                    # try:
-                    #     self.query_es.insert_data_to_index(_insert, index)
-                    # except Exception as e:
-                    #     for ins in _insert:
-                    #         self.query_es.insert_data_to_index([ins], index)
-#
                 self.logs_update(logs={"page": "data-execute",
-                                       "info": " SESSIONS index Done! - ",
+                                       "info": " SESSIONS index Done! - Number of documents :" + str(len(data)),
                                        "color": "green"})
             _insert = []
             if index == 'downloads':
@@ -397,22 +386,12 @@ class CreateIndex:
                     _insert.append(_obj)
                     if len(_insert) >= 10000:
                         self.query_es.insert_data_to_index(_insert, index)
-                        #try:
-                        #    self.query_es.insert_data_to_index(_insert, index)
-                        #except Exception as e:
-                        #    for ins in _insert:
-                        #        self.query_es.insert_data_to_index([ins], index)
                         _insert = []
+
                 if len(_insert) != 0:
                     self.query_es.insert_data_to_index(_insert, index)
-                    #try:
-                    #    self.query_es.insert_data_to_index(_insert, index)
-                    #except Exception as e:
-                    #    for ins in _insert:
-                    #        self.query_es.insert_data_to_index([ins], index)
-
             self.logs_update(logs={"page": "data-execute",
-                                   "info": " CUSTOMERS index Done! - ",
+                                   "info": " CUSTOMERS index Done! - Number of documents :" + str(len(data)),
                                    "color": "green"})
 
         except Exception as e:
@@ -448,7 +427,8 @@ class CreateIndex:
             self.end_date = current_date_to_day()
 
             spent_hour = round(abs(self.job_start_date - self.end_date).total_seconds() / 60 / 60, 2)
-            comment = "indexes are created safely. Total spent time : " + str(spent_hour) + " hr. "
+            total_time_str = str(spent_hour) + " hr. " if spent_hour >= 1 else str(spent_hour * 60) + " min. "
+            comment = "indexes are created safely. Total spent time : " + total_time_str
             self.logs_update(logs={"page": "data-execute",
                                    "info": comment,
                                    "color": "green"})

@@ -20,8 +20,8 @@ try:
 except Exception as e:
     from ml_process import create_mls
 
-from utils import current_date_to_day, convert_to_day, abspath_for_sample_data
-
+from utils import current_date_to_day, convert_to_day, abspath_for_sample_data, read_yaml
+from configs import query_path
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
                        convert_unicode=True, connect_args={'check_same_thread': False})
@@ -120,6 +120,18 @@ class Scheduler:
         self.query_es = QueryES(host=self.es_con['host'], port=self.es_con['port'])
         self.unique_dimensions = []
         self.schedule = True
+        self.sqlite_queries = read_yaml(query_path, "queries.yaml")
+        self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
+        self.success_log_for_ea = """
+                                   Exploratory Analysis are Created! Check Funnel, Cohort, 
+                                   Descriptive Stats sections.
+                                  """
+        self.success_log_for_ml = """
+                                   ML Works are Created! Check CLV Prediction, AB Test, Anomaly,
+                                   Customer Segmentation sections.
+                                  """
+        self.fail_log_for_ea = " Exploratory Analysis Creation is failed! - "
+        self.fail_log_for_ml = " ML Works Creation is failed! - "
 
     def query_schedule_status(self):
         """
@@ -138,6 +150,37 @@ class Scheduler:
                                                                                                      "fields": [
                                                                                                          "dimension"]})[
             'hits']['hits']]).tolist()
+
+    def check_for_table_exits(self, table, query=None):
+        try:
+            if table not in list(self.tables['name']):
+                if query is None:
+                    con.execute(self.sqlite_queries[table])
+                else:
+                    con.execute(query)
+        except Exception as e:
+            print(e)
+
+    def insert_query(self, table, columns, values):
+        values = [values[col] for col in columns]
+        _query = "INSERT INTO " + table + " "
+        _query += " (" + ", ".join(columns) + ") "
+        _query += " VALUES (" + ", ".join([" '{}' ".format(v) for v in values]) + ") "
+        _query = _query.replace("\\", "")
+        return _query
+
+    def logs_update(self, logs):
+        try:
+            self.check_for_table_exits(table='logs')
+        except Exception as e:
+            print(e)
+        try:
+            con.execute(self.insert_query(table='logs',
+                                          columns=self.sqlite_queries['columns']['logs'][1:],
+                                          values=logs
+                                          ))
+        except Exception as e:
+            print(e)
 
     def check_number_of_days(self):
         """
@@ -176,7 +219,7 @@ class Scheduler:
         These jobs are created per main and dimensional models individually but, are stored in the 'reports' index.
         If the scheduled time period is '12 Hours', the process will wait for day change.
         """
-        tag = self.query_schedule_status()
+        tag = self.query_schedule_status().to_dict('results')[0]
         accept = True
         if tag['time_period'] == '12_hours':
             if tag['max_date_of_order_data'] != 'None':
@@ -185,11 +228,32 @@ class Scheduler:
                 if int(time_diff) == 0:
                     accept = False
         if accept:
-            create_exploratory_analysis(self.ea_connection_structure)
-            create_mls(self.ml_connection_structure)
+            try:
+                print("Exploratory Analysis are initialized !")
+                print("arguments : ")
+                print(self.ea_connection_structure)
+                create_exploratory_analysis(self.ea_connection_structure)
+                self.logs_update(logs={"page": "data-execute", "info": self.success_log_for_ea, "color": "green"})
+            except Exception as e:
+                self.logs_update(logs={"page": "data-execute",
+                                       "info": self.fail_log_for_ea + str(e)[:max(len(str(e)), 100)].replace("'", " "),
+                                       "color": "red"})
+
+            try:
+                print("ML Works are initialized !")
+                print("arguments : ")
+                print(self.ml_connection_structure)
+                create_mls(self.ml_connection_structure)
+                self.logs_update(logs={"page": "data-execute", "info": self.success_log_for_ml, "color": "green"})
+            except Exception as e:
+                self.logs_update(logs={"page": "data-execute",
+                                       "info": self.fail_log_for_ml + str(e)[:max(len(str(e)), 100)].replace("'", " "),
+                                       "color": "red"})
 
             if len(self.unique_dimensions) > 1:
+                print("Execute Ml Works and Exploratory Analysis for the Dimensions!")
                 for dim in self.unique_dimensions:
+                    print("*"*10, " ", " Dimension Name : ", dim, "*"*10)
                     for i in [{"executor": create_exploratory_analysis,
                                "config": self.ea_connection_structure},
                               {"executor": create_mls,
@@ -197,7 +261,26 @@ class Scheduler:
                         for ea in i['config']:
                             if ea not in ['date', 'time_period']:
                                 i['executor'][ea]['order_index'], i['config'][ea]['download_index'] = dim, dim
-                    i['executor'](i['config'])
+                    try:
+                        i['executor'](i['config'])
+                        self.logs_update(
+                            logs={"page": "data-execute",
+                                  "info": self.success_log_for_ml if i['executor'] == create_mls else self.success_log_for_ea,
+                                  "color": "green"})
+                    except Exception as e:
+                        fail_message = self.fail_log_for_ml if i['executor'] == create_mls else self.fail_log_for_ea
+                        fail_message += e[:max(len(e), 100)]
+                        self.logs_update(logs={"page": "data-execute", "info": fail_message, "color": "red"})
+
+    def jobs(self):
+        """
+        Sequentially, this is the process of scheduling which is starting with data insert into the indexes.
+        The it continues with data works which includes ml works and exploratory analsis.
+        """
+        self.create_index.execute_index()
+        print("Orders and Downloads Indexes Creation processes are ended!")
+        self.data_works()
+        print("Exploratory Analysis and ML Works Creation processes are ended!")
 
     def execute_schedule(self):
         """
@@ -214,9 +297,9 @@ class Scheduler:
         s = self.create_schedule()
         if s == 'once':
             print(self.es_tag, " - triggered for once !!!")
-            self.create_index.execute_index()
+            self.jobs()
         else:
-            s.do(self.create_index.execute_index())
+            s.do(self.jobs)
             while self.schedule:
                 s.run_pending()
                 try:
