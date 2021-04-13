@@ -90,14 +90,8 @@ def get_ea_and_ml_config(ea_configs, ml_configs):
              }
 
     """
-
-    conn = read_sql(" SELECT  * FROM schedule_data ", con)
-    if list(conn['max_date_of_order_data'])[0] != 'None':
-        ea_configs['date'] = list(conn['max_date_of_order_data'])[0]
-        ml_configs['date'] = list(conn['max_date_of_order_data'])[0]
-
     es_tag_conn = read_sql(" SELECT  * FROM es_connection ", con)
-    port, host, directory = [list(es_tag_conn[i])[0] for i in ['port', 'host', 'directory']]  # list(es_tag_conn['port'])[0], list(es_tag_conn['host'])[0], list(es_tag_conn['directory'])[0]
+    port, host, directory = [list(es_tag_conn[i])[0] for i in ['port', 'host', 'directory']]
     actions = get_action_name()
 
     configs = []
@@ -112,7 +106,7 @@ def get_ea_and_ml_config(ea_configs, ml_configs):
             if ea == 'abtest':
                 conf[ea]['temporary_export_path'] = directory
         configs += [conf]
-    return configs + actions
+    return configs + [actions]
 
 
 def create_index(tag, ea_configs, ml_configs):
@@ -127,7 +121,6 @@ def create_index(tag, ea_configs, ml_configs):
                   ea_connection_structure=_ea_configs,
                   ml_connection_structure=_ml_configs, data_columns=columns, actions=_actions)
     s.run_schedule_on_thread(function=s.execute_schedule)
-    s.run_schedule_on_thread(function=s.data_works, args={'date': tag})
 
 
 def connection_elasticsearch_check(request):
