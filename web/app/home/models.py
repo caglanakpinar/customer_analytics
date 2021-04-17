@@ -8,7 +8,9 @@ from os.path import abspath, join
 from utils import read_yaml, current_date_to_day, abspath_for_sample_data
 from configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
 import pandas as pd
-from numpy import array, random
+from datetime import datetime
+from flask_login import current_user
+from web.app.base.models import User
 
 from data_storage_configurations import connection_check, create_index, check_elasticsearch
 from exploratory_analysis import ea_configs
@@ -21,8 +23,6 @@ metadata = MetaData(bind=engine)
 con = engine.connect()
 
 
-
-
 class RouterRequest:
     def __init__(self):
         self.return_values = {}
@@ -33,6 +33,11 @@ class RouterRequest:
         self.hold_connection = False
         self.recent_connection = False
         self.message = default_message
+        self.success_data_execute = """ Data Storage Process is initialized!
+                                        This process mainly involves fetching data
+                                        from the data sources and storing them into the ElasticSearch indexes.
+                                        This will take a while. Data Storage Process is triggered for
+                                    """
 
     def insert_query(self, table, columns, values):
         values = [values[col] for col in columns]
@@ -62,10 +67,19 @@ class RouterRequest:
             con.execute(self.sqlite_queries[table])
 
     def logs_update(self, logs):
-        con.execute(self.insert_query(table='logs',
-                                      columns=self.sqlite_queries['columns']['logs'][1:],
-                                      values=logs
-                                      ))
+        try:
+            self.check_for_table_exits(table='logs')
+        except Exception as e:
+            print(e)
+        try:
+            logs['login_user'] = current_user
+            logs['log_time'] = str(current_date_to_day())[0:19]
+            con.execute(self.insert_query(table='logs',
+                                          columns=self.sqlite_queries['columns']['logs'][1:],
+                                          values=logs
+                                          ))
+        except Exception as e:
+            print(e)
 
     def assign_color_for_es_tag(self, data):
         _unique_es_tags = list(data['tag'].unique())
@@ -158,7 +172,7 @@ class RouterRequest:
             logs = self.collect_data_from_table(table='logs')
             if len(logs) != 0:
                 logs['color'] = logs['color'].apply(lambda x: 'color:' + x + ';')
-                self.message['logs'] = logs.to_dict('results')
+                self.message['logs'] = logs.to_dict('results')[-min(len(logs), 10):]
             else:
                 self.message['logs'] = '....'
         except Exception as e:
@@ -273,6 +287,7 @@ class RouterRequest:
             self.check_for_table_exits(table='schedule_data')
             prev_schedule = self.collect_data_from_table(table='schedule_data').to_dict('results')
             if len(prev_schedule) != 0:
+                self.logs_update(logs={"page": "data-execute", "info": "Previous job " + " is removed.", "color": "red"})
                 con.execute(self.delete_query(table='schedule_data', condition=" id = 1"))
             columns = self.get_intersect_columns_with_request(requests, 'schedule_data')
             requests = self.check_for_insert_columns(columns, requests, 'schedule_data')
@@ -280,6 +295,9 @@ class RouterRequest:
             con.execute(self.insert_query(table='schedule_data',
                                           columns=self.sqlite_queries['columns']['schedule_data'][1:],
                                           values=requests))
+            self.logs_update(logs={"page": "data-execute",
+                                   "info": self.success_data_execute + " ".join(requests['time_period'].split("_")),
+                                   "color": "green"})
         except Exception as e:
             print(e)
         return requests['tag']

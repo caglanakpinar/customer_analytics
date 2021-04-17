@@ -146,7 +146,7 @@ class ABTests:
             # concatenate products columns and convert it to dataframe with columns produc_id and price
             self.products = pd.DataFrame(np.concatenate(list(self.products['products']))).rename(
                 columns={0: "id", 1: "client", 2: "payment_amount", 3: "session_start_date", 4: "products", 5: "price"})
-            # substract price from payment amount.
+            # subtract price from payment amount.
             # This will works to see how product of addition affects the total basket of payment amount
             self.products['payment_amount'] = self.products['payment_amount'].apply(lambda x: float(x))
             self.products['price'] = self.products['price'].apply(lambda x: float(x))
