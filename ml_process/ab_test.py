@@ -24,6 +24,7 @@ class ABTests:
     """
     def __init__(self,
                  temporary_export_path,
+                 has_product_connection=True,
                  host=None,
                  port=None,
                  download_index='downloads',
@@ -52,6 +53,7 @@ class ABTests:
         self.host = default_es_host if host is None else host
         self.download_index = download_index
         self.order_index = order_index
+        self.has_product_connection = has_product_connection
         self.test = None
         self.query_es = QueryES(port=port, host=host)
         self.cs = CustomerSegmentation(port=self.port, host=self.host, order_index=self.order_index,
@@ -75,6 +77,14 @@ class ABTests:
         self.promotion_combinations = []
         self.promotion_comparison = pd.DataFrame()
 
+    def dimensional_query(self, boolean_query=None):
+        if dimension_decision(self.order_index):
+            if boolean_query is None:
+                boolean_query = [{"term": {"dimension": self.order_index}}]
+            else:
+                boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
+
     def get_orders_data(self, end_date):
         """
         Purchased orders are collected from Orders Index.
@@ -83,8 +93,16 @@ class ABTests:
         """
         self.query_es = QueryES(port=self.port, host=self.host)
         self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
-        self.query_es.query_builder(fields=self.fields)
+        self.query_es.query_builder(fields=self.fields, boolean_queries=self.dimensional_query())
         self.data = pd.DataFrame(self.query_es.get_data_from_es())
+
+    def dimensional_query(self, boolean_query=None):
+        if dimension_decision(self.order_index):
+            if boolean_query is None:
+                boolean_query = [{"term": {"dimension": self.order_index}}]
+            else:
+                boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
 
     def get_products(self, end_date):
         """
@@ -100,36 +118,39 @@ class ABTests:
                            'p_74': {'price': 8.395, 'category': 'p_c_10', 'rank': 35}
                            }
                 a. Keys of dictionary are products.
+        IF THERE IS NO PRODUCTS DATA IS AVAILABLE SKIP THIS PROCESS !!!
         :param end_date: last date of data set
         """
-        self.query_es = QueryES(port=self.port, host=self.host)
-        self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
-        self.query_es.boolean_queries_buildier({"actions.has_basket": True})
-        self.query_es.query_builder(fields=None, _source=True)
-        self.products = self.query_es.get_data_from_es()
-        self.products = pd.DataFrame([{col: r['_source'][col] for col in self.fields_products} for r in self.products])
-        self.products = self.products.query('basket == basket')
-        self.products['products'] = self.products['basket'].apply(lambda x: list(x.keys()) if x == x else None)  # get product_ids
-        self.products = self.products.query('products == products')
-        # get prices
-        self.products['price'] = self.products.apply(
-            lambda row: [row['basket'][i]['price'] for i in row['products']], axis=1)
-        # merge price and product id into the list
-        self.products['products'] = self.products.apply(
-            lambda row: list(zip([row['id']] * len(row['products']),
-                                 [row['client']] * len(row['products']),
-                                 [row['payment_amount']] * len(row['products']),
-                                 [row['session_start_date']] * len(row['products']),
-                                 row['products'],
-                                 row['price'])), axis=1)
-        # concatenate products columns and convert it to dataframe with columns produc_id and price
-        self.products = pd.DataFrame(np.concatenate(list(self.products['products']))).rename(
-            columns={0: "id", 1: "client", 2: "payment_amount", 3: "session_start_date", 4: "products", 5: "price"})
-        # substract price from payment amount.
-        # This will works to see how product of addition affects the total basket of payment amount
-        self.products['payment_amount'] = self.products['payment_amount'].apply(lambda x: float(x))
-        self.products['price'] = self.products['price'].apply(lambda x: float(x))
-        self.products['session_start_date'] = self.products['session_start_date'].apply(lambda x: convert_to_day(x))
+        if self.has_product_connection:
+            self.query_es = QueryES(port=self.port, host=self.host)
+            self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
+            self.query_es.query_builder(fields=None,
+                                        boolean_queries=self.dimensional_query([{"term": {"actions.has_basket": True}}]),
+                                        _source=True)
+            self.products = self.query_es.get_data_from_es()
+            self.products = pd.DataFrame([{col: r['_source'][col] for col in self.fields_products} for r in self.products])
+            self.products = self.products.query('basket == basket')
+            self.products['products'] = self.products['basket'].apply(lambda x: list(x.keys()) if x == x else None)
+            self.products = self.products.query('products == products')
+            # get prices
+            self.products['price'] = self.products.apply(
+                lambda row: [row['basket'][i]['price'] for i in row['products']], axis=1)
+            # merge price and product id into the list
+            self.products['products'] = self.products.apply(
+                lambda row: list(zip([row['id']] * len(row['products']),
+                                     [row['client']] * len(row['products']),
+                                     [row['payment_amount']] * len(row['products']),
+                                     [row['session_start_date']] * len(row['products']),
+                                     row['products'],
+                                     row['price'])), axis=1)
+            # concatenate products columns and convert it to dataframe with columns produc_id and price
+            self.products = pd.DataFrame(np.concatenate(list(self.products['products']))).rename(
+                columns={0: "id", 1: "client", 2: "payment_amount", 3: "session_start_date", 4: "products", 5: "price"})
+            # substract price from payment amount.
+            # This will works to see how product of addition affects the total basket of payment amount
+            self.products['payment_amount'] = self.products['payment_amount'].apply(lambda x: float(x))
+            self.products['price'] = self.products['price'].apply(lambda x: float(x))
+            self.products['session_start_date'] = self.products['session_start_date'].apply(lambda x: convert_to_day(x))
 
     def get_customer_segments(self, date):
         """
@@ -178,8 +199,9 @@ class ABTests:
          It is the sub groups of the A and B samples
         :return:
         """
-        self.test_groups = [("promotions", None), ("products", None)] + \
-                           [("segments", tp) for tp in self.time_periods]
+        self.test_groups = [("promotions", None)] + [("segments", tp) for tp in self.time_periods]
+        if self.has_product_connection:
+            self.test_groups += [("products", None)]
 
     def get_max_order_date(self):
         """

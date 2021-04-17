@@ -112,6 +112,11 @@ class Cohorts:
             transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
         return transactions
 
+    def dimensional_query(self, boolean_query):
+        if dimension_decision(self.order_index):
+            boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
+
     def get_data(self, start_date):
         """
         Collecting orders and downloads data.
@@ -123,16 +128,20 @@ class Cohorts:
         if len(self.orders) == 0:
             self.query_es = QueryES(port=self.port, host=self.host)
             self.query_es.query_builder(fields=self.session_orders_field_data,
-                                        boolean_queries=[{"term": {"actions.purchased": True}}],
+                                        boolean_queries=self.dimensional_query([{"term": {"actions.purchased": True}}]),
                                         date_queries=[{"range": {"session_start_date": {"gte": start_date}}}])
             self.orders = self.query_es.get_data_from_es()
             self.orders = self.get_time_period(pd.DataFrame(self.orders), 'session_start_date')
         if len(self.downloads) == 0:
             if self.has_download:
+
                 self.query_es = QueryES(port=self.port, host=self.host)
                 self.query_es.query_builder(fields=self.download_field_data)
-                self.downloads = self.query_es.get_data_from_es(index='downloads')
-                self.downloads = self.get_time_period(pd.DataFrame(self.downloads), 'download_date')
+                self.downloads = pd.DataFrame(self.query_es.get_data_from_es(index='downloads'))
+                # for the dimensional it is only calculating for dimension of users.
+                if dimension_decision(self.order_index):
+                    self.downloads = self.downloads[self.downloads['client'].isin(list(self.orders['client'].unique()))]
+                self.downloads = self.get_time_period(self.downloads, 'download_date')
                 self.downloads['download_date'] = self.downloads['download_date'].apply(lambda x: convert_to_date(x))
 
     def convert_cohort_to_readable_form(self, cohort, time_period, time_period_back=None):

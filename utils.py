@@ -148,3 +148,11 @@ def abspath_for_sample_data():
         currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         base_name = os.path.basename(currentdir)
     return currentdir
+
+
+def dimension_decision(order_index):
+    if order_index != 'orders':
+        return True
+    else:
+        return False
+

@@ -95,6 +95,14 @@ class Funnels:
             transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
         return transactions
 
+    def dimensional_query(self, boolean_query=None):
+        if dimension_decision(self.order_index):
+            if boolean_query is None:
+                boolean_query = [{"term": {"dimension": self.order_index}}]
+            else:
+                boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
+
     def get_purchase_action_funnel_data(self, action, date_column):
         """
         Each action has been calculated related to time periods.
@@ -108,11 +116,14 @@ class Funnels:
         date_column shows which date column must be used.
         There are 2 options for query the data by using query_es.py.
         Orders or Downloads indexes can be queried related to action.
+
+        if it is calculating for dimensional data. ElasticSerachquery must have additional filter as below;
+            {"term": {"dimension": self.order_index}}
+
         :param action: action from orders / downloads
         :param date_column: action_date column. If it is for orders, one option; session_start_date
         :param index: action from orders / downloads
         """
-
         transactions = pd.DataFrame(self.query_es.get_data_from_es())
         transactions = self.get_time_period(transactions=transactions, date_column=date_column)
         # hourly orders
@@ -192,8 +203,8 @@ class Funnels:
             self.query_es = QueryES(port=self.port, host=self.host)
             if start_date is not None:
                 self.query_es.date_queries_builder({"session_start_date": {"gte": start_date}})
-            self.query_es.boolean_queries_buildier({"actions." + a: True})
-            self.query_es.query_builder(fields=self.purchase_action_funnel_fields)
+            self.query_es.query_builder(fields=self.purchase_action_funnel_fields,
+                                        boolean_queries=self.dimensional_query([{"term": {"actions." + a: True}}]))
             self.purchase_action_funnel_data[a] = self.get_purchase_action_funnel_data(action=a,
                                                                                        date_column='session_start_date')
         # merge actions related to time periods
@@ -259,7 +270,8 @@ class Funnels:
                 self.action_funnel_fields = ["id", _date_column]
                 self.query_es = QueryES(port=self.port, host=self.host)
                 self.query_es.date_queries_builder({_date_column: {"gte": start_date}})
-                self.query_es.query_builder(fields=self.action_funnel_fields)
+                self.query_es.query_builder(fields=self.action_funnel_fields,
+                                            boolean_queries=self.dimensional_query())
                 self.action_funnel_data[a] = self.get_purchase_action_funnel_data(action=a,
                                                                                   date_column=_date_column)
         # merge actions related to time periods
@@ -317,6 +329,8 @@ class Funnels:
         :param funnel_type: orders, downloads
         :param index: dimentionality of data index orders_location1 ;  dimension = location1
         """
+        print("is for dimension :", get_index_group(index))
+        print(index)
         list_of_obj = []
         for t in self.time_periods:
             insert_obj = {"id": np.random.randint(200000000),

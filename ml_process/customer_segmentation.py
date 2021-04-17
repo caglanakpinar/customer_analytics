@@ -154,6 +154,7 @@ class CustomerSegmentation:
         data = data.rename(columns={'predict': metric + '_segment'})
         # assign segments for each metric (Recency - Monetary  - Frequency)
         data[metric + '_segment'] = data[metric + '_segment'].apply(lambda x: x + 1)
+        h2o.shutdown(prompt=False)
         return data
 
     def current_day_r_f_m_clustering(self):

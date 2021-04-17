@@ -8,7 +8,8 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from configs import default_es_port, default_es_host, default_query_date
-from utils import convert_to_date, current_date_to_day, convert_to_iso_format, get_index_group, calculate_time_diff
+from utils import convert_to_date, current_date_to_day, convert_to_iso_format, get_index_group
+from utils import calculate_time_diff, dimension_decision
 from data_storage_configurations.query_es import QueryES
 
 
@@ -74,6 +75,14 @@ class RFM:
         self.rfm = pd.DataFrame()
         self.max_order_date = datetime.datetime.now()
 
+    def dimensional_query(self, boolean_query=None):
+        if dimension_decision(self.order_index):
+            if boolean_query is None:
+                boolean_query = [{"term": {"dimension": self.order_index}}]
+            else:
+                boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
+
     def get_data(self, start_date=None):
         """
         query orders index to collect the data with columns which are "session_start_date", "client", "payment_amount".
@@ -84,7 +93,7 @@ class RFM:
         if len(self.orders) == 0:
             self.query_es = QueryES(port=self.port, host=self.host)
             self.query_es.query_builder(fields=self.orders_field_data,
-                                        boolean_queries=[{"term": {"actions.purchased": True}}],
+                                        boolean_queries=self.dimensional_query([{"term": {"actions.purchased": True}}]),
                                         date_queries=[{"range": {"session_start_date": {"gte": start_date}}}])
             self.orders = pd.DataFrame(self.query_es.get_data_from_es())
             self.orders['date'] = self.orders['session_start_date'].apply(lambda x: convert_to_date(x))

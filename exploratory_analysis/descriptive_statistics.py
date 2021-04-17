@@ -92,24 +92,33 @@ class Stats:
                       "average_basket_value_per_user",
                       "hourly_orders", "daily_orders", "weekly_orders", "monthly_orders",
                       "purchase_amount_distribution", "weekly_average_order_per_user",
-                      "weekly_average_session_per_user", "weekly_average_payment_amount"]
+                      "weekly_average_session_per_user", "weekly_average_payment_amount", "user_counts_per_order_seq"]
         self.last_week = None
         self.time_periods = time_periods# ["daily", "weekly", 'monthly']
         self.orders = pd.DataFrame()
         self.results = {}
+
+    def dimensional_query(self, boolean_query=None):
+        if dimension_decision(self.order_index):
+            if boolean_query is None:
+                boolean_query = [{"term": {"dimension": self.order_index}}]
+            else:
+                boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
 
     def get_data(self, start_date=None):
         """
         query orders index to collect the data with columns that are
         "id", "session_start_date", "client", "payment_amount", "discount_amount", "actions.purchased".
         :param start_date: starting date of query
-        :return: data-farme individual order transactions.
+        :return: data-frame individual order transactions.
         """
         start_date = default_query_date if start_date is None else start_date
         if len(self.orders) == 0:
             self.query_es = QueryES(port=self.port, host=self.host)
             self.query_es.query_builder(fields=self.orders_field_data,
-                                        date_queries=[{"range": {"session_start_date": {"gte": start_date}}}])
+                                        date_queries=[{"range": {"session_start_date": {"gte": start_date}}}],
+                                        boolean_queries=self.dimensional_query())
             self.orders = pd.DataFrame(self.query_es.get_data_from_es())
             self.orders['date'] = self.orders['session_start_date'].apply(lambda x: convert_to_date(x))
 
@@ -274,6 +283,21 @@ class Stats:
         return self.orders[(self.orders['actions.purchased'] == True)].groupby("weekly").agg(
             {"payment_amount": "mean"}).reset_index()
 
+    def user_order_count_per_order_seq(self):
+        self.orders['order_seq_num'] = self.orders.sort_values(by=['client', 'date'],
+                                                               ascending=True).groupby(['client'])['client'].cumcount() + 1
+        self.orders['next_order_date'] = self.orders[
+            (self.orders['actions.purchased'] == True)].sort_values(by=['client', 'session_start_date'],
+                                                                    ascending=True).groupby(['client'])['date'].shift(-1)
+        self.orders['diff_hours'] = self.orders.apply(
+            lambda row: calculate_time_diff(row['date'], row['next_order_date'], 'hour'), axis=1)
+        self.orders_freq = self.orders.query("order_seq_num != 1")
+        self.orders_freq = self.orders_freq.groupby("order_seq_num").agg({"id": "count"}).reset_index()
+        self.orders_freq = self.orders_freq.sort_values(by='order_seq_num', ascending=True)
+        self.orders_freq = self.orders_freq.rename(columns={"id": "frequency"})
+        self.orders_freq['order_seq_num'] = self.orders_freq['order_seq_num'].apply(lambda x: str(x))
+        return self.orders_freq
+
     def execute_descriptive_stats(self, start_date=None):
         """
         1.  Get order data from the order index.
@@ -297,20 +321,20 @@ class Stats:
                                             self.monthly_orders,
                                             self.purchase_amount_distribution,
                                             self.weekly_average_order_per_user, self.weekly_average_session_per_user,
-                                            self.weekly_average_payment_amount])):
+                                            self.weekly_average_payment_amount,
+                                            self.user_order_count_per_order_seq
+                                            ])):
             print("stat name :", metric[0])
             if metric[0] in ["hourly_orders", "weekly_orders", "monthly_orders", "daily_orders",
                              "purchase_amount_distribution", "weekly_average_order_per_user",
                              "weekly_average_session_per_user",
-                             "weekly_average_payment_amount"]:
-                print("AAAAAAAAAA :", metric[0], metric[1])
+                             "weekly_average_payment_amount", "user_counts_per_order_seq"]:
                 self.insert_into_reports_index(metric[1]().to_dict('results'),
                                                start_date,
                                                filters={"type": metric[0]},
                                                index=self.order_index)
 
             else:
-                print("BBBBBBBBBBB :", metric[0])
                 self.results[metric[0]] = metric[1]()
         self.insert_into_reports_index([self.results],
                                        start_date,
