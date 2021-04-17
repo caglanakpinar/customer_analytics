@@ -15,7 +15,8 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from configs import default_es_port, default_es_host
-from utils import current_date_to_day, get_index_group, convert_str_to_hour, convert_to_date, dimension_decision
+from utils import current_date_to_day, get_index_group, convert_str_to_hour, convert_to_date
+from utils import dimension_decision, convert_to_iso_format
 from data_storage_configurations.query_es import QueryES
 
 
@@ -100,13 +101,33 @@ class ProductAnalytics:
         # get prices
         self.products['price'] = self.products.apply(
             lambda row: [row['basket'][i]['price'] for i in row['products']], axis=1)
+        self.products['category'] = self.products.apply(
+            lambda row: [row['basket'][i]['category'] for i in row['products']], axis=1)
+        self.products['products'] = self.products.apply(
+            lambda row: list(zip([row['id']] * len(row['products']),
+                                 [row['client']] * len(row['products']),
+                                 [row['payment_amount']] * len(row['products']),
+                                 [row['session_start_date']] * len(row['products']),
+                                 row['products'],
+                                 row['category'],
+                                 row['price'])), axis=1)
+        # concatenate products columns and convert it to dataframe with columns produc_id and price
+        self.products = pd.DataFrame(np.concatenate(list(self.products['products']))).rename(
+            columns={0: "id", 1: "client", 2: "payment_amount", 3: "session_start_date",
+                     4: "products", 5: "category", 6: "price"})
+        # subtract price from payment amount.
+        # This will works to see how product of addition affects the total basket of payment amount
+        self.products['payment_amount'] = self.products['payment_amount'].apply(lambda x: float(x))
+        self.products['price'] = self.products['price'].apply(lambda x: float(x))
+        self.products['session_start_date'] = self.products['session_start_date'].apply(lambda x: convert_to_date(x))
+        print(self.products.head())
 
     def get_most_ordered_products(self):
         """
         the products of orders are counted and sorted according to the order counts.
         So, the most ordered products are detected.
         """
-        return self.products.groupby("product").agg(
+        return self.products.groupby("products").agg(
             {"id": lambda x: len(np.unique(x))}).reset_index().rename(
             columns={"id": "order_count"}).sort_values(by='order_count', ascending=False)
 
@@ -123,54 +144,74 @@ class ProductAnalytics:
         Which product is preferred to purchase via purchased hour?
         """
         self.products['hours'] = self.products['session_start_date'].apply(lambda x: convert_str_to_hour(x))
-        self.hourly_products = self.products.groupby(["hours", "product"]).agg(
+        self.hourly_products = self.products.groupby(["hours", "products"]).agg(
             {"id": lambda x: len(np.unique(x))}).reset_index().rename(columns={"id": "order_count"})
-        self.hourly_products['product_order_count_rank'] = self.hourly_products.sort_values(by=["hours", "order_count"],
-                                                                                            ascending=False).groupby(
-            "hours").cumcount() + 1
+        self.hourly_products['product_order_count_rank'] = self.hourly_products.sort_values(
+            by=["hours", "order_count"], ascending=False).groupby("hours").cumcount() + 1
         self.hourly_products = pd.merge(self.hourly_products,
-                                        self.products.groupby("hours").agg({"id": lambda x: len(np.unique(x))}
-                                                                           ).reset_index().rename(
+                                        self.products.groupby("hours").agg(
+                                            {"id": lambda x: len(np.unique(x))}).reset_index().rename(
                                             columns={"id": "hourly_total_orders"}), on='hours', how='left')
         self.hourly_products['hourly_order_ratio'] = self.hourly_products['order_count'] / self.hourly_products[
             'hourly_total_orders']
         return self.hourly_products
 
     def get_hourly_categories_of_sales(self):
-
+        """
+        Which category is preferred to purchase via purchased hour?
+        """
         self.hourly_product_cat = self.products.groupby(["hours", "category"]).agg(
             {"id": lambda x: len(np.unique(x))}).reset_index().rename(columns={"id": "order_count"})
-        self.hourly_product_cat['product_cat_order_count_rank'] = self.hourly_product_cat.sort_values(by=["hours", "order_count"],
-                                                                                            ascending=False).groupby(
-            "hours").cumcount() + 1
+        self.hourly_product_cat['product_cat_order_count_rank'] = self.hourly_product_cat.sort_values(
+            by=["hours", "order_count"], ascending=False).groupby("hours").cumcount() + 1
         self.hourly_product_cat = pd.merge(self.hourly_product_cat,
-                                      self.products.groupby("hours").agg({"id": lambda x: len(np.unique(x))}
-                                                                    ).reset_index().rename(
-                                          columns={"id": "hourly_total_orders"}),
-                                      on='hours', how='left')
-        self.hourly_product_cat['hourly_order_ratio'] = self.hourly_product_cat['order_count'] / self.hourly_product_cat[
-            'hourly_total_orders']
+                                           self.products.groupby("hours").agg(
+                                               {"id": lambda x: len(np.unique(x))}).reset_index().rename(
+                                                columns={"id": "hourly_total_orders"}),
+                                           on='hours', how='left')
+        self.hourly_product_cat['hourly_order_ratio'] = self.hourly_product_cat['order_count'] / \
+                                                        self.hourly_product_cat['hourly_total_orders']
         return self.hourly_product_cat
 
     def get_most_combined_products(self):
-        self.product_pairs = self.products.groupby("id").agg({"product": lambda x: list(x)}).reset_index()
-        self.product_pairs['product_pairs'] = self.product_pairs['product'].apply(
+        """
+        The number of product in the basket shows us the the combination of products that is chosen by client.
+        In this analysis, pair of products are counted according to
+        purchased order or products that are selected by user.
+        Ex: basket 1; prod_1, prod_2 ||  basket 2; prod_1, prod_2, prod_3 || basket 3; prod_1, prod_2, prod_3
+
+        pairs           || number_of_pairs
+        -----------------------------------
+        prod_1 - prod_2 ||      3
+        prod_2 - prod_3 ||      2
+        prod_3 - prod_1 ||      2
+
+        """
+        self.product_pairs = self.products.groupby("id").agg({"products": lambda x: list(x)}).reset_index()
+        self.product_pairs['product_pairs'] = self.product_pairs['products'].apply(
             lambda x: np.array(list(product(x, x))).tolist())
+        self.product_pairs = pd.DataFrame(np.concatenate(list(self.product_pairs['product_pairs'])).tolist())
         self.product_pairs['total_pairs'] = 1
         self.product_pairs = self.product_pairs[self.product_pairs[0] != self.product_pairs[1]]
         self.product_pairs = self.product_pairs.groupby([0, 1]).agg({"total_pairs": "sum"}).reset_index()
         self.product_pairs = self.product_pairs.sort_values('total_pairs', ascending=False)
         return self.product_pairs
 
-    def execute_product_analysis(self, start_date=None):
+    def execute_product_analysis(self, end_date=None):
+        """
+            1. Check for products data available on elasticsearch orders index.
+            2. Get products data and convert basket data into the data-frame format.
+            3. Execute each analysis separately.
+            4. Insert into 'reports' index.
+        """
         if self.has_product_connection:
-            self.get_products()
+            self.get_products(end_date=convert_to_iso_format(current_date_to_day() if end_date is None else end_date))
             for ins in list(zip(self.analysis, [self.get_most_ordered_products, self.get_most_ordered_categories,
                                                 self.get_hourly_products_of_sales, self.get_hourly_categories_of_sales,
                                                 self.get_most_combined_products])):
                 _result = ins[1]()
                 self.insert_into_reports_index(product_analytic=_result,
-                                               pa_type=ins[0], start_date=start_date, index=self.order_index)
+                                               pa_type=ins[0], start_date=end_date, index=self.order_index)
 
     def insert_into_reports_index(self, product_analytic, pa_type, start_date=None, index='orders'):
         """
@@ -216,24 +257,17 @@ class ProductAnalytics:
 
             - start date will be filtered from data frame. In this example; .query("daily > @start_date")
 
-        :param funnel_name: funnel the whole name, includes funnel type and time period.
-        :param start_date: funnel first date
-        :param end_date: funnel last date
+        :param product_analytic_name: most_ordered_products.
+        :param start_date: product analytic report created date
         :param index: index_name in order to get dimension_of data. If there is no dimension, no need to be assigned
         :return: data frame
         """
-
-
-
-        report_name, funnel_type, time_period = funnel_name.split("_")
         boolean_queries, date_queries = [], []
-        boolean_queries = [{"term": {"report_name": report_name}},
-                           {"term": {"index": get_index_group(self.order_index)}},
-                           {"term": {"report_types.time_period": time_period}},
-                           {"term": {"report_types.type": funnel_type}}]
+        boolean_queries = [{"term": {"report_name": product_analytic_name}},
+                           {"term": {"index": get_index_group(self.order_index)}}]
 
-        if end_date is not None:
-            date_queries = [{"range": {"report_date": {"lt": convert_to_iso_format(end_date)}}}]
+        if start_date is not None:
+            date_queries = [{"range": {"report_date": {"lt": convert_to_iso_format(start_date)}}}]
 
         self.query_es = QueryES(port=self.port,
                                 host=self.host)
@@ -244,9 +278,4 @@ class ProductAnalytics:
         _data = pd.DataFrame()
         if len(_res) != 0:
             _data = pd.DataFrame(_res[0]['_source']['data'])
-            if start_date is not None:
-                if time_period not in ['yearly', 'hourly']:
-                    _data[time_period] = _data[time_period].apply(lambda x: convert_to_date(x))
-                    start_date = convert_to_date(start_date)
-                    _data = _data[_data[time_period] >= start_date]
         return _data
