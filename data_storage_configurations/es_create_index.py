@@ -13,6 +13,7 @@ from elasticsearch import helpers
 import argparse
 from dateutil.parser import parse
 from sqlalchemy import create_engine, MetaData
+from flask_login import current_user
 
 from utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format
 from configs import query_path, default_es_port, default_es_host
@@ -114,12 +115,22 @@ class CreateIndex:
         except Exception as e:
             print(e)
 
+    def get_insert_str(self, total_insert):
+        total_insert_str = str(total_insert)
+        if total_insert > 1000:
+            total_insert_str = str(round((total_insert / 1000), 2)) + ' K' if (total_insert / 1000) > 1000 else total_insert
+        if total_insert > 1000000:
+            total_insert_str = str(round((total_insert / 1000000), 2)) + ' M' if (total_insert / 1000) > 1000000 else total_insert
+        return total_insert_str
+
     def logs_update(self, logs):
         try:
             self.check_for_table_exits(table='logs')
         except Exception as e:
             print(e)
         try:
+            logs['login_user'] = current_user
+            logs['log_time'] = str(current_date_to_day())[0:19]
             con.execute(self.insert_query(table='logs',
                                           columns=self.sqlite_queries['columns']['logs'][1:],
                                           values=logs
@@ -293,6 +304,7 @@ class CreateIndex:
                     products['total_products'] = products['basket'].apply(lambda x: len(x.keys()))
                     orders = pd.merge(orders, products, on='order_id', how='left')
                     orders['basket'] = orders['basket'].fillna({})
+                    del products
             except Exception as e:
                 print(e)
         return orders
@@ -326,8 +338,10 @@ class CreateIndex:
         """
         try:
             _insert = []
+            data = data.to_dict('results')
+            total_insert_str = self.get_insert_str(len(data))
             if index == 'orders':
-                for i in data.to_dict('results'):
+                for i in data:
                     _obj = {i: None for i in orders_index_columns}
                     _keys = list(i.keys())
                     _has_purchased = True if i['has_purchased'] in ['True', True] else False
@@ -361,12 +375,13 @@ class CreateIndex:
 
                 if len(_insert) != 0:
                     self.query_es.insert_data_to_index(_insert, index)
+                # insert logs into the sqlite logs table for sessions data insert process
                 self.logs_update(logs={"page": "data-execute",
-                                       "info": " SESSIONS index Done! - Number of documents :" + str(len(data)),
+                                       "info": " SESSIONS index Done! - Number of documents :" + total_insert_str,
                                        "color": "green"})
             _insert = []
             if index == 'downloads':
-                for i in data.to_dict('results'):
+                for i in data:
                     _keys = list(i.keys())
                     _obj = {i: None for i in downloads_index_columns}
                     _obj['id'] = np.random.randint(200000000)
@@ -384,20 +399,23 @@ class CreateIndex:
                             _obj[_a] = convert_to_iso_format(i[_a])
 
                     _insert.append(_obj)
-                    if len(_insert) >= 10000:
+                    if len(_insert) >= 10:
                         self.query_es.insert_data_to_index(_insert, index)
                         _insert = []
 
                 if len(_insert) != 0:
                     self.query_es.insert_data_to_index(_insert, index)
-            self.logs_update(logs={"page": "data-execute",
-                                   "info": " CUSTOMERS index Done! - Number of documents :" + str(len(data)),
-                                   "color": "green"})
+                # insert logs into the sqlite logs table for customers data insert process
+                self.logs_update(logs={"page": "data-execute",
+                                       "info": " CUSTOMERS index Done! - Number of documents :" + total_insert_str,
+                                       "color": "green"})
 
         except Exception as e:
             print(e)
+            err_str = str(e).replace("'", " ")
+            err_str = err_str[0:100] if len(err_str) >= 100 else err_str
             self.logs_update(logs={"page": "data-execute",
-                                   "info": "indexes Creation is failed! While " + index + " is creating. - " + str(e).replace("'", " "),
+                                   "info": "indexes Creation is failed! While " + index + " is creating. - " + err_str,
                                    "color": "red"})
 
     def execute_index(self):
@@ -420,6 +438,7 @@ class CreateIndex:
                     self.get_start_date()
                 if len(_result_data) != 0:
                     self.insert_to_index(data=_result_data, index=_data_type)
+                del _result_data
 
             last_schedule_triggered_date = str(current_date_to_day())
             self.update_schedule(date=last_schedule_triggered_date)

@@ -63,31 +63,35 @@ def get_action_name():
     return {'orders': check_actions(a_orders), 'downloads': check_actions(a_downloads)}
 
 
-def get_ea_and_ml_config(ea_configs, ml_configs):
+def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn):
     """
-        configs = {"date": None,
-               "funnel": {"actions": ["download", "signup"],
-                          "purchase_actions": ["has_basket", "order_screen"],
-                          "host": 'localhost',
-                          "port": '9200',
-                          'download_index': 'downloads',
-                          'order_index': 'orders'},
-               "cohort": {"has_download": True, "host": 'localhost', "port": '9200'},
-               "products": {"has_download": True, "host": 'localhost', "port": '9200'},
-               "rfm": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
-               "stats": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
-               }
+        ea_configs = {"date": None,
+                      "funnel": {"actions": ["download", "signup"],
+                                 "purchase_actions": ["has_basket", "order_screen"],
+                                 "host": 'localhost',
+                                 "port": '9200',
+                                 'download_index': 'downloads',
+                                 'order_index': 'orders'},
+                      "cohort": {"has_download": True, "host": 'localhost', "port": '9200',
+                                 'download_index': 'downloads', 'order_index': 'orders'},
+                      "products": {"has_product_connection": True, "has_download": True,
+                                   "host": 'localhost', "port": '9200'},
+                      "rfm": {"host": 'localhost', "port": '9200',
+                              'download_index': 'downloads', 'order_index': 'orders'},
+                      "stats": {"host": 'localhost', "port": '9200',
+                               'download_index': 'downloads', 'order_index': 'orders'}
+             }
 
         ml_configs = {"date": None,
-              "segmentation": {"host": 'localhost', "port": '9200',
-                               'download_index': 'downloads', 'order_index': 'orders'},
-              "clv_prediction": {"temporary_export_path": None,
-                                 "host": 'localhost', "port": '9200',
-                                 'download_index': 'downloads', 'order_index': 'orders'},
-              "abtest": {"temporary_export_path": None,
-                         "host": 'localhost', "port": '9200',
-                         'download_index': 'downloads', 'order_index': 'orders'}
-             }
+                      'time_period': 'weekly',
+                      "segmentation": {"host": 'localhost', "port": '9200',
+                                       'download_index': 'downloads', 'order_index': 'orders'},
+                      "clv_prediction": {"temporary_export_path": None,
+                                         "host": 'localhost', "port": '9200',
+                                         'download_index': 'downloads', 'order_index': 'orders', 'time_period': 'weekly'},
+                      "abtest": {"has_product_connection": True, "temporary_export_path": None,
+                                 "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
+                     }
 
     """
     es_tag_conn = read_sql(" SELECT  * FROM es_connection ", con)
@@ -105,8 +109,15 @@ def get_ea_and_ml_config(ea_configs, ml_configs):
                 conf[ea]['purchase_actions'] = actions['orders']
             if ea == 'abtest':
                 conf[ea]['temporary_export_path'] = directory
+            if not has_product_conn:
+                if ea in ['products', 'abtest']:
+                    conf[ea]['has_product_connection'] = False
         configs += [conf]
     return configs + [actions]
+
+
+def decision_for_product_conn(data_configs):
+    return True if data_configs['products']['products_data_source_tag'] not in [None, 'None'] else False
 
 
 def create_index(tag, ea_configs, ml_configs):
@@ -115,7 +126,8 @@ def create_index(tag, ea_configs, ml_configs):
     :return:
     """
     columns, data_configs = get_data_connection_arguments()[1:]
-    _ea_configs, _ml_configs, _actions = get_ea_and_ml_config(ea_configs, ml_configs)
+    has_product_connection = decision_for_product_conn(data_configs)
+    _ea_configs, _ml_configs, _actions = get_ea_and_ml_config(ea_configs, ml_configs, has_product_connection)
     s = Scheduler(es_tag=tag,
                   data_connection_structure=data_configs,
                   ea_connection_structure=_ea_configs,
@@ -184,7 +196,8 @@ def connection_check(request, index='orders', type=''):
             if len(gd.data) != 0:
                 _columns = list(gd.data.columns)
                 _df = gd.data
-                if get_columns_condition(request, _columns, index):  # required list; order_id, client, s_start_date, amount, has_purchased
+                # required list; order_id, client, s_start_date, amount, has_purchased
+                if get_columns_condition(request, _columns, index):
                     accept, message, data, raw_columns = True, 'Connected', _df.to_dict('results'), gd.data.columns.values
                 ## TODO: change message type according to connection
                 # else:

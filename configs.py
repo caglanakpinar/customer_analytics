@@ -164,7 +164,8 @@ orders_index_obj = {'id': 74915741,
    'total_products': 7,
    'session_start_date': '2020-12-16T09:39:11'}
 orders_index_columns = ["id", "date", "actions", "client", "promotion_id",
-                        "payment_amount", "discount_amount", "basket", "total_products", "session_start_date", "dimension"]
+                        "payment_amount", "discount_amount", "basket", "total_products",
+                        "session_start_date", "dimension"]
 
 not_required_columns = {"orders": ['discount_amount'], 'downloads': ['signup_date'], 'products': ['category']}
 not_required_default_values = {'discount_amount': float(0.0), 'signup_date': default_query_date, 'category': 'cat_1'}

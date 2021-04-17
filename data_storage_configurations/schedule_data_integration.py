@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, MetaData
 from os.path import abspath, join
 from data_storage_configurations.es_create_index import CreateIndex
 from data_storage_configurations.query_es import QueryES
+from flask_login import current_user
 try:
     from exploratory_analysis.__init__ import create_exploratory_analysis
 except Exception as e:
@@ -143,13 +144,10 @@ class Scheduler:
         """
 
         """
-        self.unique_dimensions = unique([r['fields']['dimension'][0] for r in self.query_es.es.search(index='orders',
-                                                                                                 body={
-                                                                                                     "size": self.query_es.query_size,
-                                                                                                     "from": 0,
-                                                                                                     "fields": [
-                                                                                                         "dimension"]})[
-            'hits']['hits']]).tolist()
+        _res = self.query_es.es.search(index='orders', body={"size": self.query_es.query_size, "from": 0, '_source': False,
+                                                             "fields": ["dimension"]})['hits']['hits']
+        _res = [r['fields']['dimension'][0] for r in _res]
+        self.unique_dimensions = unique(_res).tolist()
 
     def check_for_table_exits(self, table, query=None):
         try:
@@ -175,6 +173,8 @@ class Scheduler:
         except Exception as e:
             print(e)
         try:
+            logs['login_user'] = current_user
+            logs['log_time'] = str(current_date_to_day())[0:19]
             con.execute(self.insert_query(table='logs',
                                           columns=self.sqlite_queries['columns']['logs'][1:],
                                           values=logs
@@ -238,7 +238,6 @@ class Scheduler:
                 self.logs_update(logs={"page": "data-execute",
                                        "info": self.fail_log_for_ea + str(e)[:max(len(str(e)), 100)].replace("'", " "),
                                        "color": "red"})
-
             try:
                 print("ML Works are initialized !")
                 print("arguments : ")
@@ -250,27 +249,34 @@ class Scheduler:
                                        "info": self.fail_log_for_ml + str(e)[:max(len(str(e)), 100)].replace("'", " "),
                                        "color": "red"})
 
-            if len(self.unique_dimensions) > 1:
-                print("Execute Ml Works and Exploratory Analysis for the Dimensions!")
-                for dim in self.unique_dimensions:
-                    print("*"*10, " ", " Dimension Name : ", dim, "*"*10)
-                    for i in [{"executor": create_exploratory_analysis,
-                               "config": self.ea_connection_structure},
-                              {"executor": create_mls,
-                               "config": self.ml_connection_structure}]:
-                        for ea in i['config']:
-                            if ea not in ['date', 'time_period']:
-                                i['executor'][ea]['order_index'], i['config'][ea]['download_index'] = dim, dim
-                    try:
-                        i['executor'](i['config'])
-                        self.logs_update(
-                            logs={"page": "data-execute",
-                                  "info": self.success_log_for_ml if i['executor'] == create_mls else self.success_log_for_ea,
-                                  "color": "green"})
-                    except Exception as e:
-                        fail_message = self.fail_log_for_ml if i['executor'] == create_mls else self.fail_log_for_ea
-                        fail_message += e[:max(len(e), 100)]
-                        self.logs_update(logs={"page": "data-execute", "info": fail_message, "color": "red"})
+            try:
+                self.collect_dimensions_for_data_works()
+                if len(self.unique_dimensions) > 1:
+                    print("Execute Ml Works and Exploratory Analysis for the Dimensions!")
+                    for dim in self.unique_dimensions:
+                        print("*" * 20)
+                        print("*"*10, " ", " Dimension Name : ", dim, "*"*10)
+                        for i in [{"executor": create_exploratory_analysis,
+                                   "config": self.ea_connection_structure},
+                                  {"executor": create_mls,
+                                   "config": self.ml_connection_structure}]:
+                            for ea in i['config']:
+                                if ea not in ['date', 'time_period']:
+                                    i['config'][ea]['order_index'], i['config'][ea]['download_index'] = dim, dim
+                            try:
+                                print("configs :")
+                                print(i['config'])
+                                i['executor'](i['config'])
+                                self.logs_update(
+                                    logs={"page": "data-execute",
+                                          "info": self.success_log_for_ml if i['executor'] == create_mls else self.success_log_for_ea,
+                                          "color": "green"})
+                            except Exception as e:
+                                fail_message = self.fail_log_for_ml if i['executor'] == create_mls else self.fail_log_for_ea
+                                fail_message += e[:max(len(e), 100)]
+                                self.logs_update(logs={"page": "data-execute", "info": fail_message, "color": "red"})
+            except Exception as e:
+                print(e)
 
     def jobs(self):
         """
@@ -278,6 +284,7 @@ class Scheduler:
         The it continues with data works which includes ml works and exploratory analsis.
         """
         self.create_index.execute_index()
+        self.create_index = None
         print("Orders and Downloads Indexes Creation processes are ended!")
         self.data_works()
         print("Exploratory Analysis and ML Works Creation processes are ended!")

@@ -80,6 +80,8 @@ schedule_data:
 logs:
   CREATE TABLE logs (
   id INTEGER NOT NULL,
+  login_user VARCHAR,
+  log_time VARCHAR,
   page VARCHAR,
   color VARCHAR,
   info VARCHAR,
@@ -163,6 +165,8 @@ columns:
 
   logs:
     - id
+    - login_user
+    - log_time
     - page
     - color
     - info
