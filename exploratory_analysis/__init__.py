@@ -17,8 +17,10 @@ ea_configs = {"date": None,
                          "port": '9200',
                          'download_index': 'downloads',
                          'order_index': 'orders'},
-              "cohort": {"has_download": True, "host": 'localhost', "port": '9200'},
-              # "products": {"has_download": True, "host": 'localhost', "port": '9200'},
+              "cohort": {"has_download": True, "host": 'localhost', "port": '9200',
+                         'download_index': 'downloads', 'order_index': 'orders'},
+              "products": {"has_product_connection": True, "host": 'localhost', "port": '9200',
+                           "download_index": 'downloads', "order_index": 'orders'},
               "rfm": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
               "stats": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
              }
@@ -26,19 +28,25 @@ ea_configs = {"date": None,
 
 exploratory_analysis = {'funnel': Funnels,
                         'cohort': Cohorts,
-                        # 'products': ProductAnalytics,
+                        'products': ProductAnalytics,
                         'rfm': RFM,
                         'stats': Stats}
 
 
 def create_exploratory_analysis(configs):
     ea = {a: exploratory_analysis[a](**configs[a]) for a in exploratory_analysis}
+    print("*"*5, " Funnels ", "*"*5)
     ea['funnel'].purchase_action_funnel(start_date=configs['date'])
     ea['funnel'].download_signup_session_order_funnel(start_date=configs['date'])
     ea['funnel'].overall_funnel(start_date=configs['date'])
+    print("*" * 5, " Cohorts ", "*" * 5)
     ea['cohort'].execute_cohort(start_date=configs['date'])
+    print("*" * 5, " RFM ", "*" * 5)
     ea['rfm'].execute_rfm(start_date=configs['date'])
+    print("*" * 5, " Descriptive Statistics ", "*" * 5)
     ea['stats'].execute_descriptive_stats(start_date=configs['date'])
+    print("*" * 5, " Product Analytics ", "*" * 5)
+    ea['products'].execute_product_analysis(end_date=configs['date'])
 
 
 def query_exploratory_analysis(configs, queries, ea):
