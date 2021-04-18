@@ -63,7 +63,7 @@ class ProductAnalytics:
         self.hourly_product_cat = pd.DataFrame()
         self.product_pairs = pd.DataFrame()
         self.analysis = ["most_ordered_products", "most_ordered_categories", "hourly_products_of_sales",
-                         "hourly_categories_of_sales", "hourly_categories_of_sales", "most_combined_products"]
+                         "hourly_products_of_sales", "hourly_categories_of_sales", "most_combined_products"]
 
     def dimensional_query(self, boolean_query=None):
         if dimension_decision(self.order_index):
@@ -263,7 +263,7 @@ class ProductAnalytics:
         :return: data frame
         """
         boolean_queries, date_queries = [], []
-        boolean_queries = [{"term": {"report_name": product_analytic_name}},
+        boolean_queries = [{"term": {"report_types.type": product_analytic_name}},
                            {"term": {"index": get_index_group(self.order_index)}}]
 
         if start_date is not None:
