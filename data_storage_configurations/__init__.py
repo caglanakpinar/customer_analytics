@@ -117,7 +117,7 @@ def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn):
 
 
 def decision_for_product_conn(data_configs):
-    return True if data_configs['products']['products_data_source_tag'] not in [None, 'None'] else False
+    return True if data_configs['products']['data_source'] not in [None, 'None'] else False
 
 
 def create_index(tag, ea_configs, ml_configs):
