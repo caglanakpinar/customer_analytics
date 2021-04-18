@@ -73,7 +73,13 @@ charts = {
                  textinfo="label+value+percent parent+percent entry", parents=[""] * 7),
                  'layout': go.Layout(width=1000,
                                      margin=dict(l=1, r=1, t=1, b=1),
-                                     height=400)}},
+                                     height=400)},
+             "customer_journey": {'trace': go.Scatter(x=[], y=[],
+                                                      marker=dict(size=[], color=[]), mode='markers', name='markers'),
+                                  'layout': go.Layout()},
+             "most_ordered_products": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
+             "most_ordered_categories": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
+             },
         # KPIs - total_orders, total_visits, total_unique_visitors. index.html left top
         "kpis": {"kpis": ['total_orders', 'total_visits', 'total_unique_visitors',
                           'total_unique_ordered_clients', 'total_revenue', 'total_discount']}},
@@ -92,7 +98,15 @@ charts = {
                                                    xaxis_title='recency',
                                                    yaxis_title='monetary',
                                                    zaxis_title='frequency'))
-                           }
+                           },
+                   "user_order_count_per_order_seq": {'trace': go.Bar(),
+                                                      'layout': go.Layout(
+                                                          xaxis_title="X Axis Title",
+                                                          yaxis_title="Y Axis Title",
+                                                          margin=dict(r=1, t=1))}
+
+
+
                    },
         # not any recent KPIs for now
         "kpis": {}
@@ -395,8 +409,8 @@ class Charts:
                                 text=data['1st promo'],
                                 marker=dict(size=data['total_negative_effects'],
                                             color=list(range(len(data))), colorscale='Rainbow'),
-                           mode='markers',
-                           name='markers')
+                                mode='markers',
+                                name='markers')
         return _trace
 
     def get_trace(self, trace, chart):
@@ -467,6 +481,24 @@ class Charts:
                 trace['text'] = list(_data[indicator])
         if chart in self.abtest_promotions:
             trace = self.ab_test_of_trace(_data, chart)
+        if chart == 'user_order_count_per_order_seq':
+            trace['x'] = list(_data['order_seq_num'])
+            trace['y'] = list(_data['frequency'])
+        if chart == 'customer_journey':
+            _data = _data.reset_index().iloc[:-1]
+            _data['text'] = _data.apply(
+                lambda row: 'Customers Who have ' + str(int(row['index'])) + ' orders. Avg. Purchase Amount : ' + str(round(row['customers` average Purchase Value'], 2)) + "  || Avg. Duration between last and recent order :" + str(round(row['hourly order differences'], 2)), axis=1)
+            trace = go.Scatter(x=_data['index'],
+                               y=_data['hourly order differences'],
+                               text=_data['text'],
+                               marker=dict(size=_data['customers` average Purchase Value'],
+                                           color=list(range(len(_data))), colorscale='Rainbow'),
+                               mode='markers',
+                               name='markers')
+        if 'most' in chart.split("_"):
+            x_column = 'products' if 'products' in chart.split("_") else 'category'
+            trace['x'], trace['y'] = list(_data[x_column]), list(_data['order_count'])
+
         return self.decide_trace_type(chart=chart, trace=trace)
 
     def get_layout(self, layout, chart, annotation=None):
@@ -490,10 +522,12 @@ class Charts:
                     annotations.append(annotation)
             layout['annotations'] = annotations
 
-        if 'usage' in chart.split("_"):
+        if 'usage' in chart.split("_") or chart == 'customer_journey':
+            columns = ['mean_control', 'mean_validation']
+            columns = ['hourly order differences'] * 2 if chart == 'customer_journey' else columns
             layout['yaxis'] = {"range": [
-                round(max(0, min(min(_data['mean_control']), min(_data['mean_validation'])) - 0.02), 2),
-                round(max(0, max(max(_data['mean_control']), max(_data['mean_validation'])) - 0.02), 2)]}
+                round(max(0, min(min(_data[columns[0]]), min(_data[columns[1]])) - 0.02), 2),
+                round(max(0, max(max(_data[columns[0]]), max(_data[columns[1]])) - 0.02), 2)]}
 
         return [layout] if 'usage' not in chart.split("_") else layout
 
