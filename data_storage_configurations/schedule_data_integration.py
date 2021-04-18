@@ -123,14 +123,14 @@ class Scheduler:
         self.schedule = True
         self.sqlite_queries = read_yaml(query_path, "queries.yaml")
         self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
-        self.success_log_for_ea = """
-                                   Exploratory Analysis are Created! Check Funnel, Cohort, 
-                                   Descriptive Stats sections.
-                                  """
-        self.success_log_for_ml = """
-                                   ML Works are Created! Check CLV Prediction, AB Test, Anomaly,
-                                   Customer Segmentation sections.
-                                  """
+        self.suc_log_for_ea = """
+                               Exploratory Analysis are Created! Check Funnel, Cohort, 
+                               Descriptive Stats sections.
+                              """
+        self.suc_log_for_ml = """
+                               ML Works are Created! Check CLV Prediction, AB Test, Anomaly,
+                               Customer Segmentation sections.
+                              """
         self.fail_log_for_ea = " Exploratory Analysis Creation is failed! - "
         self.fail_log_for_ml = " ML Works Creation is failed! - "
 
@@ -233,7 +233,7 @@ class Scheduler:
                 print("arguments : ")
                 print(self.ea_connection_structure)
                 create_exploratory_analysis(self.ea_connection_structure)
-                self.logs_update(logs={"page": "data-execute", "info": self.success_log_for_ea, "color": "green"})
+                self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_ea, "color": "green"})
             except Exception as e:
                 self.logs_update(logs={"page": "data-execute",
                                        "info": self.fail_log_for_ea + str(e)[:max(len(str(e)), 100)].replace("'", " "),
@@ -243,7 +243,7 @@ class Scheduler:
                 print("arguments : ")
                 print(self.ml_connection_structure)
                 create_mls(self.ml_connection_structure)
-                self.logs_update(logs={"page": "data-execute", "info": self.success_log_for_ml, "color": "green"})
+                self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_ml, "color": "green"})
             except Exception as e:
                 self.logs_update(logs={"page": "data-execute",
                                        "info": self.fail_log_for_ml + str(e)[:max(len(str(e)), 100)].replace("'", " "),
@@ -267,10 +267,9 @@ class Scheduler:
                                 print("configs :")
                                 print(i['config'])
                                 i['executor'](i['config'])
-                                self.logs_update(
-                                    logs={"page": "data-execute",
-                                          "info": self.success_log_for_ml if i['executor'] == create_mls else self.success_log_for_ea,
-                                          "color": "green"})
+                                _info = self.suc_log_for_ml if i['executor'] == create_mls else self.suc_log_for_ea
+                                _info += " || dimension : " + dim
+                                self.logs_update(logs={"page": "data-execute", "info": _info, "color": "green"})
                             except Exception as e:
                                 fail_message = self.fail_log_for_ml if i['executor'] == create_mls else self.fail_log_for_ea
                                 fail_message += e[:max(len(e), 100)]
