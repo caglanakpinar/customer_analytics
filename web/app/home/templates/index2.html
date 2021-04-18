@@ -69,7 +69,7 @@
 									<canvas id="chartjs-dashboard-line"></canvas>
 							</div>
 							-->
-							<div id="chart_asd" class="chart" style="height:300px;"></div>
+							<div id="order_seq_id" class="chart" style="height:300px;"></div>
 						</div>
 					</div>
 				</div>
@@ -216,6 +216,14 @@
         Plotly.plot('rfm_values', // the ID of the div, created above
 					rfm.trace,
 					rfm.layout, {});
+
+		var order_seq = {{uoc_order_seq | safe}};
+
+        Plotly.plot('order_seq_id', // the ID of the div, created above
+					order_seq.trace,
+					order_seq.layout, {});
+
+
 
 
 

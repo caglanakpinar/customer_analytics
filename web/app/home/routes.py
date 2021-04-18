@@ -43,6 +43,9 @@ def index():
                            segment='index',
                            charts=charts.get_json_format(graph_json['charts']['daily_orders']),
                            customer_segments=charts.get_json_format(graph_json['charts']['customer_segmentation']),
+                           customer_journey=charts.get_json_format(graph_json['charts']['customer_journey']),
+                           top_products=charts.get_json_format(graph_json['charts']['most_ordered_products']),
+                           top_categories=charts.get_json_format(graph_json['charts']['most_ordered_categories']),
                            kpis=graph_json['kpis']
                            )
 
@@ -143,7 +146,10 @@ def route_template(template):
 
         if template == 'index2.html':
             graph_json = charts.get_chart(target='index2')
-            return render_template(template, segment=segment, rfm=charts.get_json_format(graph_json['charts']['rfm']))
+            return render_template(template,
+                                   segment=segment,
+                                   rfm=charts.get_json_format(graph_json['charts']['rfm']),
+                                   uoc_order_seq=charts.get_json_format(graph_json['charts']['user_order_count_per_order_seq']))
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html']:
             reqs.execute_request(req=dict(request.form), template=segment)
             reqs.fetch_results(segment, dict(request.form))

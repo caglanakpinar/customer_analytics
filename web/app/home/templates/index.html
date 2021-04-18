@@ -173,36 +173,27 @@
 				<div class="col-12 col-lg-8 col-xxl-6 d-flex">
 					<div class="card flex-fill">
 						<div class="card-header">
-
 							<h5 class="card-title mb-0">Customer Journey</h5>
 						</div>
-
+						<div  id="cj_id" class="chart" style="height:400px;"></div>
 					</div>
 				</div>
 				<div class="col-12 col-lg-4 col-xxl-3 d-flex">
 					<div class="card flex-fill w-100">
 						<div class="card-header">
 
-							<h5 class="card-title mb-0">Top Products</h5>
+							<h5 class="card-title mb-0">Top 10 Purchased Products</h5>
 						</div>
-						<div class="card-body d-flex w-100">
-							<div class="align-self-center chart chart-lg">
-								<canvas id="chartjs-dashboard-bar"></canvas>
-							</div>
-						</div>
+						<div  id="products_id" class="chart" style="height:400px;"></div>
 					</div>
 				</div>
 				<div class="col-12 col-lg-4 col-xxl-3 d-flex">
 					<div class="card flex-fill w-100">
 						<div class="card-header">
 
-							<h5 class="card-title mb-0">Top Product Categories</h5>
+							<h5 class="card-title mb-0">Top 10 Purchased Categories</h5>
 						</div>
-						<div class="card-body d-flex w-100">
-							<div class="align-self-center chart chart-lg">
-								<canvas id="chartjs-dashboard-bar"></canvas>
-							</div>
-						</div>
+						<div  id="categories_id" class="chart" style="height:400px;"></div>
 					</div>
 				</div>
 			</div>
@@ -229,6 +220,21 @@
 
 		Plotly.plot('segmentation', // the ID of the div, created above
 					segments.trace, segments.layout,  {});
+
+		var cj = {{customer_journey | safe}};
+
+		Plotly.plot('cj_id', // the ID of the div, created above
+					cj.trace, cj.layout,  {});
+
+		var products = {{top_products | safe}};
+
+		Plotly.plot('products_id', // the ID of the div, created above
+					products.trace, products.layout,  {});
+
+		var categories = {{top_categories | safe}};
+
+		Plotly.plot('categories_id', // the ID of the div, created above
+					categories.trace, categories.layout,  {});
 
 		var kpis = {{kpis | safe}};
 
