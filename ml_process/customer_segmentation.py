@@ -154,7 +154,6 @@ class CustomerSegmentation:
         data = data.rename(columns={'predict': metric + '_segment'})
         # assign segments for each metric (Recency - Monetary  - Frequency)
         data[metric + '_segment'] = data[metric + '_segment'].apply(lambda x: x + 1)
-        h2o.shutdown(prompt=False)
         return data
 
     def current_day_r_f_m_clustering(self):
@@ -321,6 +320,7 @@ class CustomerSegmentation:
         self.rfm['segments_numeric'] = self.rfm['segments'].apply(lambda x: self.segments_numerics[x])
 
         self.insert_into_reports_index(self.rfm[self.insert_columns], date=start_date, index=self.order_index)
+        h2o.shutdown(prompt=False)
 
     def fetch(self, start_date=None):
         """
