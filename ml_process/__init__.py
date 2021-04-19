@@ -15,7 +15,8 @@ ml_configs = {"date": None,
               "clv_prediction": {"temporary_export_path": None,
                                  "host": 'localhost', "port": '9200',
                                  'download_index': 'downloads', 'order_index': 'orders', 'time_period': 'weekly'},
-              "abtest": {"temporary_export_path": None,
+              "abtest": {"has_product_connection": True,
+                         "has_promotion_connection": True, "temporary_export_path": None,
                          "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
           }
 
@@ -28,9 +29,13 @@ mls = {'segmentation': CustomerSegmentation,
 
 def create_mls(configs):
     ea = {a: mls[a](**configs[a]) for a in mls}
+    print("*" * 5, " Customer Segmentation ", "*" * 5)
     ea['segmentation'].execute_customer_segment(start_date=configs['date'])
+    print("*" * 5, " CLV Prediction ", "*" * 5)
     ea['clv_prediction'].execute_clv(start_date=configs['date'], time_period=configs['time_period'])
+    print("*" * 5, " A/B Test ", "*" * 5)
     ea['abtest'].build_in_tests(date=configs['date'])
+    print("*" * 5, " Anomaly Detection ", "*" * 5)
     ea['anomaly'].execute_anomaly(date=configs['date'])
 
 
