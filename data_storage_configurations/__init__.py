@@ -63,7 +63,7 @@ def get_action_name():
     return {'orders': check_actions(a_orders), 'downloads': check_actions(a_downloads)}
 
 
-def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn):
+def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion_conn):
     """
         ea_configs = {"date": None,
                       "funnel": {"actions": ["download", "signup"],
@@ -112,12 +112,20 @@ def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn):
             if not has_product_conn:
                 if ea in ['products', 'abtest']:
                     conf[ea]['has_product_connection'] = False
+            if not has_promotion_conn:
+                if ea == 'abtest':
+                    conf[ea]['has_promotion_connection'] = False
+
         configs += [conf]
     return configs + [actions]
 
 
 def decision_for_product_conn(data_configs):
     return True if data_configs['products']['data_source'] not in [None, 'None'] else False
+
+
+def decision_for_promotion_conn(columns):
+    return True if columns['promotion_id'] not in [None, 'None'] else False
 
 
 def create_index(tag, ea_configs, ml_configs):
@@ -127,7 +135,9 @@ def create_index(tag, ea_configs, ml_configs):
     """
     columns, data_configs = get_data_connection_arguments()[1:]
     has_product_connection = decision_for_product_conn(data_configs)
-    _ea_configs, _ml_configs, _actions = get_ea_and_ml_config(ea_configs, ml_configs, has_product_connection)
+    has_promotion_connection = decision_for_promotion_conn(columns)
+    _ea_configs, _ml_configs, _actions = get_ea_and_ml_config(ea_configs, ml_configs,
+                                                              has_product_connection, has_promotion_connection)
     s = Scheduler(es_tag=tag,
                   data_connection_structure=data_configs,
                   ea_connection_structure=_ea_configs,

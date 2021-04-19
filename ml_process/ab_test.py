@@ -25,6 +25,7 @@ class ABTests:
     def __init__(self,
                  temporary_export_path,
                  has_product_connection=True,
+                 has_promotion_connection=True,
                  host=None,
                  port=None,
                  download_index='downloads',
@@ -42,8 +43,12 @@ class ABTests:
         download_index; orders_location1 this will be the location dimension of
                         parameters in order to query orders indexes; 'location1'.
         ******* ******** *****
-        !!!
 
+                IF THERE IS NO PROMOTION CONNECTION ON ORDERS INDEX, IT IS NOT STARTED !!
+                IF THERE IS NO PRODUCT CONNECTION ON ORDERS INDEX, IT IS NOT STARTED !!
+
+        :param has_product_connection: Has order index data for products?
+        :param has_promotion_connection: Has order index data for promotions?
         :param host: elasticsearch host
         :param port: elasticsearch port
         :param download_index: elasticsearch port
@@ -54,6 +59,7 @@ class ABTests:
         self.download_index = download_index
         self.order_index = order_index
         self.has_product_connection = has_product_connection
+        self.has_promotion_connection = has_promotion_connection
         self.test = None
         self.query_es = QueryES(port=port, host=host)
         self.cs = CustomerSegmentation(port=self.port, host=self.host, order_index=self.order_index,
@@ -68,7 +74,8 @@ class ABTests:
         self.time_periods = time_periods[1:]
         self.path = temporary_export_path
         self.features = ["orders", "amount"]
-        self.fields = ["client", "session_start_date", "payment_amount", "promotion_id", "id"]
+        self.fields = ["client", "session_start_date", "payment_amount", "id"]
+        self.fields += ["promotion_id"] if has_promotion_connection else []
         self.fields_products = ["id", "client", "basket", "session_start_date", "payment_amount"]
         self.test_groups = ['segments', 'promotions', "products", "payment_amount"]
         self.confidence_level = [0.01, 0.05]
@@ -177,21 +184,27 @@ class ABTests:
     def assign_organic_orders(self):
         """
         fill null promotions to 'organic'
+        Check for promotion data connection
         :return:
         """
-        self.data['promotion_id'] = self.data['promotion_id'].fillna('organic')
+        if self.has_promotion_connection:
+            self.data['promotion_id'] = self.data['promotion_id'].fillna('organic')
 
     def get_unique_promotions(self):
         """
         list of unique promotions
+        Check for promotion data connection
         """
-        self.promotions = list(self.data.query("promotion_id != 'organic'")['promotion_id'].unique())
+        if self.has_promotion_connection:
+            self.promotions = list(self.data.query("promotion_id != 'organic'")['promotion_id'].unique())
 
     def get_unique_products(self):
         """
         list of unique products
+        Check for products data connection.
         """
-        self.u_products = list(self.products['products'].unique())
+        if self.has_product_connection:
+            self.u_products = list(self.products['products'].unique())
 
     def generate_test_groups(self):
         """
@@ -199,9 +212,11 @@ class ABTests:
          It is the sub groups of the A and B samples
         :return:
         """
-        self.test_groups = [("promotions", None)] + [("segments", tp) for tp in self.time_periods]
+        self.test_groups = [("segments", tp) for tp in self.time_periods]
         if self.has_product_connection:
             self.test_groups += [("products", None)]
+        if self.has_promotion_connection:
+            self.test_groups += [("promotions", None)]
 
     def get_max_order_date(self):
         """
@@ -434,7 +449,11 @@ class ABTests:
     def create_before_after_test(self, date):
         """
         BEFORE - AFTER TEST:
-            collect data from before the event and test with after the eevnt
+            collect data from before the event and test with after the event.
+
+        IF THERE IS NO PROMOTION CONNECTION ON ORDERS INDEX, IT IS NOT STARTED !!
+        IF THERE IS NO PRODUCT CONNECTION ON ORDERS INDEX, IT IS NOT STARTED !!
+
         :param date: recent date
         :return:
         """
@@ -482,20 +501,22 @@ class ABTests:
     def create_promotion_comparison_test(self, date):
         """
         Comparing all combination of Promotions
+        IF THERE IS NO PROMOTION CONNECTION ON ORDERS INDEX, IT IS NOT STARTED !!
         :param date: recent date
         :return:
         """
-        self.get_unique_promotions()
-        self.promotion_combinations = list(filter(lambda x: x[0] != x[1],
-                                                  list(product(self.promotions, self.promotions))))
+        if self.has_promotion_connection:
+            self.get_unique_promotions()
+            self.promotion_combinations = list(filter(lambda x: x[0] != x[1],
+                                                      list(product(self.promotions, self.promotions))))
 
-        for p in self.promotion_combinations:
-            self.promotion_comparison = pd.concat([self.promotion_comparison,
-                                                   self.execute_promotion_comparison_test(p)])
-        self.insert_into_reports_index(self.promotion_comparison,
-                                       date,
-                                       abtest_type='promotion_comparison',
-                                       index=self.order_index)
+            for p in self.promotion_combinations:
+                self.promotion_comparison = pd.concat([self.promotion_comparison,
+                                                       self.execute_promotion_comparison_test(p)])
+            self.insert_into_reports_index(self.promotion_comparison,
+                                           date,
+                                           abtest_type='promotion_comparison',
+                                           index=self.order_index)
 
     def insert_into_reports_index(self,
                                   abtest,
