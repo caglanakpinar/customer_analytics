@@ -307,15 +307,17 @@ class Scheduler:
         else:
             s.do(self.jobs)
             while self.schedule:
-                s.run_pending()
+                schedule.run_pending()
                 try:
                     tag = self.query_schedule_status()
                     if len(tag) == 0:
+                        print("schedule is cancelled")
                         self.schedule = False
                 except Exception as e:
                     self.schedule = False
                 # time.sleep(721*60)
-                time.sleep(2)
+                time.sleep(100)
+                print("waiting ....")
 
     def run_schedule_on_thread(self, function, args=None):
         """
