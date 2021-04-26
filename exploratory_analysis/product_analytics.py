@@ -15,7 +15,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from configs import default_es_port, default_es_host
-from utils import current_date_to_day, get_index_group, convert_str_to_hour, convert_to_date
+from utils import current_date_to_day, get_index_group, convert_str_to_hour, convert_to_date, convert_dt_to_day_str
 from utils import dimension_decision, convert_to_iso_format
 from data_storage_configurations.query_es import QueryES
 
@@ -62,8 +62,9 @@ class ProductAnalytics:
         self.hourly_products = pd.DataFrame()
         self.hourly_product_cat = pd.DataFrame()
         self.product_pairs = pd.DataFrame()
-        self.analysis = ["most_ordered_products", "most_ordered_categories", "hourly_products_of_sales",
-                         "hourly_products_of_sales", "hourly_categories_of_sales", "most_combined_products"]
+        self.analysis = ["most_ordered_products", "most_ordered_categories",
+                         "hourly_products_of_sales", "hourly_categories_of_sales",
+                         "most_combined_products"]
 
     def dimensional_query(self, boolean_query=None):
         if dimension_decision(self.order_index):
@@ -120,7 +121,16 @@ class ProductAnalytics:
         self.products['payment_amount'] = self.products['payment_amount'].apply(lambda x: float(x))
         self.products['price'] = self.products['price'].apply(lambda x: float(x))
         self.products['session_start_date'] = self.products['session_start_date'].apply(lambda x: convert_to_date(x))
-        print(self.products.head())
+
+    def get_customer_segments(self, date):
+        """
+        Collecting segments of customers from the reports index.
+        :param date: given report date
+        """
+        date = current_date_to_day().isoformat() if date is None else date
+        self.products = pd.merge(self.products,
+                                 self.cs.fetch(start_date=convert_dt_to_day_str(date))[['client', 'segments']],
+                                 on='client', how='left')
 
     def get_most_ordered_products(self):
         """
