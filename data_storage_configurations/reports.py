@@ -10,7 +10,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from configs import abtest_promotions, descriptive_reports, product_analytics, abtest_reports
+from configs import descriptive_reports, product_analytics, abtest_reports
 from utils import *
 from data_storage_configurations.query_es import QueryES
 
@@ -25,44 +25,75 @@ class Reports:
     """
     There are some overall values that need to check each day for businesses.
     These values are also crucial metrics for the dashboards.
+    These reports are collecting from 'reports' index and storing in a temporary folder.
+    This folder path is a required field when ElasticSearch connection is created from the user.
+    This process will be triggered when data storage process will be scheduled.
+    Daily scheduling will be generated latest reports of the data
+    Structure of the folder;
+        - temporary_folder
+            - build_in_reports
+                - main
+                    - weekly_funnel.csv
+                    - daily_funnel.csv
+                    ....
+                - dimension_1
+                    - weekly_funnel.csv
+                    - daily_funnel.csv
+                    ....
+                - dimension_2
+                    - weekly_funnel.csv
+                    - daily_funnel.csv
+                    ....
 
-    Here are the reports
 
+    Here are the reports;
+        index : main || report :  weekly_funnel
+        index : main || report :  daily_funnel
+        index : main || report :  daily_funnel_downloads
+        index : main || report :  weekly_average_payment_amount
+        index : main || report :  weekly_cohort_from_2_to_3
+        index : main || report :  daily_cohort_from_3_to_4
+        index : main || report :  promotion_comparison
+        index : main || report :  promotion_usage_before_after_orders_reject
+        index : main || report :  most_ordered_products
+        index : main || report :  daily_cohort_from_2_to_3
+        index : main || report :  weekly_cohort_from_3_to_4
+        index : main || report :  monthly_orders
+        index : main || report :  hourly_funnel
+        index : main || report :  weekly_average_order_per_user
+        index : main || report :  daily_cohort_downloads
+        index : main || report :  promotion_usage_before_after_orders_accept
+        index : main || report :  customer_journey
+        index : main || report :  purchase_amount_distribution
+        index : main || report :  user_counts_per_order_seq
+        index : main || report :  daily_cohort_from_1_to_2
+        index : main || report :  weekly_cohort_downloads
+        index : main || report :  hourly_funnel_downloads
+        index : main || report :  monthly_funnel_downloads
+        index : main || report :  weekly_cohort_from_1_to_2
+        index : main || report :  rfm
+        index : main || report :  promotion_usage_before_after_amount_accept
+        index : main || report :  monthly_funnel
+        index : main || report :  kpis
+        index : main || report :  order_and_payment_amount_differences
+        index : main || report :  hourly_orders
+        index : main || report :  weekly_funnel_downloads
+        index : main || report :  weekly_average_session_per_user
+        index : main || report :  daily_orders
+        index : main || report :  weekly_orders
+        index : main || report :  segmentation
+        index : main || report :  most_ordered_categories
+        index : main || report :  promotion_usage_before_after_amount_reject
 
+    There are some reports which still needs manipulation even they have been applied for data manipulation;
+        - promotion_comparison
+        - order_and_payment_amount_differences
+        - promotion_usage_before_after_amount_reject/ _accept
+        - promotion_usage_before_after_orders_reject/ _accept
 
-
-    !!!!
-    ******* ******** *****
-    Dimensional Stats:
-    Descriptive Statistics must be created individually for dimensions.
-    For instance, the Data set contains locations dimension.
-    In this case, each location of 'orders' and 'downloads' indexes must be created individually.
-    by using 'download_index' and 'order_index' dimension can be assigned in order to create the descriptive Stats
-
-    download_index; downloads_location1 this will be the location dimension of
-                    parameters in order to query downloads indexes; 'location1'.
-    download_index; orders_location1 this will be the location dimension of
-                    parameters in order to query orders indexes; 'location1'.
-    ******* ******** *****
-        !!!
     """
 
     def __init__(self):
-        """
-        ******* ******** *****
-        Dimensional Stats:
-        Descriptive Statistics must be created individually for dimensions.
-        For instance, the Data set contains locations dimension.
-        In this case, each location of 'orders' and 'downloads' indexes must be created individually.
-        by using 'download_index' and 'order_index' dimension can be assigned in order to create the descriptive Stats
-
-        download_index; downloads_location1 this will be the location dimension of
-                        parameters in order to query downloads indexes; 'location1'.
-        download_index; orders_location1 this will be the location dimension of
-                        parameters in order to query orders indexes; 'location1'.
-        ******* ******** *****
-        !!!
-        """
         self.es_tag = {}
         self.folder = join(abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
         self.sample_report_names = []
@@ -80,6 +111,12 @@ class Reports:
         self.p_usage_ba_orders = ['promotion_usage_before_after_orders', 'promotion_usage_before_after_amount']
 
     def connections(self):
+        """
+        connections to sqlite db. tables are;
+            -   schedule_data
+            -   es_connection
+            -   data_columns_integration
+        """
         tag, has_dimension = {}, False
         try:
             tag = pd.read_sql("SELECT * FROM schedule_data", con).to_dict('resutls')[-1]
@@ -93,7 +130,8 @@ class Reports:
 
     def collect_dimensions_for_data_works(self, has_dimensions):
         """
-
+        If there is dimension in the orders Index all reports will be created individually per indexes
+        with 'main' which indicates whole data in orders index
         """
         dimensions = []
         if has_dimensions:
@@ -116,6 +154,9 @@ class Reports:
             return ['main']
 
     def collect_reports(self, port, host, index, query=None):
+        """
+        Query reports index with given date
+        """
         query_es = QueryES(host=host, port=port)
         res = []
 
@@ -154,31 +195,10 @@ class Reports:
                     print(e)
         return pd.DataFrame(res)
 
-    def report_name(self, k):
-        r_name = ''
-        if k['report_name'] == 'funnel':
-            r_name = k['time_period'] + '_funnel'
-            if k['type'] == 'downloads':
-                r_name += '_downloads'
-        if k['report_name'] == 'cohort':
-            if k['type'] == 'orders':
-                r_name = "_".join([k['time_period'], 'cohort_from', str(int(k['_from'])), 'to', str(int(k['_to']))])
-            else:
-                r_name = "_".join([k['time_period'], 'cohort', k['type']])
-        if k['report_name'] == 'stats':
-            r_name = k['type'] if k['type'] != '' else 'kpis'
-        if k['report_name'] == 'abtest':
-            if k['abtest_type'] in list(self.double_reports.keys()):
-                r_name = self.double_reports[k['abtest_type']]
-            else:
-                r_name = k['abtest_type']
-        if k['report_name'] == 'product_analytic':
-            r_name = k['type']
-        if k['report_name'] not in ['cohort', 'funnel', 'stats', 'product_analytic', 'abtest']:
-            r_name = k['report_name']
-        return r_name
-
     def split_report_name(self, r_name):
+        """
+        get related data from reports index for the given report name
+        """
         _splits = r_name.split("_")
         query = ''
         if 'funnel' in _splits:
@@ -210,17 +230,19 @@ class Reports:
             for sub_reports in self.double_reports:
                 if r_name in self.double_reports[sub_reports]:
                     query = " report_name == 'abtest' and abtest_type == '{}'".format(sub_reports)
-        print(query, r_name)
         return query
 
     def get_promotion_comparison(self, x):
         """
-
+        This is only for promotion_comparison reports. Promotion fields is stored in the index promo1_promo_2.
         """
         _x = x.split("_")
         return pd.Series(["_".join(_x[0:2]), "_".join(_x[2:4])])
 
     def required_aggregation(self, r_name, data):
+        """
+        These is the last data manipulation before stored in the directory.
+        """
         if r_name == 'segmentation':
             total_clients = len(data)
             data = data.groupby("segments").agg({"client": "count"}).reset_index().rename(columns={"client": "value"})
@@ -232,10 +254,10 @@ class Reports:
                 metric = 'amount' if 'amount' in r_name.split("_") else 'orders'
                 data = data.query("is_" + metric + "_increased_per_promotions == " + accept)
                 data = data.sort_values('diff') if 'accept' in r_name.split("_") else data
-            if r_name == 'promo_comparison':
+            if r_name == 'promotion_comparison':
                 data[['1st promo', '2nd Promo']] = data['promotion_comparison'].apply(
                     lambda x: self.get_promotion_comparison(x))
-                data['total_positive_effects'] = data['promo_1st_vs_promo_2nd'].apply(
+                data['total_effects'] = data['promo_1st_vs_promo_2nd'].apply(
                     lambda x: 1 if x in ['True', True] else 0)
                 data = data.groupby("1st promo").agg({"total_effects": "sum",
                                                       "accept_Ratio": "mean",
@@ -246,24 +268,32 @@ class Reports:
         return data
 
     def get_order_and_payment_amount_differences(self, reports):
+        """
+        It is only for 'order_and_payment_amount_differences'. It is the combination of data
+        which are 'promotion_usage_before_after_orders' and 'promotion_usage_before_after_amount'.
+        """
         usage_orders = self.required_aggregation(
             r_name=self.p_usage_ba_orders[0], data=pd.DataFrame(list(reports.query("abtest_type == '{}'".format(
                 self.p_usage_ba_orders[0])).sort_values('report_date',  ascending=False)['data'])[0]))
         usage_amount = self.required_aggregation(
             r_name=self.p_usage_ba_orders[1], data=pd.DataFrame(list(reports.query("abtest_type == '{}'".format(
                 self.p_usage_ba_orders[1])).sort_values('report_date', ascending=False)['data'])[0]))
-        print(usage_orders.head())
-        print(usage_amount.head())
         return pd.merge(usage_orders,
                         usage_amount.rename(columns={'diff': 'diff_amount'}),
                         on='promotions', how='inner')[['diff_amount', 'diff', 'promotions']]
 
     def get_sample_report_names(self):
+        """
+        Collect all sample reports in sample_data folder
+        """
         for f in listdir(dirname(self.folder)):
             if f.split(".")[1] == 'csv':
                 self.sample_report_names.append("_".join(f.split(".")[0].split("_")[2:]))
 
     def get_related_report(self, reports, r_name):
+        """
+        Last exit before import data as .csv format
+        """
         report_data = pd.DataFrame()
         report = reports.query(self.split_report_name(r_name))
         if len(report) != 0:
@@ -273,9 +303,13 @@ class Reports:
             else:
                 report = report.sort_values('report_date', ascending=False)
                 report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
+
         return report_data
 
     def get_report_count(self, es_tag):
+        """
+        Check if the reports are stored in to the reports index.
+        """
         reports_index_count = 0
         try:
             qs = QueryES(host=es_tag['host'], port=es_tag['port'])
@@ -285,6 +319,10 @@ class Reports:
         return reports_index_count
 
     def create_build_in_reports(self):
+        """
+        This is the main process of importing data into the given directory in .csv format.
+        For each index, separate reports are imported.
+        """
         self.get_sample_report_names()
         tag, has_dimensions = self.connections()
         try:
@@ -300,8 +338,10 @@ class Reports:
                 except:
                     print("folder already exists")
                 for r_name in self.sample_report_names:
+                    print("index :", index, "|| report : ", r_name)
                     _data = self.get_related_report(reports, r_name)
-                    _data.to_csv(join(self.es_tag['directory'], "build_in_reports", index, r_name) + ".csv", index=False)
+                    if len(_data) != 0:
+                        _data.to_csv(join(self.es_tag['directory'], "build_in_reports", index, r_name) + ".csv", index=False)
 
     def query_es_for_report(self, report_name, index, date=datetime.datetime.now()):
         ## TODO: will be updated

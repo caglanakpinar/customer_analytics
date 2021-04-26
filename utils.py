@@ -155,4 +155,3 @@ def dimension_decision(order_index):
         return True
     else:
         return False
-
