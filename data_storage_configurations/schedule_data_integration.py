@@ -23,6 +23,7 @@ except Exception as e:
 
 from utils import current_date_to_day, convert_to_day, abspath_for_sample_data, read_yaml
 from configs import query_path
+from data_storage_configurations.reports import Reports
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
                        convert_unicode=True, connect_args={'check_same_thread': False})
@@ -115,9 +116,12 @@ class Scheduler:
         self.data_connection_structure = data_connection_structure
         self.ea_connection_structure = ea_connection_structure
         self.ml_connection_structure = ml_connection_structure
+        self.actions = actions
+        self.data_columns = data_columns
         self.es_con = pd.read_sql("select * from es_connection", con).to_dict('results')[-1]
         self.create_index = CreateIndex(data_connection_structure=data_connection_structure,
                                         data_columns=data_columns, actions=actions)
+        self.create_build_in_reports = Reports()
         self.query_es = QueryES(host=self.es_con['host'], port=self.es_con['port'])
         self.unique_dimensions = []
         self.schedule = True
@@ -131,8 +135,14 @@ class Scheduler:
                                ML Works are Created! Check CLV Prediction, AB Test, Anomaly,
                                Customer Segmentation sections.
                               """
+        self.suc_log_for_br = """
+                              Daily reports are created in a .csv format in Directory.
+                              """
         self.fail_log_for_ea = " Exploratory Analysis Creation is failed! - "
         self.fail_log_for_ml = " ML Works Creation is failed! - "
+        self.fail_log_for_br = """
+                              Daily reports are craetion is failed!
+                              """
 
     def query_schedule_status(self):
         """
@@ -277,6 +287,13 @@ class Scheduler:
             except Exception as e:
                 print(e)
 
+            try:
+                self.create_build_in_reports.create_build_in_reports()
+                self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_br, "color": "green"})
+            except Exception as e:
+                fail_message = self.fail_log_for_br + e[:max(len(e), 100)]
+                self.logs_update(logs={"page": "data-execute", "info": fail_message, "color": "red"})
+
     def jobs(self):
         """
         Sequentially, this is the process of scheduling which is starting with data insert into the indexes.
@@ -284,6 +301,9 @@ class Scheduler:
         """
         self.create_index.execute_index()
         self.create_index = None
+        self.create_index = CreateIndex(data_connection_structure=self.data_connection_structure,
+                                        data_columns=self.data_columns,
+                                        actions=self.actions)
         print("Orders and Downloads Indexes Creation processes are ended!")
         self.data_works()
         print("Exploratory Analysis and ML Works Creation processes are ended!")

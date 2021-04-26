@@ -247,24 +247,7 @@ def check_elasticsearch(port, host, directory):
     return connection, message
 
 
-def collect_reports(port, host, index, date):
-    query_es = QueryES(host=host, port=port)
-    res = []
-    for r in query_es.es.search(index='reports', body={"size": 1000, "from": 0})['hits']['hits']:
-        if r['_source']['index'] == index:
-            try:
-                res.append({'report_name': r['_source']['report_name'],
-                            'report_date': r['_source']['report_date'],
-                            'time_period': r['_source']['report_types'].get('time_period', None),
-                            'type': r['_source']['report_types'].get('type', None),
-                            'from': r['_source']['report_types'].get('from', None),
-                            'to': r['_source']['report_types'].get('to', None),
-                            'report_types': r['_source']['report_types'],
-                            'index': r['_source']['index'],
-                            'data': r['_source']['data']})
-            except Exception as e:
-                print(e)
-    return DataFrame(res)
+
 
 
 
