@@ -87,7 +87,7 @@ class Stats:
                                   "payment_amount", "discount_amount", "actions.purchased"]
         self.stats = ["total_orders", "last_week_orders",
                       "total_revenue", "last_week_revenue",
-                      "total_visitors", "last_week_visitors",
+                      "total_visits", "last_week_visitors",
                       "total_discount", "last_week_discount",
                       "average_basket_value_per_user",
                       "hourly_orders", "daily_orders", "weekly_orders", "monthly_orders",
@@ -292,7 +292,6 @@ class Stats:
         self.orders_freq = self.orders_freq.rename(columns={"id": "frequency"})
         self.orders_freq['order_seq_num'] = self.orders_freq['order_seq_num'].apply(lambda x: str(x))
         return self.orders_freq
-
 
     def execute_descriptive_stats(self, start_date=None):
         """
