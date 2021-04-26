@@ -16,8 +16,7 @@ from screeninfo import get_monitors
 
 samples = SampleData()
 real = RealData()
-real.execute_real_data()
-charts = Charts(samples.kpis, real.kpis)
+charts = Charts(samples.kpis, real)
 reqs = RouterRequest()
 
 
@@ -42,7 +41,7 @@ def index():
     return render_template('index.html',
                            segment='index',
                            charts=charts.get_json_format(graph_json['charts']['daily_orders']),
-                           customer_segments=charts.get_json_format(graph_json['charts']['customer_segmentation']),
+                           customer_segments=charts.get_json_format(graph_json['charts']['segmentation']),
                            customer_journey=charts.get_json_format(graph_json['charts']['customer_journey']),
                            top_products=charts.get_json_format(graph_json['charts']['most_ordered_products']),
                            top_categories=charts.get_json_format(graph_json['charts']['most_ordered_categories']),

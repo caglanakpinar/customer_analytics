@@ -6,10 +6,11 @@ from flask_wtf import FlaskForm
 from wtforms import TextField, PasswordField
 from wtforms.validators import InputRequired, Email, DataRequired
 import pandas as pd
-from numpy import array
+from numpy import array, unique
 import json
+import datetime
 
-from os.path import abspath, join, dirname, basename
+from os.path import abspath, join, dirname, basename, exists
 from os import listdir
 import plotly.graph_objs as go
 import plotly
@@ -17,8 +18,7 @@ from screeninfo import get_monitors
 from sqlalchemy import create_engine, MetaData
 
 from utils import convert_to_day, abspath_for_sample_data
-from configs import time_periods
-from data_storage_configurations import collect_reports
+from configs import time_periods, descriptive_stats, abtest_promotions
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
                        connect_args={'check_same_thread': False})
@@ -34,7 +34,7 @@ charts Dictionary:
 charts = {
     # index.html charts and KPIs
     "index": {
-        # charts - orders_monthly, orders_hourly, orders_weekly, orders_daily, customer_segmentation
+        # charts - orders_monthly, orders_hourly, orders_weekly, orders_daily, segmentation
         "charts":
             {'monthly_orders': {'trace': go.Scatter(mode="lines+markers+text",
                                                     line=dict(color='firebrick', width=4),
@@ -68,7 +68,7 @@ charts = {
                                                       size=30,
                                                       color="crimson")),
                               'layout': go.Layout()},
-             'customer_segmentation': {'trace': go.Treemap(
+             'segmentation': {'trace': go.Treemap(
                  marker_colorscale='Blues',
                  textinfo="label+value+percent parent+percent entry", parents=[""] * 7),
                  'layout': go.Layout(width=1000,
@@ -81,8 +81,7 @@ charts = {
              "most_ordered_categories": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
              },
         # KPIs - total_orders, total_visits, total_unique_visitors. index.html left top
-        "kpis": {"kpis": ['total_orders', 'total_visits', 'total_unique_visitors',
-                          'total_unique_ordered_clients', 'total_revenue', 'total_discount']}},
+        "kpis": {"kpis": ['total_orders', 'total_visits', 'total_revenue', 'total_discount']}},
     # index2.html of Charts and KPIs
     "index2": {
         # charts - rfm
@@ -242,56 +241,36 @@ class RealData:
     """
     Just, For now, it is the same as Samples. (Work in progress)
     """
-    def __init__(self):
-        self.kpis = {}
-
-    def connections(self):
-        tag = pd.read_sql("SELECT * FROM schedule_data WHERE status = 'on' ", con).to_dict('resutls')[-1]
-        es_tag = pd.read_sql("SELECT * FROM es_connection WHERE tag = '" + tag['tag'] + "' ", con).to_dict('resutls')[-1]
-        conn = pd.read_sql(
-            """
-            SELECT  * FROM data_connection  WHERE tag =  '""" + tag['tag'] + "' and process = 'connected'", con)
-        conn = conn.query("is_action == 'None' and is_product == 'None' and is_promotion == 'None'")
-
-        return tag, es_tag, conn.to_dict('results')
-
-    def get_index_names(self, c):
-        index = 'main'
-        if c['dimension'] != 'None':
-            index = c['orders_data_source_tag']
-        return index
-
-    def report_name(self, k, c):
-        if k['report_name'] == 'funnel':
-            r_name = k['time_period'] + '_funnel'
-            if k['type'] == 'downloads':
-                r_name += '_downloads'
-        if k['report_name'] == 'cohort':
-            r_name = "_".join(['cohort', k['from'], 'to', k['to'], k['time_period']])
-        if k['report_name'] == 'stats':
-            r_name = k['type']
-        if k['report_name'] not in ['cohort', 'funnel', 'stats']:
-            r_name = k
-        if c['dimension'] != 'None':
-            r_name = "_".join([r_name, c['orders_data_source_tag']])
-        return r_name
-
-    def execute_real_data(self):
+    kpis = {}
+    es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
+    folder = join(es_tag['directory'], "build_in_reports", "")
+    
+    def check_for_the_report(self, report_name, index='main'):
         try:
-            tag, es_tag, conn = self.connections()
-            if tag['is_exploratory'] != 'None' or tag['is_mlworks'] != 'None':
-                for c in conn:
-                    index = self.get_index_names(c)
-                    reports = collect_reports(es_tag['port'], es_tag['host'], index, tag['max_date_of_order_data'])
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
+            return exists(join(es_tag['directory'], "build_in_reports", index, report_name + ".csv"))
+        except:
+            return False
 
-                    for k in reports.to_dict('results'):
-                        r_name = self.report_name(k, c)
-                        self.kpis[r_name] = pd.DataFrame(k['data'])
-        except Exception as e:
-            print(e)
-
-        return self.kpis
-
+    def fetch_report(self, report_name, index='main'):
+        try:
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
+            return pd.read_csv(join(es_tag['directory'], "build_in_reports", index, report_name + ".csv"))
+        except:
+            return False
+    asd = listdir(dirname(folder))
+    for index in listdir(dirname(folder)):
+        _folder = join(es_tag['directory'], "build_in_reports", index, "")
+        kpis[index] = {}
+        try:
+            for f in listdir(dirname(_folder)):
+                try:
+                    kpis[index][f.split(".")[0]] = pd.read_csv(join(_folder, f))
+                except:
+                    print()
+        except:
+            print()
+            
 
 def cohort_human_readable_form(cohort, tp):
     cohort_updated = pd.DataFrame()
@@ -319,45 +298,42 @@ class Charts:
         After collecting the real data by using **charts** dictionary,
         template of the chart related to page (.html) and its data merge and sending to render_template.
     """
-    def __init__(self, samples, reals):
+    def __init__(self, samples, real):
         """
         The main perspective here to store each chart serialized .json file into the self.graph_json
-        e.g. index.html has customer_segmentation chart
-            self.graph_json['charts']['customer_segmentation'] = {'trace': [], 'layout': {}}
+        e.g. index.html has segmentation chart
+            self.graph_json['charts']['segmentation'] = {'trace': [], 'layout': {}}
         If each chart needs any specific change pls check **charts** dictionary.
         :param samples: built-in data sets in .csv format, converted to pandas data-frame
         :param reals: created ports in .csv format, converted to pandas data-frame
         """
         self.samples = samples
-        self.reals = reals
+        self.reals = real
         self.graph_json = {}
         self.monitor = get_monitors()[0]
-        self.descriptive_stats = ["weekly_average_session_per_user", "weekly_average_order_per_user",
-                                  "purchase_amount_distribution", "weekly_average_payment_amount"]
-        self.abtest_promotions = ["order_and_payment_amount_differences",
-                                  "promotion_comparison",
-                                  "promotion_usage_before_after_amount_accept",
-                                  "promotion_usage_before_after_amount_reject",
-                                  "promotion_usage_before_after_orders_accept",
-                                  "promotion_usage_before_after_orders_reject"]
+        self.descriptive_stats = descriptive_stats
+        self.abtest_promotions = abtest_promotions
 
-    def get_data(self, chart):
+    def get_data(self, chart, index):
         """
         checks both sample and real data. If there is real data for the related KPI or chart fetches from sample_data.
-        :param chart: e.g. rfm, customer_segmentation, ...
+        :param chart: e.g. rfm, segmentation, ...
         :return:
         """
         try:
-            if chart not in list(self.reals.keys()):
-                return self.samples[chart]
+            if chart not in list(self.reals.kpis.keys()):
+                if not self.reals.check_for_the_report(report_name=chart, index=index):
+                    return self.samples[chart], False
+                else:
+                    return self.reals.fetch_report(report_name=chart, index=index), True
             else:
-                return self.reals[chart]
+                return self.reals.kpis[index][chart], True
         except Exception as e:
             print()
-            return self.samples[chart]
+            return self.samples[chart], False
 
     def get_widths_heights(self, target, chart):
-        if chart == 'customer_segmentation':
+        if chart == 'segmentation':
             if self.monitor.height == 1080 and self.monitor.width == 1920:
                 width, height = 720, 450
             if self.monitor.height == 1050 and self.monitor.width == 1680:
@@ -367,7 +343,7 @@ class Charts:
                 width, height = 700, 600
             if self.monitor.height == 1050 and self.monitor.width == 1680:
                 width, height = 1000, 600
-        if chart in ['customer_segmentation', 'rfm']:
+        if chart in ['segmentation', 'rfm']:
             charts[target]['charts'][chart]['layout']['width'] = width
             charts[target]['charts'][chart]['layout']['height'] = height
 
@@ -383,11 +359,11 @@ class Charts:
     def ab_test_of_trace(self, data, chart):
         """
         "order_and_payment_amount_differences",
-                                  "promotion_comparison",
-                                  "promotion_usage_before_after_amount_accept",
-                                  "promotion_usage_before_after_amount_reject",
-                                  "promotion_usage_before_after_orders_accept",
-                                  "promotion_usage_before_after_orders_reject"
+        "promotion_comparison",
+        "promotion_usage_before_after_amount_accept",
+        "promotion_usage_before_after_amount_reject",
+        "promotion_usage_before_after_orders_accept",
+        "promotion_usage_before_after_orders_reject"
         """
         _trace = []
         if chart.split("_")[1] == 'usage':
@@ -399,7 +375,7 @@ class Charts:
                 ]
         if chart == 'order_and_payment_amount_differences':
             data = data.rename(columns={"diff": "Difference of Order (Before Vs After)",
-                                 "diff_amount": "Difference of Payment Amount (Before Vs After)"})
+                                        "diff_amount": "Difference of Payment Amount (Before Vs After)"})
             _trace = go.Scatter(x=data['Difference of Order (Before Vs After)'],
                                 y=data['Difference of Payment Amount (Before Vs After)'], mode='markers',
                                 marker=dict(color=list(range(len(data))), colorscale='Rainbow'))
@@ -413,15 +389,15 @@ class Charts:
                                 name='markers')
         return _trace
 
-    def get_trace(self, trace, chart):
+    def get_trace(self, trace, chart, index):
         """
         fill more variables on charts dictionary. At this process, data sets are stored in the trace.
 
         :param trace: e.g. [{go.Scatter()}]
-        :param chart: e.g. rfm, customer_segmentation, ...
+        :param chart: e.g. rfm, segmentation, ...
         :return:
         """
-        _data = self.get_data(chart)  # collect data
+        _data, is_real_data = self.get_data(chart, index)  # collect data
         # data for line chart daily(sum), weekly(sum), houry(average), monthly(sum)
         if chart in ["_".join([t, 'orders']) for t in time_periods]:
             try:
@@ -434,7 +410,7 @@ class Charts:
             except Exception as e:
                 print(e)
         # from the customer segmentation Human readable segments with their sizes
-        if chart == 'customer_segmentation':
+        if chart == 'segmentation':
             trace['labels'] = list(_data['segments'])
             trace['values'] = list(_data['value'])
         # sampled clients of numerical recency, monetary and frequency values
@@ -499,10 +475,10 @@ class Charts:
             x_column = 'products' if 'products' in chart.split("_") else 'category'
             trace['x'], trace['y'] = list(_data[x_column]), list(_data['order_count'])
 
-        return self.decide_trace_type(chart=chart, trace=trace)
+        return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 
-    def get_layout(self, layout, chart, annotation=None):
-        _data = self.get_data(chart)
+    def get_layout(self, layout, chart, index, annotation=None):
+        _data = self.get_data(chart, index)[0]
         if 'cohort' in chart.split("_"):
             _t = chart.split("_")[0]
             _t_str = ' day' if _t == 'daily' else ' week'
@@ -531,16 +507,16 @@ class Charts:
 
         return [layout] if 'usage' not in chart.split("_") else layout
 
-    def get_values(self, kpi):
+    def get_values(self, kpi, index):
         """
         get data related KPI
         :param kpi: .e.g.total_orders, total_visitors, ...
         :return: dictionary with KPIs in keys
         """
-        _data = self.get_data(kpi).to_dict('results')[0]
+        _data = self.get_data(kpi, index)[0].to_dict('results')[0]
         return _data
 
-    def get_chart(self, target):
+    def get_chart(self, target, index='main'):
         """
         related to 'target', charts and KPIs are collected in order to show on-page.
         The main aim here, fill the self.graph_json dictionary with serialized dictionaries.
@@ -550,18 +526,21 @@ class Charts:
         # collecting charts
         self.graph_json['charts'] = {}
         for c in charts[target]['charts']:
-            trace = self.get_trace(charts[target]['charts'][c]['trace'], c)
+            trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index)
             self.get_widths_heights(chart=c, target=target)
             layout = self.get_layout(charts[target]['charts'][c]['layout'], c,
-                                     annotation=charts[target]['charts'][c]['annotation'] if target == 'cohort' else None)
+                                     annotation=charts[target]['charts'][c]['annotation'] if target == 'cohort' else None, index=index)
             self.graph_json['charts'][c] = {'trace': trace,
-                                            'layout': layout}
+                                            'layout': layout, 'is_real_data': is_real_data}
         # collecting KPIs
         self.graph_json['kpis'] = {}
         for k in charts[target]['kpis']:
-            _obj = self.get_values(k)
+            _obj = self.get_values(k, index)
             for _k in charts[target]['kpis'][k]:
-                self.graph_json['kpis'][_k] = '{:,}'.format(int(_obj[_k])).replace(",", ".")
+                try:
+                    self.graph_json['kpis'][_k] = '{:,}'.format(int(_obj[_k])).replace(",", ".")
+                except Exception as e:
+                    print()
         return self.graph_json
 
     def get_json_format(self, chart):
