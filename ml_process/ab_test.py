@@ -159,15 +159,12 @@ class ABTests:
             self.products['price'] = self.products['price'].apply(lambda x: float(x))
             self.products['session_start_date'] = self.products['session_start_date'].apply(lambda x: convert_to_day(x))
 
-    def get_customer_segments(self, date):
+    def get_customer_segments(self):
         """
         Collecting segments of customers from the reports index.
         :param date: given report date
         """
-        date = current_date_to_day().isoformat() if date is None else date
-        print(self.cs.fetch(start_date=convert_dt_to_day_str(date))[['client', 'segments']])
-        self.data = pd.merge(self.data, self.cs.fetch(start_date=convert_dt_to_day_str(date))[['client', 'segments']],
-                             on='client', how='left')
+        self.data = pd.merge(self.data, self.cs.fetch()[['client', 'segments']], on='client', how='left')
 
     def get_time_period(self, transactions, date_column):
         """
@@ -230,7 +227,6 @@ class ABTests:
         :param day: interval date which splits dates into 2 parts before and after.
         :return: datetime
         """
-        print(type(day), type(self.max_date))
         if day <= self.max_date:
             return day
         else:
@@ -239,7 +235,7 @@ class ABTests:
     def generate_before_after_dates(self, date):
         """
         There 3 types of time periods to calculate dates.
-            dasy, weeks, months
+            days, weeks, months
         :param date: current date
         """
         date = self.before_after_day_decision(date)
@@ -359,7 +355,6 @@ class ABTests:
                 print("group *******", group[1])
                 _df = self.execute_test_grouping(data=group[0], metric=metric, feature=feature)
                 _df['groups'] = group[1]
-                print(_df.head())
                 dfs.append(_df)
             return pd.concat(dfs)
 
@@ -443,7 +438,6 @@ class ABTests:
         if is_before_after:
             name += 'before_after_'
         name += fetaure
-        print(name)
         return name
 
     def create_before_after_test(self, date):
@@ -473,7 +467,6 @@ class ABTests:
                 self.decision_of_test(f, groups[0], groups[1])
                 _name = self.name_of_test(is_before_after=True, fetaure=f, group=groups[0], time_period=groups[1])
                 self.insert_into_reports_index(self.decision,
-                                               date,
                                                abtest_type=_name,
                                                index=self.order_index)
 
@@ -514,13 +507,11 @@ class ABTests:
                 self.promotion_comparison = pd.concat([self.promotion_comparison,
                                                        self.execute_promotion_comparison_test(p)])
             self.insert_into_reports_index(self.promotion_comparison,
-                                           date,
                                            abtest_type='promotion_comparison',
                                            index=self.order_index)
 
     def insert_into_reports_index(self,
                                   abtest,
-                                  start_date,
                                   abtest_type,
                                   index='orders'):
         """
@@ -540,7 +531,7 @@ class ABTests:
         :param index: dimensionality of data index orders_location1 ;  dimension = location1
         """
         list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
+                        "report_date": convert_to_day(current_date_to_day()).isoformat(),
                         "report_name": "abtest",
                         "index": get_index_group(index),
                         "report_types": {"abtest_type": abtest_type},
@@ -553,14 +544,14 @@ class ABTests:
         :param date: recent date for query data
         :return:
         """
-        date = str(current_date_to_day())[0:10] if date is None else date
-        self.get_orders_data(end_date=date)
-        self.get_products(end_date=date)
+        _date = str(current_date_to_day())[0:10] if date is None else date
+        self.get_orders_data(end_date=_date)
+        self.get_products(end_date=_date)
         self.data = self.get_time_period(self.data, "session_start_date")
         self.assign_organic_orders()
         self.get_max_order_date()
-        self.get_customer_segments(date=date)
-        self.generate_before_after_dates(convert_to_day(date))
+        self.get_customer_segments()
+        self.generate_before_after_dates(convert_to_day(_date))
         self.generate_test_groups()
         self.create_before_after_test(date)
         self.create_promotion_comparison_test(date)
