@@ -205,6 +205,10 @@ class ProductAnalytics:
         self.product_pairs = self.product_pairs[self.product_pairs[0] != self.product_pairs[1]]
         self.product_pairs = self.product_pairs.groupby([0, 1]).agg({"total_pairs": "sum"}).reset_index()
         self.product_pairs = self.product_pairs.sort_values('total_pairs', ascending=False)
+        self.product_pairs = self.product_pairs.rename(columns={0: "pair_1", 1: "pair_2"})
+        self.product_pairs['product_pair'] = self.product_pairs.apply(
+            lambda row: " - ".join(list(sorted([row['pair_1'], row['pair_2']]))), axis=1)
+        self.product_pairs = self.product_pairs.groupby("product_pair").agg({"total_pairs": "first"}).reset_index()
         return self.product_pairs
 
     def execute_product_analysis(self, end_date=None):
