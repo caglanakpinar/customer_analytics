@@ -1,0 +1,11 @@
+segments,accept_Ratio,mean_control,mean_validation,is_orders_increased_per_segments_per_monthly
+can`t lose them,1.0,0.0,0.0,False
+champions,1.0,0.0,0.0,False
+lost,1.0,0.0,0.0,False
+new customers,1.0,0.0,0.0,False
+promising,0.5666666666666667,1.2222222222222219,1.1361111111111106,False
+need attention,0.466666666666666,1.161111111111111,1.0,False
+at risk,0.4499999999999995,1.3333333333333333,1.0,False
+potential loyalist,0.3666666666666669,3.477243589743589,2.7464743589743588,False
+others,0.033333333333333375,1.3432539682539681,1.9999999999999991,True
+loyal customers,0.0,11.744858156028373,4.393735224586289,False
