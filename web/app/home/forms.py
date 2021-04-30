@@ -98,11 +98,11 @@ charts = {
                                                    yaxis_title='monetary',
                                                    zaxis_title='frequency'))
                            },
-                   "user_order_count_per_order_seq": {'trace': go.Bar(),
-                                                      'layout': go.Layout(
-                                                          xaxis_title="X Axis Title",
-                                                          yaxis_title="Y Axis Title",
-                                                          margin=dict(r=1, t=1))}
+                   "user_counts_per_order_seq": {'trace': go.Bar(),
+                                                  'layout': go.Layout(
+                                                      xaxis_title="X Axis Title",
+                                                      yaxis_title="Y Axis Title",
+                                                      margin=dict(r=1, t=1))}
 
 
 
@@ -210,8 +210,91 @@ charts = {
                               "promotion_usage_before_after_orders_accept", "promotion_usage_before_after_orders_reject"]},
         "kpis": {}
     },
+    "abtest-product": {
+        # Descriptive Statistics
+        "charts": {_f: {'trace': go.Bar(),
+                        'layout': go.Layout(
+                            legend=dict(
+                                orientation="h",
+                                yanchor="bottom",
+                                y=1.02,
+                                xanchor="right",
+                                x=1),
+                            margin=dict(r=1, t=1))} if _f not in ["order_and_payment_amount_differences",
+                                                                  "promotion_comparison"] else
+        {'trace': go.Scatter(x=[], y=[], marker=dict(size=[], color=[]), mode='markers', name='markers'),
+         'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))}
+                   for _f in ["product_usage_before_after_amount_accept",
+                              "product_usage_before_after_amount_reject",
+                              "product_usage_before_after_orders_accept",
+                              "product_usage_before_after_orders_reject"]},
+        "kpis": {}
+    },
+    "abtest-segments": {
+        # Descriptive Statistics
+        "charts": {_f: {'trace': [], 'layout': []} for _f in
+                   ['segments_change_weekly_before_after_orders', 'segments_change_weekly_before_after_amount',
+                    'segments_change_daily_before_after_orders', 'segments_change_daily_before_after_amount',
+                    'segments_change_monthly_before_after_orders', 'segments_change_monthly_before_after_amount']},
+        "kpis": {}
+    },
+    "product_analytic": {
+        # product analytics
+        "charts": {
+            "most_combined_products": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
+            "most_ordered_products": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
+            "most_ordered_categories": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
+        },
+        # not any recent KPIs for now
+        "kpis": {}
+    },
+    "rfm": {
+        # charts - rfm
+        "charts": {"rfm": {"trace": go.Scatter3d(mode='markers',
+                                                 marker=dict(color=None,
+                                                             size=12,
+                                                             colorscale='Viridis',
+                                                             opacity=0.8)),
+                           "layout": go.Layout(width=1000,
+                                               margin=dict(l=1, r=1, t=1, b=1),
+                                               height=600,
+                                               scene=dict(
+                                                   xaxis_title='recency',
+                                                   yaxis_title='monetary',
+                                                   zaxis_title='frequency'))
+                           },
+                   'frequency_recency': {'trace': go.Scatter(y=[], x=[],
+                                                    mode='markers',
+                                                    marker=dict(
+                                                        size=16,
+                                                        color=[],
+                                                        colorscale='Viridis',  # one of plotly colorscales
+                                                        showscale=False
+                                                    )),
+                                         "layout": go.Layout(margin=dict(l=1, r=1, t=1, b=1))},
+                   'monetary_frequency': {'trace': go.Scatter(y=[], x=[],
+                                                    mode='markers',
+                                                    marker=dict(
+                                                        size=16,
+                                                        color=[],
+                                                        colorscale='Viridis',  # one of plotly colorscales
+                                                        showscale=False
+                                                    )),
+                                          "layout": go.Layout(margin=dict(l=1, r=1, t=1, b=1))},
+                   'recency_monetary': {'trace': go.Scatter(y=[], x=[],
+                                                    mode='markers',
+                                                    marker=dict(
+                                                        size=16,
+                                                        color=[],
+                                                        colorscale='Viridis',  # one of plotly colorscales
+                                                        showscale=False
+                                                    )),
+                                        "layout": go.Layout(margin=dict(l=1, r=1, t=1, b=1))}
 
-
+                   },
+        # not any recent KPIs for now
+        "kpis": {}
+    }
 }
 
 
@@ -369,9 +452,10 @@ class Charts:
         if chart.split("_")[1] == 'usage':
             _name = 'order count' if chart.split("_")[-2] == 'orders' else 'purchase amount'
             names = ["before average "+_name+"  per c.", "after average "+_name+" per c."]
+            indicator = chart.split("_")[0]
             _trace = [
-                go.Bar(name=names[0], x=data['promotions'], y=data['mean_control']),
-                go.Bar(name=names[1], x=data['promotions'], y=data['mean_validation'])
+                go.Bar(name=names[0], x=data[indicator], y=data['mean_control']),
+                go.Bar(name=names[1], x=data[indicator], y=data['mean_validation'])
                 ]
         if chart == 'order_and_payment_amount_differences':
             data = data.rename(columns={"diff": "Difference of Order (Before Vs After)",
@@ -387,6 +471,8 @@ class Charts:
                                             color=list(range(len(data))), colorscale='Rainbow'),
                                 mode='markers',
                                 name='markers')
+        if chart.split("_")[1] == 'change':
+            _trace = data.to_dict('results')
         return _trace
 
     def get_trace(self, trace, chart, index):
@@ -457,7 +543,7 @@ class Charts:
                 trace['text'] = list(_data[indicator])
         if chart in self.abtest_promotions:
             trace = self.ab_test_of_trace(_data, chart)
-        if chart == 'user_order_count_per_order_seq':
+        if chart == 'user_counts_per_order_seq':
             trace['x'] = list(_data['order_seq_num'])
             trace['y'] = list(_data['frequency'])
         if chart == 'customer_journey':
@@ -474,6 +560,10 @@ class Charts:
         if 'most' in chart.split("_"):
             x_column = 'products' if 'products' in chart.split("_") else 'category'
             trace['x'], trace['y'] = list(_data[x_column]), list(_data['order_count'])
+        if 'recency' in chart.split("_") or 'frequency' in chart.split("_") or 'monetary' in chart.split("_"):
+            trace['x'] = list(_data[chart.split("_")[0]])
+            trace['y'] = list(_data[chart.split("_")[1]])
+            trace['marker']['color'] = list(_data['segments_numeric'])  # segments are numerical values.
 
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 
