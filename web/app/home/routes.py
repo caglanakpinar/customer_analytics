@@ -83,8 +83,6 @@ def route_template(template):
                                    )
         if template == 'cohorts.html':
             graph_json = charts.get_chart(target='cohort')
-            asd = charts.get_json_format(
-                                       graph_json['charts']['daily_cohort_downloads'])
             return render_template(template,
                                    segment=segment,
                                    daily_cohort_downloads=charts.get_json_format(
@@ -143,12 +141,49 @@ def route_template(template):
                                        graph_json['charts']['promotion_usage_before_after_orders_reject']),
                                    )
 
+        if template == 'abtest-segments.html':
+            graph_json = charts.get_chart(target='abtest-segments')
+            return render_template(template,
+                                   segment=segment,
+                                   sc_weekly_ba_orders=graph_json['charts'][
+                                       'segments_change_weekly_before_after_orders'],
+                                   sc_daily_ba_orders=graph_json['charts']['segments_change_daily_before_after_orders'],
+                                   sc_monthly_ba_orders=graph_json['charts'][
+                                       'segments_change_monthly_before_after_orders'],
+                                   sc_weekly_ba_amount=graph_json['charts'][
+                                       'segments_change_weekly_before_after_amount'],
+                                   sc_daily_ba_amount=graph_json['charts']['segments_change_daily_before_after_amount'],
+                                   sc_monthly_ba_amount=graph_json['charts'][
+                                       'segments_change_monthly_before_after_amount'],
+                                   )
+
+        if template == 'product.html':
+            graph_json = charts.get_chart(target='product_analytic')
+            return render_template(template,
+                                   segment=segment,
+                                   most_combined_products=charts.get_json_format(
+                                       graph_json['charts']['most_combined_products']),
+                                   most_ordered_products=charts.get_json_format(
+                                       graph_json['charts']['most_ordered_products']),
+                                   most_ordered_categories=charts.get_json_format(
+                                       graph_json['charts']['most_ordered_categories'])
+                                   )
+        if template == 'rfm.html':
+            graph_json = charts.get_chart(target='rfm')
+            return render_template(template,
+                                   segment=segment,
+                                   rfm=charts.get_json_format(graph_json['charts']['rfm']),
+                                   frequency_recency=charts.get_json_format(graph_json['charts']['frequency_recency']),
+                                   monetary_frequency=charts.get_json_format(graph_json['charts']['monetary_frequency']),
+                                   recency_monetary=charts.get_json_format(graph_json['charts']['recency_monetary'])
+                                   )
+
         if template == 'index2.html':
             graph_json = charts.get_chart(target='index2')
             return render_template(template,
                                    segment=segment,
                                    rfm=charts.get_json_format(graph_json['charts']['rfm']),
-                                   uoc_order_seq=charts.get_json_format(graph_json['charts']['user_order_count_per_order_seq']))
+                                   uoc_order_seq=charts.get_json_format(graph_json['charts']['user_counts_per_order_seq']))
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html']:
             reqs.execute_request(req=dict(request.form), template=segment)
             reqs.fetch_results(segment, dict(request.form))
