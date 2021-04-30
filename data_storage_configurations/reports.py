@@ -109,6 +109,8 @@ class Reports:
                                'promotion_usage_before_after_orders': ['promotion_usage_before_after_orders_accept',
                                                                        'promotion_usage_before_after_orders_reject']}
         self.p_usage_ba_orders = ['promotion_usage_before_after_orders', 'promotion_usage_before_after_amount']
+        self.rfm_reports = ['rfm', 'segmentation']
+
 
     def connections(self):
         """
@@ -219,17 +221,22 @@ class Reports:
         if r_name in 'kpis':
             query = " report_name == 'stats' and type == ''"
         if r_name in 'rfm':
-            query = " report_name == 'rfm'"
+            query = " report_name in ('rfm', 'segmentation')"
 
         # ab-test reports
         if r_name == 'promotion_comparison':
             query = " report_name == 'abtest' and abtest_type == 'promotion_comparison'"
         if r_name == 'order_and_payment_amount_differences':
             query = " report_name == 'abtest' and abtest_type in ('{}')".format("', '".join(self.p_usage_ba_orders))
+        if r_name in abtest_reports and r_name not in ['promotion_comparison', 'order_and_payment_amount_differences']:
+            query = " report_name == 'abtest' and abtest_type == '{}'".format(r_name)
         if 'usage' in r_name:
             for sub_reports in self.double_reports:
                 if r_name in self.double_reports[sub_reports]:
                     query = " report_name == 'abtest' and abtest_type == '{}'".format(sub_reports)
+
+        if r_name == 'user_counts_per_order_seq':
+            query = " report_name == 'stats' and type == 'user_counts_per_order_seq' "
         return query
 
     def get_promotion_comparison(self, x):
@@ -265,6 +272,10 @@ class Reports:
                 data = data.sort_values(['total_effects'], ascending=False).sort_values(['accept_Ratio'], ascending=True)
                 data = data.rename(columns={"promo_1st_vs_promo_2nd": "total_negative_effects"})
                 data['total_negative_effects'] = data['total_negative_effects'] - data['total_effects']
+        if 'most' in r_name.split("_"):
+            if r_name == 'most_combined_products':
+                data = data.rename(columns={"product_pair": "products", "total_pairs": "order_count"})
+            data = data.sort_values(by='order_count', ascending=False).iloc[:20].reset_index(drop=True)
         return data
 
     def get_order_and_payment_amount_differences(self, reports):
@@ -281,6 +292,13 @@ class Reports:
         return pd.merge(usage_orders,
                         usage_amount.rename(columns={'diff': 'diff_amount'}),
                         on='promotions', how='inner')[['diff_amount', 'diff', 'promotions']]
+
+    def get_rfm(self, reports):
+        rfm = pd.DataFrame(list(reports.query("report_name == '{}'".format(
+                self.rfm_reports[0])).sort_values('report_date',  ascending=False)['data'])[0])
+        segmentation = pd.DataFrame(list(reports.query("report_name == '{}'".format(
+                self.rfm_reports[1])).sort_values('report_date',  ascending=False)['data'])[0])
+        return pd.merge(rfm, segmentation, on='client', how='left')
 
     def get_sample_report_names(self):
         """
@@ -300,10 +318,11 @@ class Reports:
             report['report_date'] = report['report_date'].apply(lambda x: convert_to_day(x))
             if r_name == 'order_and_payment_amount_differences':
                 report_data = self.get_order_and_payment_amount_differences(report)
-            else:
+            if r_name == 'rfm':
+                report_data = self.get_rfm(report)
+            if r_name not in ['order_and_payment_amount_differences', 'rfm']:
                 report = report.sort_values('report_date', ascending=False)
                 report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
-
         return report_data
 
     def get_report_count(self, es_tag):
