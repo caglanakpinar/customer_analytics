@@ -111,7 +111,6 @@ class Reports:
         self.p_usage_ba_orders = ['promotion_usage_before_after_orders', 'promotion_usage_before_after_amount']
         self.rfm_reports = ['rfm', 'segmentation']
 
-
     def connections(self):
         """
         connections to sqlite db. tables are;
