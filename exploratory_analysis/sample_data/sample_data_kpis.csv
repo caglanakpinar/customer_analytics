@@ -1,2 +1,2 @@
-,total_orders,total_visits,total_unique_visitors,total_unique_ordered_clients,total_revenue,total_discount
+Unnamed: 0,total_orders,total_visits,total_visitors,total_unique_ordered_clients,total_revenue,total_discount
 0,400832,1000000,574096,400832,11907628.640000515,611471.405149993

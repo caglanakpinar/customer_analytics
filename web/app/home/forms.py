@@ -82,7 +82,7 @@ charts = {
              },
         ## TODO  organic - promoted ratio
         # KPIs - total_orders, total_visits, total_unique_visitors. index.html left top
-        "kpis": {"kpis": ['total_orders', 'total_visits', 'total_revenue', 'total_discount']}},
+        "kpis": {"kpis": ['total_orders', 'total_visitors', 'total_revenue', 'total_discount']}},
     # index2.html of Charts and KPIs
     "index2": {
         # charts - rfm
