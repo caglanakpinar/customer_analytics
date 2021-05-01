@@ -20,19 +20,19 @@
 										<h5 class="card-title mb-1">Promotion Comparison</h5>
 																			<div class="row">
 										<h6 class="card-subtitle text-muted mb-1">- Y-axis represents total number Test Accepted Count.</h6>
-									</div>
-									<div class="row">
-										<h6 class="card-subtitle text-muted mb-1">- X-axis represents Test Reject Ratio.</h6>
-									</div>
-									<div class="row">
-										<h6 class="card-subtitle text-muted mb-1">- Each dot on scatter plot represents each promotion.</h6>
-									</div>
-									<div class="row">
-										<h6 class="card-subtitle text-muted mb-1">- This is a comparison of each promotion pairs. Each promotion pair is tested and  Each dot represents 1st promotion of each promotion pairs.</h6>
-									</div>
-									<div class="row">
-										<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> More valuable Promotions are the dots which have less Reject Ratio and the more number of Accept Count. </strong></h6>
-									</div>
+										</div>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- X-axis represents Test Reject Ratio.</h6>
+										</div>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- Each dot on scatter plot represents each promotion.</h6>
+										</div>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- This is a comparison of each promotion pairs. Each promotion pair is tested and  Each dot represents 1st promotion of each promotion pairs.</h6>
+										</div>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> More valuable Promotions are the dots which have less Reject Ratio and the more number of Accept Count. </strong></h6>
+										</div>
 									</div>
 
 									<div  id="promo_compare_id" class="plotly-gra ph-div" style="height:400px;"></div>
@@ -53,7 +53,7 @@
 									</div>
 
 									<div class="row">
-											<h6 class="card-subtitle text-muted mb-1">- Differences are calculated between customers of purchase before and using the promotion.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- Differences are calculated between customers of purchase before and after using the promotion.</h6>
 									</div>
 
 
@@ -70,8 +70,15 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Before After Customers of Average Purchase <strong> Payment Amount</strong> Test (Test Accepted!)</h5>
+										<h5 class="card-title">Before - After Time Periods Customers' of Average Purchase <strong> Payment Amount</strong> Test <strong> (Test Accepted!)</strong></h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Avg. purchase amount  <strong style="color:green;"> Before the promoted Order</strong> for each promotion of usage per customer.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Avg. purchase amount  <strong style="color:green;"> After the promoted Order</strong> for each promotion of usage per customer.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Accepted :</strong>  <strong style="color:green;" > Significant Increase</strong> on Avg. Purchase Amounts after the Promoted order.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per promotion).</h6>
+										</div>
 									</div>
+
 									<div class="card-body">
 										<div id="promo_usage_ba_a_accept_id" class="plotly-gra ph-div" style="height:400px;"></div>
 
@@ -81,7 +88,13 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Before After Customers of Average Purchase <strong> Payment Amount</strong> Test (Test Rejected!)</h5>
+										<h5 class="card-title">Before - After Time Periods Customers' of Average Purchase <strong> Payment Amount</strong> Test <strong> (Test Rejected!)</strong> </h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Avg. purchase amount  <strong style="color:green;"> Before the promoted Order</strong> for each promotion of usage per customer.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Avg. purchase amount  <strong style="color:green;"> After the promoted Order</strong> for each promotion of usage per customer.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Rejected :</strong>  <strong style="color:green;" > Significant Decrease</strong> on Avg. Purchase Amounts after the Promoted order.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per promotion).</h6>
+										</div>
 									</div>
 									<div class="card-body">
 										<div  id="promo_usage_ba_a_reject_id" class="plotly-gra ph-div" style="height:400px;"></div>
@@ -93,7 +106,13 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Before After Customers of Average <strong> Purchase Count</strong> Test (Test Accepted!)</h5>
+										<h5 class="card-title">Before - After Time Periods Customers' of <strong> Total Purchase Count</strong> Test  <strong> (Test Accepted!)</strong></h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Total P. Count  <strong style="color:green;"> Before the promoted Order</strong> for each promotion of usage per customer.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Total P. Count  <strong style="color:green;"> After the promoted Order</strong> for each promotion of usage per customer.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Accepted :</strong>  <strong style="color:green;" > Significant Increase</strong> on Total Purchase Counts after the Promoted order.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per promotion).</h6>
+										</div>
 									</div>
 									<div class="card-body">
 										<div id="promo_usage_ba_o_accept_id" class="plotly-gra ph-div" style="height:400px;"></div>
@@ -103,7 +122,13 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Before After Customers of Average  <strong> Purchase Count</strong> Test (Test Rejected!)</h5>
+										<h5 class="card-title">Before - After Time Periods Customers' of <strong>Total Purchase Count</strong> Test <strong> (Test Rejected!)</strong></h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Total P. Count  <strong style="color:green;"> Before the promoted Order</strong> for each promotion of usage per customer.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Total P. Count  <strong style="color:green;"> After the promoted Order</strong> for each promotion of usage per customer.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Rejected :</strong>  <strong style="color:green;" > Significant Decrease</strong> on Total Purchase Counts after the Promoted order.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per promotion).</h6>
+										</div>
 									</div>
 									<div class="card-body">
 										<div  id="promo_usage_ba_o_reject_id" class="plotly-gra ph-div" style="height:400px;"></div>
