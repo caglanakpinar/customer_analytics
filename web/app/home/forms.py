@@ -2,15 +2,12 @@ import sys, os, inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
-from flask_wtf import FlaskForm
-from wtforms import TextField, PasswordField
-from wtforms.validators import InputRequired, Email, DataRequired
-import pandas as pd
-from numpy import array, unique
-import json
-import datetime
 
-from os.path import abspath, join, dirname, basename, exists
+import pandas as pd
+from numpy import array
+import json
+
+from os.path import join, dirname, exists
 from os import listdir
 import plotly.graph_objs as go
 import plotly
@@ -323,13 +320,20 @@ class SampleData:
 
 class RealData:
     """
-    Just, For now, it is the same as Samples. (Work in progress)
+    After the scheduling process is done,
+    reports are created on the temporary folder with a folder name 'build_in_reports'.
+    This collects all reports of  created .csv files from 'build_in_reports'.
+    Each dimension and whole data ('main' folder name) will be stored separately.
+    Each dimension of reports will be created as .csv file.
     """
     kpis = {}
     es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
     folder = join(es_tag['directory'], "build_in_reports", "")
     
     def check_for_the_report(self, report_name, index='main'):
+        """
+        checks for 'build_in_reports' while platform is running.
+        """
         try:
             es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
             return exists(join(es_tag['directory'], "build_in_reports", index, report_name + ".csv"))
@@ -337,12 +341,17 @@ class RealData:
             return False
 
     def fetch_report(self, report_name, index='main'):
+        """
+        checks for 'build_in_reports' while platform is running and collect the selected report.
+        """
         try:
             es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
             return pd.read_csv(join(es_tag['directory'], "build_in_reports", index, report_name + ".csv"))
         except:
             return False
-    asd = listdir(dirname(folder))
+
+    # this will collect the report in the 'build_in_reports'.
+    # whole data of reports will be stored in 'main' folder. dimensions are stored seperatelly
     for index in listdir(dirname(folder)):
         _folder = join(es_tag['directory'], "build_in_reports", index, "")
         kpis[index] = {}
@@ -350,13 +359,16 @@ class RealData:
             for f in listdir(dirname(_folder)):
                 try:
                     kpis[index][f.split(".")[0]] = pd.read_csv(join(_folder, f))
-                except:
-                    print()
-        except:
-            print()
+                except Exception as e:
+                    print(e)
+        except Exception as e:
+            print(e)
             
 
 def cohort_human_readable_form(cohort, tp):
+    """
+    cohorts data is manipulated in or order to convert more readable format.
+    """
     cohort_updated = pd.DataFrame()
     cohort_days = [int(i) for i in list(set(list(cohort.columns)) - set([tp]))]
 
