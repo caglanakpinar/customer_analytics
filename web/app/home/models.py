@@ -63,6 +63,10 @@ class RouterRequest:
         return _query
 
     def check_for_table_exits(self, table):
+        """
+        checking sqlite if table is created before. If it not, table is created.
+        :params table: checking table name in sqlite
+        """
         if table not in list(self.tables['name']):
             con.execute(self.sqlite_queries[table])
 

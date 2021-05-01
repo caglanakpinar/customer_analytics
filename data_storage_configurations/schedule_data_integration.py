@@ -146,30 +146,44 @@ class Scheduler:
 
     def query_schedule_status(self):
         """
-        When the process is scheduled for daily, '12 hours', before it starts, checks scheduling is still 'on' or not deleted.
+        When the process is scheduled for daily, '12 hours',
+        before it starts, checks scheduling is still 'on' or not deleted.
         """
         return pd.read_sql("SELECT * FROM schedule_data ", con)
 
     def collect_dimensions_for_data_works(self):
         """
-
+        checking if dimensions are created in orders index.
+        This will help us to create Exploratory Analysis and ML Works or each dimension include whole data (index='main')
         """
-        _res = self.query_es.es.search(index='orders', body={"size": self.query_es.query_size, "from": 0, '_source': False,
-                                                             "fields": ["dimension"]})['hits']['hits']
+        _res = self.query_es.es.search(index='orders',
+                                       body={"size": self.query_es.query_size,
+                                             "from": 0,
+                                             '_source': False,
+                                             "fields": ["dimension"]})['hits']['hits']
         _res = [r['fields']['dimension'][0] for r in _res]
         self.unique_dimensions = unique(_res).tolist()
 
-    def check_for_table_exits(self, table, query=None):
+    def check_for_table_exits(self, table):
+        """
+        checking sqlite if table is created before. If it not, table is created.
+        :params table: checking table name in sqlite
+        """
+
         try:
             if table not in list(self.tables['name']):
-                if query is None:
-                    con.execute(self.sqlite_queries[table])
-                else:
-                    con.execute(query)
+                con.execute(self.sqlite_queries[table])
         except Exception as e:
             print(e)
 
     def insert_query(self, table, columns, values):
+        """
+        insert sqlite tables with given table column and values
+
+        :param table: tables to be inserted the row
+        :param columns: tables of columns (all columns)
+        :param values: values for each column in the table
+        """
         values = [values[col] for col in columns]
         _query = "INSERT INTO " + table + " "
         _query += " (" + ", ".join(columns) + ") "
@@ -178,6 +192,9 @@ class Scheduler:
         return _query
 
     def logs_update(self, logs):
+        """
+        logs table in sqlite table is updated
+        """
         try:
             self.check_for_table_exits(table='logs')
         except Exception as e:
@@ -191,11 +208,6 @@ class Scheduler:
                                           ))
         except Exception as e:
             print(e)
-
-    def check_number_of_days(self):
-        """
-
-        """
 
     def create_schedule(self):
         tag = self.query_schedule_status()
@@ -231,6 +243,7 @@ class Scheduler:
         """
         tag = self.query_schedule_status().to_dict('results')[0]
         accept = True
+        # if time period is '12_hours', checking for time it is time for execute Exploratory Analysis and ML Works
         if tag['time_period'] == '12_hours':
             if tag['max_date_of_order_data'] != 'None':
                 time_diff = (convert_to_day(current_date_to_day()) -
@@ -238,6 +251,7 @@ class Scheduler:
                 if int(time_diff) == 0:
                     accept = False
         if accept:
+            # First execute whole data for EA and ML Works
             try:
                 print("Exploratory Analysis are initialized !")
                 print("arguments : ")
@@ -258,12 +272,13 @@ class Scheduler:
                 self.logs_update(logs={"page": "data-execute",
                                        "info": self.fail_log_for_ml + str(e)[:max(len(str(e)), 100)].replace("'", " "),
                                        "color": "red"})
-
+            # Second execute EA and ML Works per dimension. Before execution, checking for dimensions
             try:
+                # checks if there is executable dimensions are stored in 'orders' index.
                 self.collect_dimensions_for_data_works()
                 if len(self.unique_dimensions) > 1:
                     print("Execute Ml Works and Exploratory Analysis for the Dimensions!")
-                    for dim in self.unique_dimensions:
+                    for dim in self.unique_dimensions: # iteratevely execute EA and ML works for each dimension
                         print("*" * 20)
                         print("*"*10, " ", " Dimension Name : ", dim, "*"*10)
                         for i in [{"executor": create_exploratory_analysis,
@@ -299,8 +314,8 @@ class Scheduler:
         Sequentially, this is the process of scheduling which is starting with data insert into the indexes.
         The it continues with data works which includes ml works and exploratory analsis.
         """
-        self.create_index.execute_index()
-        self.create_index = None
+        self.create_index.execute_index()  # create or update Orders and Downloads indexes
+        self.create_index = None  # each schedule most be unique. Otherwise, class must be regenerated.
         self.create_index = CreateIndex(data_connection_structure=self.data_connection_structure,
                                         data_columns=self.data_columns,
                                         actions=self.actions)
@@ -321,7 +336,7 @@ class Scheduler:
                During the whole process, It also checks the 'status' column on the 'schedule_data' table.
         """
         s = self.create_schedule()
-        if s == 'once':
+        if s == 'once':  # no need to schedule for once triggering process
             print(self.es_tag, " - triggered for once !!!")
             self.jobs()
         else:
@@ -329,7 +344,7 @@ class Scheduler:
             while self.schedule:
                 schedule.run_pending()
                 try:
-                    tag = self.query_schedule_status()
+                    tag = self.query_schedule_status()  # when schedule record is removed or it is canceled, returns 0
                     if len(tag) == 0:
                         print("schedule is cancelled")
                         self.schedule = False
