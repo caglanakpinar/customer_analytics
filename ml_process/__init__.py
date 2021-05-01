@@ -4,9 +4,9 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from ml_process.customer_segmentation import CustomerSegmentation
-# from ml_process.clv_prediction import CLVPrediction
+from ml_process.clv_prediction import CLVPrediction
 from ml_process.ab_test import ABTests
-# from ml_process.anomaly_detection import Anomaly
+from ml_process.anomaly_detection import Anomaly
 
 ml_configs = {"date": None,
               'time_period': 'weekly',
@@ -21,9 +21,9 @@ ml_configs = {"date": None,
           }
 
 mls = {'segmentation': CustomerSegmentation,
-       # 'clv_prediction': CLVPrediction,
+       'clv_prediction': CLVPrediction,
        'abtest': ABTests,
-       # 'anomaly': Anomaly
+       'anomaly': Anomaly
        }
 
 
@@ -32,11 +32,11 @@ def create_mls(configs):
     print("*" * 5, " Customer Segmentation ", "*" * 5)
     ea['segmentation'].execute_customer_segment(start_date=configs['date'])
     print("*" * 5, " CLV Prediction ", "*" * 5)
-    # ea['clv_prediction'].execute_clv(start_date=configs['date'], time_period=configs['time_period'])
+    ea['clv_prediction'].execute_clv(start_date=configs['date'], time_period=configs['time_period'])
     print("*" * 5, " A/B Test ", "*" * 5)
     ea['abtest'].build_in_tests(date=configs['date'])
     print("*" * 5, " Anomaly Detection ", "*" * 5)
-    # ea['anomaly'].execute_anomaly(date=configs['date'])
+    ea['anomaly'].execute_anomaly(date=configs['date'])
 
 
 def query_mls(configs, queries, ea):
