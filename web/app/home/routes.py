@@ -123,7 +123,7 @@ def route_template(template):
                                    weekly_average_payment_amount=charts.get_json_format(graph_json['charts']['weekly_average_payment_amount'])
                                    )
 
-        if template in ['abtest-products.html', 'abtest-promotion.html', 'abtest-segments.html']:
+        if template == 'abtest-promotion.html':
             graph_json = charts.get_chart(target='abtest-promotion')
             return render_template(template,
                                    segment=segment,
@@ -139,6 +139,19 @@ def route_template(template):
                                        graph_json['charts']['promotion_usage_before_after_orders_accept']),
                                    promo_use_ba_o_reject=charts.get_json_format(
                                        graph_json['charts']['promotion_usage_before_after_orders_reject']),
+                                   )
+        if template == 'abtest-product.html':
+            graph_json = charts.get_chart(target='abtest-product')
+            return render_template(template,
+                                   segment=segment,
+                                   product_use_ba_a_accept=charts.get_json_format(
+                                       graph_json['charts']['product_usage_before_after_amount_accept']),
+                                   product_use_ba_a_reject=charts.get_json_format(
+                                       graph_json['charts']['product_usage_before_after_amount_reject']),
+                                   product_use_ba_o_accept=charts.get_json_format(
+                                       graph_json['charts']['product_usage_before_after_orders_accept']),
+                                   product_use_ba_o_reject=charts.get_json_format(
+                                       graph_json['charts']['product_usage_before_after_orders_reject'])
                                    )
 
         if template == 'abtest-segments.html':
@@ -184,7 +197,9 @@ def route_template(template):
                                    segment=segment,
                                    rfm=charts.get_json_format(graph_json['charts']['rfm']),
                                    uoc_order_seq=charts.get_json_format(graph_json['charts']['user_counts_per_order_seq']))
-        if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html']:
+        if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html', 'rfm.htm',
+                            'product.html', 'abtest-segments.html', 'abtest-product.html', 'abtest-promotion.html',
+                            'stats-desc.html', 'stats-purchase.htm', 'cohorts.html']:
             reqs.execute_request(req=dict(request.form), template=segment)
             reqs.fetch_results(segment, dict(request.form))
             values = reqs.message
