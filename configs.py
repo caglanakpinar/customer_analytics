@@ -198,6 +198,11 @@ abtest_promotions = ["order_and_payment_amount_differences",
                      "promotion_usage_before_after_orders_accept",
                      "promotion_usage_before_after_orders_reject"]
 
+abtest_products = ["product_usage_before_after_amount_accept",
+                   "product_usage_before_after_amount_reject",
+                   "product_usage_before_after_orders_accept",
+                   "product_usage_before_after_orders_reject"]
+
 
 abtest_reports = ['product_usage_before_after_amount',
                   'product_usage_before_after_orders', 'promotion_comparison',
