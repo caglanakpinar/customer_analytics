@@ -45,7 +45,7 @@
 								<div class="card" style="height:180px;">
 									<div class="card-body">
 										<h5 class="card-title mb-4">Visitors</h5>
-										<h1 class="mt-1 mb-3">{{ kpis.total_unique_visitors }}</h1>
+										<h1 class="mt-1 mb-3">{{ kpis.total_visitors }}</h1>
 										<div class="mb-1">
 											<span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> 5.25% </span>
 											<span class="text-muted">Since last week</span>
@@ -87,12 +87,12 @@
 
 						</div>
 
-						<div name="monthly" class="card-body py-3" >
+						<div class="card-body py-3" >
 							<!--<div class="chart chart-sm">
 									<canvas id="chartjs-dashboard-line"></canvas>
 							</div>
 							-->
-							<div id="chart_asd" class="chart" style="height:200px;"></div>
+							<div id="chart_asd2" class="chart" style="height:200px;"></div>
 						</div>
 					</div>
 				</div>
@@ -138,7 +138,7 @@
 							<h5 class="card-title mb-0">Customer Segmentation</h5>
 						</div>
 						<div class="card-body px-5" style="height:400px;">
-							<div name="cust_segment" id="segmentation" style="height:400px;"></div>
+							<div  id="segmentation" class="chart" style="height:400px;"></div>
 
 						</div>
 					</div>
@@ -173,36 +173,27 @@
 				<div class="col-12 col-lg-8 col-xxl-6 d-flex">
 					<div class="card flex-fill">
 						<div class="card-header">
-
 							<h5 class="card-title mb-0">Customer Journey</h5>
 						</div>
-
+						<div  id="cj_id" class="chart" style="height:400px;"></div>
 					</div>
 				</div>
 				<div class="col-12 col-lg-4 col-xxl-3 d-flex">
 					<div class="card flex-fill w-100">
 						<div class="card-header">
 
-							<h5 class="card-title mb-0">Top Products</h5>
+							<h5 class="card-title mb-0">Top 10 Purchased Products</h5>
 						</div>
-						<div class="card-body d-flex w-100">
-							<div class="align-self-center chart chart-lg">
-								<canvas id="chartjs-dashboard-bar"></canvas>
-							</div>
-						</div>
+						<div  id="products_id" class="chart" style="height:400px;"></div>
 					</div>
 				</div>
 				<div class="col-12 col-lg-4 col-xxl-3 d-flex">
 					<div class="card flex-fill w-100">
 						<div class="card-header">
 
-							<h5 class="card-title mb-0">Top Product Categories</h5>
+							<h5 class="card-title mb-0">Top 10 Purchased Categories</h5>
 						</div>
-						<div class="card-body d-flex w-100">
-							<div class="align-self-center chart chart-lg">
-								<canvas id="chartjs-dashboard-bar"></canvas>
-							</div>
-						</div>
+						<div  id="categories_id" class="chart" style="height:400px;"></div>
 					</div>
 				</div>
 			</div>
@@ -215,20 +206,35 @@
 {% endblock content %}
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 	<script>
 
 
 		var graphs = {{charts | safe}};
 
-        Plotly.plot('chart_asd', // the ID of the div, created above
-					graphs.trace,
-					graphs.layout, {displayModeBar: false} || {});
+        Plotly.plot('chart_asd2', // the ID of the div, created above
+					graphs.trace, graphs.layout, {});
 
 		var segments = {{customer_segments | safe}};
 
 		Plotly.plot('segmentation', // the ID of the div, created above
-					segments.trace,
-					segments.layout, {displayModeBar: false} || {});
+					segments.trace, segments.layout,  {});
+
+		var cj = {{customer_journey | safe}};
+
+		Plotly.plot('cj_id', // the ID of the div, created above
+					cj.trace, cj.layout,  {});
+
+		var products = {{top_products | safe}};
+
+		Plotly.plot('products_id', // the ID of the div, created above
+					products.trace, products.layout,  {});
+
+		var categories = {{top_categories | safe}};
+
+		Plotly.plot('categories_id', // the ID of the div, created above
+					categories.trace, categories.layout,  {});
 
 		var kpis = {{kpis | safe}};
 

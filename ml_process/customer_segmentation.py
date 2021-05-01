@@ -112,8 +112,8 @@ class CustomerSegmentation:
         """
         RFM values for segmentation can be fetched from the reports index with related dimensions.
         """
-        configs['rfm']['order_index'] = self.order_index
-        self.rfm = query_exploratory_analysis(configs, {"start_date": date}, "rfm")
+        ea_configs['rfm']['order_index'] = self.order_index
+        self.rfm = query_exploratory_analysis(ea_configs, {"start_date": date}, "rfm")
 
     def segmentation(self, data, metric):
         """
@@ -320,6 +320,7 @@ class CustomerSegmentation:
         self.rfm['segments_numeric'] = self.rfm['segments'].apply(lambda x: self.segments_numerics[x])
 
         self.insert_into_reports_index(self.rfm[self.insert_columns], date=start_date, index=self.order_index)
+        h2o.shutdown(prompt=False)
 
     def fetch(self, start_date=None):
         """

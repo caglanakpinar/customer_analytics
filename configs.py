@@ -164,7 +164,11 @@ orders_index_obj = {'id': 74915741,
    'total_products': 7,
    'session_start_date': '2020-12-16T09:39:11'}
 orders_index_columns = ["id", "date", "actions", "client", "promotion_id",
-                        "payment_amount", "basket", "total_products", "session_start_date", "dimension"]
+                        "payment_amount", "discount_amount", "basket", "total_products",
+                        "session_start_date", "dimension"]
+
+not_required_columns = {"orders": ['discount_amount'], 'downloads': ['signup_date'], 'products': ['category']}
+not_required_default_values = {'discount_amount': float(0.0), 'signup_date': default_query_date, 'category': 'cat_1'}
 
 downloads_index_columns = ["id", "download_date", "signup_date", "client"]
 
@@ -172,4 +176,48 @@ downloads_index_obj = {'id': 89481673,
                        'download_date': '2021-01-01T21:23:15',
                        'signup_date': '2021-01-14T09:22:15',
                        'client': 'u_100006'}
+
+descriptive_stats = ["weekly_average_session_per_user", "weekly_average_order_per_user",
+                     "purchase_amount_distribution", "weekly_average_payment_amount"]
+
+descriptive_reports = ['monthly_orders',
+                       'purchase_amount_distribution',
+                       'weekly_average_order_per_user',
+                       'weekly_average_session_per_user',
+                       'user_counts_per_order_seq',
+                       '',
+                       'weekly_orders',
+                       'weekly_average_payment_amount',
+                       'daily_orders',
+                       'hourly_orders']
+
+abtest_promotions = ["order_and_payment_amount_differences",
+                     "promotion_comparison",
+                     "promotion_usage_before_after_amount_accept",
+                     "promotion_usage_before_after_amount_reject",
+                     "promotion_usage_before_after_orders_accept",
+                     "promotion_usage_before_after_orders_reject"]
+
+abtest_products = ["product_usage_before_after_amount_accept",
+                   "product_usage_before_after_amount_reject",
+                   "product_usage_before_after_orders_accept",
+                   "product_usage_before_after_orders_reject"]
+
+
+abtest_reports = ['product_usage_before_after_amount',
+                  'product_usage_before_after_orders', 'promotion_comparison',
+                  'promotion_usage_before_after_amount',
+                  'promotion_usage_before_after_orders',
+                  'segments_change_daily_before_after_amount',
+                  'segments_change_daily_before_after_orders',
+                  'segments_change_monthly_before_after_amount',
+                  'segments_change_monthly_before_after_orders',
+                  'segments_change_weekly_before_after_amount',
+                  'segments_change_weekly_before_after_orders']
+
+product_analytics = ['most_ordered_products',
+                     'most_ordered_categories',
+                     'hourly_products_of_sales',
+                     'hourly_categories_of_sales',
+                     'most_combined_products']
 

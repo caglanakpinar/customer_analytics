@@ -1,0 +1,147 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} A/B Test Product {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">A/B Test Product</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Before - After Time Periods Customers' of Average Purchase <strong> Payment Amount</strong> Test <strong> (Test Accepted!)</strong></h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Avg. purc. amount  <strong style="color:green;"> Before the basket with selected product</strong> per customer, per product.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Avg. purc. amount  <strong style="color:green;"> After the basket with selected product</strong> per customer, per product</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Accepted :</strong>  <strong style="color:green;" > Significant Increase</strong> on Avg. purc. amount  after the product is selected in ordered basket.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per product).</h6>
+										</div>
+									</div>
+									<div  id="product_usage_ba_a_accept_id" class="plotly-gra ph-div" style="height:400px;"></div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Before - After Time Periods Customers' of Average Purchase <strong> Payment Amount</strong> Test <strong> (Test Rejected!)</strong></h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Avg. purc. amount  <strong style="color:green;"> Before the basket with selected product</strong> per customer, per product.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Avg. purc. amount  <strong style="color:green;"> After the basket with selected product</strong> per customer, per product</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Rejected :</strong>  <strong style="color:green;" > Significant Decrease</strong> on Avg. purc. amount  after the product is selected in ordered basket.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per product).</h6>
+										</div>
+									</div>
+									<div class="card-body">
+										<div  id="product_usage_ba_a_reject_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Before - After Time Periods Customers' of <strong> Total Purchase Count</strong> Test <strong> (Test Accepted!)</strong></h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Total P. Count <strong style="color:green;"> Before the basket with selected product</strong> per customer, per product.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Total P. Count <strong style="color:green;"> After the basket with selected product</strong> per customer, per product</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Accepted :</strong>  <strong style="color:green;" > Significant Increase</strong> on Total P. Counts after the product is selected in ordered basket.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per product).</h6>
+										</div>
+									</div>
+									<div class="card-body">
+										<div  id="product_usage_ba_o_accept_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Before - After Time Periods Customers' of <strong> Total Purchase Count</strong> Test <strong> (Test Rejected!)</strong></h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Total P. Count <strong style="color:green;"> Before the basket with selected product</strong> per customer, per product.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Total P. Count <strong style="color:green;"> After the basket with selected product</strong> per customer, per product</h6>
+											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Rejected :</strong>  <strong style="color:green;" > Significant Decrease</strong> on Total P. Counts after the product is selected in ordered basket.</h6>
+											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per product).</h6>
+										</div>
+									</div>
+									<div class="card-body">
+										<div  id="product_usage_ba_o_reject_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+
+
+			var product_usage_ba_a_a = {{product_use_ba_a_accept | safe}};
+
+	        Plotly.plot('product_usage_ba_a_accept_id', // the ID of the div, created above
+						product_usage_ba_a_a.trace, product_usage_ba_a_a.layout, {});
+
+
+			var product_usage_ba_a_r = {{product_use_ba_a_reject | safe}};
+
+	        Plotly.plot('product_usage_ba_a_reject_id', // the ID of the div, created above
+						product_usage_ba_a_r.trace, product_usage_ba_a_r.layout, {});
+
+
+			var product_usage_ba_o_a = {{product_use_ba_o_accept | safe}};
+
+	        Plotly.plot('product_usage_ba_o_accept_id', // the ID of the div, created above
+						product_usage_ba_o_a.trace, product_usage_ba_o_a.layout, {});
+
+
+			var product_usage_ba_o_r = {{product_use_ba_o_reject | safe}};
+
+	        Plotly.plot('product_usage_ba_o_reject_id', // the ID of the div, created above
+						product_usage_ba_o_r.trace, product_usage_ba_o_r.layout, {});
+
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}

@@ -57,6 +57,14 @@ class CLVPrediction:
         self.clv_fields = ["client", "session_start_date", "payment_amount"]
         self.clv_predictions = pd.DataFrame()
 
+    def dimensional_query(self, boolean_query=None):
+        if dimension_decision(self.order_index):
+            if boolean_query is None:
+                boolean_query = [{"term": {"dimension": self.order_index}}]
+            else:
+                boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
+
     def get_orders_data(self, end_date):
         """
         Purchased orders are collected from Orders Index.
@@ -66,9 +74,11 @@ class CLVPrediction:
         """
         self.query_es = QueryES(port=self.port, host=self.host)
         self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
-        self.query_es.boolean_queries_buildier({"actions.purchased": True})
-        self.query_es.query_builder(fields=self.clv_fields)
-        pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index)).to_csv(self.temp_csv_file, index=False)
+        self.query_es.query_builder(fields=self.clv_fields,
+                                    boolean_queries=self.dimensional_query([{"term": {"actions.purchased": True}}]))
+        _data = pd.DataFrame(self.query_es.get_data_from_es())
+        _data['session_start_date'] = _data['session_start_date'].apply(lambda x: str(convert_to_date(x)))
+        _data.query("session_start_date == session_start_date").to_csv(self.temp_csv_file, index=False)
 
     def insert_into_reports_index(self, clv_predictions, time_period, date=None, index='orders'):
         """

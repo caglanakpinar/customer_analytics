@@ -26,9 +26,16 @@ class Stats:
         -   total_discount
         -   last_week_discount
         -   average_basket_value_per_user
+        -   overall_payment_distribution
+        -   weekly_average_order_per_user
+        -   weekly_average_session_per_user
+        -   weekly_average_payment_amount
         -   daily_orders
         -   weekly_orders
         -   monthly_orders
+        -   purchase_amount_distribution
+
+
 
     !!!!
     ******* ******** *****
@@ -80,28 +87,39 @@ class Stats:
                                   "payment_amount", "discount_amount", "actions.purchased"]
         self.stats = ["total_orders", "last_week_orders",
                       "total_revenue", "last_week_revenue",
-                      "total_visitors", "last_week_visitors",
+                      "total_visits", "last_week_visitors",
                       "total_discount", "last_week_discount",
                       "average_basket_value_per_user",
-                      "daily_orders", "weekly_orders", "monthly_orders"]
+                      "hourly_orders", "daily_orders", "weekly_orders", "monthly_orders",
+                      "purchase_amount_distribution", "weekly_average_order_per_user",
+                      "weekly_average_session_per_user", "weekly_average_payment_amount", "user_counts_per_order_seq"]
         self.last_week = None
-        self.time_periods = ["daily", "weekly", 'monthly']
+        self.time_periods = time_periods# ["daily", "weekly", 'monthly']
         self.orders = pd.DataFrame()
         self.results = {}
+
+    def dimensional_query(self, boolean_query=None):
+        if dimension_decision(self.order_index):
+            if boolean_query is None:
+                boolean_query = [{"term": {"dimension": self.order_index}}]
+            else:
+                boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
 
     def get_data(self, start_date=None):
         """
         query orders index to collect the data with columns that are
         "id", "session_start_date", "client", "payment_amount", "discount_amount", "actions.purchased".
         :param start_date: starting date of query
-        :return: data-farme individual order transactions.
+        :return: data-frame individual order transactions.
         """
         start_date = default_query_date if start_date is None else start_date
         if len(self.orders) == 0:
             self.query_es = QueryES(port=self.port, host=self.host)
             self.query_es.query_builder(fields=self.orders_field_data,
-                                        date_queries=[{"range": {"session_start_date": {"gte": start_date}}}])
-            self.orders = pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index))
+                                        date_queries=[{"range": {"session_start_date": {"gte": start_date}}}],
+                                        boolean_queries=self.dimensional_query())
+            self.orders = pd.DataFrame(self.query_es.get_data_from_es())
             self.orders['date'] = self.orders['session_start_date'].apply(lambda x: convert_to_date(x))
 
     def get_last_week(self):
@@ -118,7 +136,7 @@ class Stats:
         final data; data set with time periods
         """
         for p in list(zip(self.time_periods,
-                     [convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
+                     [convert_str_to_hour, convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
             self.orders[p[0]] = self.orders["date"].apply(lambda x: p[1](x))
 
     def total_orders(self):
@@ -188,13 +206,22 @@ class Stats:
         return np.mean(self.orders[(self.orders['actions.purchased'] == True)].groupby("client").agg(
             {"payment_amount": "mean"}).reset_index()['payment_amount'])
 
+    def hourly_orders(self):
+        """
+        total number of orders per day
+        :return: data-frame
+        """
+        return self.orders[(self.orders['actions.purchased'] == True)].groupby('hourly').agg(
+            {'id': 'count'}).reset_index().rename(columns={'id': 'orders'}).groupby('hourly').agg(
+            {'orders': 'mean'}).reset_index()
+
     def daily_orders(self):
         """
         total number of orders per day
         :return: data-frame
         """
         return self.orders[(self.orders['actions.purchased'] == True)].groupby("daily").agg(
-            {"id": "count"}).reset_index().rename(columns={"id": "order_count"})
+            {"id": "count"}).reset_index().rename(columns={"id": "orders"})
 
     def weekly_orders(self):
         """
@@ -202,7 +229,7 @@ class Stats:
         :return: data-frame
         """
         return self.orders[(self.orders['actions.purchased'] == True)].groupby("weekly").agg(
-            {"id": "count"}).reset_index().rename(columns={"id": "order_count"})
+            {"id": "count"}).reset_index().rename(columns={"id": "orders"})
 
     def monthly_orders(self):
         """
@@ -210,7 +237,61 @@ class Stats:
         :return:
         """
         return self.orders[(self.orders['actions.purchased'] == True)].groupby("monthly").agg(
-            {"id": "count"}).reset_index().rename(columns={"id": "order_count"})
+            {"id": "count"}).reset_index().rename(columns={"id": "orders"})
+
+    def purchase_amount_distribution(self):
+        """
+        Payment values (purchased orders) of Distribution
+        :return: data-frame; payment_bins, orders
+        """
+        _orders = self.orders[(self.orders['actions.purchased'] == True)]
+        _amount = list(_orders['payment_amount'])
+        _min_amount, _max_amount = min(_amount), max(_amount)
+        _range = (_max_amount - _min_amount) / 20
+
+        bins = {}
+        for i in range(0, 20):
+            bins[i] = {"min": _min_amount + (_range * i), "max": _min_amount + (_range * (i + 1))}
+
+        _orders['payment_bins'] = _orders['payment_amount'].apply(
+            lambda x: str(round(_min_amount + (int((x - _min_amount) / _range) * _range), 2)) if x == x else '-')
+        _orders = _orders.groupby("payment_bins").agg({"id": "count"}).reset_index().rename(columns={"id": "orders"})
+        _orders['payment_bins'] = _orders['payment_bins'].apply(lambda x: str(x))
+        return _orders
+
+    def weekly_average_order_per_user(self):
+        """
+        Weekly average order per user
+        """
+        _orders = self.orders[(self.orders['actions.purchased'] == True)].groupby(["weekly", "client"]).agg(
+            {"id": "count"}).reset_index().rename(columns={"id": "orders"})
+        return _orders.groupby("weekly").agg({"orders": "mean"}).reset_index()
+
+    def weekly_average_session_per_user(self):
+        """
+        Weekly average session per user
+        """
+        _orders = self.orders.groupby(["weekly", "client"]).agg(
+            {"id": "count"}).reset_index().rename(columns={"id": "sessions"})
+
+        return _orders.groupby("weekly").agg({"sessions": "mean"}).reset_index()
+
+    def weekly_average_payment_amount(self):
+        """
+        Weekly average payment amount
+        """
+        return self.orders[(self.orders['actions.purchased'] == True)].groupby("weekly").agg(
+            {"payment_amount": "mean"}).reset_index()
+
+    def user_order_count_per_order_seq(self):
+        self.orders['order_seq_num'] = self.orders.sort_values(by=['client', 'date'],
+                                                               ascending=True).groupby(['client'])['client'].cumcount() + 1
+        self.orders_freq = self.orders.query("order_seq_num != 1")
+        self.orders_freq = self.orders_freq.groupby("order_seq_num").agg({"id": "count"}).reset_index()
+        self.orders_freq = self.orders_freq.sort_values(by='order_seq_num', ascending=True)
+        self.orders_freq = self.orders_freq.rename(columns={"id": "frequency"})
+        self.orders_freq['order_seq_num'] = self.orders_freq['order_seq_num'].apply(lambda x: str(x))
+        return self.orders_freq
 
     def execute_descriptive_stats(self, start_date=None):
         """
@@ -224,21 +305,30 @@ class Stats:
         self.get_data(start_date=start_date)
         self.get_time_period()
         self.get_last_week()
-
         for metric in list(zip(self.stats, [self.total_orders, self.last_week_orders,
                                             self.total_revenue, self.last_week_revenue,
                                             self.total_visitors, self.last_week_visitors,
                                             self.total_discount, self.last_week_discount,
                                             self.average_basket_value_per_user,
+                                            self.hourly_orders,
                                             self.daily_orders,
                                             self.weekly_orders,
-                                            self.monthly_orders])):
+                                            self.monthly_orders,
+                                            self.purchase_amount_distribution,
+                                            self.weekly_average_order_per_user, self.weekly_average_session_per_user,
+                                            self.weekly_average_payment_amount,
+                                            self.user_order_count_per_order_seq
+                                            ])):
             print("stat name :", metric[0])
-            if metric[0] in ["weekly_orders", "monthly_orders", "daily_orders"]:
+            if metric[0] in ["hourly_orders", "weekly_orders", "monthly_orders", "daily_orders",
+                             "purchase_amount_distribution", "weekly_average_order_per_user",
+                             "weekly_average_session_per_user",
+                             "weekly_average_payment_amount", "user_counts_per_order_seq"]:
                 self.insert_into_reports_index(metric[1]().to_dict('results'),
                                                start_date,
                                                filters={"type": metric[0]},
                                                index=self.order_index)
+
             else:
                 self.results[metric[0]] = metric[1]()
         self.insert_into_reports_index([self.results],
@@ -277,7 +367,7 @@ class Stats:
         query format;
             queries = {"stats": "overall"}
             queries = {"stats": "weekly_orders"}
-            	weekly	            order_count
+            	weekly	            orders
             0	2020-12-07T00:00:00	3
             1	2020-12-14T00:00:00	36687
             2	2020-12-21T00:00:00	38166

@@ -1,0 +1,126 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} A/B Test Customer Segments {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Recency - Monetary - Frequency Calculations for Customers</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">RFM</h5>
+									</div>
+
+									<div  id="rfm_vals_id" class="plotly-gra ph-div" style="height:400px;"></div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Frequency - Recency</h5>
+									</div>
+									<div class="card-body">
+										<div  id="fr_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Monetary - Frequency</h5>
+									</div>
+									<div class="card-body">
+										<div  id="mf_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Recency - Monetary</h5>
+									</div>
+									<div class="card-body">
+										<div  id="rm_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+			var rfm_vals = {{rfm | safe}};
+
+	        Plotly.plot('rfm_vals_id', // the ID of the div, created above
+						rfm_vals.trace, rfm_vals.layout, {});
+
+			var fr = {{frequency_recency | safe}};
+
+	        Plotly.plot('fr_id', // the ID of the div, created above
+						fr.trace, fr.layout, {});
+
+			var mf = {{monetary_frequency | safe}};
+
+	        Plotly.plot('mf_id', // the ID of the div, created above
+						mf.trace, mf.layout, {});
+
+			var rm = {{recency_monetary | safe}};
+
+	        Plotly.plot('rm_id', // the ID of the div, created above
+						rm.trace, rm.layout, {});
+
+
+
+
+
+
+
+
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}

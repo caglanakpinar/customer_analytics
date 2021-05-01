@@ -112,6 +112,11 @@ class Cohorts:
             transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
         return transactions
 
+    def dimensional_query(self, boolean_query):
+        if dimension_decision(self.order_index):
+            boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
+
     def get_data(self, start_date):
         """
         Collecting orders and downloads data.
@@ -123,16 +128,20 @@ class Cohorts:
         if len(self.orders) == 0:
             self.query_es = QueryES(port=self.port, host=self.host)
             self.query_es.query_builder(fields=self.session_orders_field_data,
-                                        boolean_queries=[{"term": {"actions.purchased": True}}],
+                                        boolean_queries=self.dimensional_query([{"term": {"actions.purchased": True}}]),
                                         date_queries=[{"range": {"session_start_date": {"gte": start_date}}}])
-            self.orders = self.query_es.get_data_from_es(index=self.order_index)
+            self.orders = self.query_es.get_data_from_es()
             self.orders = self.get_time_period(pd.DataFrame(self.orders), 'session_start_date')
         if len(self.downloads) == 0:
             if self.has_download:
+
                 self.query_es = QueryES(port=self.port, host=self.host)
                 self.query_es.query_builder(fields=self.download_field_data)
-                self.downloads = self.query_es.get_data_from_es(index=self.download_index)
-                self.downloads = self.get_time_period(pd.DataFrame(self.downloads), 'download_date')
+                self.downloads = pd.DataFrame(self.query_es.get_data_from_es(index='downloads'))
+                # for the dimensional it is only calculating for dimension of users.
+                if dimension_decision(self.order_index):
+                    self.downloads = self.downloads[self.downloads['client'].isin(list(self.orders['client'].unique()))]
+                self.downloads = self.get_time_period(self.downloads, 'download_date')
                 self.downloads['download_date'] = self.downloads['download_date'].apply(lambda x: convert_to_date(x))
 
     def convert_cohort_to_readable_form(self, cohort, time_period, time_period_back=None):
@@ -199,7 +208,6 @@ class Cohorts:
                                             columns='downloads_to_first_order_'+p,
                                             aggfunc={"client": lambda x: len(np.unique(x))}
                                             ).reset_index().rename(columns={"client": "client_count"})
-
                 self.cohorts['downloads_to_1st_order'][p] = self.convert_cohort_to_readable_form(
                 self.cohorts['downloads_to_1st_order'][p], time_period=p)
 
@@ -330,11 +338,14 @@ class Cohorts:
 
         x_axis, y_axis = [0, np.mean(first_last_orders['download_to_first_order_hourly'])], [0, np.mean(
             first_last_orders['first_order_amount'])]
+        self.orders['download_to_first_order_hourly'] = first_last_orders.apply(
+            lambda row: calculate_time_diff(row['download_date'], row['first_order_date'], 'hourly'), axis=1)
+        
         for o in range(1, avg_order_count):  # iterate each order and calculate hour difference and avg. payment amount.
             _orders = self.orders.query("order_seq_num == @o and next_order_date == next_order_date")
             y_axis.append(np.mean(_orders['payment_amount']))
-            x_val = x_axis[-1] + np.mean(list(_orders.query("order_seq_num != 0").groupby("diff_hours").agg(
-                {"id": "count"}).reset_index().sort_values(by='id', ascending=False)['diff_hours'])[0])
+            x_val = x_axis[-1] + np.mean(list(_orders.query("order_seq_num != 0").groupby("diff_days").agg(
+                {"id": "count"}).reset_index().sort_values(by='id', ascending=False)['diff_days'])[0])
             x_axis.append(x_val)
         # recency value is added as the last point on the x-axis
         x_axis += [x_axis[-1] + np.mean(first_last_orders['diff_hours_recency'])]
@@ -436,8 +447,7 @@ class Cohorts:
                                                    _to=_to,
                                                    time_period=p,
                                                    cohort_type=_cohort_type,
-                                                   index=self.order_index
-                                                   if _c.split("_")[0] != 'downloads' else self.download_index)
+                                                   index=self.order_index)
 
         self.insert_into_reports_index(self.cohorts['customers_journey']['hourly'],
                                        start_date,

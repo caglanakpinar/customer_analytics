@@ -20,7 +20,7 @@ from tensorflow.keras.optimizers import RMSprop
 
 from configs import default_es_port, default_es_host
 from data_storage_configurations.query_es import QueryES
-from data_storage_configurations import collect_reports
+from data_storage_configurations.reports import Reports
 from utils import current_date_to_day, convert_to_date, calculate_time_diff, get_index_group, convert_to_iso_format
 
 
@@ -78,6 +78,7 @@ class Anomaly:
         self.host = default_es_host if host is None else host
         self.download_index = download_index
         self.order_index = order_index
+        self.report_execute = Reports()
         self.daily_funnel = pd.DataFrame()
         self.cohorts = pd.DataFrame()
         self.cohorts_d = pd.DataFrame()
@@ -99,8 +100,12 @@ class Anomaly:
         collecting all reports from reports index.
         """
         date = current_date_to_day().isoformat() if date is None else convert_to_date(date).isoformat()
-        self.reports = collect_reports(self.port, self.host, get_index_group(self.order_index),  date)
-        print(self.reports.head())
+
+        self.reports = self.report_execute.collect_reports(self.port,
+                                                           self.host,
+                                                           get_index_group(self.order_index),
+                                                           query={'index': get_index_group(self.order_index),
+                                                                  'end': date})
 
     def detect_outlier(self, value, _mean, _var, _sample_size, left_tail=False):
         """

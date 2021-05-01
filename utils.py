@@ -1,4 +1,6 @@
 import datetime
+import os
+import inspect
 from os.path import join
 import yaml
 
@@ -108,7 +110,7 @@ def convert_to_iso_format(date):
 
 def get_index_group(index):
     """
-    when Exploraty Analysis or Ml Processes work on dimension this will hep us to get exact dimension name.
+    when Exploratory Analysis or Ml Processes work on dimension this will hep us to get exact dimension name.
     If it is calculating for aLL data, this will return 'main'.
     """
     if index in ['orders', 'downloads']:
@@ -129,8 +131,37 @@ def convert_dt_to_month_str(date):
 def sqlite_string_converter(_str, back_to_normal=False):
     """
     when query or path is inserted into the sqlite db, it is need to be convert ''' and removing back slashes.
+    :param _str: query string Ex: " SELECT *  FROm table ..."
+    :param back_to_normal: convert back to normal True / False
+    :return: string query
     """
     if back_to_normal:
         return _str.replace("#&_5", "'").replace("+", " ") + ' '
     else:
         return _str.replace("'", "#&_5").replace("\r", " ").replace("\n", " ").replace(" ", "+")
+
+
+def abspath_for_sample_data():
+    """
+    get customer_analytics path. Ex: ....../customer_analytics
+    :return: current folder path
+    """
+    currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    base_name = os.path.basename(currentdir)
+    while base_name != 'customer_analytics':
+        currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        base_name = os.path.basename(currentdir)
+    return currentdir
+
+
+def dimension_decision(order_index):
+    """
+    Decision of dimension.
+    if order_index = 'Orders' it will be whole data, if it is not it will be executed for a dimension
+    :param order_index:
+    :return: True/False
+    """
+    if order_index != 'orders':
+        return True
+    else:
+        return False

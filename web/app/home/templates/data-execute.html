@@ -76,17 +76,27 @@
 
 						</div>
 						{% if values['connect_accept'] != True %}
-							<div class="mb-2">
-								<strong style="color:red;">Please create Both Session & Customer Data Source</strong>
+							<div class="card-header">
+								<div class="mb-2">
+									<strong style="color:red;">Please create Both Session & Customer Data Source</strong>
+								</div>
 							</div>
 						{% endif %}
 						{% if values['connect_accept'] == True %}
 							{% if values['has_product_data_source'] != True %}
-								<div class="mb-2">
-									<strong style="color:red;">You have both Session and Customer Data Source.
-										But You ay want to add Basket Data Source which covers products, prices and categories of products.
-										This might help us to create Product Anlaytics and A/B Tests based on products, e.g.</strong>
+								<div class="card-header">
+									<div class="mb-1">
+										<h6 class="card-subtitle text-muted">
+											<strong style="color:red;">You have both Session and Customer Data Source.
+												                       But You may want to add Basket Data Source which covers products, prices and categories of products.
+												                       This might help us to create Product Analytics and A/B Tests based on products, e.g.
+											</strong>
+										</h6>
+
 								</div>
+
+								</div>
+
 							{% endif %}
 
 							<table class="table scroll">
@@ -109,7 +119,7 @@
 
 
 											{% if i not in ['Sessions Connection Tag Name', 'Sessions Connection Data Source', 'Sessions Connection Data Query/Path', 'Customers Connection Tag Name', 'Customers Connection Data Source', 'Customers Connection Data Query/Path', 'Baskets Connection Tag Name', 'Baskets Connection Data Source', 'Baskets Connection Data Query/Path', 'Last Time Triggered Scheduling Job', 'Schedule Time Period', 'Schedule Status'] %}
-												<th style="font-size:50%;">{{ i }}</th>
+												<th style="font-size:60%;">{{ i }}</th>
 											{% endif %}
 										{% endfor %}
 									</tr>
@@ -117,8 +127,8 @@
 								<tbody>
 									{% for i in values['schedule'] %}
 										<tr>
-											<td style="font-size:6%;">{{ values['es_connection']['tag'] }}</td>
-											<td style="font-size:6%;">
+											<td style="font-size:60%;">{{ values['es_connection']['tag'] }}</td>
+											<td style="font-size:60%;">
 												{% if i['dimension'] != '....' %}
 													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i>
 												{% endif %}
@@ -126,9 +136,9 @@
 													<i class="align-middle mr-2" data-feather="x-circle" style="color:#FF0000;"></i>
 												{% endif %}
 											</td>
-											<td style="font-size:6%;">{{ i['orders_data_source_tag'] }}</td>
-											<td style="font-size:6%;">{{ i['orders_data_source_type'] }}</td>
-											<td style="font-size:6%;" >
+											<td style="font-size:60%;">{{ i['orders_data_source_tag'] }}</td>
+											<td style="font-size:60%;">{{ i['orders_data_source_type'] }}</td>
+											<td style="font-size:60%;" >
 												{% if i['orders_data_query_path'] != '...' %}
 													<a data-toggle="modal"  data-target="#edit_query_path_{{ i['orders_data_source_tag'] }}" style="color:green;">{{ i['orders_data_query_path'] }}</a>
 													<form method="POST">
@@ -164,9 +174,9 @@
 												{% endif %}
 
 											</td>
-											<td style="font-size:6%;">{{ i['downloads_data_source_tag'] }}</td>
-											<td style="font-size:6%;">{{ i['downloads_data_source_type'] }}</td>
-											<td style="font-size:6%;" >
+											<td style="font-size:60%;">{{ i['downloads_data_source_tag'] }}</td>
+											<td style="font-size:60%;">{{ i['downloads_data_source_type'] }}</td>
+											<td style="font-size:60%;" >
 												{% if i['downloads_data_query_path'] != '...' %}
 													<a data-toggle="modal"  data-target="#edit_query_path_{{ i['downloads_data_source_tag'] }}" style="color:green;">{{ i['downloads_data_query_path'] }}</a>
 													<form method="POST">
@@ -203,9 +213,9 @@
 
 											</td>
 
-											<td style="font-size:6%;">{{ i['products_data_source_tag'] }}</td>
-											<td style="font-size:6%;">{{ i['products_data_source_type'] }}</td>
-											<td style="font-size:6%;" >
+											<td style="font-size:60%;">{{ i['products_data_source_tag'] }}</td>
+											<td style="font-size:60%;">{{ i['products_data_source_type'] }}</td>
+											<td style="font-size:60%;" >
 												{% if i['products_data_query_path'] != '...' %}
 													<a data-toggle="modal"  data-target="#edit_query_path_{{ i['products_data_source_tag'] }}" style="color:green;">{{ i['products_data_query_path'] }}</a>
 													<form method="POST">
@@ -242,15 +252,13 @@
 											</td>
 
 
-											<td style="font-size:6%;">{{ i['ses_actions'] }}</td>
-											<td style="font-size:6%;">{{ i['d_actions'] }}</td>
-											<td style="font-size:6%;">{{ i['promotion_id'] }}</td>
+											<td style="font-size:60%;">{{ i['ses_actions'] }}</td>
+											<td style="font-size:60%;">{{ i['d_actions'] }}</td>
+											<td style="font-size:60%;">{{ i['promotion_id'] }}</td>
 
-
-
-											<td style="font-size:6%;">{{ i['max_date_of_order_data'] }}</td>
-											<td style="font-size:6%;">{{ i['time_period'] }}</td>
-											<td style="font-size:6%;">
+											<td style="font-size:60%;">{{ i['max_date_of_order_data'] }}</td>
+											<td style="font-size:60%;">{{ i['time_period'] }}</td>
+											<td style="font-size:60%;">
 												{% if i['schedule_tag'] != '....' %}
 													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i>
 												{% endif %}
@@ -336,6 +344,11 @@ function myFunction() {
   .card {
     flex: 0 0 auto;
   }
+}
+
+.scroll {
+    max-height: 100px;
+    overflow-y: auto;
 }
 
 </script>

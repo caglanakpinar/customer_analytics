@@ -16,11 +16,15 @@ from data_storage_configurations.sample_data import CreateSampleIndex
 from data_storage_configurations.es_create_index import CreateIndex
 from data_storage_configurations.schedule_data_integration import Scheduler
 from configs import elasticsearch_connection_refused_comment, query_path, acception_column_count
-from utils import read_yaml, sqlite_string_converter
+from utils import read_yaml, sqlite_string_converter, abspath_for_sample_data
 
-engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
+
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
+                       convert_unicode=True, connect_args={'check_same_thread': False})
 metadata = MetaData(bind=engine)
 con = engine.connect()
+
+
 sample_data_columns = read_yaml(query_path, "queries.yaml")['columns']
 
 
@@ -59,46 +63,45 @@ def get_action_name():
     return {'orders': check_actions(a_orders), 'downloads': check_actions(a_downloads)}
 
 
-def get_ea_and_ml_config(ea_configs, ml_configs):
+def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion_conn):
     """
-        configs = {"date": None,
-               "funnel": {"actions": ["download", "signup"],
-                          "purchase_actions": ["has_basket", "order_screen"],
-                          "host": 'localhost',
-                          "port": '9200',
-                          'download_index': 'downloads',
-                          'order_index': 'orders'},
-               "cohort": {"has_download": True, "host": 'localhost', "port": '9200'},
-               "products": {"has_download": True, "host": 'localhost', "port": '9200'},
-               "rfm": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
-               "stats": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
-               }
-
-        ml_configs = {"date": None,
-              "segmentation": {"host": 'localhost', "port": '9200',
-                               'download_index': 'downloads', 'order_index': 'orders'},
-              "clv_prediction": {"temporary_export_path": None,
-                                 "host": 'localhost', "port": '9200',
+        ea_configs = {"date": None,
+                      "funnel": {"actions": ["download", "signup"],
+                                 "purchase_actions": ["has_basket", "order_screen"],
+                                 "host": 'localhost',
+                                 "port": '9200',
+                                 'download_index': 'downloads',
+                                 'order_index': 'orders'},
+                      "cohort": {"has_download": True, "host": 'localhost', "port": '9200',
                                  'download_index': 'downloads', 'order_index': 'orders'},
-              "abtest": {"temporary_export_path": None,
-                         "host": 'localhost', "port": '9200',
-                         'download_index': 'downloads', 'order_index': 'orders'}
+                      "products": {"has_product_connection": True, "has_download": True,
+                                   "host": 'localhost', "port": '9200'},
+                      "rfm": {"host": 'localhost', "port": '9200',
+                              'download_index': 'downloads', 'order_index': 'orders'},
+                      "stats": {"host": 'localhost', "port": '9200',
+                               'download_index': 'downloads', 'order_index': 'orders'}
              }
 
+        ml_configs = {"date": None,
+                      'time_period': 'weekly',
+                      "segmentation": {"host": 'localhost', "port": '9200',
+                                       'download_index': 'downloads', 'order_index': 'orders'},
+                      "clv_prediction": {"temporary_export_path": None,
+                                         "host": 'localhost', "port": '9200',
+                                         'download_index': 'downloads', 'order_index': 'orders', 'time_period': 'weekly'},
+                      "abtest": {"has_product_connection": True, "temporary_export_path": None,
+                                 "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
+                     }
+
     """
-
-    conn = read_sql(" SELECT  * FROM schedule_data ", con)
-    if list(conn['max_date_of_order_data'])[0] != 'None':
-        ea_configs['date'] = list(conn['max_date_of_order_data'])[0]
-        ml_configs['date'] = list(conn['max_date_of_order_data'])[0]
-
     es_tag_conn = read_sql(" SELECT  * FROM es_connection ", con)
-    port, host, directory = [list(es_tag_conn[i])[0] for i in ['port', 'host', 'directory']]  # list(es_tag_conn['port'])[0], list(es_tag_conn['host'])[0], list(es_tag_conn['directory'])[0]
+    port, host, directory = [list(es_tag_conn[i])[0] for i in ['port', 'host', 'directory']]
     actions = get_action_name()
 
+    configs = []
     for conf in [ea_configs, ml_configs]:
         for ea in conf:
-            if ea != 'date':
+            if ea not in ['date', 'time_period']:
                 conf[ea]['host'] = host
                 conf[ea]['port'] = port
             if ea == 'funnel':
@@ -106,7 +109,23 @@ def get_ea_and_ml_config(ea_configs, ml_configs):
                 conf[ea]['purchase_actions'] = actions['orders']
             if ea == 'abtest':
                 conf[ea]['temporary_export_path'] = directory
-    return [ea_configs], [ml_configs], actions
+            if not has_product_conn:
+                if ea in ['products', 'abtest']:
+                    conf[ea]['has_product_connection'] = False
+            if not has_promotion_conn:
+                if ea == 'abtest':
+                    conf[ea]['has_promotion_connection'] = False
+
+        configs += [conf]
+    return configs + [actions]
+
+
+def decision_for_product_conn(data_configs):
+    return True if data_configs['products']['data_source'] not in [None, 'None'] else False
+
+
+def decision_for_promotion_conn(columns):
+    return True if columns['promotion_id'] not in [None, 'None'] else False
 
 
 def create_index(tag, ea_configs, ml_configs):
@@ -115,13 +134,15 @@ def create_index(tag, ea_configs, ml_configs):
     :return:
     """
     columns, data_configs = get_data_connection_arguments()[1:]
-    _ea_configs, _ml_configs, _actions = get_ea_and_ml_config(ea_configs, ml_configs)
+    has_product_connection = decision_for_product_conn(data_configs)
+    has_promotion_connection = decision_for_promotion_conn(columns)
+    _ea_configs, _ml_configs, _actions = get_ea_and_ml_config(ea_configs, ml_configs,
+                                                              has_product_connection, has_promotion_connection)
     s = Scheduler(es_tag=tag,
                   data_connection_structure=data_configs,
                   ea_connection_structure=_ea_configs,
                   ml_connection_structure=_ml_configs, data_columns=columns, actions=_actions)
     s.run_schedule_on_thread(function=s.execute_schedule)
-    s.run_schedule_on_thread(function=s.data_works, args={'date': tag})
 
 
 def connection_elasticsearch_check(request):
@@ -185,7 +206,8 @@ def connection_check(request, index='orders', type=''):
             if len(gd.data) != 0:
                 _columns = list(gd.data.columns)
                 _df = gd.data
-                if get_columns_condition(request, _columns, index):  # required list; order_id, client, s_start_date, amount, has_purchased
+                # required list; order_id, client, s_start_date, amount, has_purchased
+                if get_columns_condition(request, _columns, index):
                     accept, message, data, raw_columns = True, 'Connected', _df.to_dict('results'), gd.data.columns.values
                 ## TODO: change message type according to connection
                 # else:
@@ -225,24 +247,7 @@ def check_elasticsearch(port, host, directory):
     return connection, message
 
 
-def collect_reports(port, host, index, date):
-    query_es = QueryES(host=host, port=port)
-    res = []
-    for r in query_es.es.search(index='reports', body={"size": 1000, "from": 0})['hits']['hits']:
-        if r['_source']['index'] == index:
-            try:
-                res.append({'report_name': r['_source']['report_name'],
-                            'report_date': r['_source']['report_date'],
-                            'time_period': r['_source']['report_types'].get('time_period', None),
-                            'type': r['_source']['report_types'].get('type', None),
-                            'from': r['_source']['report_types'].get('from', None),
-                            'to': r['_source']['report_types'].get('to', None),
-                            'report_types': r['_source']['report_types'],
-                            'index': r['_source']['index'],
-                            'data': r['_source']['data']})
-            except Exception as e:
-                print(e)
-    return DataFrame(res)
+
 
 
 

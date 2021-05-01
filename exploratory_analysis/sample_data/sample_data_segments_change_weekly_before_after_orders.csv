@@ -1,0 +1,10 @@
+segments,accept_Ratio,mean_control,mean_validation,is_orders_increased_per_segments_per_weekly
+at risk,1.0,0.0,0.0,False
+lost,1.0,0.0,0.0,False
+need attention,1.0,0.0,0.0,False
+others,1.0,2.46991341991342,0.0,False
+promising,1.0,0.0,0.0,False
+champions,0.5166666666666664,2.771935483870969,2.5,False
+new customers,0.1166666666666665,1.2442959001782536,1.0,False
+potential loyalist,0.016666666666666687,2.423717948717949,3.0,True
+loyal customers,0.0,1.8503232758620685,1.294117647058825,False

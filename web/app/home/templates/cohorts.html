@@ -1,0 +1,182 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Cohorts {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Sessions Of Actions Funnel</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Daily Download to 1st Order Cohort</h5>
+									</div>
+									<div  id="d_cohort_d_id" class="plotly-gra ph-div" style="height:400px;"></div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Daily From 1st to 2nd Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="d_cohort_from_1_to_2_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Daily From 2nd to 3rd Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="d_cohort_from_2_to_3_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Daily From 3rd to 4th Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="d_cohort_from_3_to_4_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Weekly Download to 1st Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="w_cohort_d_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Weekly From 1st to 2nd Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="w_cohort_from_1_to_2_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Weekly From 2nd to 3rd Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="w_cohort_from_2_to_3_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Weekly From 3rd to 4th Order Cohort</h5>
+									</div>
+									<div class="card-body">
+										<div  id="w_cohort_from_3_to_4_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+			var d_c_d = {{daily_cohort_downloads | safe}};
+
+	        Plotly.plot('d_cohort_d_id', // the ID of the div, created above
+						d_c_d.trace, d_c_d.layout, {});
+
+			var d_c_f_1_t_2 = {{daily_cohort_from_1_to_2 | safe}};
+
+	        Plotly.plot('d_cohort_from_1_to_2_id', // the ID of the div, created above
+						d_c_f_1_t_2.trace, d_c_f_1_t_2.layout, {});
+
+			var d_c_f_2_t_3 = {{daily_cohort_from_2_to_3 | safe}};
+
+	        Plotly.plot('d_cohort_from_2_to_3_id', // the ID of the div, created above
+						d_c_f_2_t_3.trace, d_c_f_2_t_3.layout, {});
+
+			var d_c_f_3_t_4 = {{daily_cohort_from_2_to_3 | safe}};
+
+	        Plotly.plot('d_cohort_from_3_to_4_id', // the ID of the div, created above
+						d_c_f_3_t_4.trace, d_c_f_3_t_4.layout, {});
+
+			var w_c_d = {{weekly_cohort_downloads | safe}};
+
+	        Plotly.plot('w_cohort_d_id', // the ID of the div, created above
+						w_c_d.trace, w_c_d.layout, {});
+
+			var w_c_f_1_t_2 = {{weekly_cohort_from_1_to_2 | safe}};
+
+	        Plotly.plot('w_cohort_from_1_to_2_id', // the ID of the div, created above
+						w_c_f_1_t_2.trace, w_c_f_1_t_2.layout, {});
+
+			var w_c_f_2_t_3 = {{weekly_cohort_from_2_to_3 | safe}};
+
+	        Plotly.plot('w_cohort_from_2_to_3_id', // the ID of the div, created above
+						w_c_f_2_t_3.trace, w_c_f_2_t_3.layout, {});
+
+			var w_c_f_3_t_4 = {{weekly_cohort_from_3_to_4 | safe}};
+
+	        Plotly.plot('w_cohort_from_3_to_4_id', // the ID of the div, created above
+						w_c_f_3_t_4.trace, w_c_f_3_t_4.layout, {});
+
+
+
+
+
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}

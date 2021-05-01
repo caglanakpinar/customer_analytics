@@ -4,7 +4,6 @@ import numpy as np
 from itertools import product
 
 from ab_test_platform.executor import ABTest
-from utils import get_iter_sample, execute_parallel_run
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -25,6 +24,8 @@ class ABTests:
     """
     def __init__(self,
                  temporary_export_path,
+                 has_product_connection=True,
+                 has_promotion_connection=True,
                  host=None,
                  port=None,
                  download_index='downloads',
@@ -42,8 +43,12 @@ class ABTests:
         download_index; orders_location1 this will be the location dimension of
                         parameters in order to query orders indexes; 'location1'.
         ******* ******** *****
-        !!!
 
+                IF THERE IS NO PROMOTION CONNECTION ON ORDERS INDEX, IT IS NOT STARTED !!
+                IF THERE IS NO PRODUCT CONNECTION ON ORDERS INDEX, IT IS NOT STARTED !!
+
+        :param has_product_connection: Has order index data for products?
+        :param has_promotion_connection: Has order index data for promotions?
         :param host: elasticsearch host
         :param port: elasticsearch port
         :param download_index: elasticsearch port
@@ -53,6 +58,8 @@ class ABTests:
         self.host = default_es_host if host is None else host
         self.download_index = download_index
         self.order_index = order_index
+        self.has_product_connection = has_product_connection
+        self.has_promotion_connection = has_promotion_connection
         self.test = None
         self.query_es = QueryES(port=port, host=host)
         self.cs = CustomerSegmentation(port=self.port, host=self.host, order_index=self.order_index,
@@ -67,7 +74,8 @@ class ABTests:
         self.time_periods = time_periods[1:]
         self.path = temporary_export_path
         self.features = ["orders", "amount"]
-        self.fields = ["client", "session_start_date", "payment_amount", "promotion_id", "id"]
+        self.fields = ["client", "session_start_date", "payment_amount", "id"]
+        self.fields += ["promotion_id"] if has_promotion_connection else []
         self.fields_products = ["id", "client", "basket", "session_start_date", "payment_amount"]
         self.test_groups = ['segments', 'promotions', "products", "payment_amount"]
         self.confidence_level = [0.01, 0.05]
@@ -75,6 +83,14 @@ class ABTests:
         self.decision = pd.DataFrame()
         self.promotion_combinations = []
         self.promotion_comparison = pd.DataFrame()
+
+    def dimensional_query(self, boolean_query=None):
+        if dimension_decision(self.order_index):
+            if boolean_query is None:
+                boolean_query = [{"term": {"dimension": self.order_index}}]
+            else:
+                boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
 
     def get_orders_data(self, end_date):
         """
@@ -84,8 +100,16 @@ class ABTests:
         """
         self.query_es = QueryES(port=self.port, host=self.host)
         self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
-        self.query_es.query_builder(fields=self.fields)
-        self.data = pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index))
+        self.query_es.query_builder(fields=self.fields, boolean_queries=self.dimensional_query())
+        self.data = pd.DataFrame(self.query_es.get_data_from_es())
+
+    def dimensional_query(self, boolean_query=None):
+        if dimension_decision(self.order_index):
+            if boolean_query is None:
+                boolean_query = [{"term": {"dimension": self.order_index}}]
+            else:
+                boolean_query += [{"term": {"dimension": self.order_index}}]
+        return boolean_query
 
     def get_products(self, end_date):
         """
@@ -101,43 +125,46 @@ class ABTests:
                            'p_74': {'price': 8.395, 'category': 'p_c_10', 'rank': 35}
                            }
                 a. Keys of dictionary are products.
+        IF THERE IS NO PRODUCTS DATA IS AVAILABLE SKIP THIS PROCESS !!!
         :param end_date: last date of data set
         """
-        self.query_es = QueryES(port=self.port, host=self.host)
-        self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
-        self.query_es.boolean_queries_buildier({"actions.has_basket": True})
-        self.query_es.query_builder(fields=self.fields_products)
-        self.products = pd.DataFrame(self.query_es.get_data_from_es(index=self.order_index))
-        self.products['products'] = self.products['basket'].apply(lambda x: list(x.keys()))  # get product_ids
-        # get prices
-        self.products['price'] = self.products.apply(
-            lambda row: [row['basket'][i]['price'] for i in row['products']], axis=1)
-        # merge price and product id into the list
-        self.products['products'] = self.products.apply(
-            lambda row: list(zip([row['id']] * len(row['products']),
-                                 [row['client']] * len(row['products']),
-                                 [row['payment_amount']] * len(row['products']),
-                                 [row['session_start_date']] * len(row['products']),
-                                 row['products'],
-                                 row['price'])), axis=1)
-        # concatenate products columns and convert it to dataframe with columns produc_id and price
-        self.products = pd.DataFrame(np.concatenate(list(self.products['products']))).rename(
-            columns={0: "id", 1: "client", 2: "payment_amount", 3: "session_start_date", 4: "products", 5: "price"})
-        # substract price from payment amount.
-        # This will works to see how product of addition affects the total basket of payment amount
-        self.products['payment_amount'] = self.products['payment_amount'].apply(lambda x: float(x))
-        self.products['price'] = self.products['price'].apply(lambda x: float(x))
-        self.products['session_start_date'] = self.products['session_start_date'].apply(lambda x: convert_to_day(x))
+        if self.has_product_connection:
+            self.query_es = QueryES(port=self.port, host=self.host)
+            self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
+            self.query_es.query_builder(fields=None,
+                                        boolean_queries=self.dimensional_query([{"term": {"actions.has_basket": True}}]),
+                                        _source=True)
+            self.products = self.query_es.get_data_from_es()
+            self.products = pd.DataFrame([{col: r['_source'][col] for col in self.fields_products} for r in self.products])
+            self.products = self.products.query('basket == basket')
+            self.products['products'] = self.products['basket'].apply(lambda x: list(x.keys()) if x == x else None)
+            self.products = self.products.query('products == products')
+            # get prices
+            self.products['price'] = self.products.apply(
+                lambda row: [row['basket'][i]['price'] for i in row['products']], axis=1)
+            # merge price and product id into the list
+            self.products['products'] = self.products.apply(
+                lambda row: list(zip([row['id']] * len(row['products']),
+                                     [row['client']] * len(row['products']),
+                                     [row['payment_amount']] * len(row['products']),
+                                     [row['session_start_date']] * len(row['products']),
+                                     row['products'],
+                                     row['price'])), axis=1)
+            # concatenate products columns and convert it to dataframe with columns produc_id and price
+            self.products = pd.DataFrame(np.concatenate(list(self.products['products']))).rename(
+                columns={0: "id", 1: "client", 2: "payment_amount", 3: "session_start_date", 4: "products", 5: "price"})
+            # subtract price from payment amount.
+            # This will works to see how product of addition affects the total basket of payment amount
+            self.products['payment_amount'] = self.products['payment_amount'].apply(lambda x: float(x))
+            self.products['price'] = self.products['price'].apply(lambda x: float(x))
+            self.products['session_start_date'] = self.products['session_start_date'].apply(lambda x: convert_to_day(x))
 
-    def get_customer_segments(self, date):
+    def get_customer_segments(self):
         """
         Collecting segments of customers from the reports index.
         :param date: given report date
         """
-        date = current_date_to_day().isoformat() if date is None else date
-        print(self.cs.fetch(start_date=convert_dt_to_day_str(date))[['client', 'segments']])
-        self.data = pd.merge(self.data, self.cs.fetch(start_date=convert_dt_to_day_str(date))[['client', 'segments']],
-                             on='client', how='left')
+        self.data = pd.merge(self.data, self.cs.fetch()[['client', 'segments']], on='client', how='left')
 
     def get_time_period(self, transactions, date_column):
         """
@@ -154,21 +181,27 @@ class ABTests:
     def assign_organic_orders(self):
         """
         fill null promotions to 'organic'
+        Check for promotion data connection
         :return:
         """
-        self.data['promotion_id'] = self.data['promotion_id'].fillna('organic')
+        if self.has_promotion_connection:
+            self.data['promotion_id'] = self.data['promotion_id'].fillna('organic')
 
     def get_unique_promotions(self):
         """
         list of unique promotions
+        Check for promotion data connection
         """
-        self.promotions = list(self.data.query("promotion_id != 'organic'")['promotion_id'].unique())
+        if self.has_promotion_connection:
+            self.promotions = list(self.data.query("promotion_id != 'organic'")['promotion_id'].unique())
 
     def get_unique_products(self):
         """
         list of unique products
+        Check for products data connection.
         """
-        self.u_products = list(self.products['products'].unique())
+        if self.has_product_connection:
+            self.u_products = list(self.products['products'].unique())
 
     def generate_test_groups(self):
         """
@@ -176,8 +209,11 @@ class ABTests:
          It is the sub groups of the A and B samples
         :return:
         """
-        self.test_groups = [("promotions", None), ("products", None)] + \
-                           [("segments", tp) for tp in self.time_periods]
+        self.test_groups = [("segments", tp) for tp in self.time_periods]
+        if self.has_product_connection:
+            self.test_groups += [("products", None)]
+        if self.has_promotion_connection:
+            self.test_groups += [("promotions", None)]
 
     def get_max_order_date(self):
         """
@@ -191,7 +227,6 @@ class ABTests:
         :param day: interval date which splits dates into 2 parts before and after.
         :return: datetime
         """
-        print(type(day), type(self.max_date))
         if day <= self.max_date:
             return day
         else:
@@ -200,7 +235,7 @@ class ABTests:
     def generate_before_after_dates(self, date):
         """
         There 3 types of time periods to calculate dates.
-            dasy, weeks, months
+            days, weeks, months
         :param date: current date
         """
         date = self.before_after_day_decision(date)
@@ -320,7 +355,6 @@ class ABTests:
                 print("group *******", group[1])
                 _df = self.execute_test_grouping(data=group[0], metric=metric, feature=feature)
                 _df['groups'] = group[1]
-                print(_df.head())
                 dfs.append(_df)
             return pd.concat(dfs)
 
@@ -373,11 +407,14 @@ class ABTests:
                  i: np.mean(decision[i]) for i in ['accept_Ratio', 'mean_control', 'mean_validation']
             }])
         decision['promotion_comparison'] = groups[0] + '_' + groups[1]
+        decision['1st promo'], decision['2nd promo'] = groups[0], groups[1]
         column = 'promo_1st_vs_promo_2nd'
 
         decision[column] = decision.apply(
             lambda row: True if row['mean_validation'] > row['mean_control'] and
                                 row['mean_validation'] > 0.5 else False, axis=1)
+        decision['total_positive_effects'] = decision['promo_1st_vs_promo_2nd'].apply(
+            lambda x: 1 if x in ['True', True] else 0)
         return decision
 
     def name_of_test(self, is_before_after, fetaure, group, time_period):
@@ -401,13 +438,16 @@ class ABTests:
         if is_before_after:
             name += 'before_after_'
         name += fetaure
-        print(name)
         return name
 
     def create_before_after_test(self, date):
         """
         BEFORE - AFTER TEST:
-            collect data from before the event and test with after the eevnt
+            collect data from before the event and test with after the event.
+
+        IF THERE IS NO PROMOTION CONNECTION ON ORDERS INDEX, IT IS NOT STARTED !!
+        IF THERE IS NO PRODUCT CONNECTION ON ORDERS INDEX, IT IS NOT STARTED !!
+
         :param date: recent date
         :return:
         """
@@ -427,7 +467,6 @@ class ABTests:
                 self.decision_of_test(f, groups[0], groups[1])
                 _name = self.name_of_test(is_before_after=True, fetaure=f, group=groups[0], time_period=groups[1])
                 self.insert_into_reports_index(self.decision,
-                                               date,
                                                abtest_type=_name,
                                                index=self.order_index)
 
@@ -455,24 +494,24 @@ class ABTests:
     def create_promotion_comparison_test(self, date):
         """
         Comparing all combination of Promotions
+        IF THERE IS NO PROMOTION CONNECTION ON ORDERS INDEX, IT IS NOT STARTED !!
         :param date: recent date
         :return:
         """
-        self.get_unique_promotions()
-        self.promotion_combinations = list(filter(lambda x: x[0] != x[1],
-                                                  list(product(self.promotions, self.promotions))))
+        if self.has_promotion_connection:
+            self.get_unique_promotions()
+            self.promotion_combinations = list(filter(lambda x: x[0] != x[1],
+                                                      list(product(self.promotions, self.promotions))))
 
-        for p in self.promotion_combinations:
-            self.promotion_comparison = pd.concat([self.promotion_comparison,
-                                                   self.execute_promotion_comparison_test(p)])
-        self.insert_into_reports_index(self.decision,
-                                       date,
-                                       abtest_type='promotion_comparison',
-                                       index=self.order_index)
+            for p in self.promotion_combinations:
+                self.promotion_comparison = pd.concat([self.promotion_comparison,
+                                                       self.execute_promotion_comparison_test(p)])
+            self.insert_into_reports_index(self.promotion_comparison,
+                                           abtest_type='promotion_comparison',
+                                           index=self.order_index)
 
     def insert_into_reports_index(self,
                                   abtest,
-                                  start_date,
                                   abtest_type,
                                   index='orders'):
         """
@@ -492,7 +531,7 @@ class ABTests:
         :param index: dimensionality of data index orders_location1 ;  dimension = location1
         """
         list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
+                        "report_date": convert_to_day(current_date_to_day()).isoformat(),
                         "report_name": "abtest",
                         "index": get_index_group(index),
                         "report_types": {"abtest_type": abtest_type},
@@ -505,14 +544,14 @@ class ABTests:
         :param date: recent date for query data
         :return:
         """
-        date = str(current_date_to_day())[0:10] if date is None else date
-        self.get_orders_data(end_date=date)
-        self.get_products(end_date=date)
+        _date = str(current_date_to_day())[0:10] if date is None else date
+        self.get_orders_data(end_date=_date)
+        self.get_products(end_date=_date)
         self.data = self.get_time_period(self.data, "session_start_date")
         self.assign_organic_orders()
         self.get_max_order_date()
-        self.get_customer_segments(date=date)
-        self.generate_before_after_dates(convert_to_day(date))
+        self.get_customer_segments()
+        self.generate_before_after_dates(convert_to_day(_date))
         self.generate_test_groups()
         self.create_before_after_test(date)
         self.create_promotion_comparison_test(date)
