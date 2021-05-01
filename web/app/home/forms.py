@@ -18,7 +18,7 @@ from screeninfo import get_monitors
 from sqlalchemy import create_engine, MetaData
 
 from utils import convert_to_day, abspath_for_sample_data
-from configs import time_periods, descriptive_stats, abtest_promotions
+from configs import time_periods, descriptive_stats, abtest_promotions, abtest_products
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
                        connect_args={'check_same_thread': False})
@@ -80,6 +80,7 @@ charts = {
              "most_ordered_products": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
              "most_ordered_categories": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
              },
+        ## TODO  organic - promoted ratio
         # KPIs - total_orders, total_visits, total_unique_visitors. index.html left top
         "kpis": {"kpis": ['total_orders', 'total_visits', 'total_revenue', 'total_discount']}},
     # index2.html of Charts and KPIs
@@ -396,6 +397,7 @@ class Charts:
         self.monitor = get_monitors()[0]
         self.descriptive_stats = descriptive_stats
         self.abtest_promotions = abtest_promotions
+        self.abtest_products = abtest_products
 
     def get_data(self, chart, index):
         """
@@ -443,16 +445,16 @@ class Charts:
         """
         "order_and_payment_amount_differences",
         "promotion_comparison",
-        "promotion_usage_before_after_amount_accept",
-        "promotion_usage_before_after_amount_reject",
-        "promotion_usage_before_after_orders_accept",
-        "promotion_usage_before_after_orders_reject"
+        "promotion / product  _usage_before_after_amount_accept",
+        "promotion / product  _usage_before_after_amount_reject",
+        "promotion / product  _usage_before_after_orders_accept",
+        "promotion / product  _usage_before_after_orders_reject"
         """
         _trace = []
         if chart.split("_")[1] == 'usage':
             _name = 'order count' if chart.split("_")[-2] == 'orders' else 'purchase amount'
             names = ["before average "+_name+"  per c.", "after average "+_name+" per c."]
-            indicator = chart.split("_")[0]
+            indicator = chart.split("_")[0] + 's'
             _trace = [
                 go.Bar(name=names[0], x=data[indicator], y=data['mean_control']),
                 go.Bar(name=names[1], x=data[indicator], y=data['mean_validation'])
@@ -541,7 +543,7 @@ class Charts:
                 trace['x'] = list(_data[_t])
                 trace['y'] = list(_data[indicator])
                 trace['text'] = list(_data[indicator])
-        if chart in self.abtest_promotions:
+        if chart in self.abtest_promotions + self.abtest_products:
             trace = self.ab_test_of_trace(_data, chart)
         if chart == 'user_counts_per_order_seq':
             trace['x'] = list(_data['order_seq_num'])
