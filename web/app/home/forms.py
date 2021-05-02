@@ -352,17 +352,17 @@ class RealData:
 
     # this will collect the report in the 'build_in_reports'.
     # whole data of reports will be stored in 'main' folder. dimensions are stored seperatelly
-    for index in listdir(dirname(folder)):
-        _folder = join(es_tag['directory'], "build_in_reports", index, "")
-        kpis[index] = {}
-        try:
+    try:
+        for index in listdir(dirname(folder)):
+            _folder = join(es_tag['directory'], "build_in_reports", index, "")
+            kpis[index] = {}
             for f in listdir(dirname(_folder)):
                 try:
                     kpis[index][f.split(".")[0]] = pd.read_csv(join(_folder, f))
                 except Exception as e:
                     print(e)
-        except Exception as e:
-            print(e)
+    except Exception as e:
+        print(e)
             
 
 def cohort_human_readable_form(cohort, tp):
