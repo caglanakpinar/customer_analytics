@@ -194,6 +194,10 @@ class CreateIndex:
 
     def change_columns_format(self, data, data_source_type):
         columns = list(data.columns)
+        if data_source_type in ['orders', 'products']:
+            data['order_id'] = data['order_id'].apply(lambda x: str(x))
+        if data_source_type in ['orders', 'downloads']:
+            data['client'] = data['client'].apply(lambda x: str(x))
         if data_source_type == 'orders':
             data['session_start_date'] = data['session_start_date'].apply(lambda x: parse(x))
             data['payment_amount'] = data['payment_amount'].apply(lambda x: float(x))
@@ -339,7 +343,7 @@ class CreateIndex:
         try:
             _insert = []
             data = data.to_dict('results')
-            total_insert_str = self.get_insert_str(len(data))
+            # total_insert_str = self.get_insert_str(len(data))
             if index == 'orders':
                 for i in data:
                     _obj = {i: None for i in orders_index_columns}
@@ -377,7 +381,7 @@ class CreateIndex:
                     self.query_es.insert_data_to_index(_insert, index)
                 # insert logs into the sqlite logs table for sessions data insert process
                 self.logs_update(logs={"page": "data-execute",
-                                       "info": " SESSIONS index Done! - Number of documents :" + total_insert_str,
+                                       "info": " SESSIONS index Done! - Number of documents :", # + total_insert_str,
                                        "color": "green"})
             _insert = []
             if index == 'downloads':
@@ -407,7 +411,7 @@ class CreateIndex:
                     self.query_es.insert_data_to_index(_insert, index)
                 # insert logs into the sqlite logs table for customers data insert process
                 self.logs_update(logs={"page": "data-execute",
-                                       "info": " CUSTOMERS index Done! - Number of documents :" + total_insert_str,
+                                       "info": " CUSTOMERS index Done! - Number of documents :" , # + total_insert_str,
                                        "color": "green"})
 
         except Exception as e:
