@@ -24,6 +24,7 @@ class CLVPrediction:
                  temporary_export_path,
                  host=None,
                  port=None,
+                 time_period='weekly',
                  download_index='downloads',
                  order_index='orders'):
         """
@@ -50,6 +51,7 @@ class CLVPrediction:
         self.host = default_es_host if host is None else host
         self.download_index = download_index
         self.order_index = order_index
+        self.time_period = time_period
         self.clv = None
         self.query_es = QueryES(port=port, host=host)
         self.path = temporary_export_path

@@ -17,7 +17,10 @@ ml_configs = {"date": None,
                                  'download_index': 'downloads', 'order_index': 'orders', 'time_period': 'weekly'},
               "abtest": {"has_product_connection": True,
                          "has_promotion_connection": True, "temporary_export_path": None,
-                         "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
+                         "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
+              "anomaly": {"host": 'localhost', "port": '9200',
+                          'download_index': 'downloads', 'order_index': 'orders'},
+
           }
 
 mls = {'segmentation': CustomerSegmentation,
