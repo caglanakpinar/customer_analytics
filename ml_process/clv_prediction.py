@@ -98,7 +98,7 @@ class CLVPrediction:
         :param index: dimensionality of data index orders_location1 ;  dimension = location1
         """
         list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if date is None else date.isoformat(),
+                        "report_date": current_date_to_day().isoformat() if date is None else convert_to_day(date).isoformat(),
                         "report_name": "clv_prediction",
                         "index": get_index_group(index),
                         "report_types": {"time_period": time_period},
