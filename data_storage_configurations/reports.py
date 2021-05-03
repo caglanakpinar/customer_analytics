@@ -164,11 +164,19 @@ class Reports:
         match = {"size": 1000, "from": 0}
         if query is not None:
             date_queries = None if 'end' not in list(query.keys()) else [
-                {'range': {'report_date': {'gt': query['start'],
-                                           'lt': query['end']}}}]
+                {'range': {'report_date': {'lt': query['end']}}}]
+
+            boolean_queries = []
+            _keys = list(query.keys())
+            for _b in ['index', 'report_name']:
+                if _b in _keys:
+                    boolean_queries.append({'term': {_b: query[_b]}})
+
+
             try:
-                query_es.query_builder(boolean_queries=[{'term': {'index': query['index']}},
-                                                        {'term': {'report_name': query['report_name']}}],
+
+                boolean_queries = None if len(boolean_queries) == 0 else boolean_queries
+                query_es.query_builder(boolean_queries=boolean_queries,
                                        date_queries=date_queries,
                                        fields=None,
                                        _source=True)
