@@ -14,44 +14,91 @@
 				<div class="card">
 					<div class="card-body">
 						<div class="row">
-							<div class="col-md-6">
+							<div class="col-md-4">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Daily Orders</h5>
-									</div>
-
-									<div  id="d_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
-								</div>
-							</div>
-							<div class="col-md-6">
-								<div class="card">
-									<div class="card-header">
-										<h5 class="card-title">Hourly Orders</h5>
+										<h5 class="card-title" style="font-size:10px;"><strong> Daily </strong> Customers' <strong> Total Order Count </strong> per Customer Segment</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents Average of total order count per customers per segment for <strong style="color:green;"> current week day (Ex: Monday)</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents Average of total order count per customers per segment for <strong style="color:green;"> last 4 weeks of current week day (Ex : last 4 Mondays)</strong>.</h6>
+										</div>
 									</div>
 									<div class="card-body">
-										<div  id="h_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div id="sc_daily_ba_o_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title" style="font-size:10px;"><strong> Weekly </strong> Customers' <strong> Total Order Count </strong> per Customer Segment</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents Average of total order count per customers per segment for <strong style="color:green;"> current week</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents Average of total order count per customers per segment for <strong style="color:green;"> last 4 weeks </strong>.</h6>
+										</div>
+									</div>
+									<div class="card-body">
+										<div id="sc_weekly_ba_o_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title" style="font-size:10px;"><strong> Monthly </strong> Customers' <strong> Total Order Count </strong> per Customer Segment</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents average of total order count per customer per segment for <strong style="color:green;"> current month</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents average of total order count per customer per segment for <strong style="color:green;"> last 4 months </strong>.</h6>
+										</div>
+									</div>
+									<div class="card-body">
+										<div id="sc_monthly_ba_o_id" class="plotly-gra ph-div" style="height:400px;wight"></div>
 									</div>
 								</div>
 							</div>
 						</div>
+
+
 						<div class="row">
-							<div class="col-md-6">
+							<div class="col-md-4">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Weekly Orders</h5>
+										<h5 class="card-title" style="font-size:10px;"><strong> Daily </strong> Customers' Average Purchase <strong> Payment Amount</strong> per Customer Segment</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> current week day (Ex: Monday)</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> last 4 weeks of current week day (Ex : last 4 Mondays)</strong>.</h6>
+										</div>
 									</div>
 									<div class="card-body">
-										<div  id="w_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div id="sc_weekly_ba_a_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
-							<div class="col-md-6">
+							<div class="col-md-4">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Monthly Orders</h5>
+										<h5 class="card-title" style="font-size:10px;"><strong> Weekly </strong> Customers' Average Purchase <strong> Payment Amount</strong> per Customer Segment</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> current week</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> last 4 weeks </strong>.</h6>
+										</div>
 									</div>
 									<div class="card-body">
-										<div  id="m_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div id="sc_daily_ba_a_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title" style="font-size:10px;"><strong> Monthly </strong> Customers' Average Purchase <strong> Payment Amount</strong> per Customer Segment</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> current month</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> last 4 months </strong>.</h6>
+										</div>
+									</div>
+									<div class="card-body">
+										<div id="sc_monthly_ba_a_id" class="plotly-gra ph-div" style="height:400px;wight"></div>
 									</div>
 								</div>
 							</div>
@@ -70,25 +117,42 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 	<script>
 
-			var d_orders = {{daily_orders | safe}};
+			var sc_weekly_ba_o = {{sc_weekly_ba_orders | safe}};
 
-	        Plotly.plot('d_orders_id', // the ID of the div, created above
-						d_orders.trace, d_orders.layout, {});
+	        Plotly.plot('sc_weekly_ba_o_id', // the ID of the div, created above
+						sc_weekly_ba_o.trace, sc_weekly_ba_o.layout, {});
 
-			var h_orders = {{hourly_orders | safe}};
+			var sc_daily_ba_o = {{sc_daily_ba_orders | safe}};
 
-	        Plotly.plot('h_orders_id', // the ID of the div, created above
-						h_orders.trace, h_orders.layout, {});
+	        Plotly.plot('sc_daily_ba_o_id', // the ID of the div, created above
+						sc_daily_ba_o.trace, sc_daily_ba_o.layout, {});
 
-			var w_orders = {{weekly_orders | safe}};
+			var sc_monthly_ba_o = {{sc_monthly_ba_orders | safe}};
 
-	        Plotly.plot('w_orders_id', // the ID of the div, created above
-						w_orders.trace, w_orders.layout, {});
+	        Plotly.plot('sc_monthly_ba_o_id', // the ID of the div, created above
+						sc_monthly_ba_o.trace, sc_monthly_ba_o.layout, {});
 
-			var m_orders = {{monthly_orders | safe}};
 
-	        Plotly.plot('m_orders_id', // the ID of the div, created above
-						m_orders.trace, m_orders.layout, {});
+			var sc_weekly_ba_a = {{sc_weekly_ba_amount | safe}};
+
+	        Plotly.plot('sc_weekly_ba_a_id', // the ID of the div, created above
+						sc_weekly_ba_a.trace, sc_weekly_ba_a.layout, {});
+
+
+			var sc_daily_ba_a = {{sc_daily_ba_amount | safe}};
+
+	        Plotly.plot('sc_daily_ba_a_id', // the ID of the div, created above
+						sc_daily_ba_a.trace, sc_daily_ba_a.layout, {});
+
+			var sc_monthly_ba_a = {{sc_monthly_ba_amount | safe}};
+
+	        Plotly.plot('sc_monthly_ba_a_id', // the ID of the div, created above
+						sc_monthly_ba_a.trace, sc_monthly_ba_a.layout, {});
+
+
+
+
+
 
 
 	function myFunction() {

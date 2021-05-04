@@ -262,7 +262,6 @@ class ABTests:
             return {'payment_amount': 'mean'}, {'payment_amount': 'amount'}
 
     def users_promotion_usage(self):
-
         self.get_unique_promotions()
         get_promo_data = lambda x, p: x.query("promotion_id == @p")
         _first_promo_orders = self.data.query("promotion_id != 'organic'").groupby(["client", "promotion_id"]).agg(
@@ -337,7 +336,7 @@ class ABTests:
         :param feature: products or promotions
         :param data: if there is data to manipulate
         :param before_after_test: if is before after test
-        :return: ooncatenate data-frame
+        :return: concatenate data-frame
         """
         if before_after_test:
             if periods in ['daily', 'weekly', 'monthly']:

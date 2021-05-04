@@ -158,16 +158,18 @@ def route_template(template):
             graph_json = charts.get_chart(target='abtest-segments')
             return render_template(template,
                                    segment=segment,
-                                   sc_weekly_ba_orders=graph_json['charts'][
-                                       'segments_change_weekly_before_after_orders'],
-                                   sc_daily_ba_orders=graph_json['charts']['segments_change_daily_before_after_orders'],
-                                   sc_monthly_ba_orders=graph_json['charts'][
-                                       'segments_change_monthly_before_after_orders'],
-                                   sc_weekly_ba_amount=graph_json['charts'][
-                                       'segments_change_weekly_before_after_amount'],
-                                   sc_daily_ba_amount=graph_json['charts']['segments_change_daily_before_after_amount'],
-                                   sc_monthly_ba_amount=graph_json['charts'][
-                                       'segments_change_monthly_before_after_amount'],
+                                   sc_weekly_ba_orders=charts.get_json_format(
+                                       graph_json['charts']['segments_change_weekly_before_after_orders']),
+                                   sc_daily_ba_orders=charts.get_json_format(
+                                       graph_json['charts']['segments_change_daily_before_after_orders']),
+                                   sc_monthly_ba_orders=charts.get_json_format(
+                                       graph_json['charts']['segments_change_monthly_before_after_orders']),
+                                   sc_weekly_ba_amount=charts.get_json_format(
+                                       graph_json['charts']['segments_change_weekly_before_after_amount']),
+                                   sc_daily_ba_amount=charts.get_json_format(
+                                       graph_json['charts']['segments_change_daily_before_after_amount']),
+                                   sc_monthly_ba_amount=charts.get_json_format(
+                                       graph_json['charts']['segments_change_monthly_before_after_amount']),
                                    )
 
         if template == 'product.html':

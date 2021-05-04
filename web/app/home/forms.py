@@ -15,7 +15,7 @@ from screeninfo import get_monitors
 from sqlalchemy import create_engine, MetaData
 
 from utils import convert_to_day, abspath_for_sample_data
-from configs import time_periods, descriptive_stats, abtest_promotions, abtest_products
+from configs import time_periods, descriptive_stats, abtest_promotions, abtest_products, abtest_segments
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
                        connect_args={'check_same_thread': False})
@@ -230,7 +230,15 @@ charts = {
     },
     "abtest-segments": {
         # Descriptive Statistics
-        "charts": {_f: {'trace': [], 'layout': []} for _f in
+        "charts": {_f: {'trace': go.Bar(),
+                        'layout': go.Layout(
+                            legend=dict(
+                                orientation="h",
+                                yanchor="bottom",
+                                y=1.02,
+                                xanchor="right",
+                                x=1),
+                            margin=dict(r=1, t=1))} for _f in
                    ['segments_change_weekly_before_after_orders', 'segments_change_weekly_before_after_amount',
                     'segments_change_daily_before_after_orders', 'segments_change_daily_before_after_amount',
                     'segments_change_monthly_before_after_orders', 'segments_change_monthly_before_after_amount']},
@@ -410,6 +418,7 @@ class Charts:
         self.descriptive_stats = descriptive_stats
         self.abtest_promotions = abtest_promotions
         self.abtest_products = abtest_products
+        self.abtest_segments = abtest_segments
 
     def get_data(self, chart, index):
         """
@@ -461,16 +470,26 @@ class Charts:
         "promotion / product  _usage_before_after_amount_reject",
         "promotion / product  _usage_before_after_orders_accept",
         "promotion / product  _usage_before_after_orders_reject"
+
+        "segments_change_weekly_before_after_orders"
+        "segments_change_weekly_before_after_amount"
+        "segments_change_daily_before_after_orders"
+        "segments_change_daily_before_after_amount"
+        "segments_change_monthly_before_after_orders"
+        "segments_change_monthly_before_after_amount"
+
         """
         _trace = []
-        if chart.split("_")[1] == 'usage':
-            _name = 'order count' if chart.split("_")[-2] == 'orders' else 'purchase amount'
+        if chart.split("_")[1] in ['usage', 'change']:
+            _type = -1 if chart.split("_")[1] == 'usage' else -2
+            _name = 'order count' if chart.split("_")[_type] == 'orders' else 'purchase amount'
             names = ["before average "+_name+"  per c.", "after average "+_name+" per c."]
-            indicator = chart.split("_")[0] + 's'
+            indicator = chart.split("_")[0] + 's' if chart.split("_")[1] == 'usage' else chart.split("_")[0]
             _trace = [
                 go.Bar(name=names[0], x=data[indicator], y=data['mean_control']),
                 go.Bar(name=names[1], x=data[indicator], y=data['mean_validation'])
                 ]
+
         if chart == 'order_and_payment_amount_differences':
             data = data.rename(columns={"diff": "Difference of Order (Before Vs After)",
                                         "diff_amount": "Difference of Payment Amount (Before Vs After)"})
@@ -485,8 +504,6 @@ class Charts:
                                             color=list(range(len(data))), colorscale='Rainbow'),
                                 mode='markers',
                                 name='markers')
-        if chart.split("_")[1] == 'change':
-            _trace = data.to_dict('results')
         return _trace
 
     def get_trace(self, trace, chart, index):
@@ -555,7 +572,7 @@ class Charts:
                 trace['x'] = list(_data[_t])
                 trace['y'] = list(_data[indicator])
                 trace['text'] = list(_data[indicator])
-        if chart in self.abtest_promotions + self.abtest_products:
+        if chart in self.abtest_promotions + self.abtest_products + self.abtest_segments:
             trace = self.ab_test_of_trace(_data, chart)
         if chart == 'user_counts_per_order_seq':
             trace['x'] = list(_data['order_seq_num'])
@@ -608,8 +625,15 @@ class Charts:
             layout['yaxis'] = {"range": [
                 round(max(0, min(min(_data[columns[0]]), min(_data[columns[1]])) - 0.02), 2),
                 round(max(0, max(max(_data[columns[0]]), max(_data[columns[1]])) - 0.02), 2)]}
-
-        return [layout] if 'usage' not in chart.split("_") else layout
+        if 'change' in chart.split("_"):
+            columns = ['mean_control', 'mean_validation']
+            layout['yaxis'] = {"range": [
+                round(max(0, min(min(_data[columns[0]]), min(_data[columns[1]])) - 0.02), 2),
+                round(max(0, max(max(_data[columns[0]]), max(_data[columns[1]])) - 0.02), 2)]}
+        if 'change' in chart.split("_"):
+            return layout
+        else:
+            return [layout] if 'usage' not in chart.split("_") else layout
 
     def get_values(self, kpi, index):
         """
