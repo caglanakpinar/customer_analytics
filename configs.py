@@ -203,6 +203,13 @@ abtest_products = ["product_usage_before_after_amount_accept",
                    "product_usage_before_after_orders_accept",
                    "product_usage_before_after_orders_reject"]
 
+abtest_segments = ['segments_change_daily_before_after_amount',
+                   'segments_change_daily_before_after_orders',
+                   'segments_change_monthly_before_after_amount',
+                   'segments_change_monthly_before_after_orders',
+                   'segments_change_weekly_before_after_amount',
+                   'segments_change_weekly_before_after_orders']
+
 
 abtest_reports = ['product_usage_before_after_amount',
                   'product_usage_before_after_orders', 'promotion_comparison',
