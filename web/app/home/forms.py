@@ -86,7 +86,7 @@ charts = {
         "charts": {"rfm": {"trace": go.Scatter3d(mode='markers',
                                                  marker=dict(color=None,
                                                              size=12,
-                                                             colorscale='Viridis',
+                                                             colorscale='delta',
                                                              opacity=0.8)),
                            "layout": go.Layout(width=1000,
                                                margin=dict(l=1, r=1, t=1, b=1),
@@ -97,13 +97,27 @@ charts = {
                                                    zaxis_title='frequency'))
                            },
                    "user_counts_per_order_seq": {'trace': go.Bar(),
-                                                  'layout': go.Layout(
-                                                      xaxis_title="X Axis Title",
-                                                      yaxis_title="Y Axis Title",
-                                                      margin=dict(r=1, t=1))}
+                                                 'layout': go.Layout(
+                                                     xaxis_title="X Axis Title",
+                                                     yaxis_title="Y Axis Title",
+                                                     margin=dict(r=1, t=1))},
 
 
-
+                   "purchase_amount_distribution": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
+                   "daily_funnel": {'trace': go.Scatter(mode="lines+markers+text",
+                                            line=dict(color='firebrick', width=4),
+                                            textposition="bottom center",
+                                            textfont=dict(
+                                                family="sans serif",
+                                                size=30,
+                                                color="crimson")),
+                                      'layout': go.Layout(legend=dict(
+                                                          orientation="h",
+                                                          yanchor="bottom",
+                                                          y=1.02,
+                                                          xanchor="right",
+                                                          x=1
+                                                      ))}
                    },
         # not any recent KPIs for now
         "kpis": {}
@@ -259,7 +273,7 @@ charts = {
         "charts": {"rfm": {"trace": go.Scatter3d(mode='markers',
                                                  marker=dict(color=None,
                                                              size=12,
-                                                             colorscale='Viridis',
+                                                             colorscale='delta',
                                                              opacity=0.8)),
                            "layout": go.Layout(width=1000,
                                                margin=dict(l=1, r=1, t=1, b=1),
