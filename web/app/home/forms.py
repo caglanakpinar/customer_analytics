@@ -300,6 +300,48 @@ charts = {
                    },
         # not any recent KPIs for now
         "kpis": {}
+    },
+    "customer-segmentation": {
+        "charts": {'segmentation': {'trace': go.Treemap(marker_colorscale='Blues',
+                                                        textinfo="label+value+percent parent+percent entry",
+                                                        parents=[""] * 7),
+                                    'layout': go.Layout(width=1000,
+                                                        margin=dict(l=1, r=1, t=1, b=1),
+                                                        height=400)}
+                   ,
+                    'recency_clusters': {'trace': go.Scatter(y=[], x=[],
+                                                             hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Recency : %{x}',
+                                                             mode='markers',
+                                                             marker=dict(
+                                                                 size=[],
+                                                                 color=[],
+                                                                 showscale=False
+                                                             )),
+                                          'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
+                                         }
+                                ,
+                    'frequency_clusters': {'trace': go.Scatter(y=[], x=[],
+                                                               hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Frequency : %{x}',
+                                                               mode='markers',
+                                                               marker=dict(
+                                                                   size=[],
+                                                                   color=[],
+                                                                   showscale=False
+                                                             )),
+                                           'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
+                                         },
+                    'monetary_clusters': {'trace': go.Scatter(y=[], x=[],
+                                                              hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Monetary : %{x}',
+                                                              mode='markers',
+                                                              marker=dict(
+                                                                  size=[],
+                                                                  color=[],
+                                                                  showscale=False
+                                                               )),
+                                          'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
+                                           }
+         },
+        "kpis": {}
     }
 }
 
@@ -592,9 +634,16 @@ class Charts:
             x_column = 'products' if 'products' in chart.split("_") else 'category'
             trace['x'], trace['y'] = list(_data[x_column]), list(_data['order_count'])
         if 'recency' in chart.split("_") or 'frequency' in chart.split("_") or 'monetary' in chart.split("_"):
-            trace['x'] = list(_data[chart.split("_")[0]])
-            trace['y'] = list(_data[chart.split("_")[1]])
-            trace['marker']['color'] = list(_data['segments_numeric'])  # segments are numerical values.
+            if 'clusters' in chart.split("_"):
+                _segment_column = chart.split("_")[0] + '_segment'
+                trace['x'] = list(_data[chart.split("_")[0]])
+                trace['y'] = list(_data['client_count'])
+                trace['marker']['size'] = [s * 16 for s in list(_data[_segment_column])]
+                trace['marker']['color'] = list(_data[_segment_column])
+            else:
+                trace['x'] = list(_data[chart.split("_")[0]])
+                trace['y'] = list(_data[chart.split("_")[1]])
+                trace['marker']['color'] = list(_data['segments_numeric'])  # segments are numerical values.
 
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 

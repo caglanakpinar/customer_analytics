@@ -17,19 +17,19 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Daily Orders</h5>
+										<h5 class="card-title">Customer Segmentation</h5>
 									</div>
 
-									<div  id="d_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									<div  id="segment_id" class="plotly-gra ph-div" style="height:400px;"></div>
 								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Hourly Orders</h5>
+										<h5 class="card-title">Frequency Segmentation</h5>
 									</div>
 									<div class="card-body">
-										<div  id="h_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="f_segment_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
@@ -38,20 +38,20 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Weekly Orders</h5>
+										<h5 class="card-title">Monetary Segmentation</h5>
 									</div>
 									<div class="card-body">
-										<div  id="w_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="m_segment_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Monthly Orders</h5>
+										<h5 class="card-title">Recency Segmentation</h5>
 									</div>
 									<div class="card-body">
-										<div  id="m_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="r_segment_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
@@ -70,25 +70,29 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 	<script>
 
-			var d_orders = {{daily_orders | safe}};
+			var segment = {{segmentation | safe}};
 
-	        Plotly.plot('d_orders_id', // the ID of the div, created above
-						d_orders.trace, d_orders.layout, {});
+	        Plotly.plot('segment_id', // the ID of the div, created above
+						segment.trace, segment.layout, {});
 
-			var h_orders = {{hourly_orders | safe}};
+			var f_segment = {{frequency_clusters | safe}};
 
-	        Plotly.plot('h_orders_id', // the ID of the div, created above
-						h_orders.trace, h_orders.layout, {});
+	        Plotly.plot('f_segment_id', // the ID of the div, created above
+						f_segment.trace, f_segment.layout, {});
 
-			var w_orders = {{weekly_orders | safe}};
+			var m_segment = {{monetary_clusters | safe}};
 
-	        Plotly.plot('w_orders_id', // the ID of the div, created above
-						w_orders.trace, w_orders.layout, {});
+	        Plotly.plot('m_segment_id', // the ID of the div, created above
+						m_segment.trace, m_segment.layout, {});
 
-			var m_orders = {{monthly_orders | safe}};
+			var r_segment = {{recency_clusters | safe}};
 
-	        Plotly.plot('m_orders_id', // the ID of the div, created above
-						m_orders.trace, m_orders.layout, {});
+	        Plotly.plot('r_segment_id', // the ID of the div, created above
+						r_segment.trace, r_segment.layout, {});
+
+
+
+
 
 
 	function myFunction() {

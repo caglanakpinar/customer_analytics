@@ -193,6 +193,16 @@ def route_template(template):
                                    recency_monetary=charts.get_json_format(graph_json['charts']['recency_monetary'])
                                    )
 
+        if template == 'customer-segmentation.html':
+            graph_json = charts.get_chart(target='customer-segmentation')
+            return render_template(template,
+                                   segment=segment,
+                                   segmentation=charts.get_json_format(graph_json['charts']['segmentation']),
+                                   frequency_clusters=charts.get_json_format(graph_json['charts']['frequency_clusters']),
+                                   monetary_clusters=charts.get_json_format(graph_json['charts']['monetary_clusters']),
+                                   recency_clusters=charts.get_json_format(graph_json['charts']['recency_clusters'])
+                                   )
+
         if template == 'index2.html':
             graph_json = charts.get_chart(target='index2')
             return render_template(template,
@@ -201,7 +211,7 @@ def route_template(template):
                                    uoc_order_seq=charts.get_json_format(graph_json['charts']['user_counts_per_order_seq']))
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html', 'rfm.htm',
                             'product.html', 'abtest-segments.html', 'abtest-product.html', 'abtest-promotion.html',
-                            'stats-desc.html', 'stats-purchase.htm', 'cohorts.html']:
+                            'stats-desc.html', 'stats-purchase.htm', 'cohorts.html', 'customer-segmentation.html']:
             reqs.execute_request(req=dict(request.form), template=segment)
             reqs.fetch_results(segment, dict(request.form))
             values = reqs.message
