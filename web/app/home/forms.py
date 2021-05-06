@@ -111,13 +111,25 @@ charts = {
                                                 family="sans serif",
                                                 size=30,
                                                 color="crimson")),
-                                      'layout': go.Layout(legend=dict(
-                                                          orientation="h",
-                                                          yanchor="bottom",
-                                                          y=1.02,
-                                                          xanchor="right",
-                                                          x=1
-                                                      ))}
+                                    'layout': go.Layout(legend=dict(
+                                                        orientation="h",
+                                                        yanchor="bottom",
+                                                        y=1.02,
+                                                        xanchor="right",
+                                                        x=1
+                                                    ))},
+                   "weekly_cohort_downloads": {'trace': go.Heatmap(z=[], x=[], y=[],
+                                                                   colorscale='Viridis', opacity=0.9,
+                                                                   showlegend=False, ygap=2, xgap=2,
+                                                                   hoverongaps=None, showscale=False),
+                                               'annotation': go.Annotation(text=[], x=[], y=[],
+                                                                           xref='x1', yref='y1', showarrow=False),
+                                               'layout': go.Layout(paper_bgcolor='rgba(0,0,0,0)',
+                                                                   plot_bgcolor='rgba(0,0,0,0)',
+                                                                   width=1000,
+                                                                   margin=dict(l=1, r=1, t=1, b=1),
+                                                                   height=600,
+                                                                   annotations=[])}
                    },
         # not any recent KPIs for now
         "kpis": {}
@@ -131,13 +143,13 @@ charts = {
                                                 family="sans serif",
                                                 size=30,
                                                 color="crimson")),
-                                      'layout': go.Layout(legend=dict(
-                                                          orientation="h",
-                                                          yanchor="bottom",
-                                                          y=1.02,
-                                                          xanchor="right",
-                                                          x=1
-                                                      ))}
+                        'layout': go.Layout(legend=dict(
+                                            orientation="h",
+                                            yanchor="bottom",
+                                            y=1.02,
+                                            xanchor="right",
+                                            x=1
+                                        ))}
                    for _f in ['daily_funnel', 'hourly_funnel', 'weekly_funnel', 'monthly_funnel',
                               'daily_funnel_downloads', 'hourly_funnel_downloads',
                               'weekly_funnel_downloads', 'monthly_funnel_downloads']},
@@ -293,22 +305,22 @@ charts = {
                                                     )),
                                          "layout": go.Layout(margin=dict(l=1, r=1, t=1, b=1))},
                    'monetary_frequency': {'trace': go.Scatter(y=[], x=[],
-                                                    mode='markers',
-                                                    marker=dict(
-                                                        size=16,
-                                                        color=[],
-                                                        colorscale='Viridis',  # one of plotly colorscales
-                                                        showscale=False
-                                                    )),
+                                                              mode='markers',
+                                                              marker=dict(
+                                                                  size=16,
+                                                                  color=[],
+                                                                  colorscale='Viridis',  # one of plotly colorscales
+                                                                  showscale=False
+                                                              )),
                                           "layout": go.Layout(margin=dict(l=1, r=1, t=1, b=1))},
                    'recency_monetary': {'trace': go.Scatter(y=[], x=[],
-                                                    mode='markers',
-                                                    marker=dict(
-                                                        size=16,
-                                                        color=[],
-                                                        colorscale='Viridis',  # one of plotly colorscales
-                                                        showscale=False
-                                                    )),
+                                                            mode='markers',
+                                                            marker=dict(
+                                                                size=16,
+                                                                color=[],
+                                                                colorscale='Viridis',  # one of plotly colorscales
+                                                                showscale=False
+                                                            )),
                                         "layout": go.Layout(margin=dict(l=1, r=1, t=1, b=1))}
 
                    },
@@ -719,8 +731,9 @@ class Charts:
         for c in charts[target]['charts']:
             trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index)
             self.get_widths_heights(chart=c, target=target)
+            annotation = charts[target]['charts'][c]['annotation'] if 'cohort' in c.split("_") else None
             layout = self.get_layout(charts[target]['charts'][c]['layout'], c,
-                                     annotation=charts[target]['charts'][c]['annotation'] if target == 'cohort' else None, index=index)
+                                     annotation=annotation, index=index)
             self.graph_json['charts'][c] = {'trace': trace,
                                             'layout': layout, 'is_real_data': is_real_data}
         # collecting KPIs

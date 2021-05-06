@@ -99,7 +99,13 @@
 							<h5 class="card-title mb-0">Download to First Order Cohorts</h5>
 						</div>
 
-
+						<div class="card-body" >
+							<!--<div class="chart chart-sm">
+									<canvas id="chartjs-dashboard-line"></canvas>
+							</div>
+							-->
+							<div id="w_c_d_id" class="chart" style="height:300px;"></div>
+						</div>
 
 					</div>
 				</div>
@@ -154,9 +160,13 @@
         Plotly.plot('d_funnel_id', // the ID of the div, created above
 					d_funnel.trace, d_funnel.layout, {});
 
+		var w_c_d = {{weekly_cohort_downloads | safe}};
+
+        Plotly.plot('w_c_d_id', // the ID of the div, created above
+					w_c_d.trace, w_c_d.layout, {});
 
 
-					charts.get_json_format(graph_json['charts']['user_counts_per_order_seq'])
+
 
 
 

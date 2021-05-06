@@ -214,7 +214,10 @@ def route_template(template):
                                    uoc_order_seq=charts.get_json_format(
                                        graph_json['charts']['user_counts_per_order_seq']),
                                    daily_funnel=charts.get_json_format(
-                                       graph_json['charts']['daily_funnel']))
+                                       graph_json['charts']['daily_funnel']),
+                                   weekly_cohort_downloads=charts.get_json_format(
+                                       graph_json['charts']['weekly_cohort_downloads']))
+
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html', 'rfm.htm',
                             'product.html', 'abtest-segments.html', 'abtest-product.html', 'abtest-promotion.html',
                             'stats-desc.html', 'stats-purchase.htm', 'cohorts.html', 'customer-segmentation.html']:
