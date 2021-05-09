@@ -16,11 +16,11 @@ try:
     from exploratory_analysis.__init__ import create_exploratory_analysis
 except Exception as e:
     from exploratory_analysis import create_exploratory_analysis
-# try:
-#     from ml_process.__init__ import create_mls
-# except Exception as e:
-#     from ml_process import create_mls
-#
+try:
+    from ml_process.__init__ import create_mls
+except Exception as e:
+    from ml_process import create_mls
+
 from utils import current_date_to_day, convert_to_day, abspath_for_sample_data, read_yaml
 from configs import query_path
 from data_storage_configurations.reports import Reports
@@ -259,6 +259,7 @@ class Scheduler:
                 create_exploratory_analysis(self.ea_connection_structure)
                 self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_ea, "color": "green"})
             except Exception as e:
+                e = str(e) if e is not None else ''
                 self.logs_update(logs={"page": "data-execute",
                                        "info": self.fail_log_for_ea + str(e)[:min(len(str(e)), 100)].replace("'", " "),
                                        "color": "red"})
@@ -269,6 +270,7 @@ class Scheduler:
                 create_mls(self.ml_connection_structure)
                 self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_ml, "color": "green"})
             except Exception as e:
+                e = str(e) if e is not None else ''
                 self.logs_update(logs={"page": "data-execute",
                                        "info": self.fail_log_for_ml + str(e)[:min(len(str(e)), 100)].replace("'", " "),
                                        "color": "red"})
@@ -296,6 +298,7 @@ class Scheduler:
                                 _info += " || dimension : " + dim
                                 self.logs_update(logs={"page": "data-execute", "info": _info, "color": "green"})
                             except Exception as e:
+                                e = str(e) if e is not None else ''
                                 fail_message = self.fail_log_for_ml if i['executor'] == create_mls else self.fail_log_for_ea
                                 fail_message += e[:min(len(e), 100)]
                                 self.logs_update(logs={"page": "data-execute", "info": fail_message, "color": "red"})
@@ -306,7 +309,8 @@ class Scheduler:
                 self.create_build_in_reports.create_build_in_reports()
                 self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_br, "color": "green"})
             except Exception as e:
-                fail_message = self.fail_log_for_br + e[:min(len(e), 100)]
+                e = str(e) if e is not None else ''
+                fail_message = self.fail_log_for_br + e[:min(len(e), 100)] if e is not None else self.fail_log_for_br
                 self.logs_update(logs={"page": "data-execute", "info": fail_message, "color": "red"})
 
     def jobs(self):
