@@ -421,13 +421,16 @@ class RealData:
         except:
             return dimensions
     
-    def check_for_the_report(self, report_name, index='main'):
+    def check_for_the_report(self, report_name, index='main', date=None):
         """
         checks for 'build_in_reports' while platform is running.
         """
         try:
             es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
-            return exists(join(es_tag['directory'], "build_in_reports", index, report_name + ".csv"))
+            _path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
+            if date is not None:
+                _path = oin(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
+            return exists(_path)
         except:
             return False
 
