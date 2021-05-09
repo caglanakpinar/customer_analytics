@@ -11,16 +11,94 @@
 		<div class="container-fluid p-0">
 			<h5 class="h3 mb-3">Customers Of Actions Funnel</h5>
 			<div class="col-md-12">
+				<div class="accordion" id="accordionExample">
+					<div class="card">
+						<div class="card-header" id="headingOne">
+							<h5 class="card-title my-1">
+								<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+									Filters
+								</a>
+							</h5>
+						</div>
+						<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+							<div class="row">
+								<div class="col-md-6">
+									<div class="card">
+										<div class="card-body">
+											<div class="card">
+												<div class="card-header">
+													<h5 class="card-title mb-0">Dimension selection</h5>
+												</div>
+												<div class="card-body">
+													<select name="index" id="index" class="form-control">
+														{% for d in filters['dimensions'] %}
+															{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																<option value= "main">{{ d }}</option>
+															{% endif %}
+															{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																<option value="{{ d }}">{{ d }}</option>
+															{% endif %}
+														{% endfor %}
+													</select>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="col-md-6">
+									<div class="card flex-fil">
+										<div class="card-body col-12">
+											<div class="col-12 ">
+												<div class="align-self-center w-100">
+													<div class="chart">
+														<input name="date" id="datetimepicker-dashboard" hidden>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="card-header">
+								<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+							</div>
+
+							</div>
+						</div>
+					</div>
+
+					<div class="card">
+						<div class="card-header" id="headingTwo">
+							<h5 class="card-title my-1">
+								<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+									Infos
+								</a>
+							</h5>
+						</div>
+						<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+							<div class="card-body">
+								{{ data_type }}
+								Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch.
+								Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch
+								et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat
+								craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+							</div>
+						</div>
+					</div>
+				</div>
+
 				<div class="card">
 					<div class="card-header">
 						<h5 class="card-title"><strong>Customers of Action</strong> </h5>
 					</div>
+
 					<div class="card-body">
 						<div class="row">
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Daily Funnel</h5>
+										<h5 class="card-title">Daily Funnel {% if data_type['daily_funnel'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 									</div>
 									<div  id="d_funnel" class="plotly-gra ph-div" style="height:400px;"></div>
 								</div>
@@ -28,7 +106,7 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Weekly Funnel</h5>
+										<h5 class="card-title">Weekly Funnel {% if data_type['weekly_funnel'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 									</div>
 									<div class="card-body">
 										<div  id="w_funnel" class="plotly-gra ph-div" style="height:400px;"></div>
@@ -40,7 +118,7 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Monthly Funnel</h5>
+										<h5 class="card-title">Monthly Funnel {% if data_type['monthly_funnel'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 									</div>
 									<div class="card-body">
 										<div  id="m_funnel" class="plotly-gra ph-div" style="height:400px;"></div>
@@ -50,7 +128,7 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Hourly Funnel</h5>
+										<h5 class="card-title">Hourly Funnel {% if data_type['hourly_funnel'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 									</div>
 									<div class="card-body">
 										<div  id="h_funnel" class="plotly-gra ph-div" style="height:400px;"></div>

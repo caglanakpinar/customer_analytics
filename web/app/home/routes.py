@@ -37,7 +37,7 @@ def index():
     When logged In, Platform start with General Dashboard running on index.html
     :return: render_template
     """
-    graph_json = charts.get_chart(target='index') # collect charts on index.html
+    graph_json, data_type, filters = charts.get_chart(target='index') # collect charts on index.html
     return render_template('index.html',
                            segment='index',
                            charts=charts.get_json_format(graph_json['charts']['daily_orders']),
@@ -45,8 +45,9 @@ def index():
                            customer_journey=charts.get_json_format(graph_json['charts']['customer_journey']),
                            top_products=charts.get_json_format(graph_json['charts']['most_ordered_products']),
                            top_categories=charts.get_json_format(graph_json['charts']['most_ordered_categories']),
-                           kpis=graph_json['kpis']
-                           )
+                           kpis=graph_json['kpis'],
+                           data_type=data_type,
+                           filters=filters)
 
 
 @blueprint.route('/<template>', methods=['GET', 'POST'])
@@ -67,9 +68,12 @@ def route_template(template):
 
         segment = get_segment(request)
 
+        index = dict(request.form).get('index', 'main')
+        date = dict(request.form).get('date', None)
+
         if template in ['funnel-session.html', 'funnel-customer.html']:
             additional_name = '' if template == 'funnel-session.html' else '_downloads'
-            graph_json = charts.get_chart(target='funnel')
+            graph_json, data_type, filters = charts.get_chart(target='funnel', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    daily_funnel=charts.get_json_format(
@@ -79,10 +83,11 @@ def route_template(template):
                                    monthly_funnel=charts.get_json_format(
                                        graph_json['charts']['monthly_funnel' + additional_name]),
                                    hourly_funnel=charts.get_json_format(
-                                       graph_json['charts']['hourly_funnel' + additional_name])
-                                   )
+                                       graph_json['charts']['hourly_funnel' + additional_name]),
+                                   data_type=data_type,
+                                   filters=filters)
         if template == 'cohorts.html':
-            graph_json = charts.get_chart(target='cohort')
+            graph_json, data_type, filters = charts.get_chart(target='cohort', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    daily_cohort_downloads=charts.get_json_format(
@@ -100,31 +105,34 @@ def route_template(template):
                                    weekly_cohort_from_2_to_3=charts.get_json_format(
                                        graph_json['charts']['weekly_cohort_from_2_to_3']),
                                    weekly_cohort_from_3_to_4=charts.get_json_format(
-                                       graph_json['charts']['weekly_cohort_from_3_to_4'])
-                                   )
+                                       graph_json['charts']['weekly_cohort_from_3_to_4']),
+                                   data_type=data_type,
+                                   filters=filters)
 
         if template == 'stats-purchase.html':
-            graph_json = charts.get_chart(target='stats')
+            graph_json, data_type, filters = charts.get_chart(target='stats', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    daily_orders=charts.get_json_format(graph_json['charts']['daily_orders']),
                                    weekly_orders=charts.get_json_format(graph_json['charts']['weekly_orders']),
                                    monthly_orders=charts.get_json_format(graph_json['charts']['monthly_orders']),
-                                   hourly_orders=charts.get_json_format(graph_json['charts']['hourly_orders'])
-                                   )
+                                   hourly_orders=charts.get_json_format(graph_json['charts']['hourly_orders']),
+                                   data_type=data_type,
+                                   filters=filters)
 
         if template == 'stats-desc.html':
-            graph_json = charts.get_chart(target='descriptive')
+            graph_json, data_type, filters = charts.get_chart(target='descriptive', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    weekly_average_session_per_user=charts.get_json_format(graph_json['charts']['weekly_average_session_per_user']),
                                    weekly_average_order_per_user=charts.get_json_format(graph_json['charts']['weekly_average_order_per_user']),
                                    purchase_amount_distribution=charts.get_json_format(graph_json['charts']['purchase_amount_distribution']),
-                                   weekly_average_payment_amount=charts.get_json_format(graph_json['charts']['weekly_average_payment_amount'])
-                                   )
+                                   weekly_average_payment_amount=charts.get_json_format(graph_json['charts']['weekly_average_payment_amount']),
+                                   data_type=data_type,
+                                   filters=filters)
 
         if template == 'abtest-promotion.html':
-            graph_json = charts.get_chart(target='abtest-promotion')
+            graph_json, data_type, filters = charts.get_chart(target='abtest-promotion', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    o_pa_diff=charts.get_json_format(
@@ -139,9 +147,11 @@ def route_template(template):
                                        graph_json['charts']['promotion_usage_before_after_orders_accept']),
                                    promo_use_ba_o_reject=charts.get_json_format(
                                        graph_json['charts']['promotion_usage_before_after_orders_reject']),
+                                   data_type=data_type,
+                                   filters=filters
                                    )
         if template == 'abtest-product.html':
-            graph_json = charts.get_chart(target='abtest-product')
+            graph_json, data_type, filters = charts.get_chart(target='abtest-product', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    product_use_ba_a_accept=charts.get_json_format(
@@ -151,11 +161,12 @@ def route_template(template):
                                    product_use_ba_o_accept=charts.get_json_format(
                                        graph_json['charts']['product_usage_before_after_orders_accept']),
                                    product_use_ba_o_reject=charts.get_json_format(
-                                       graph_json['charts']['product_usage_before_after_orders_reject'])
-                                   )
+                                       graph_json['charts']['product_usage_before_after_orders_reject']),
+                                   data_type=data_type,
+                                   filters=filters)
 
         if template == 'abtest-segments.html':
-            graph_json = charts.get_chart(target='abtest-segments')
+            graph_json, data_type, filters = charts.get_chart(target='abtest-segments', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    sc_weekly_ba_orders=charts.get_json_format(
@@ -170,10 +181,11 @@ def route_template(template):
                                        graph_json['charts']['segments_change_daily_before_after_amount']),
                                    sc_monthly_ba_amount=charts.get_json_format(
                                        graph_json['charts']['segments_change_monthly_before_after_amount']),
-                                   )
+                                   data_type=data_type,
+                                   filters=filters)
 
         if template == 'product.html':
-            graph_json = charts.get_chart(target='product_analytic')
+            graph_json, data_type, filters = charts.get_chart(target='product_analytic', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    most_combined_products=charts.get_json_format(
@@ -181,30 +193,34 @@ def route_template(template):
                                    most_ordered_products=charts.get_json_format(
                                        graph_json['charts']['most_ordered_products']),
                                    most_ordered_categories=charts.get_json_format(
-                                       graph_json['charts']['most_ordered_categories'])
-                                   )
+                                       graph_json['charts']['most_ordered_categories']),
+                                   data_type=data_type,
+                                   filters=filters)
         if template == 'rfm.html':
-            graph_json = charts.get_chart(target='rfm')
+            graph_json, data_type, filters = charts.get_chart(target='rfm', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    rfm=charts.get_json_format(graph_json['charts']['rfm']),
                                    frequency_recency=charts.get_json_format(graph_json['charts']['frequency_recency']),
                                    monetary_frequency=charts.get_json_format(graph_json['charts']['monetary_frequency']),
-                                   recency_monetary=charts.get_json_format(graph_json['charts']['recency_monetary'])
+                                   recency_monetary=charts.get_json_format(graph_json['charts']['recency_monetary']),
+                                   data_type=data_type,
+                                   filters=filters
                                    )
 
         if template == 'customer-segmentation.html':
-            graph_json = charts.get_chart(target='customer-segmentation')
+            graph_json, data_type, filters = charts.get_chart(target='customer-segmentation', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    segmentation=charts.get_json_format(graph_json['charts']['segmentation']),
                                    frequency_clusters=charts.get_json_format(graph_json['charts']['frequency_clusters']),
                                    monetary_clusters=charts.get_json_format(graph_json['charts']['monetary_clusters']),
-                                   recency_clusters=charts.get_json_format(graph_json['charts']['recency_clusters'])
-                                   )
+                                   recency_clusters=charts.get_json_format(graph_json['charts']['recency_clusters']),
+                                   data_type=data_type,
+                                   filters=filters)
 
         if template == 'index2.html':
-            graph_json = charts.get_chart(target='index2')
+            graph_json, data_type, filters = charts.get_chart(target='index2', index=index, date=date)
             return render_template(template,
                                    segment=segment,
                                    rfm=charts.get_json_format(
@@ -216,7 +232,9 @@ def route_template(template):
                                    daily_funnel=charts.get_json_format(
                                        graph_json['charts']['daily_funnel']),
                                    weekly_cohort_downloads=charts.get_json_format(
-                                       graph_json['charts']['weekly_cohort_downloads']))
+                                       graph_json['charts']['weekly_cohort_downloads']),
+                                   data_type=data_type,
+                                   filters=filters)
 
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html', 'rfm.htm',
                             'product.html', 'abtest-segments.html', 'abtest-product.html', 'abtest-promotion.html',
@@ -227,6 +245,7 @@ def route_template(template):
             return render_template(template, segment=segment, values=values)
 
     except TemplateNotFound:
+
         return render_template('page-404.html'), 404
     
     except Exception as e:

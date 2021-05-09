@@ -405,24 +405,43 @@ class RealData:
     kpis = {}
     es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
     folder = join(es_tag['directory'], "build_in_reports", "")
+
+    def get_report_dimensions(self):
+        """
+
+        """
+        dimensions = ['There is no available report. Please execute Schedule Data Process']
+        try:
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            if exists(join(es_tag['directory'], "build_in_reports")):
+                _dims = listdir(dirname(join(es_tag['directory'], "build_in_reports")))
+                if len(_dims) != 0:
+                    dimensions = _dims
+            return dimensions
+        except:
+            return dimensions
     
     def check_for_the_report(self, report_name, index='main'):
         """
         checks for 'build_in_reports' while platform is running.
         """
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
             return exists(join(es_tag['directory'], "build_in_reports", index, report_name + ".csv"))
         except:
             return False
 
-    def fetch_report(self, report_name, index='main'):
+    def fetch_report(self, report_name, index='main', date=None):
         """
         checks for 'build_in_reports' while platform is running and collect the selected report.
         """
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
-            return pd.read_csv(join(es_tag['directory'], "build_in_reports", index, report_name + ".csv"))
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            file_path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
+            if date is not None:
+                date_file_path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
+                file_path = date_file_path if exists(date_file_path) else file_path
+            return pd.read_csv(file_path)
         except:
             return False
 
@@ -482,13 +501,15 @@ class Charts:
         self.samples = samples
         self.reals = real
         self.graph_json = {}
+        self.data_type = {}
+        self.filters = {}
         self.monitor = get_monitors()[0]
         self.descriptive_stats = descriptive_stats
         self.abtest_promotions = abtest_promotions
         self.abtest_products = abtest_products
         self.abtest_segments = abtest_segments
 
-    def get_data(self, chart, index):
+    def get_data(self, chart, index, date):
         """
         checks both sample and real data. If there is real data for the related KPI or chart fetches from sample_data.
         :param chart: e.g. rfm, segmentation, ...
@@ -496,7 +517,7 @@ class Charts:
         """
         try:
             if chart not in list(self.reals.kpis.keys()):
-                if not self.reals.check_for_the_report(report_name=chart, index=index):
+                if not self.reals.check_for_the_report(report_name=chart, index=index, date=date):
                     return self.samples[chart], False
                 else:
                     return self.reals.fetch_report(report_name=chart, index=index), True
@@ -574,7 +595,7 @@ class Charts:
                                 name='markers')
         return _trace
 
-    def get_trace(self, trace, chart, index):
+    def get_trace(self, trace, chart, index, date):
         """
         fill more variables on charts dictionary. At this process, data sets are stored in the trace.
 
@@ -582,7 +603,7 @@ class Charts:
         :param chart: e.g. rfm, segmentation, ...
         :return:
         """
-        _data, is_real_data = self.get_data(chart, index)  # collect data
+        _data, is_real_data = self.get_data(chart, index, date)  # collect data
         # data for line chart daily(sum), weekly(sum), houry(average), monthly(sum)
         if chart in ["_".join([t, 'orders']) for t in time_periods]:
             try:
@@ -673,8 +694,8 @@ class Charts:
 
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 
-    def get_layout(self, layout, chart, index, annotation=None):
-        _data = self.get_data(chart, index)[0]
+    def get_layout(self, layout, chart, index, date, annotation=None):
+        _data = self.get_data(chart, index, date)[0]
         if 'cohort' in chart.split("_"):
             _t = chart.split("_")[0]
             _t_str = ' day' if _t == 'daily' else ' week'
@@ -710,16 +731,16 @@ class Charts:
         else:
             return [layout] if 'usage' not in chart.split("_") else layout
 
-    def get_values(self, kpi, index):
+    def get_values(self, kpi, index, date):
         """
         get data related KPI
         :param kpi: .e.g.total_orders, total_visitors, ...
         :return: dictionary with KPIs in keys
         """
-        _data = self.get_data(kpi, index)[0].to_dict('results')[0]
-        return _data
+        _data, is_real_data = self.get_data(kpi, index, date)
+        return _data.to_dict('results')[0], is_real_data
 
-    def get_chart(self, target, index='main'):
+    def get_chart(self, target, index='main', date=None):
         """
         related to 'target', charts and KPIs are collected in order to show on-page.
         The main aim here, fill the self.graph_json dictionary with serialized dictionaries.
@@ -728,24 +749,29 @@ class Charts:
         """
         # collecting charts
         self.graph_json['charts'] = {}
+        self.data_type = {}
+        self.filters = {"dimensions": self.reals.get_report_dimensions()}
         for c in charts[target]['charts']:
-            trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index)
+            trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index, date)
             self.get_widths_heights(chart=c, target=target)
             annotation = charts[target]['charts'][c]['annotation'] if 'cohort' in c.split("_") else None
             layout = self.get_layout(charts[target]['charts'][c]['layout'], c,
-                                     annotation=annotation, index=index)
+                                     annotation=annotation, index=index, date=date)
+            self.data_type[c] = is_real_data
             self.graph_json['charts'][c] = {'trace': trace,
                                             'layout': layout, 'is_real_data': is_real_data}
         # collecting KPIs
         self.graph_json['kpis'] = {}
         for k in charts[target]['kpis']:
-            _obj = self.get_values(k, index)
+            _obj, is_real_data = self.get_values(k, index, date)
             for _k in charts[target]['kpis'][k]:
                 try:
+                    self.data_type[_k] = is_real_data
                     self.graph_json['kpis'][_k] = '{:,}'.format(int(_obj[_k])).replace(",", ".")
                 except Exception as e:
                     print()
-        return self.graph_json
+                    print()
+        return self.graph_json, self.data_type, self.filters
 
     def get_json_format(self, chart):
         return json.dumps({"trace": chart['trace'],

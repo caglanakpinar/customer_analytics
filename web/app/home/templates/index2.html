@@ -26,18 +26,93 @@
 					</nav>
 				</div>
 			</div>
+
+
+				<div class="accordion" id="accordionExample">
+								<div class="card">
+									<div class="card-header" id="headingOne">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Filters
+											</a>
+										</h5>
+									</div>
+									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+										<div class="row">
+											<div class="col-md-6">
+												<div class="card">
+													<div class="card-body">
+														<div class="card">
+															<div class="card-header">
+																<h5 class="card-title mb-0">Dimension selection</h5>
+															</div>
+															<div class="card-body">
+																<select name="index" id="index" class="form-control">
+																	{% for d in filters['dimensions'] %}
+																		{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																			<option value= "main">{{ d }}</option>
+																		{% endif %}
+																		{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																			<option value="{{ d }}">{{ d }}</option>
+																		{% endif %}
+																	{% endfor %}
+																</select>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="card flex-fil">
+													<div class="card-body col-12">
+														<div class="col-12 ">
+															<div class="align-self-center w-100">
+																<div class="chart">
+																	<input name="date" id="datetimepicker-dashboard" hidden>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											<div class="card-header">
+											<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+										</div>
+
+										</div>
+									</div>
+								</div>
+
+								<div class="card">
+									<div class="card-header" id="headingTwo">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Infos
+											</a>
+										</h5>
+									</div>
+									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+										<div class="card-body">
+											Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch.
+											Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch
+											et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat
+											craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+										</div>
+									</div>
+								</div>
+							</div>
+
+
 			<div class="row">
 				<div class="col-xl-8 col-xxl-6" >
 					<div class="card flex-fill w-100">
 						<div class="card-header">
 
-							<h5 class="card-title mb-0" >Payment Amount Distribution</h5>
+							<h5 class="card-title mb-0" >Payment Amount Distribution {% if data_type['purchase_amount_distribution'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 						<div class="card-body py-3" >
-							<!--<div class="chart chart-sm">
-									<canvas id="chartjs-dashboard-line"></canvas>
-							</div>
-							-->
 							<div id="pa_distribution_id" class="chart" style="height:300px;"></div>
 						</div>
 					</div>
@@ -48,7 +123,7 @@
 					<div class="card flex-fill w-100">
 						<div class="card-header">
 
-							<h5 class="card-title mb-0">Total Number Customer Breakdown with Purchased Order Count</h5>
+							<h5 class="card-title mb-0">Total Number Customer Breakdown with Purchased Order Count {% if data_type['user_counts_per_order_seq'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 						<div class="card-body py-3" >
 							<!--<div class="chart chart-sm">
@@ -64,7 +139,7 @@
 				<div class="col-8 col-md-8 col-xxl-6 d-flex order-3 order-xxl-2">
 					<div class="card flex-fill w-100">
 						<div class="card-header">
-							<h5 class="card-title mb-0">RFM</h5>
+							<h5 class="card-title mb-0">RFM {% if data_type['rfm'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 						<div class="card-body px-5" style="height:650px;">
 							<div id="rfm_values" ></div>
@@ -72,38 +147,17 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-12 col-md-6 col-xxl-3 d-flex order-1 order-xxl-1">
-					<div class="card flex-fill">
-						<div class="card-header">
-							<h5 class="card-title mb-0">Calendar</h5>
-						</div>
-							<div class="card-header">
-							<button  type="submit" class="btn btn-pill btn-primary">Primary</button>
-						</div>
 
-						<div class="card-body d-flex">
-							<div class="align-self-center w-100">
-								<div class="chart">
-									<input name="date_start" id="datetimepicker-dashboard" hidden>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
 			</div></form>
 
 			<div class="row">
 				<div class="col-12 col-lg-8 col-xxl-6 d-flex">
 					<div class="card flex-fill">
 						<div class="card-header">
-							<h5 class="card-title mb-0">Download to First Order Cohorts</h5>
+							<h5 class="card-title mb-0">Download to First Order Cohorts {% if data_type['weekly_cohort_downloads'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 
 						<div class="card-body" >
-							<!--<div class="chart chart-sm">
-									<canvas id="chartjs-dashboard-line"></canvas>
-							</div>
-							-->
 							<div id="w_c_d_id" class="chart" style="height:300px;"></div>
 						</div>
 
@@ -113,13 +167,9 @@
 					<div class="card flex-fill w-100">
 						<div class="card-header">
 
-							<h5 class="card-title mb-0">Daily Funnel</h5>
+							<h5 class="card-title mb-0">Daily Funnel {% if data_type['daily_funnel'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 						<div class="card-body" >
-							<!--<div class="chart chart-sm">
-									<canvas id="chartjs-dashboard-line"></canvas>
-							</div>
-							-->
 							<div id="d_funnel_id" class="chart" style="height:300px;"></div>
 						</div>
 					</div>

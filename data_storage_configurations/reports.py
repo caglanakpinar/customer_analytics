@@ -107,9 +107,15 @@ class Reports:
                                                                        'promotion_usage_before_after_amount_reject',
                                                                        'order_and_payment_amount_differences'],
                                'promotion_usage_before_after_orders': ['promotion_usage_before_after_orders_accept',
-                                                                       'promotion_usage_before_after_orders_reject']}
+                                                                       'promotion_usage_before_after_orders_reject'],
+                               'product_usage_before_after_amount': ['product_usage_before_after_amount_accept',
+                                                                     'product_usage_before_after_amount_reject'],
+                               'product_usage_before_after_orders': ['product_usage_before_after_orders_accept',
+                                                                     'product_usage_before_after_orders_reject']
+                              }
         self.p_usage_ba_orders = ['promotion_usage_before_after_orders', 'promotion_usage_before_after_amount']
         self.rfm_reports = ['rfm', 'segmentation']
+        self.day_folder = str(current_date_to_day())[0:10]
 
     def connections(self):
         """
@@ -164,11 +170,16 @@ class Reports:
         match = {"size": 1000, "from": 0}
         if query is not None:
             date_queries = None if 'end' not in list(query.keys()) else [
-                {'range': {'report_date': {'gt': query['start'],
-                                           'lt': query['end']}}}]
+                {'range': {'report_date': {'lt': query['end']}}}]
+
+            boolean_queries = []
+            _keys = list(query.keys())
+            for _b in ['index', 'report_name']:
+                if _b in _keys:
+                    boolean_queries.append({'term': {_b: query[_b]}})
             try:
-                query_es.query_builder(boolean_queries=[{'term': {'index': query['index']}},
-                                                        {'term': {'report_name': query['report_name']}}],
+                boolean_queries = None if len(boolean_queries) == 0 else boolean_queries
+                query_es.query_builder(boolean_queries=boolean_queries,
                                        date_queries=date_queries,
                                        fields=None,
                                        _source=True)
@@ -219,7 +230,7 @@ class Reports:
             query = " report_name == 'cohort' and type == 'customers_journey'"
         if r_name in 'kpis':
             query = " report_name == 'stats' and type == ''"
-        if r_name in 'rfm':
+        if r_name in 'rfm' or len(set(_splits) & {'recency', 'monetary', 'frequency'}) != 0:
             query = " report_name in ('rfm', 'segmentation')"
 
         # ab-test reports
@@ -229,13 +240,14 @@ class Reports:
             query = " report_name == 'abtest' and abtest_type in ('{}')".format("', '".join(self.p_usage_ba_orders))
         if r_name in abtest_reports and r_name not in ['promotion_comparison', 'order_and_payment_amount_differences']:
             query = " report_name == 'abtest' and abtest_type == '{}'".format(r_name)
-        if 'usage' in r_name:
+        if 'usage' in _splits:
             for sub_reports in self.double_reports:
                 if r_name in self.double_reports[sub_reports]:
                     query = " report_name == 'abtest' and abtest_type == '{}'".format(sub_reports)
 
         if r_name == 'user_counts_per_order_seq':
             query = " report_name == 'stats' and type == 'user_counts_per_order_seq' "
+        print(r_name, query)
         return query
 
     def get_promotion_comparison(self, x):
@@ -292,12 +304,15 @@ class Reports:
                         usage_amount.rename(columns={'diff': 'diff_amount'}),
                         on='promotions', how='inner')[['diff_amount', 'diff', 'promotions']]
 
-    def get_rfm(self, reports):
+    def get_rfm_reports(self, reports, metrics=[]):
         rfm = pd.DataFrame(list(reports.query("report_name == '{}'".format(
                 self.rfm_reports[0])).sort_values('report_date',  ascending=False)['data'])[0])
         segmentation = pd.DataFrame(list(reports.query("report_name == '{}'".format(
                 self.rfm_reports[1])).sort_values('report_date',  ascending=False)['data'])[0])
-        return pd.merge(rfm, segmentation, on='client', how='left')
+        report = pd.merge(rfm, segmentation, on='client', how='left')
+        if len(metrics) != 0:
+            report = report[metrics + ['segments_numeric']]
+        return report
 
     def get_sample_report_names(self):
         """
@@ -318,7 +333,9 @@ class Reports:
             if r_name == 'order_and_payment_amount_differences':
                 report_data = self.get_order_and_payment_amount_differences(report)
             if r_name == 'rfm':
-                report_data = self.get_rfm(report)
+                report_data = self.get_rfm_reports(report)
+            if len(set(r_name.split("_")) & {'recency', 'monetary', 'frequency'}) != 0:
+                report_data = self.get_rfm_reports(report, metrics=r_name.split("_"))
             if r_name not in ['order_and_payment_amount_differences', 'rfm']:
                 report = report.sort_values('report_date', ascending=False)
                 report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
@@ -328,7 +345,7 @@ class Reports:
         """
         Check if the reports are stored in to the reports index.
         """
-        reports_index_count = 0
+        reports_index_count = {}
         try:
             qs = QueryES(host=es_tag['host'], port=es_tag['port'])
             reports_index_count = qs.es.cat.count('reports', params={"format": "json"})
@@ -355,11 +372,19 @@ class Reports:
                     os.mkdir(join(self.es_tag['directory'], "build_in_reports", index))
                 except:
                     print("folder already exists")
+                try:
+                    os.mkdir(join(self.es_tag['directory'], "build_in_reports", index, self.day_folder))
+                except:
+                    print("folder already exists")
                 for r_name in self.sample_report_names:
                     print("index :", index, "|| report : ", r_name)
                     _data = self.get_related_report(reports, r_name)
                     if len(_data) != 0:
-                        _data.to_csv(join(self.es_tag['directory'], "build_in_reports", index, r_name) + ".csv", index=False)
+                        _data.to_csv(join(self.es_tag['directory'], "build_in_reports", index, r_name) + ".csv",
+                                     index=False)
+                        _data.to_csv(
+                            join(self.es_tag['directory'], "build_in_reports", index, self.day_folder, r_name) + ".csv",
+                            index=False)
 
     def query_es_for_report(self, report_name, index, date=datetime.datetime.now()):
         ## TODO: will be updated
@@ -369,6 +394,14 @@ class Reports:
                  'report_name': report_name,
                  'end': convert_to_iso_format(date),
                  'start': convert_to_iso_format(convert_to_day(date) - datetime.timedelta(days=1))}
+
+
+
+
+
+
+
+
 
 
 

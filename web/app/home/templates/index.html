@@ -27,6 +27,83 @@
 					</nav>
 				</div>
 			</div>
+			<div class="accordion" id="accordionExample">
+				<div class="card">
+					<div class="card-header" id="headingOne">
+						<h5 class="card-title my-1">
+							<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+								Filters
+							</a>
+						</h5>
+					</div>
+					<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-body">
+										<div class="card">
+											<div class="card-header">
+												<h5 class="card-title mb-0">Dimension selection</h5>
+											</div>
+											<div class="card-body">
+												<select name="index" id="index" class="form-control">
+													{% for d in filters['dimensions'] %}
+														{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+															<option value= "main">{{ d }}</option>
+														{% endif %}
+														{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+															<option value="{{ d }}">{{ d }}</option>
+														{% endif %}
+													{% endfor %}
+												</select>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card flex-fil">
+									<div class="card-body col-12">
+										<div class="col-12 ">
+											<div class="align-self-center w-100">
+												<div class="chart">
+													<input name="date" id="datetimepicker-dashboard" hidden>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="card-header">
+							<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+						</div>
+
+						</div>
+					</div>
+				</div>
+
+				<div class="card">
+					<div class="card-header" id="headingTwo">
+						<h5 class="card-title my-1">
+							<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+								Infos
+							</a>
+						</h5>
+					</div>
+					<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+						<div class="card-body">
+							Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch.
+							Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch
+							et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat
+							craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+						</div>
+					</div>
+				</div>
+			</div>
+
+
 			<div class="row">
 				<div class="col-xl-6 col-xxl-5 d-flex">
 					<div class="w-100">
@@ -34,7 +111,7 @@
 							<div class="col-sm-6">
 								<div class="card" style="height:180px;">
 									<div class="card-body">
-										<h5 class="card-title mb-4">Orders</h5>
+										<h5 class="card-title mb-4">Orders  {% if data_type['total_orders'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 										<h1 class="mt-1 mb-3">{{ kpis.total_orders }}</h1>
 										<div class="mb-1">
 											<span class="text-danger"> <i class="mdi mdi-arrow-bottom-right"></i> -3.65% </span>
@@ -44,7 +121,7 @@
 								</div>
 								<div class="card" style="height:180px;">
 									<div class="card-body">
-										<h5 class="card-title mb-4">Visitors</h5>
+										<h5 class="card-title mb-4">Visitors {% if data_type['total_visitors'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 										<h1 class="mt-1 mb-3">{{ kpis.total_visitors }}</h1>
 										<div class="mb-1">
 											<span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> 5.25% </span>
@@ -56,7 +133,7 @@
 							<div class="col-sm-6">
 								<div class="card" style="height:180px;">
 									<div class="card-body">
-										<h5 class="card-title mb-4">Revenue</h5>
+										<h5 class="card-title mb-4">Revenue {% if data_type['total_revenue'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 										<h1 class="mt-1 mb-3">{{ kpis.total_revenue }}</h1>
 										<div class="mb-1">
 											<span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> 6.65% </span>
@@ -66,7 +143,7 @@
 								</div>
 								<div class="card">
 									<div class="card-body" style="height:180px;">
-										<h5 class="card-title mb-4">Discount</h5>
+										<h5 class="card-title mb-4">Discount {% if data_type['total_discount'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 										<h1 class="mt-1 mb-3">{{ kpis.total_discount }}</h1>
 										<div class="mb-1">
 											<span class="text-danger"> <i class="mdi mdi-arrow-bottom-right"></i> -2.25% </span>
@@ -83,15 +160,11 @@
 					<div class="card flex-fill w-100">
 						<div class="card-header">
 
-							<h5 class="card-title mb-0" >Daily Orders</h5>
+							<h5 class="card-title mb-0" >Daily Orders {% if data_type['daily_orders'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 
 						</div>
 
 						<div class="card-body py-3" >
-							<!--<div class="chart chart-sm">
-									<canvas id="chartjs-dashboard-line"></canvas>
-							</div>
-							-->
 							<div id="chart_asd2" class="chart" style="height:200px;"></div>
 						</div>
 					</div>
@@ -135,7 +208,7 @@
 				<div class="col-12 col-md-12 col-xxl-6 d-flex order-3 order-xxl-2">
 					<div class="card flex-fill w-100">
 						<div class="card-header">
-							<h5 class="card-title mb-0">Customer Segmentation</h5>
+							<h5 class="card-title mb-0">Customer Segmentation {% if data_type['segmentation'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 						<div class="card-body px-5" style="height:400px;">
 							<div  id="segmentation" class="chart" style="height:400px;"></div>
@@ -143,37 +216,16 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-12 col-md-6 col-xxl-3 d-flex order-1 order-xxl-1">
-					<div class="card flex-fill">
-						<div class="card-header">
-							<h5 class="card-title mb-0">Calendar</h5>
-						</div>
-						<div class="card-header">
-							<button  type="submit" class="btn btn-pill btn-primary">Select</button>
 
-						</div>
-						<div class="card-header col-16 col-lg-10 col-xxl-12 d-flex">
-							<select id="inputState" class="form-control">
-								<option selected> Assign Dimension from Create Data Source</option>
-							</select>
-						</div>
-						<div class="card-body d-flex">
-							<div class="align-self-center w-100">
-								<div class="chart">
-									<input name="date_start" id="datetimepicker-dashboard" hidden>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div></form>
+			</div>
+			</form>
 
 
 			<div class="row">
 				<div class="col-12 col-lg-8 col-xxl-6 d-flex">
 					<div class="card flex-fill">
 						<div class="card-header">
-							<h5 class="card-title mb-0">Customer Journey</h5>
+							<h5 class="card-title mb-0">Customer Journey {% if data_type['customer_journey'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 						<div  id="cj_id" class="chart" style="height:400px;"></div>
 					</div>
@@ -182,7 +234,7 @@
 					<div class="card flex-fill w-100">
 						<div class="card-header">
 
-							<h5 class="card-title mb-0">Top 10 Purchased Products</h5>
+							<h5 class="card-title mb-0">Top 10 Purchased Products {% if data_type['most_ordered_products'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 						<div  id="products_id" class="chart" style="height:400px;"></div>
 					</div>
@@ -191,7 +243,7 @@
 					<div class="card flex-fill w-100">
 						<div class="card-header">
 
-							<h5 class="card-title mb-0">Top 10 Purchased Categories</h5>
+							<h5 class="card-title mb-0">Top 10 Purchased Categories {% if data_type['most_ordered_categories'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 						<div  id="categories_id" class="chart" style="height:400px;"></div>
 					</div>
