@@ -359,6 +359,15 @@ class Reports:
             print(e)
         return reports_index_count
 
+    def get_import_file_path(self, r_name, index, day_folder=False):
+        """
+        importing file path for .csv file to the build_in_reports
+        """
+        if not day_folder:
+            return join(self.es_tag['directory'], "build_in_reports", index, r_name) + ".csv"
+        else:
+            return join(self.es_tag['directory'], "build_in_reports", index, self.day_folder, r_name) + ".csv"
+
     def create_build_in_reports(self):
         """
         This is the main process of importing data into the given directory in .csv format.
@@ -374,23 +383,21 @@ class Reports:
             dimensions = self.collect_dimensions_for_data_works(has_dimensions)
             for index in dimensions:
                 reports = self.collect_reports(self.es_tag['port'], self.es_tag['host'], index)
-                try:
-                    os.mkdir(join(self.es_tag['directory'], "build_in_reports", index))
-                except:
-                    print("folder already exists")
-                try:
-                    os.mkdir(join(self.es_tag['directory'], "build_in_reports", index, self.day_folder))
-                except:
-                    print("folder already exists")
-                for r_name in self.sample_report_names:
-                    print("index :", index, "|| report : ", r_name)
-                    _data = self.get_related_report(reports, r_name)
-                    if len(_data) != 0:
-                        _data.to_csv(join(self.es_tag['directory'], "build_in_reports", index, r_name) + ".csv",
-                                     index=False)
-                        _data.to_csv(
-                            join(self.es_tag['directory'], "build_in_reports", index, self.day_folder, r_name) + ".csv",
-                            index=False)
+                if len(reports) != 0:  # if there has NOT been created any report, yet
+                    try:
+                        os.mkdir(join(self.es_tag['directory'], "build_in_reports", index))
+                    except:
+                        print("folder already exists")
+                    try:
+                        os.mkdir(join(self.es_tag['directory'], "build_in_reports", index, self.day_folder))
+                    except:
+                        print("folder already exists")
+                    for r_name in self.sample_report_names:
+                        print("index :", index, "|| report : ", r_name)
+                        _data = self.get_related_report(reports, r_name)
+                        if len(_data) != 0:
+                            _data.to_csv(self.get_import_file_path(r_name, index), index=False)
+                            _data.to_csv(self.get_import_file_path(r_name, index, day_folder=True), index=False)
 
     def query_es_for_report(self, report_name, index, date=datetime.datetime.now()):
         ## TODO: will be updated
