@@ -115,7 +115,10 @@ class Reports:
                               }
         self.p_usage_ba_orders = ['promotion_usage_before_after_orders', 'promotion_usage_before_after_amount']
         self.rfm_reports = ['rfm', 'segmentation']
+        self.rfm_metrics = {'recency', 'monetary', 'frequency'}
         self.day_folder = str(current_date_to_day())[0:10]
+        self.rfm_metrics_reports = ['frequency_recency', 'recency_monetary', 'monetary_frequency',
+                                    'monetary_clusters', 'frequency_clusters', 'recency_clusters']
 
     def connections(self):
         """
@@ -230,7 +233,7 @@ class Reports:
             query = " report_name == 'cohort' and type == 'customers_journey'"
         if r_name in 'kpis':
             query = " report_name == 'stats' and type == ''"
-        if r_name in 'rfm' or len(set(_splits) & {'recency', 'monetary', 'frequency'}) != 0:
+        if r_name in 'rfm' or len(set(_splits) & self.rfm_metrics) != 0:
             query = " report_name in ('rfm', 'segmentation')"
 
         # ab-test reports
@@ -247,7 +250,6 @@ class Reports:
 
         if r_name == 'user_counts_per_order_seq':
             query = " report_name == 'stats' and type == 'user_counts_per_order_seq' "
-        print(r_name, query)
         return query
 
     def get_promotion_comparison(self, x):
@@ -316,7 +318,14 @@ class Reports:
                 self.rfm_reports[1])).sort_values('report_date',  ascending=False)['data'])[0])
         report = pd.merge(rfm, segmentation, on='client', how='left')
         if len(metrics) != 0:
-            report = report[metrics + ['segments_numeric']]
+
+            if 'clusters' not in metrics:
+                report = report[metrics + ['segments_numeric']]
+            else:
+                _metric = list(set(metrics) & self.rfm_metrics)[0]
+                report = report.groupby([_metric + '_segment', _metric]).agg(
+                    {"client": lambda x: len(np.unique(x))}).reset_index().rename(columns={"client": "client_count"})
+        report
         return report
 
     def get_sample_report_names(self):
@@ -339,9 +348,9 @@ class Reports:
                 report_data = self.get_order_and_payment_amount_differences(report)
             if r_name == 'rfm':
                 report_data = self.get_rfm_reports(report)
-            if len(set(r_name.split("_")) & {'recency', 'monetary', 'frequency'}) != 0:
+            if r_name in self.rfm_metrics_reports: # rfm rec. - mon.,
                 report_data = self.get_rfm_reports(report, metrics=r_name.split("_"))
-            if r_name not in ['order_and_payment_amount_differences', 'rfm']:
+            if r_name not in ['order_and_payment_amount_differences', 'rfm'] + self.rfm_metrics_reports:
                 report = report.sort_values('report_date', ascending=False)
                 report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
         report_data = self.radomly_sample_data(report_data)
