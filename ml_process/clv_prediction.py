@@ -2,8 +2,9 @@ import sys, os, inspect
 import pandas as pd
 import numpy as np
 import shutil
+import glob
 from clv.executor import CLV
-
+glob
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
@@ -56,7 +57,11 @@ class CLVPrediction:
         self.query_es = QueryES(port=port, host=host)
         self.path = temporary_export_path
         self.temp_csv_file = join(temporary_export_path, "temp_data.csv")
+        self.temp_folder = join(temporary_export_path, "temp_purchase_amount_results", "*.csv")
+        self.results = join(temporary_export_path, "results_*.csv")
         self.clv_fields = ["client", "session_start_date", "payment_amount"]
+        self.result_query = "data_type == 'prediction' and session_start_date == session_start_date"
+        self.result_columns = ['session_start_date', 'client', 'payment_amount']
         self.clv_predictions = pd.DataFrame()
 
     def dimensional_query(self, boolean_query=None):
@@ -119,6 +124,38 @@ class CLVPrediction:
         if period == 'monthly':
             return 'month'
 
+    def remove_temp_files(self):
+        """
+        Removing temp_data.csv, .csv files in temp_purchase_amount_results and results*.csv files
+        """
+        # remove temp_data.csv
+        try:
+            os.unlink(self.temp_csv_file)
+        except Exception as e:
+            print("no file is observed!!!")
+
+        # remove results*.csv files
+        print(self.results)
+        print(glob.glob(self.results))
+        for f in glob.glob(self.results):
+            print(f)
+            try:
+                os.unlink(f)
+            except Exception as e:
+                print(e)
+                print("no file is observed!!!")
+
+        # remove .csv files in temp_purchase_amount_results
+        print(self.temp_folder)
+        print(glob.glob(self.temp_folder))
+        for f in glob.glob(self.temp_folder):
+            print(f)
+            try:
+                os.unlink(f)
+            except Exception as e:
+                print(e)
+                print("no file is observed!!!")
+
     def execute_clv(self, start_date, job='train', time_period='weekly'):
         """
         1.  train clv prediction models
@@ -153,17 +190,15 @@ class CLVPrediction:
                            time_indicator="session_start_date",
                            export_path=self.path)
             self.clv.clv_prediction()
-        self.clv_predictions = \
-        self.clv.get_result_data().query("data_type == 'prediction' and session_start_date == session_start_date")[
-            ['session_start_date', 'client', 'payment_amount']]
+        self.clv_predictions = self.clv.get_result_data().query(self.result_query)[self.result_columns]
+        self.clv_predictions['session_start_date'] = self.clv_predictions['session_start_date'].apply(lambda x: str(x))
+        self.clv_predictions = self.clv_predictions.rename(columns={"session_start_date": "date"})
         self.insert_into_reports_index(self.clv_predictions,
                                        time_period=time_period,
                                        date=start_date,
                                        index=self.order_index)
-        try:
-            os.unlink(self.temp_csv_file)
-        except Exception as e:
-            print("no file is observed!!!")
+
+        self.remove_temp_files()
 
     def fetch(self, end_date=None, time_period='weekly'):
         """
