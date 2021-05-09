@@ -304,6 +304,11 @@ class Reports:
                         usage_amount.rename(columns={'diff': 'diff_amount'}),
                         on='promotions', how='inner')[['diff_amount', 'diff', 'promotions']]
 
+    def radomly_sample_data(self, data):
+        if len(data) > 500:
+            data = data.sample(n=500, replace=False)
+        return data
+
     def get_rfm_reports(self, reports, metrics=[]):
         rfm = pd.DataFrame(list(reports.query("report_name == '{}'".format(
                 self.rfm_reports[0])).sort_values('report_date',  ascending=False)['data'])[0])
@@ -339,6 +344,7 @@ class Reports:
             if r_name not in ['order_and_payment_amount_differences', 'rfm']:
                 report = report.sort_values('report_date', ascending=False)
                 report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
+        report_data = self.radomly_sample_data(report_data)
         return report_data
 
     def get_report_count(self, es_tag):
