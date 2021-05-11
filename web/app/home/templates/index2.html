@@ -148,6 +148,18 @@
 					</div>
 				</div>
 
+				<div class="col-8 col-md-8 col-xxl-6 d-flex order-3 order-xxl-2">
+					<div class="card flex-fill w-100">
+						<div class="card-header">
+							<h5 class="card-title mb-0">RFM {% if data_type['daily_clv'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+						</div>
+						<div class="card-body px-5" style="height:650px;">
+							<div id="clv_id" ></div>
+
+						</div>
+					</div>
+				</div>
+
 			</div></form>
 
 			<div class="row">
@@ -214,6 +226,13 @@
 
         Plotly.plot('w_c_d_id', // the ID of the div, created above
 					w_c_d.trace, w_c_d.layout, {});
+
+		var clv = {{daily_clv | safe}};
+
+        Plotly.plot('clv_id', // the ID of the div, created above
+					clv.trace, clv.layout, {});
+
+
 
 
 

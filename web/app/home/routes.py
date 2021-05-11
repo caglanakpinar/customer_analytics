@@ -233,6 +233,8 @@ def route_template(template):
                                        graph_json['charts']['daily_funnel']),
                                    weekly_cohort_downloads=charts.get_json_format(
                                        graph_json['charts']['weekly_cohort_downloads']),
+                                   daily_clv=charts.get_json_format(
+                                       graph_json['charts']['daily_clv']),
                                    data_type=data_type,
                                    filters=filters)
 

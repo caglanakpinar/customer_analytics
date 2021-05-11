@@ -115,6 +115,7 @@ class Reports:
                               }
         self.p_usage_ba_orders = ['promotion_usage_before_after_orders', 'promotion_usage_before_after_amount']
         self.rfm_reports = ['rfm', 'segmentation']
+        self.clv_reports = ["clv_prediction", "stats"]
         self.rfm_metrics = {'recency', 'monetary', 'frequency'}
         self.day_folder = str(current_date_to_day())[0:10]
         self.rfm_metrics_reports = ['frequency_recency', 'recency_monetary', 'monetary_frequency',
@@ -250,6 +251,8 @@ class Reports:
 
         if r_name == 'user_counts_per_order_seq':
             query = " report_name == 'stats' and type == 'user_counts_per_order_seq' "
+        if 'clv' in r_name.split("_"):
+            query = "report_name in ( 'clv_prediction', 'stats') and type != type or type == 'daily_revenue'"
         return query
 
     def get_promotion_comparison(self, x):
@@ -306,6 +309,16 @@ class Reports:
                         usage_amount.rename(columns={'diff': 'diff_amount'}),
                         on='promotions', how='inner')[['diff_amount', 'diff', 'promotions']]
 
+    def get_clv_report(self, reports):
+        clv = pd.DataFrame(list(reports.query("report_name == '{}' and type != type'".format(
+                self.clv_reports[0])).sort_values('report_date',  ascending=False)['data'])[0])
+        daily_revenue = pd.DataFrame(list(reports.query("report_name == '{}' and type == 'daily_revenue'".format(
+                self.clv_reports[0])).sort_values('report_date',  ascending=False)['data'])[0])
+        clv['type'] = 'prediction'
+        daily_revenue['type'] = "actual"
+        reports = pd.concat([clv, daily_revenue])[['date', 'payment_amount', 'data_type']]
+        return reports
+
     def radomly_sample_data(self, data):
         if len(data) > 500:
             data = data.sample(n=500, replace=False)
@@ -325,7 +338,6 @@ class Reports:
                 _metric = list(set(metrics) & self.rfm_metrics)[0]
                 report = report.groupby([_metric + '_segment', _metric]).agg(
                     {"client": lambda x: len(np.unique(x))}).reset_index().rename(columns={"client": "client_count"})
-        report
         return report
 
     def get_sample_report_names(self):
@@ -350,9 +362,11 @@ class Reports:
                 report_data = self.get_rfm_reports(report)
             if r_name in self.rfm_metrics_reports: # rfm rec. - mon.,
                 report_data = self.get_rfm_reports(report, metrics=r_name.split("_"))
-            if r_name not in ['order_and_payment_amount_differences', 'rfm'] + self.rfm_metrics_reports:
+            if r_name not in ['order_and_payment_amount_differences', 'rfm', 'daily_clv'] + self.rfm_metrics_reports:
                 report = report.sort_values('report_date', ascending=False)
                 report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
+            if r_name == 'daily_clv':
+                report_data = self.get_clv_report(reports)
         report_data = self.radomly_sample_data(report_data)
         return report_data
 

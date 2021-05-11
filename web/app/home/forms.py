@@ -96,6 +96,9 @@ charts = {
                                                    yaxis_title='monetary',
                                                    zaxis_title='frequency'))
                            },
+
+                   "daily_clv": {'trace': go.Scatter(mode="lines+markers+text", fill='tozeroy'),
+                                 'layout': go.Layout()},
                    "user_counts_per_order_seq": {'trace': go.Bar(),
                                                  'layout': go.Layout(
                                                      xaxis_title="X Axis Title",
@@ -546,7 +549,7 @@ class Charts:
             charts[target]['charts'][chart]['layout']['height'] = height
 
     def decide_trace_type(self, trace, chart):
-        if len(set(['funnel', 'distribution']) & set(chart.split("_"))) != 0:
+        if len(set(['funnel', 'distribution', 'clv']) & set(chart.split("_"))) != 0:
             return trace
         else:
             if type(trace) == list:
@@ -694,7 +697,12 @@ class Charts:
                 trace['x'] = list(_data[chart.split("_")[0]])
                 trace['y'] = list(_data[chart.split("_")[1]])
                 trace['marker']['color'] = list(_data['segments_numeric'])  # segments are numerical values.
-
+        if 'clv' in chart.split("_"):
+            trace = []
+            for data_type in ["prediction", "actual"]:
+                 _data_dt = _data.query("data_type == @data_type")
+                 trace.append(go.Scatter(x=list(_data_dt['date']), y=list(_data_dt['payment_amount']),
+                     mode="lines+markers+text", fill='tozeroy'))
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 
     def get_layout(self, layout, chart, index, date, annotation=None):
