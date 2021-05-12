@@ -238,6 +238,17 @@ def route_template(template):
                                    data_type=data_type,
                                    filters=filters)
 
+        if template == 'clv.html':
+            graph_json, data_type, filters = charts.get_chart(target='clv', index=index, date=date)
+            return render_template(template,
+                                   segment=segment,
+                                   daily_clv=charts.get_json_format(
+                                       graph_json['charts']['daily_clv']),
+                                   clvsegments_amount=charts.get_json_format(
+                                       graph_json['charts']['clvsegments_amount']),
+                                   data_type=data_type,
+                                   filters=filters)
+
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html', 'rfm.htm',
                             'product.html', 'abtest-segments.html', 'abtest-product.html', 'abtest-promotion.html',
                             'stats-desc.html', 'stats-purchase.htm', 'cohorts.html', 'customer-segmentation.html']:

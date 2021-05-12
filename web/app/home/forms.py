@@ -338,38 +338,45 @@ charts = {
                                                         margin=dict(l=1, r=1, t=1, b=1),
                                                         height=400)}
                    ,
-                    'recency_clusters': {'trace': go.Scatter(y=[], x=[],
-                                                             hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Recency : %{x}',
-                                                             mode='markers',
-                                                             marker=dict(
-                                                                 size=[],
-                                                                 color=[],
-                                                                 showscale=False
-                                                             )),
-                                          'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
-                                         }
-                                ,
-                    'frequency_clusters': {'trace': go.Scatter(y=[], x=[],
-                                                               hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Frequency : %{x}',
-                                                               mode='markers',
-                                                               marker=dict(
-                                                                   size=[],
-                                                                   color=[],
-                                                                   showscale=False
-                                                             )),
-                                           'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
-                                         },
-                    'monetary_clusters': {'trace': go.Scatter(y=[], x=[],
-                                                              hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Monetary : %{x}',
+                   'recency_clusters': {'trace': go.Scatter(y=[], x=[],
+                                                            hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Recency : %{x}',
+                                                            mode='markers',
+                                                            marker=dict(
+                                                                size=[],
+                                                                color=[],
+                                                                showscale=False
+                                                            )),
+                                         'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
+                                        }
+                               ,
+                   'frequency_clusters': {'trace': go.Scatter(y=[], x=[],
+                                                              hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Frequency : %{x}',
                                                               mode='markers',
                                                               marker=dict(
                                                                   size=[],
                                                                   color=[],
                                                                   showscale=False
-                                                               )),
+                                                            )),
                                           'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
-                                           }
+                                        },
+                   'monetary_clusters': {'trace': go.Scatter(y=[], x=[],
+                                                             hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Monetary : %{x}',
+                                                             mode='markers',
+                                                             marker=dict(
+                                                                 size=[],
+                                                                 color=[],
+                                                                 showscale=False
+                                                              )),
+                                         'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
+                                          }
          },
+        "kpis": {}
+    },
+    "clv": {
+        "charts": {'daily_clv': {'trace': go.Scatter(mode="lines+markers+text", fill='tozeroy'),
+                                 'layout': go.Layout()},
+                   'clvsegments_amount': {'trace': go.Pie(labels=[], values=[], hole=.3), 'layout': go.Layout()}
+                   },
         "kpis": {}
     }
 }
@@ -701,8 +708,11 @@ class Charts:
             trace = []
             for data_type in ["prediction", "actual"]:
                  _data_dt = _data.query("data_type == @data_type")
-                 trace.append(go.Scatter(x=list(_data_dt['date']), y=list(_data_dt['payment_amount']),
+                 trace.append(go.Scatter(x=list(_data_dt['date']), y=list(_data_dt['payment_amount']), name=data_type,
                      mode="lines+markers+text", fill='tozeroy'))
+        if chart == 'clvsegments_amount':
+            trace['labels'] = list(_data['segments'])
+            trace['values'] = list(_data['payment_amount'])
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 
     def get_layout(self, layout, chart, index, date, annotation=None):
