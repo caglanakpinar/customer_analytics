@@ -9,7 +9,7 @@ from ml_process.ab_test import ABTests
 from ml_process.anomaly_detection import Anomaly
 
 ml_configs = {"date": None,
-              'time_period': 'weekly',
+              'time_period': '6 months',
               "segmentation": {"host": 'localhost', "port": '9200',
                                'download_index': 'downloads', 'order_index': 'orders'},
               "clv_prediction": {"temporary_export_path": None,
@@ -37,6 +37,7 @@ def create_mls(configs):
     del ea['segmentation']
     print("*" * 5, " CLV Prediction ", "*" * 5)
     ea['clv_prediction'].execute_clv(start_date=configs['date'], time_period=configs['time_period'])
+    del ea['clv_prediction']
     print("*" * 5, " A/B Test ", "*" * 5)
     ea['abtest'].build_in_tests(date=configs['date'])
     del ea['abtest']
