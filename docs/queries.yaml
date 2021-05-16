@@ -96,6 +96,20 @@ actions:
   PRIMARY KEY (id)
   )
 
+chat:
+  CREATE TABLE chat (
+  id INTEGER NOT NULL,
+  epoch VARCHAR,
+  date VARCHAR,
+  message VARCHAR,
+  general_message VARCHAR,
+  user VARCHAR,
+  chat_type VARCHAR,
+  user_pic VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+
 columns:
   es_connection:
     - id
@@ -175,6 +189,16 @@ columns:
     - id
     - data_type
     - action_name
+
+  chat:
+    - id
+    - epoch
+    - date
+    - message
+    - general_message
+    - user
+    - chat_type
+    - user_pic
 
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'
