@@ -107,7 +107,7 @@ def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion
             if ea == 'funnel':
                 conf[ea]['actions'] = actions['downloads']
                 conf[ea]['purchase_actions'] = actions['orders']
-            if ea == 'abtest':
+            if ea in ['abtest', 'clv_prediction']:
                 conf[ea]['temporary_export_path'] = directory
             if not has_product_conn:
                 if ea in ['products', 'abtest']:

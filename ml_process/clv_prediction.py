@@ -2,6 +2,7 @@ import sys, os, inspect
 import pandas as pd
 import numpy as np
 import shutil
+import glob
 from clv.executor import CLV
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -11,6 +12,7 @@ sys.path.insert(0, parentdir)
 from configs import default_es_port, default_es_host, default_query_date
 from utils import *
 from data_storage_configurations.query_es import QueryES
+from data_storage_configurations.reports import Reports
 
 
 class CLVPrediction:
@@ -24,6 +26,7 @@ class CLVPrediction:
                  temporary_export_path,
                  host=None,
                  port=None,
+                 time_period='weekly',
                  download_index='downloads',
                  order_index='orders'):
         """
@@ -50,20 +53,31 @@ class CLVPrediction:
         self.host = default_es_host if host is None else host
         self.download_index = download_index
         self.order_index = order_index
+        self.time_period = time_period
         self.clv = None
         self.query_es = QueryES(port=port, host=host)
         self.path = temporary_export_path
         self.temp_csv_file = join(temporary_export_path, "temp_data.csv")
-        self.clv_fields = ["client", "session_start_date", "payment_amount"]
+        self.temp_folder = join(temporary_export_path, "temp_purchase_amount_results", "*.csv")
+        self.results = join(temporary_export_path, "results_*.csv")
+        self.clv_fields = ["client", "session_start_date", "payment_amount", "dimension"]
+        self.result_query = "data_type == 'prediction' and session_start_date == session_start_date"
+        self.result_columns = ['session_start_date', 'client', 'payment_amount']
         self.clv_predictions = pd.DataFrame()
+        self.client_dimensions = pd.DataFrame()
+        self.collect_reports = Reports()
+        self.has_prev_clv = False
 
-    def dimensional_query(self, boolean_query=None):
-        if dimension_decision(self.order_index):
-            if boolean_query is None:
-                boolean_query = [{"term": {"dimension": self.order_index}}]
-            else:
-                boolean_query += [{"term": {"dimension": self.order_index}}]
-        return boolean_query
+    def get_customers_dimesions(self, _data):
+        _data["dimension"] = _data["dimension"].fillna("main")
+        if list(_data['dimension'].unique()) != 1:
+            _data_pv = _data.groupby(["client", "dimension"]).agg({"session_start_date": "count"}).reset_index().rename(columns={"session_start_date": "order_count"})
+            _data_pv['order_seq_num'] = _data_pv.sort_values(by=["client",
+                                                                 "dimension",
+                                                                 "order_count"], ascending=False).groupby(["client"]).cumcount() + 1
+            _data_pv = _data_pv.query("order_seq_num == 1")
+            _data_pv[["client", "dimension"]].groupby("client").agg({"dimension": "first"}).reset_index()
+            self.client_dimensions = pd.merge(_data.drop('dimension', axis=1), _data_pv, on='client', how='left')
 
     def get_orders_data(self, end_date):
         """
@@ -75,10 +89,22 @@ class CLVPrediction:
         self.query_es = QueryES(port=self.port, host=self.host)
         self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
         self.query_es.query_builder(fields=self.clv_fields,
-                                    boolean_queries=self.dimensional_query([{"term": {"actions.purchased": True}}]))
+                                    boolean_queries=[{"term": {"actions.purchased": True}}])
         _data = pd.DataFrame(self.query_es.get_data_from_es())
         _data['session_start_date'] = _data['session_start_date'].apply(lambda x: str(convert_to_date(x)))
+        self.get_customers_dimesions(_data)
         _data.query("session_start_date == session_start_date").to_csv(self.temp_csv_file, index=False)
+
+    def check_for_previous_clv_prediction(self):
+        """
+        check if the last clv prediction is applied in 7 days.
+        """
+        _reports = self.collect_reports.collect_reports(self.port, self.host, 'main',
+                                                        query={"report_name": "clv_prediction"})
+        if len(_reports) != 0:
+            _reports['report_date'] = _reports['report_date'].apply(lambda x: convert_to_date(x))
+            if abs(max(list(_reports['report_date'])) - current_date_to_day()). total_seconds() / 60 / 60 / 24 < 7:
+                self.has_prev_clv = True
 
     def insert_into_reports_index(self, clv_predictions, time_period, date=None, index='orders'):
         """
@@ -96,7 +122,7 @@ class CLVPrediction:
         :param index: dimensionality of data index orders_location1 ;  dimension = location1
         """
         list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if date is None else date.isoformat(),
+                        "report_date": current_date_to_day().isoformat() if date is None else convert_to_day(date).isoformat(),
                         "report_name": "clv_prediction",
                         "index": get_index_group(index),
                         "report_types": {"time_period": time_period},
@@ -116,34 +142,58 @@ class CLVPrediction:
             return 'day'
         if period == 'monthly':
             return 'month'
+        if period == '6 months':
+            return '6*month'
 
-    def execute_clv(self, start_date, job='train', time_period='weekly'):
+    def remove_temp_files(self):
         """
-        1.  train clv prediction models
-            For more details about models pls check; https://github.com/caglanakpinar/clv_prediction
+        Removing temp_data.csv, .csv files in temp_purchase_amount_results and results*.csv files
+        """
+        # remove temp_data.csv
+        try:
+            os.unlink(self.temp_csv_file)
+        except Exception as e:
+            print("no file is observed!!!")
+
+        # remove results*.csv files
+        for f in glob.glob(self.results):
+            print(f)
+            try:
+                os.unlink(f)
+            except Exception as e:
+                print(e)
+                print("no file is observed!!!")
+
+        # remove .csv files in temp_purchase_amount_results
+        for f in glob.glob(self.temp_folder):
+            try:
+                os.unlink(f)
+            except Exception as e:
+                print(e)
+                print("no file is observed!!!")
+
+    def execute_clv(self, start_date, job='train_prediction', time_period='weekly'):
+        """
+        1. train clv prediction models
+           For more details about models pls check; https://github.com/caglanakpinar/clv_prediction
         2. predict users of feature payment amount via using built models.
-        3. Each model and stored in the directory at elasticsearch folder. After it is used, it is removed.
+        3. use 'train_prediction' for the job argument which allows us to train and predict the results.
+           If time period is weekly and if there is a stored .json and .h5 trained models in last 7 days,
+           skips the train process and uses the latest trained model.
+        4. Each model and stored in the directory at elasticsearch folder. After it is used, it is removed.
+        5. If last stored clv prediction is applied before 7 days, it is not triggered for prediction again.
 
         :param start_date: date of start for clv prediction
         :param job: train or prediction
         :param time_period: weekly, daily, monthly
         """
         start_date = str(current_date_to_day())[0:10] if start_date is None else start_date
-        self.get_orders_data(end_date=start_date)
-        self.clv = CLV(customer_indicator="client",
-                       amount_indicator="payment_amount",
-                       job=job,
-                       date=start_date,
-                       data_source='csv',
-                       data_query_path=self.temp_csv_file,
-                       time_period=self.convert_time_period(time_period),
-                       time_indicator="session_start_date",
-                       export_path=self.path)
-        self.clv.clv_prediction()
-        if job == 'train':
+        self.check_for_previous_clv_prediction()
+        if not self.has_prev_clv:
+            self.get_orders_data(end_date=start_date)
             self.clv = CLV(customer_indicator="client",
                            amount_indicator="payment_amount",
-                           job='prediction',
+                           job=job,
                            date=start_date,
                            data_source='csv',
                            data_query_path=self.temp_csv_file,
@@ -151,17 +201,22 @@ class CLVPrediction:
                            time_indicator="session_start_date",
                            export_path=self.path)
             self.clv.clv_prediction()
-        self.clv_predictions = \
-        self.clv.get_result_data().query("data_type == 'prediction' and session_start_date == session_start_date")[
-            ['session_start_date', 'client', 'payment_amount']]
-        self.insert_into_reports_index(self.clv_predictions,
-                                       time_period=time_period,
-                                       date=start_date,
-                                       index=self.order_index)
-        try:
-            os.unlink(self.temp_csv_file)
-        except Exception as e:
-            print("no file is observed!!!")
+            self.clv_predictions = self.clv.get_result_data().query(self.result_query)[self.result_columns]
+            self.clv_predictions['session_start_date'] = self.clv_predictions['session_start_date'].apply(lambda x: str(x))
+            self.clv_predictions = self.clv_predictions.rename(columns={"session_start_date": "date"})
+            if len(self.client_dimensions) != 0:
+                self.clv_predictions = pd.merge(self.clv_predictions,
+                                                self.client_dimensions[['client', 'dimension']], on="client", how="left")
+            self.insert_into_reports_index(self.clv_predictions,
+                                           time_period=time_period,
+                                           date=start_date,
+                                           index=self.order_index)
+            del self.clv
+            del self.clv_predictions
+            self.clv = None
+            self.clv_predictions = pd.DataFrame()
+
+            self.remove_temp_files()
 
     def fetch(self, end_date=None, time_period='weekly'):
         """

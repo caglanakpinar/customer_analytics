@@ -1,4 +1,5 @@
 import sys, os, inspect
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
@@ -39,14 +40,19 @@ def create_exploratory_analysis(configs):
     ea['funnel'].purchase_action_funnel(start_date=configs['date'])
     ea['funnel'].download_signup_session_order_funnel(start_date=configs['date'])
     ea['funnel'].overall_funnel(start_date=configs['date'])
+    del ea['funnel']
     print("*" * 5, " Cohorts ", "*" * 5)
     ea['cohort'].execute_cohort(start_date=configs['date'])
+    del ea['cohort']
     print("*" * 5, " RFM ", "*" * 5)
     ea['rfm'].execute_rfm(start_date=configs['date'])
+    del ea['rfm']
     print("*" * 5, " Descriptive Statistics ", "*" * 5)
     ea['stats'].execute_descriptive_stats(start_date=configs['date'])
+    del ea['stats']
     print("*" * 5, " Product Analytics ", "*" * 5)
     ea['products'].execute_product_analysis(end_date=configs['date'])
+    del ea
 
 
 def query_exploratory_analysis(configs, queries, ea):

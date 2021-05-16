@@ -92,7 +92,8 @@ class Stats:
                       "average_basket_value_per_user",
                       "hourly_orders", "daily_orders", "weekly_orders", "monthly_orders",
                       "purchase_amount_distribution", "weekly_average_order_per_user",
-                      "weekly_average_session_per_user", "weekly_average_payment_amount", "user_counts_per_order_seq"]
+                      "weekly_average_session_per_user", "weekly_average_payment_amount", "user_counts_per_order_seq",
+                      "hourly_revenue", "daily_revenue", "weekly_revenue", "monthly_revenue"]
         self.last_week = None
         self.time_periods = time_periods# ["daily", "weekly", 'monthly']
         self.orders = pd.DataFrame()
@@ -208,7 +209,7 @@ class Stats:
 
     def hourly_orders(self):
         """
-        total number of orders per day
+        Average of total order count per day
         :return: data-frame
         """
         return self.orders[(self.orders['actions.purchased'] == True)].groupby('hourly').agg(
@@ -238,6 +239,38 @@ class Stats:
         """
         return self.orders[(self.orders['actions.purchased'] == True)].groupby("monthly").agg(
             {"id": "count"}).reset_index().rename(columns={"id": "orders"})
+
+    def hourly_revenue(self):
+        """
+        total revenue per hour
+        :return: data-frame
+        """
+        return self.orders[(self.orders['actions.purchased'] == True)].groupby('hourly').agg(
+            {"payment_amount": "sum"}).reset_index()
+
+    def daily_revenue(self):
+        """
+        total revenue per day
+        :return: data-frame
+        """
+        return self.orders[(self.orders['actions.purchased'] == True)].groupby("daily").agg(
+            {"payment_amount": "sum"}).reset_index()
+
+    def weekly_revenue(self):
+        """
+        total revenue per week
+        :return: data-frame
+        """
+        return self.orders[(self.orders['actions.purchased'] == True)].groupby("weekly").agg(
+            {"payment_amount": "sum"}).reset_index()
+
+    def monthly_revenue(self):
+        """
+        total revenue per month
+        :return:
+        """
+        return self.orders[(self.orders['actions.purchased'] == True)].groupby("monthly").agg(
+            {"payment_amount": "sum"}).reset_index()
 
     def purchase_amount_distribution(self):
         """
@@ -317,10 +350,13 @@ class Stats:
                                             self.purchase_amount_distribution,
                                             self.weekly_average_order_per_user, self.weekly_average_session_per_user,
                                             self.weekly_average_payment_amount,
-                                            self.user_order_count_per_order_seq
+                                            self.user_order_count_per_order_seq,
+                                            self.hourly_revenue, self.daily_revenue,
+                                            self.weekly_revenue, self.monthly_revenue
                                             ])):
             print("stat name :", metric[0])
-            if metric[0] in ["hourly_orders", "weekly_orders", "monthly_orders", "daily_orders",
+            if metric[0] in ["hourly_revenue", "daily_revenue", "weekly_revenue", "monthly_revenue",
+                             "hourly_orders", "weekly_orders", "monthly_orders", "daily_orders",
                              "purchase_amount_distribution", "weekly_average_order_per_user",
                              "weekly_average_session_per_user",
                              "weekly_average_payment_amount", "user_counts_per_order_seq"]:
