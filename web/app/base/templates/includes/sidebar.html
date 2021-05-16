@@ -14,9 +14,9 @@
 						<a data-target="#profile" data-toggle="collapse" class="sidebar-link collapsed">
               				<i class="align-middle" data-feather="user"></i> <span class="align-middle">Profile & Settings</span>
             			</a>
-						<ul id="profile" class="sidebar-dropdown list-unstyled collapse {% if 'pages-profile' in segment or 'pages-settings' in segment or 'pages-sign-in' in segment or 'pages-sign-up' in segment %} show {% endif %}" data-parent="#sidebar">
-							<li class="sidebar-item {% if 'pages-profile' in segment %} active {% endif %}"><a class="sidebar-link" href="pages-profile.html">Profile</a></li>
-							<li class="sidebar-item {% if 'pages-settings' in segment %} active {% endif %}"><a class="sidebar-link" href="pages-settings.html">Settings</a></li>
+						<ul id="profile" class="sidebar-dropdown list-unstyled collapse {% if 'profile' in segment or 'settings' in segment or 'pages-sign-in' in segment or 'pages-sign-up' in segment %} show {% endif %}" data-parent="#sidebar">
+							<li class="sidebar-item {% if 'profile' in segment %} active {% endif %}"><a class="sidebar-link" href="profile.html">Profile</a></li>
+							<li class="sidebar-item {% if 'settings' in segment %} active {% endif %}"><a class="sidebar-link" href="settings.html">Settings</a></li>
 							<li class="sidebar-item {% if 'pages-sign-up' in segment %} active {% endif %}"><a class="sidebar-link" href="pages-sign-in.html">Sign In</a></li>
 							<li class="sidebar-item {% if 'pages-sign-up' in segment %} active {% endif %}"><a class="sidebar-link" href="pages-sign-up.html">Sign Up</a></li>
 						</ul>
@@ -127,7 +127,6 @@
               				<i class="align-middle" data-feather="briefcase"></i> <span class="align-middle">Genius</span>
             			</a>
 					</li>
-
 
 					<li class="sidebar-header">
 						Auth

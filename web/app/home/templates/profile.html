@@ -1,0 +1,332 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Profile {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+
+			<h1 class="h3 mb-3">Profile</h1>
+
+			<div class="row">
+				<div class="col-md-4 col-xl-3">
+					<div class="card mb-3">
+						<div class="card-header">
+							<h5 class="card-title mb-0">Profile Details</h5>
+						</div>
+						<div class="card-body text-center">
+							<img src="/static/assets/img/avatars/avatar-1.png"
+							    alt="Jodie Drewer" class="img-fluid rounded-circle mb-2" width="128" height="128" />
+
+							<div class="row">
+								<input type="file" name="file" id="file" class="inputfile" style="color:green;"/>
+								<label for="file" style="color:green;">change pic</label>
+							</div>
+
+
+							<h5 class="card-title mb-0">
+								{{ current_user.username }}
+							</h5>
+							<div class="text-muted mb-2">
+								{{ current_user.email }}	
+							</div>
+
+							<div>
+								<a data-toggle="modal" data-target="#test" class="btn btn-primary btn-sm" ><span data-feather="message-square"></span> Message</a>
+								<form method="POST">
+									<div class="modal fade" id="test" tabindex="-1" role="dialog" aria-hidden="true">
+									<div class="modal-dialog" role="document">
+										<div class="modal-content" style=" width: 800px;">
+											<div class="modal-header">
+												<h4 class="card-subtitle text-muted"></h4>
+												<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+											</div>
+											<div class="modal-body m-3">
+												<div class="card">
+													<div class="card-body">
+														<h5 class="card-title mb-3" style="text-align:left;">Title Of Message</h5>
+														<input name="general_message" class="form-control mb-3 " type="text" style=" width: 700px; outline: none; border-radius: 25px; border: 2px solid #73AD21;" required/>
+														<div class="accordion" id="accordionExample">
+															<div class="card">
+																<div class="card-header" id="headingOne">
+																	<h5 class="card-title my-1">
+																		<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+																			Filters
+																		</a>
+																	</h5>
+																</div>
+																<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+																	<div class="row">
+																		<div class="col-md-6">
+																			<div class="card">
+																				<div class="card-body">
+																					<div class="card">
+																						<div class="card-header">
+																							<h5 class="card-title mb-0" style="text-align:left;">dimension selection</h5>
+																						</div>
+																						<div class="card-body">
+																							<select name="index" id="index" class="form-control" style="font-size:12px;">
+																								{% for d in filters['dimensions'] %}
+																									{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																										<option value= "main">{{ d }}</option>
+																									{% endif %}
+																									{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																										<option value="{{ d }}">{{ d }}</option>
+																									{% endif %}
+																								{% endfor %}
+																							</select>
+																						</div>
+																					</div>
+
+
+																					<div class="card">
+																						<div class="card-header">
+																							<h5 class="card-title mb-0" style="text-align:left;">chart title</h5>
+																						</div>
+																						<div class="card-body">
+																							<select name="chart" id="chart" class="form-control" style="font-size:12px;">
+																								 <option>select chart to show on message ..</option>
+																								 {% for page in filters['chart_names'] %}
+																								  	<optgroup label="{{ page }}">
+																										{% for d in filters['chart_names'][page] %}
+																											<option value= "{{page + '*' + d}}">{{ d }}</option>
+																										{% endfor %}
+																								  	</optgroup>
+																								{% endfor %}
+																							</select>
+																						</div>
+																					</div>
+
+																				</div>
+																			</div>
+																		</div>
+
+																		<div class="col-md-6">
+																			<div class="card flex-fil">
+																				<div class="card-body col-12">
+																					<div class="col-12 ">
+																						<div class="align-self-center w-100">
+																							<div class="chart">
+																								<input name="date" id="datetimepicker-dashboard" hidden>
+																							</div>
+																						</div>
+																					</div>
+																				</div>
+																			</div>
+																		</div>
+																	</div>
+																</div>
+															</div>
+
+
+														</div>
+														<h5 class="card-title mb-1" style="text-align:left;">Content
+														</h5>
+
+															<div class="mb-3">
+
+															</div>
+															<textarea name="message" class="form-control"
+																	  placeholder="use <chart nme> to show charts or <kpis> Ex: <Daily Funnel> Ex: <Daily Funnel *dimension:location_1; date:2021-05-13;>"
+
+																	  rows="5" style="width: 700px; outline: none; border-radius: 25px; border: 2px solid #73AD21;" required></textarea>
+													</div>
+												</div>
+											</div>
+											<div class="modal-footer">
+												<button name="edit" value="True" type="submit" class="btn btn-pill btn-outline-primary">send</button>
+											</div>
+										</div>
+									</div>
+									</div>
+								</form>
+							</div>
+						</div>
+						<hr class="my-0" />
+						<div class="card-body">
+							<h5 class="h6 card-title">Skills</h5>
+							<a href="#" class="badge bg-primary mr-1 my-1">HTML</a>
+							<a href="#" class="badge bg-primary mr-1 my-1">JavaScript</a>
+							<a href="#" class="badge bg-primary mr-1 my-1">Python</a>
+							<a href="#" class="badge bg-primary mr-1 my-1">AI</a>
+							<a href="#" class="badge bg-primary mr-1 my-1">AWS</a>
+						</div>
+						<hr class="my-0" />
+						<div class="card-body">
+							<h5 class="h6 card-title">About</h5>
+							<ul class="list-unstyled mb-0">
+								<li class="mb-1"><span data-feather="home" class="feather-sm mr-1"></span> Lives in <a href="#">Istanbul, Turkey</a></li>
+							</ul>
+						</div>
+						<hr class="my-0" />
+						<div class="card-body">
+							<h5 class="h6 card-title">Elsewhere</h5>
+							<ul class="list-unstyled mb-0">
+								<li class="mb-1"><span class="fas fa-globe fa-fw mr-1"></span> <a href="#">GitHub</a></li>
+								<li class="mb-1"><span class="fab fa-linkedin fa-fw mr-1"></span> <a href="#">LinkedIn</a></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-8 col-xl-9">
+					<div class="card" style = "height: 600px;  overflow:auto;  padding: 5px;">
+						<div class="card-header">
+
+							<h5 class="card-title mb-0">Activities</h5>
+						</div>
+						<div class="card-body h-100">
+
+							<div class="d-flex align-items-start">
+								<img src="/static/assets/img/avatars/avatar-4.png" width="36" height="36" class="rounded-circle mr-2" alt="John Gorn">
+								<div class="flex-grow-1">
+									<small class="float-right text-navy">5m ago</small>
+									<strong>John Gorn</strong> created CLV Prediction <strong> Weekly Schedule</strong><br />
+									<small class="text-muted">Today 7:51 pm</small><br />
+								</div>
+							</div>
+
+							<hr />
+							<div class="d-flex align-items-start">
+								<img src="/static/assets/img/avatars/avatar-1.png" width="36" height="36" class="rounded-circle mr-2" alt="Stacie Scull">
+								<div class="flex-grow-1">
+									<small class="float-right text-navy">30m ago</small>
+									<strong>Stacie Scull</strong> created Downloads to 1st Orders Cohort <strong> Weekly</strong><br />
+									<small class="text-muted">Today 7:21 pm</small>
+								</div>
+							</div>
+
+							<hr />
+							<div class="d-flex align-items-start">
+								<img src="/static/assets/img/avatars/avatar-4.png" width="36" height="36" class="rounded-circle mr-2" alt="John Gorn">
+								<div class="flex-grow-1">
+									<small class="float-right text-navy">1h ago</small>
+									<strong>John Gorn</strong> created AB - Test for Customer Segmentation<br />
+									<small class="text-muted">Today 6:35 pm</small>
+								</div>
+							</div>
+
+
+							<hr />
+							<div class="d-flex align-items-start">
+								<img src="/static/assets/img/avatars/avatar-2.png" width="36" height="36" class="rounded-circle mr-2" alt="William Harris">
+								<div class="flex-grow-1">
+									<small class="float-right text-navy">1d ago</small>
+									<strong>William Harris</strong> posted a comment on  <strong>John Gorn</strong>`s  created CLV Prediction Weekly Schedule <br />
+									<small class="text-muted">Yesterday 3:12 pm</small>
+									<div class="d-flex align-items-start mt-1 col-md-12">
+
+<div class="row">
+
+										<div class="accordion col-md-12" id="accordionExample">
+											<div class="card col-md-12" style="border:none;">
+												<div class="card-header" id="headingOne" >
+													<h5 class="card-title my-1">
+														<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="border:none; color:green;font-size:12px; ">
+															recent replies
+														</a>
+													</h5>
+												</div>
+												<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample" style="border:none; color:green;font-size:12px; ">
+
+
+													<div class="row">
+
+
+														<div class="col-md-12">
+															<div class="flex-grow-1">
+																<input class="border text-sm text-muted p-2 mt-1"
+																	   type="text" style=" width: 800px; outline: none; border-radius: 25px; border: 2px solid #73AD21;"/>
+																       <button class="btn btn-pill btn-outline-primary">send</button>
+															</div>
+
+														</div>
+													</div>
+												</div>
+											</div>
+
+
+										</div>
+
+	<div class="row">
+
+
+
+
+</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<hr />
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+
+	</main>
+
+		<style>
+			/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+
+
+
+
+.inputfile {
+
+	opacity: 8;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+}
+
+.inputfile + label {
+	cursor: pointer; /* "hand" cursor */
+}
+		</style>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+
+
+	</script>
+
+{% endblock javascripts %}

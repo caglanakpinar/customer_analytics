@@ -11,13 +11,14 @@ import json
 
 from web.app.home.models import RouterRequest
 from web.app.home.forms import SampleData, RealData, Charts, charts
-from screeninfo import get_monitors
+from web.app.home.profiles import Profiles
 
 
 samples = SampleData()
 real = RealData()
 charts = Charts(samples.kpis, real)
 reqs = RouterRequest()
+profile = Profiles()
 
 
 def get_segment(request):
@@ -252,10 +253,15 @@ def route_template(template):
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html', 'rfm.htm',
                             'product.html', 'abtest-segments.html', 'abtest-product.html', 'abtest-promotion.html',
                             'stats-desc.html', 'stats-purchase.htm', 'cohorts.html', 'customer-segmentation.html']:
-            reqs.execute_request(req=dict(request.form), template=segment)
-            reqs.fetch_results(segment, dict(request.form))
-            values = reqs.message
-            return render_template(template, segment=segment, values=values)
+            if template in ['profile.html', 'settings.html']:
+                profile.add_new_message(dict(request.form))
+                args = profile.fetch_chats()
+                return render_template(template, segment=segment, messagges=args['messages'], filters=args['filters'])
+            else:
+                reqs.execute_request(req=dict(request.form), template=segment)
+                reqs.fetch_results(segment, dict(request.form))
+                values = reqs.message
+                return render_template(template, segment=segment, values=values)
 
     except TemplateNotFound:
 
