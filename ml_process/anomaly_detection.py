@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from math import sqrt
 import datetime
-from statsmodels import stats
+from scipy import stats
 import sys
 
 import sys, os, inspect
@@ -95,17 +95,38 @@ class Anomaly:
         self.query_es = QueryES(port=port, host=host)
         self.reports = pd.DataFrame()
 
+    def collect_clv(self):
+        """
+        clv prediction results are not stored with dimensions.
+        Need to query individually.
+        """
+        if get_index_group(self.order_index) != 'main':
+            clv = self.report_execute.collect_reports(self.port, self.host, 'main',
+                                                            query={"report_name": "clv_prediction"})
+            clv['report_date'] = clv['report_date'].apply(lambda x: convert_to_date(x))
+            clv = pd.DataFrame(list(clv.sort_values(['report_name', 'report_date'], ascending=False)['data'])[0])
+            clv = clv[clv['dimension'] == get_index_group(self.order_index)]
+            if len(clv) != 0:
+                self.clv_prediction = clv.rename(columns={"date": "session_start_date"})
+
+        else:
+            self.clv_prediction = pd.DataFrame(list(self.reports.query("report_name == 'clv_prediction'")['data'])[0])
+        print(self.clv_prediction.head())
+
     def get_reports(self, date=None):
         """
         collecting all reports from reports index.
         """
-        date = current_date_to_day().isoformat() if date is None else convert_to_date(date).isoformat()
-
+        date = current_date_to_day() if date is None else convert_to_date(date)
+        end_date = date.isoformat()
         self.reports = self.report_execute.collect_reports(self.port,
                                                            self.host,
                                                            get_index_group(self.order_index),
                                                            query={'index': get_index_group(self.order_index),
-                                                                  'end': date})
+                                                                  'end': end_date})
+        self.reports['report_date'] = self.reports['report_date'].apply(lambda x: convert_to_date(x))
+        self.reports = self.reports.sort_values(['report_name', 'report_date'], ascending=False)
+        self.collect_clv()
 
     def detect_outlier(self, value, _mean, _var, _sample_size, left_tail=False):
         """
@@ -250,7 +271,7 @@ class Anomaly:
         for o in [2, 3, 4]:
             print("********* number of orders :", o)
             _cohort = pd.DataFrame(list(self.reports.query(
-                "report_name == 'cohort' and time_period == 'daily' and to == '" + str(o) + "' ")['data'])[0])
+                "report_name == 'cohort' and time_period == 'daily' and _to == '" + str(o) + "' ")['data'])[0])
             _name = 'anomaly_scores_' + str(o)
             _cohort[_name] = self.build_model(_cohort[self.feature_cohort].values,
                                               self.feature_cohort, self.p_cohort)
@@ -270,8 +291,12 @@ class Anomaly:
         self.cohorts_d = pd.DataFrame(
             list(self.reports.query(
                 "report_name == 'cohort' and time_period == 'daily' and type == 'downloads'")['data'])[0])
-        features = [str(i) for i in list(range(7))]
-        self.cohorts_d['anomaly_scores_from_d_to_1'] = self.build_model(self.cohorts_d[features].values,
+        self.features = [str(i) for i in list(range(7))]
+        print(self.cohorts_d[self.features].values.shape)
+        print(self.cohorts_d[self.features].head())
+        print(np.mean(self.cohorts_d[self.features]))
+        print(self.features)
+        self.cohorts_d['anomaly_scores_from_d_to_1'] = self.build_model(self.cohorts_d[self.features].values,
                                                                         self.features, self.p_cohort)
         _mean, _var, _sample_size = np.mean(self.cohorts_d['anomaly_scores_from_d_to_1']), np.var(
             self.cohorts_d['anomaly_scores_from_d_to_1']), len(self.cohorts_d)
@@ -294,14 +319,15 @@ class Anomaly:
                     _diff[1]].shift(-_diff[0])
                 _data[_diff[1]] = _data[_diff[1]].fillna(True)
 
+            print(_data.columns)
             _last_month_recent_day_compare = _data.query("is_last_month == True").groupby(
-                ["is_last_order", "isoweekday"]).agg({"order_count": "mean"}).reset_index()
+                ["is_last_order", "isoweekday"]).agg({"orders": "mean"}).reset_index()
 
             _last_month_recent_day_compare = pd.merge(
                 _last_month_recent_day_compare.query(
-                    "is_last_order == False").rename(columns={"order_count": "order_count_last_month"}),
+                    "is_last_order == False").rename(columns={"orders": "order_count_last_month"}),
                 _last_month_recent_day_compare.query(
-                    "is_last_order == True").rename(columns={"order_count": "order_count_last_recent"}),
+                    "is_last_order == True").rename(columns={"orders": "order_count_last_recent"}),
                 on='isoweekday', how='inner')[['isoweekday', 'order_count_last_month', 'order_count_last_recent']]
             _last_month_recent_day_compare['diff_perc'] = 100 * (
                     _last_month_recent_day_compare['order_count_last_recent'] - _last_month_recent_day_compare[
@@ -321,21 +347,28 @@ class Anomaly:
         self.daily_orders_comparison = self.daily_orders_comparison[['diff_perc', 'anomalities', 'daily']]
 
     def clv_segmentation_change(self):
-        self.clv_prediction = pd.DataFrame(list(self.reports.query("report_name == 'clv_prediction'")['data'])[0])
+        self.collect_clv()
         self.rfm = pd.DataFrame(list(self.reports.query("report_name == 'rfm'")['data'])[0])
+        self.clv_prediction['session_start_date'] = self.clv_prediction['session_start_date'].apply(
+            lambda x: convert_to_date(x))
         self.clv_prediction['session_start_date_prev'] = self.clv_prediction.sort_values(
             by=['client', 'session_start_date']).groupby(['client'])['session_start_date'].shift(-1)
-        frequency_clv = self.clv_prediction.query("session_start_date_prev == session_start_date_prev")
+
+        frequency_clv = self.clv_prediction[['session_start_date_prev', 'session_start_date', 'client']]
+        frequency_clv['session_start_date_prev'] = frequency_clv['session_start_date_prev'].fillna(current_date_to_day())
         frequency_clv['frequency'] = frequency_clv.apply(
             lambda row: calculate_time_diff(row['session_start_date'], row['session_start_date_prev'], 'week'), axis=1)
-        monetary_clv = self.clv_prediction.groupby('client').agg({"payment_amount": "mean"}).reset_index()
         frequency_clv = frequency_clv.groupby('client').agg({'frequency': 'mean'}).reset_index()
 
-        self.clv_prediction = pd.merge(pd.merge(monetary_clv, frequency_clv, on='client', how='left'),
-                                  self.rfm.rename(columns={'frequency': 'frequency_prev', 'monetary': 'monetary_prev'}),
-                                  on='client', how='left')
-        self.clv_prediction['monetary_diff'] = self.clv_prediction['payment_amount'] - self.clv_prediction['monetary_prev']
+        monetary_clv = self.clv_prediction.groupby('client').agg({"payment_amount": "mean"}).reset_index()
 
+        self.clv_prediction = pd.merge(pd.merge(monetary_clv,
+                                                frequency_clv, on='client', how='left'),
+                                       self.rfm.rename(columns={'frequency': 'frequency_prev',
+                                                                'monetary': 'monetary_prev'}),
+                                       on='client', how='left')
+
+        self.clv_prediction['monetary_diff'] = self.clv_prediction['payment_amount'] - self.clv_prediction['monetary_prev']
         self.clv_prediction['frequency_diff'] = self.clv_prediction.apply(
             lambda row: row['frequency_prev'] - row['frequency'] if row['frequency'] == row['frequency'] else None,
             axis=1)

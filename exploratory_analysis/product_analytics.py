@@ -226,6 +226,7 @@ class ProductAnalytics:
                 _result = ins[1]()
                 self.insert_into_reports_index(product_analytic=_result,
                                                pa_type=ins[0], start_date=end_date, index=self.order_index)
+                del _result
 
     def insert_into_reports_index(self, product_analytic, pa_type, start_date=None, index='orders'):
         """

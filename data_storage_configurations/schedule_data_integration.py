@@ -259,8 +259,9 @@ class Scheduler:
                 create_exploratory_analysis(self.ea_connection_structure)
                 self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_ea, "color": "green"})
             except Exception as e:
+                e = str(e) if e is not None else ''
                 self.logs_update(logs={"page": "data-execute",
-                                       "info": self.fail_log_for_ea + str(e)[:max(len(str(e)), 100)].replace("'", " "),
+                                       "info": self.fail_log_for_ea + str(e)[:min(len(str(e)), 100)].replace("'", " "),
                                        "color": "red"})
             try:
                 print("ML Works are initialized !")
@@ -269,8 +270,9 @@ class Scheduler:
                 create_mls(self.ml_connection_structure)
                 self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_ml, "color": "green"})
             except Exception as e:
+                e = str(e) if e is not None else ''
                 self.logs_update(logs={"page": "data-execute",
-                                       "info": self.fail_log_for_ml + str(e)[:max(len(str(e)), 100)].replace("'", " "),
+                                       "info": self.fail_log_for_ml + str(e)[:min(len(str(e)), 100)].replace("'", " "),
                                        "color": "red"})
             # Second execute EA and ML Works per dimension. Before execution, checking for dimensions
             try:
@@ -278,7 +280,7 @@ class Scheduler:
                 self.collect_dimensions_for_data_works()
                 if len(self.unique_dimensions) > 1:
                     print("Execute Ml Works and Exploratory Analysis for the Dimensions!")
-                    for dim in self.unique_dimensions: # iteratevely execute EA and ML works for each dimension
+                    for dim in self.unique_dimensions:  # iteratively execute EA and ML works for each dimension
                         print("*" * 20)
                         print("*"*10, " ", " Dimension Name : ", dim, "*"*10)
                         for i in [{"executor": create_exploratory_analysis,
@@ -296,8 +298,9 @@ class Scheduler:
                                 _info += " || dimension : " + dim
                                 self.logs_update(logs={"page": "data-execute", "info": _info, "color": "green"})
                             except Exception as e:
+                                e = str(e) if e is not None else ''
                                 fail_message = self.fail_log_for_ml if i['executor'] == create_mls else self.fail_log_for_ea
-                                fail_message += e[:max(len(e), 100)]
+                                fail_message += e[:min(len(e), 100)]
                                 self.logs_update(logs={"page": "data-execute", "info": fail_message, "color": "red"})
             except Exception as e:
                 print(e)
@@ -306,7 +309,8 @@ class Scheduler:
                 self.create_build_in_reports.create_build_in_reports()
                 self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_br, "color": "green"})
             except Exception as e:
-                fail_message = self.fail_log_for_br + e[:max(len(e), 100)]
+                e = str(e) if e is not None else ''
+                fail_message = self.fail_log_for_br + e[:min(len(e), 100)] if e is not None else self.fail_log_for_br
                 self.logs_update(logs={"page": "data-execute", "info": fail_message, "color": "red"})
 
     def jobs(self):
