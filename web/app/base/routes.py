@@ -1,3 +1,4 @@
+import logging
 from flask import jsonify, render_template, redirect, request, url_for
 from flask_login import (
     current_user,
@@ -10,9 +11,11 @@ from web.app import db, login_manager
 from web.app.base import blueprint
 from web.app.base.forms import LoginForm, CreateAccountForm
 from web.app.base.models import User
+from data_storage_configurations.logger import LogsBasicConfeger, logger_str
 
 from web.app.base.util import verify_pass
 
+LogsBasicConfeger()
 
 @blueprint.route('/')
 def route_default():
@@ -35,6 +38,7 @@ def login():
         if user and verify_pass( password, user.password):
 
             login_user(user)
+            logging.info(logger_str("login"))
             return redirect(url_for('base_blueprint.route_default'))
 
         # Something (user or pass) is not ok
@@ -86,6 +90,7 @@ def register():
 
 @blueprint.route('/logout')
 def logout():
+    logging.info(logger_str("logout"))
     logout_user()
     return redirect(url_for('base_blueprint.login'))
 

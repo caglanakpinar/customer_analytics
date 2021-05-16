@@ -1,4 +1,4 @@
-import sys, os, inspect
+import sys, os, inspect, logging
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
@@ -24,11 +24,14 @@ except Exception as e:
 from utils import current_date_to_day, convert_to_day, abspath_for_sample_data, read_yaml
 from configs import query_path
 from data_storage_configurations.reports import Reports
+from data_storage_configurations.logger import LogsBasicConfeger, logger_str
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
                        convert_unicode=True, connect_args={'check_same_thread': False})
 metadata = MetaData(bind=engine)
 con = engine.connect()
+
+LogsBasicConfeger()
 
 
 class Scheduler:
@@ -193,12 +196,19 @@ class Scheduler:
 
     def logs_update(self, logs):
         """
-        logs table in sqlite table is updated
+        logs table in sqlite table is updated.
+        chats table in sqlite table is updated.
         """
         try:
             self.check_for_table_exits(table='logs')
         except Exception as e:
             print(e)
+
+        try:
+            self.check_for_table_exits(table='chat')
+        except Exception as e:
+            print(e)
+
         try:
             logs['login_user'] = current_user
             logs['log_time'] = str(current_date_to_day())[0:19]
@@ -207,6 +217,21 @@ class Scheduler:
                                           values=logs
                                           ))
         except Exception as e:
+            print(e)
+
+        try:
+            logs['user'] = 'info'
+            logs['date'] = str(current_date_to_day())[0:19]
+            logs['user_logo'] = 'info.jpeg'
+            logs['chat_type'] = 'info'
+            logs['general_message'] = logs['info']
+            logs['message'] = ""
+            con.execute(self.insert_query(table='chat',
+                                          columns=self.sqlite_queries['columns']['chat'][1:],
+                                          values=logs
+                                          ))
+        except Exception as e:
+            pint("Schedule process")
             print(e)
 
     def create_schedule(self):
@@ -258,6 +283,7 @@ class Scheduler:
                 print(self.ea_connection_structure)
                 create_exploratory_analysis(self.ea_connection_structure)
                 self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_ea, "color": "green"})
+                logging.info(logger_str("job-ea-main-done"))
             except Exception as e:
                 e = str(e) if e is not None else ''
                 self.logs_update(logs={"page": "data-execute",
@@ -269,6 +295,7 @@ class Scheduler:
                 print(self.ml_connection_structure)
                 create_mls(self.ml_connection_structure)
                 self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_ml, "color": "green"})
+                logging.info(logger_str("job-ml-main-done"))
             except Exception as e:
                 e = str(e) if e is not None else ''
                 self.logs_update(logs={"page": "data-execute",
@@ -287,6 +314,8 @@ class Scheduler:
                                    "config": self.ea_connection_structure},
                                   {"executor": create_mls,
                                    "config": self.ml_connection_structure}]:
+                            # no need to execute for clv per dimension
+                            i['config'] = {c: i['config'][c] for c in i['config'] if c not in ['clv']}
                             for ea in i['config']:
                                 if ea not in ['date', 'time_period']:
                                     i['config'][ea]['order_index'], i['config'][ea]['download_index'] = dim, dim
@@ -294,9 +323,11 @@ class Scheduler:
                                 print("configs :")
                                 print(i['config'])
                                 i['executor'](i['config'])
-                                _info = self.suc_log_for_ml if i['executor'] == create_mls else self.suc_log_for_ea
+                                _type = 'ml' if i['executor'] == create_mls else 'ea'
+                                _info = self.suc_log_for_ml if _type == 'ml' else self.suc_log_for_ea
                                 _info += " || dimension : " + dim
                                 self.logs_update(logs={"page": "data-execute", "info": _info, "color": "green"})
+                                logging.info(logger_str("job-" + _type + "-" + dim + "-done"))
                             except Exception as e:
                                 e = str(e) if e is not None else ''
                                 fail_message = self.fail_log_for_ml if i['executor'] == create_mls else self.fail_log_for_ea
@@ -324,6 +355,7 @@ class Scheduler:
                                         data_columns=self.data_columns,
                                         actions=self.actions)
         print("Orders and Downloads Indexes Creation processes are ended!")
+        logging.info(logger_str("job-index-done"))
         self.data_works()
         print("Exploratory Analysis and ML Works Creation processes are ended!")
 

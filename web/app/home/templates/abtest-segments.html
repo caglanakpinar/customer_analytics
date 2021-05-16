@@ -14,44 +14,168 @@
 				<div class="card">
 					<div class="card-body">
 						<div class="row">
-							<div class="col-md-6">
+							<div class="accordion" id="accordionExample">
 								<div class="card">
-									<div class="card-header">
-										<h5 class="card-title">Daily Orders</h5>
+									<div class="card-header" id="headingOne">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Filters
+											</a>
+										</h5>
 									</div>
+									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+										<div class="row">
+											<div class="col-md-6">
+												<div class="card">
+													<div class="card-body">
+														<div class="card">
+															<div class="card-header">
+																<h5 class="card-title mb-0">Dimension selection</h5>
+															</div>
+															<div class="card-body">
+																<select name="index" id="index" class="form-control">
+																	{% for d in filters['dimensions'] %}
+																		{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																			<option value= "main">{{ d }}</option>
+																		{% endif %}
+																		{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																			<option value="{{ d }}">{{ d }}</option>
+																		{% endif %}
+																	{% endfor %}
+																</select>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
 
-									<div  id="d_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+											<div class="col-md-6">
+												<div class="card flex-fil">
+													<div class="card-body col-12">
+														<div class="col-12 ">
+															<div class="align-self-center w-100">
+																<div class="chart">
+																	<input name="date" id="datetimepicker-dashboard" hidden>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											<div class="card-header">
+											<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+										</div>
+
+										</div>
+									</div>
+								</div>
+
+								<div class="card">
+									<div class="card-header" id="headingTwo">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Infos
+											</a>
+										</h5>
+									</div>
+									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+										<div class="card-body">
+
+											Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch.
+											Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch
+											et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat
+											craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+										</div>
+									</div>
 								</div>
 							</div>
-							<div class="col-md-6">
+
+							<div class="col-md-4">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Hourly Orders</h5>
+										<h5 class="card-title" style="font-size:10px;"><strong> Daily </strong> Customers' <strong> Total Order Count </strong> per Customer Segment {% if data_type['segments_change_daily_before_after_orders'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents Average of total order count per customers per segment for <strong style="color:green;"> current week day (Ex: Monday)</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents Average of total order count per customers per segment for <strong style="color:green;"> last 4 weeks of current week day (Ex : last 4 Mondays)</strong>.</h6>
+										</div>
 									</div>
 									<div class="card-body">
-										<div  id="h_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div id="sc_daily_ba_o_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title" style="font-size:10px;"><strong> Weekly </strong> Customers' <strong> Total Order Count </strong> per Customer Segment {% if data_type['segments_change_weekly_before_after_orders'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents Average of total order count per customers per segment for <strong style="color:green;"> current week</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents Average of total order count per customers per segment for <strong style="color:green;"> last 4 weeks </strong>.</h6>
+										</div>
+									</div>
+									<div class="card-body">
+										<div id="sc_weekly_ba_o_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title" style="font-size:10px;"><strong> Monthly </strong> Customers' <strong> Total Order Count </strong> per Customer Segment {% if data_type['segments_change_monthly_before_after_orders'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents average of total order count per customer per segment for <strong style="color:green;"> current month</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents average of total order count per customer per segment for <strong style="color:green;"> last 4 months </strong>.</h6>
+										</div>
+									</div>
+									<div class="card-body">
+										<div id="sc_monthly_ba_o_id" class="plotly-gra ph-div" style="height:400px;wight"></div>
 									</div>
 								</div>
 							</div>
 						</div>
+
+
 						<div class="row">
-							<div class="col-md-6">
+							<div class="col-md-4">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Weekly Orders</h5>
+										<h5 class="card-title" style="font-size:10px;"><strong> Daily </strong> Customers' Average Purchase <strong> Payment Amount</strong> per Customer Segment {% if data_type['segments_change_daily_before_after_amount'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> current week day (Ex: Monday)</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> last 4 weeks of current week day (Ex : last 4 Mondays)</strong>.</h6>
+										</div>
 									</div>
 									<div class="card-body">
-										<div  id="w_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div id="sc_weekly_ba_a_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
-							<div class="col-md-6">
+							<div class="col-md-4">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Monthly Orders</h5>
+										<h5 class="card-title" style="font-size:10px;"><strong> Weekly </strong> Customers' Average Purchase <strong> Payment Amount</strong> per Customer Segment {% if data_type['segments_change_weekly_before_after_amount'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> current week</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> last 4 weeks </strong>.</h6>
+										</div>
 									</div>
 									<div class="card-body">
-										<div  id="m_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div id="sc_daily_ba_a_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title" style="font-size:10px;"><strong> Monthly </strong> Customers' Average Purchase <strong> Payment Amount</strong> per Customer Segment {% if data_type['segments_change_monthly_before_after_amount'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+										<div class="row">
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> After :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> current month</strong>.</h6>
+											<h6 class="card-subtitle text-muted mb-1" style="font-size:10px;">- <strong style="color:green;"> Before :</strong> Each bar represents average payment amount per customer per segment for <strong style="color:green;"> last 4 months </strong>.</h6>
+										</div>
+									</div>
+									<div class="card-body">
+										<div id="sc_monthly_ba_a_id" class="plotly-gra ph-div" style="height:400px;wight"></div>
 									</div>
 								</div>
 							</div>
@@ -70,25 +194,42 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 	<script>
 
-			var d_orders = {{daily_orders | safe}};
+			var sc_weekly_ba_o = {{sc_weekly_ba_orders | safe}};
 
-	        Plotly.plot('d_orders_id', // the ID of the div, created above
-						d_orders.trace, d_orders.layout, {});
+	        Plotly.plot('sc_weekly_ba_o_id', // the ID of the div, created above
+						sc_weekly_ba_o.trace, sc_weekly_ba_o.layout, {});
 
-			var h_orders = {{hourly_orders | safe}};
+			var sc_daily_ba_o = {{sc_daily_ba_orders | safe}};
 
-	        Plotly.plot('h_orders_id', // the ID of the div, created above
-						h_orders.trace, h_orders.layout, {});
+	        Plotly.plot('sc_daily_ba_o_id', // the ID of the div, created above
+						sc_daily_ba_o.trace, sc_daily_ba_o.layout, {});
 
-			var w_orders = {{weekly_orders | safe}};
+			var sc_monthly_ba_o = {{sc_monthly_ba_orders | safe}};
 
-	        Plotly.plot('w_orders_id', // the ID of the div, created above
-						w_orders.trace, w_orders.layout, {});
+	        Plotly.plot('sc_monthly_ba_o_id', // the ID of the div, created above
+						sc_monthly_ba_o.trace, sc_monthly_ba_o.layout, {});
 
-			var m_orders = {{monthly_orders | safe}};
 
-	        Plotly.plot('m_orders_id', // the ID of the div, created above
-						m_orders.trace, m_orders.layout, {});
+			var sc_weekly_ba_a = {{sc_weekly_ba_amount | safe}};
+
+	        Plotly.plot('sc_weekly_ba_a_id', // the ID of the div, created above
+						sc_weekly_ba_a.trace, sc_weekly_ba_a.layout, {});
+
+
+			var sc_daily_ba_a = {{sc_daily_ba_amount | safe}};
+
+	        Plotly.plot('sc_daily_ba_a_id', // the ID of the div, created above
+						sc_daily_ba_a.trace, sc_daily_ba_a.layout, {});
+
+			var sc_monthly_ba_a = {{sc_monthly_ba_amount | safe}};
+
+	        Plotly.plot('sc_monthly_ba_a_id', // the ID of the div, created above
+						sc_monthly_ba_a.trace, sc_monthly_ba_a.layout, {});
+
+
+
+
+
 
 
 	function myFunction() {

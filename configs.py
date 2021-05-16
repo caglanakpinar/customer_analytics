@@ -203,6 +203,13 @@ abtest_products = ["product_usage_before_after_amount_accept",
                    "product_usage_before_after_orders_accept",
                    "product_usage_before_after_orders_reject"]
 
+abtest_segments = ['segments_change_daily_before_after_amount',
+                   'segments_change_daily_before_after_orders',
+                   'segments_change_monthly_before_after_amount',
+                   'segments_change_monthly_before_after_orders',
+                   'segments_change_weekly_before_after_amount',
+                   'segments_change_weekly_before_after_orders']
+
 
 abtest_reports = ['product_usage_before_after_amount',
                   'product_usage_before_after_orders', 'promotion_comparison',
@@ -220,4 +227,90 @@ product_analytics = ['most_ordered_products',
                      'hourly_products_of_sales',
                      'hourly_categories_of_sales',
                      'most_combined_products']
+
+
+non_dimensional_reports = ["clv"]
+
+
+clv_prediction_reports = ["daily_clv", "clvsegments_amount"]
+
+
+messages = {'ds_connect': "{} Data Source is created or updated",
+            'es_connect': "ElasticSearch Connection is created.",
+            'es_delete': "ElasticSearch Connection is deleted.",
+            'schedule_start': "Scheduling Process is initialized.",
+            'schedule_end': "Scheduling Process is done.",
+            'schedule_delete': "Scheduling Process is deleted."}
+
+chart_names = {
+    "Sessions Of Actions Funnel":
+        {"Daily Funnel": "funnel*daily_funnel",
+         "Weekly Funnel": "funnel*weekly_funnel",
+         "Monthly Funnel": "funnel*monthly_funnel",
+         "Hourly Funnel": "funnel*hourly_funnel"},
+
+    "Customers Of Actions Funnel":
+        {"Daily Funnel": "funnel*daily_funnel_downloads",
+         "Weekly Funnel": "funnel*weekly_funnel_downloads",
+         "Monthly Funnel": "funnel*monthly_funnel_downloads",
+         "Hourly Funnel": "funnel*hourly_funnel_downloads"},
+    "Cohorts":
+        {"Daily Download to 1st Order Cohort": "cohort*daily_cohort_downloads",
+         "Daily From 1st to 2nd Order Cohort": "cohort*daily_cohort_from_1_to_2",
+         "Daily From 2nd to 3rd Order Cohort": "cohort*daily_cohort_from_2_to_3",
+         "Daily From 3rd to 4th Order Cohort": "cohort*daily_cohort_from_3_to_4",
+         "Weekly Download to 1st Order Cohort": "cohort*weekly_cohort_downloads",
+         "Weekly From 1st to 2nd Order Cohort": "cohort*weekly_cohort_from_1_to_2",
+         "Weekly From 2nd to 3rd Order Cohort": "cohort*weekly_cohort_from_2_to_3",
+         "Weekly From 3rd to 4th Order Cohort": "cohort*weekly_cohort_from_3_to_4"},
+    "Descriptive Stats":
+        {"Daily Orders": "stats*daily_orders",
+         "Hourly Orders": "stats*hourly_orders",
+         "Weekly Orders": "stats*weekly_orders",
+         "Monthly Orders": "stats*monthly_orders",
+         "Weekly Average Session Count per Customer": "descriptive*weekly_average_session_per_user",
+         "Weekly Average Purchase Count per Customer": "descriptive*weekly_average_payment_amount",
+         "Payment Amount Distribution": "descriptive*purchase_amount_distribution",
+         "Weekly Average Payment Amount": "descriptive*weekly_average_payment_amount"},
+    "Product Analytics":
+        {"Most Combined Products": "product_analytic*most_combined_products",
+         "Most Order Products": "product_analytic*most_ordered_products",
+         "Most Order Categories": "product_analytic*most_ordered_categories"},
+    "A/B test Promotion":
+        {"Promotion Comparison": "abtest-promotion*promotion_comparison",
+         "Order And Payment Amount Difference for Before And After Promotion Usage": "abtest-promotion*order_and_payment_amount_differences",
+         "A/B Test Promotion B. - A. Time Periods Cust.s' Avg. Purchase Payment Amount Test (Test Accepted!)": "abtest-promotion*promotion_usage_before_after_amount_accept",
+         "A/B Test Promotion B. - A. Time Periods Cust.s' Avg. Purchase Payment Amount Test (Test Rejected!)": "abtest-promotion*promotion_usage_before_after_amount_reject",
+         "A/B Test Promotion B. - A. Time Periods Cust.s' Tot. Purchase Count Test (Test Accepted!)": "abtest-promotion*promotion_usage_before_after_orders_accept",
+         "A/B Test Promotion B. - A. Time Periods Cust.s' Tott Purchase Count Test (Test Rejected!)": "abtest-promotion*promotion_usage_before_after_orders_reject"},
+    "A/B Test Product":
+        {
+            "A/B Test Product - B. - A. Time Periods Cust.s' Avg. Purchase Payment Amount Test (Test Accepted!)": "abtest-product*product_usage_before_after_amount_accept",
+            "A/B Test Product - B. - A. Time Periods Cust.s' Avg. Purchase Payment Amount Test (Test Rejected!)": "abtest-product*product_usage_before_after_amount_reject",
+            "A/B Test Product - B. - A. Time Periods Cust.s' Totg Purchase Count Test (Test Accepted!)": "abtest-product*product_usage_before_after_orders_accept",
+            "A/B Test Product - B. - A. Time Periods Cust.s' Totg Purchase Count Test (Test Rejected!)": "abtest-product*product_usage_before_after_orders_reject"},
+    "A/B Test Customer Segment Change":
+        {
+            "A/B Test Cust. Segment Change - A/B Test Product - Daily Customers' Total Order Count per Customer Segment": "abtest-segments*segments_change_daily_before_after_orders",
+            "Weekly Customers' Total Order Count per Customer Segment": "abtest-segments*segments_change_weekly_before_after_orders",
+            "Monthly Customers' Total Order Count per Customer Segment": "abtest-segments*segments_change_weekly_before_after_orders",
+            "Daily Customers' Average Purchase Payment Amount per Customer Segment": "abtest-segments*segments_change_daily_before_after_amount",
+            "Weekly Customers' Average Purchase Payment Amount per Customer Segment": "abtest-segments*segments_change_weekly_before_after_amount",
+            "Monthly Customers' Average Purchase Payment Amount per Customer Segment": "abtest-segments*segments_change_weekly_before_after_amount"},
+    "RFM":
+        {"RFM": "rfm*rfm",
+         "Frequency - Recency": "rfm*frequency_recency",
+         "Monetary - Frequency": "rfm*monetary_frequency",
+         "Recency - Monetary": "rfm*recency_monetary"},
+    "Segmentation":
+        {"Customer Segmentation": "customer-segmentation*",
+         "Frequency Segmentation": "customer-segmentation*frequency_clusters",
+         "Monetary Segmentation": "customer-segmentation*monetary_clusters",
+         "Recency Segmentation": "customer-segmentation*recency_clusters"},
+    "CLv Prediction":
+        {"Next Week CLV Predictions": "clv*daily_clv",
+         "CLV Predicted Nex Week Customers of Segments of Total Purchase Amounts": "clv*daily_clv"},
+    "Overall":
+        {"Customer Journey": "index*customer_journey",
+         "Total Number Customer Breakdown with Purchased Order Count": "clv*clvsegments_amount"}}
 

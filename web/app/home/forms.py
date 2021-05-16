@@ -15,7 +15,7 @@ from screeninfo import get_monitors
 from sqlalchemy import create_engine, MetaData
 
 from utils import convert_to_day, abspath_for_sample_data
-from configs import time_periods, descriptive_stats, abtest_promotions, abtest_products
+from configs import time_periods, descriptive_stats, abtest_promotions, abtest_products, abtest_segments
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
                        connect_args={'check_same_thread': False})
@@ -86,7 +86,7 @@ charts = {
         "charts": {"rfm": {"trace": go.Scatter3d(mode='markers',
                                                  marker=dict(color=None,
                                                              size=12,
-                                                             colorscale='Viridis',
+                                                             colorscale='delta',
                                                              opacity=0.8)),
                            "layout": go.Layout(width=1000,
                                                margin=dict(l=1, r=1, t=1, b=1),
@@ -96,14 +96,43 @@ charts = {
                                                    yaxis_title='monetary',
                                                    zaxis_title='frequency'))
                            },
+
+                   "daily_clv": {'trace': go.Scatter(mode="lines+markers+text", fill='tozeroy'),
+                                 'layout': go.Layout()},
                    "user_counts_per_order_seq": {'trace': go.Bar(),
-                                                  'layout': go.Layout(
-                                                      xaxis_title="X Axis Title",
-                                                      yaxis_title="Y Axis Title",
-                                                      margin=dict(r=1, t=1))}
+                                                 'layout': go.Layout(
+                                                     xaxis_title="X Axis Title",
+                                                     yaxis_title="Y Axis Title",
+                                                     margin=dict(r=1, t=1))},
 
 
-
+                   "purchase_amount_distribution": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
+                   "daily_funnel": {'trace': go.Scatter(mode="lines+markers+text",
+                                            line=dict(color='firebrick', width=4),
+                                            textposition="bottom center",
+                                            textfont=dict(
+                                                family="sans serif",
+                                                size=30,
+                                                color="crimson")),
+                                    'layout': go.Layout(legend=dict(
+                                                        orientation="h",
+                                                        yanchor="bottom",
+                                                        y=1.02,
+                                                        xanchor="right",
+                                                        x=1
+                                                    ))},
+                   "weekly_cohort_downloads": {'trace': go.Heatmap(z=[], x=[], y=[],
+                                                                   colorscale='Viridis', opacity=0.9,
+                                                                   showlegend=False, ygap=2, xgap=2,
+                                                                   hoverongaps=None, showscale=False),
+                                               'annotation': go.Annotation(text=[], x=[], y=[],
+                                                                           xref='x1', yref='y1', showarrow=False),
+                                               'layout': go.Layout(paper_bgcolor='rgba(0,0,0,0)',
+                                                                   plot_bgcolor='rgba(0,0,0,0)',
+                                                                   width=1000,
+                                                                   margin=dict(l=1, r=1, t=1, b=1),
+                                                                   height=600,
+                                                                   annotations=[])}
                    },
         # not any recent KPIs for now
         "kpis": {}
@@ -117,13 +146,13 @@ charts = {
                                                 family="sans serif",
                                                 size=30,
                                                 color="crimson")),
-                                      'layout': go.Layout(legend=dict(
-                                                          orientation="h",
-                                                          yanchor="bottom",
-                                                          y=1.02,
-                                                          xanchor="right",
-                                                          x=1
-                                                      ))}
+                        'layout': go.Layout(legend=dict(
+                                            orientation="h",
+                                            yanchor="bottom",
+                                            y=1.02,
+                                            xanchor="right",
+                                            x=1
+                                        ))}
                    for _f in ['daily_funnel', 'hourly_funnel', 'weekly_funnel', 'monthly_funnel',
                               'daily_funnel_downloads', 'hourly_funnel_downloads',
                               'weekly_funnel_downloads', 'monthly_funnel_downloads']},
@@ -230,7 +259,15 @@ charts = {
     },
     "abtest-segments": {
         # Descriptive Statistics
-        "charts": {_f: {'trace': [], 'layout': []} for _f in
+        "charts": {_f: {'trace': go.Bar(),
+                        'layout': go.Layout(
+                            legend=dict(
+                                orientation="h",
+                                yanchor="bottom",
+                                y=1.02,
+                                xanchor="right",
+                                x=1),
+                            margin=dict(r=1, t=1))} for _f in
                    ['segments_change_weekly_before_after_orders', 'segments_change_weekly_before_after_amount',
                     'segments_change_daily_before_after_orders', 'segments_change_daily_before_after_amount',
                     'segments_change_monthly_before_after_orders', 'segments_change_monthly_before_after_amount']},
@@ -251,7 +288,7 @@ charts = {
         "charts": {"rfm": {"trace": go.Scatter3d(mode='markers',
                                                  marker=dict(color=None,
                                                              size=12,
-                                                             colorscale='Viridis',
+                                                             colorscale='delta',
                                                              opacity=0.8)),
                            "layout": go.Layout(width=1000,
                                                margin=dict(l=1, r=1, t=1, b=1),
@@ -271,26 +308,75 @@ charts = {
                                                     )),
                                          "layout": go.Layout(margin=dict(l=1, r=1, t=1, b=1))},
                    'monetary_frequency': {'trace': go.Scatter(y=[], x=[],
-                                                    mode='markers',
-                                                    marker=dict(
-                                                        size=16,
-                                                        color=[],
-                                                        colorscale='Viridis',  # one of plotly colorscales
-                                                        showscale=False
-                                                    )),
+                                                              mode='markers',
+                                                              marker=dict(
+                                                                  size=16,
+                                                                  color=[],
+                                                                  colorscale='Viridis',  # one of plotly colorscales
+                                                                  showscale=False
+                                                              )),
                                           "layout": go.Layout(margin=dict(l=1, r=1, t=1, b=1))},
                    'recency_monetary': {'trace': go.Scatter(y=[], x=[],
-                                                    mode='markers',
-                                                    marker=dict(
-                                                        size=16,
-                                                        color=[],
-                                                        colorscale='Viridis',  # one of plotly colorscales
-                                                        showscale=False
-                                                    )),
+                                                            mode='markers',
+                                                            marker=dict(
+                                                                size=16,
+                                                                color=[],
+                                                                colorscale='Viridis',  # one of plotly colorscales
+                                                                showscale=False
+                                                            )),
                                         "layout": go.Layout(margin=dict(l=1, r=1, t=1, b=1))}
 
                    },
         # not any recent KPIs for now
+        "kpis": {}
+    },
+    "customer-segmentation": {
+        "charts": {'segmentation': {'trace': go.Treemap(marker_colorscale='Blues',
+                                                        textinfo="label+value+percent parent+percent entry",
+                                                        parents=[""] * 7),
+                                    'layout': go.Layout(width=1000,
+                                                        margin=dict(l=1, r=1, t=1, b=1),
+                                                        height=400)}
+                   ,
+                   'recency_clusters': {'trace': go.Scatter(y=[], x=[],
+                                                            hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Recency : %{x}',
+                                                            mode='markers',
+                                                            marker=dict(
+                                                                size=[],
+                                                                color=[],
+                                                                showscale=False
+                                                            )),
+                                         'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
+                                        }
+                               ,
+                   'frequency_clusters': {'trace': go.Scatter(y=[], x=[],
+                                                              hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Frequency : %{x}',
+                                                              mode='markers',
+                                                              marker=dict(
+                                                                  size=[],
+                                                                  color=[],
+                                                                  showscale=False
+                                                            )),
+                                          'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
+                                        },
+                   'monetary_clusters': {'trace': go.Scatter(y=[], x=[],
+                                                             hovertemplate='Segment %{marker.color}: <br>Client Count: %{y} </br>Monetary : %{x}',
+                                                             mode='markers',
+                                                             marker=dict(
+                                                                 size=[],
+                                                                 color=[],
+                                                                 showscale=False
+                                                              )),
+                                         'layout': go.Layout(margin=dict(l=1, r=1, t=1, b=1))
+                                          }
+         },
+        "kpis": {}
+    },
+    "clv": {
+        "charts": {'daily_clv': {'trace': go.Scatter(mode="lines+markers+text", fill='tozeroy'),
+                                 'layout': go.Layout()},
+                   'clvsegments_amount': {'trace': go.Pie(labels=[], values=[], hole=.3), 'layout': go.Layout()}
+                   },
         "kpis": {}
     }
 }
@@ -327,26 +413,54 @@ class RealData:
     Each dimension of reports will be created as .csv file.
     """
     kpis = {}
-    es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
-    folder = join(es_tag['directory'], "build_in_reports", "")
+    try:
+        es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
+        folder = join(es_tag['directory'], "build_in_reports", "")
+    except:
+        es_tag, folder = {}, []
+
+
+    def get_report_dimensions(self):
+        """
+
+        """
+        dimensions = ['There is no available report. Please execute Schedule Data Process']
+        try:
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            if exists(join(es_tag['directory'], "build_in_reports")):
+                _dims = listdir(dirname(join(es_tag['directory'], "build_in_reports")))
+                if len(_dims) != 0:
+                    dimensions = _dims
+            return dimensions
+        except:
+            return dimensions
     
-    def check_for_the_report(self, report_name, index='main'):
+    def check_for_the_report(self, report_name, index='main', date=None):
         """
         checks for 'build_in_reports' while platform is running.
         """
+
+
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
-            return exists(join(es_tag['directory'], "build_in_reports", index, report_name + ".csv"))
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            _path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
+            if date is not None:
+                _path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
+            return exists(_path)
         except:
             return False
 
-    def fetch_report(self, report_name, index='main'):
+    def fetch_report(self, report_name, index='main', date=None):
         """
         checks for 'build_in_reports' while platform is running and collect the selected report.
         """
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
-            return pd.read_csv(join(es_tag['directory'], "build_in_reports", index, report_name + ".csv"))
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            file_path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
+            if date is not None:
+                date_file_path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
+                file_path = date_file_path if exists(date_file_path) else file_path
+            return pd.read_csv(file_path)
         except:
             return False
 
@@ -406,12 +520,15 @@ class Charts:
         self.samples = samples
         self.reals = real
         self.graph_json = {}
+        self.data_type = {}
+        self.filters = {}
         self.monitor = get_monitors()[0]
         self.descriptive_stats = descriptive_stats
         self.abtest_promotions = abtest_promotions
         self.abtest_products = abtest_products
+        self.abtest_segments = abtest_segments
 
-    def get_data(self, chart, index):
+    def get_data(self, chart, index, date):
         """
         checks both sample and real data. If there is real data for the related KPI or chart fetches from sample_data.
         :param chart: e.g. rfm, segmentation, ...
@@ -419,7 +536,7 @@ class Charts:
         """
         try:
             if chart not in list(self.reals.kpis.keys()):
-                if not self.reals.check_for_the_report(report_name=chart, index=index):
+                if not self.reals.check_for_the_report(report_name=chart, index=index, date=date):
                     return self.samples[chart], False
                 else:
                     return self.reals.fetch_report(report_name=chart, index=index), True
@@ -445,7 +562,7 @@ class Charts:
             charts[target]['charts'][chart]['layout']['height'] = height
 
     def decide_trace_type(self, trace, chart):
-        if len(set(['funnel', 'distribution']) & set(chart.split("_"))) != 0:
+        if len(set(['funnel', 'distribution', 'clv']) & set(chart.split("_"))) != 0:
             return trace
         else:
             if type(trace) == list:
@@ -461,16 +578,26 @@ class Charts:
         "promotion / product  _usage_before_after_amount_reject",
         "promotion / product  _usage_before_after_orders_accept",
         "promotion / product  _usage_before_after_orders_reject"
+
+        "segments_change_weekly_before_after_orders"
+        "segments_change_weekly_before_after_amount"
+        "segments_change_daily_before_after_orders"
+        "segments_change_daily_before_after_amount"
+        "segments_change_monthly_before_after_orders"
+        "segments_change_monthly_before_after_amount"
+
         """
         _trace = []
-        if chart.split("_")[1] == 'usage':
-            _name = 'order count' if chart.split("_")[-2] == 'orders' else 'purchase amount'
+        if chart.split("_")[1] in ['usage', 'change']:
+            _type = -1 if chart.split("_")[1] == 'usage' else -2
+            _name = 'order count' if chart.split("_")[_type] == 'orders' else 'purchase amount'
             names = ["before average "+_name+"  per c.", "after average "+_name+" per c."]
-            indicator = chart.split("_")[0] + 's'
+            indicator = chart.split("_")[0] + 's' if chart.split("_")[1] == 'usage' else chart.split("_")[0]
             _trace = [
                 go.Bar(name=names[0], x=data[indicator], y=data['mean_control']),
                 go.Bar(name=names[1], x=data[indicator], y=data['mean_validation'])
                 ]
+
         if chart == 'order_and_payment_amount_differences':
             data = data.rename(columns={"diff": "Difference of Order (Before Vs After)",
                                         "diff_amount": "Difference of Payment Amount (Before Vs After)"})
@@ -485,11 +612,9 @@ class Charts:
                                             color=list(range(len(data))), colorscale='Rainbow'),
                                 mode='markers',
                                 name='markers')
-        if chart.split("_")[1] == 'change':
-            _trace = data.to_dict('results')
         return _trace
 
-    def get_trace(self, trace, chart, index):
+    def get_trace(self, trace, chart, index, date):
         """
         fill more variables on charts dictionary. At this process, data sets are stored in the trace.
 
@@ -497,7 +622,7 @@ class Charts:
         :param chart: e.g. rfm, segmentation, ...
         :return:
         """
-        _data, is_real_data = self.get_data(chart, index)  # collect data
+        _data, is_real_data = self.get_data(chart, index, date)  # collect data
         # data for line chart daily(sum), weekly(sum), houry(average), monthly(sum)
         if chart in ["_".join([t, 'orders']) for t in time_periods]:
             try:
@@ -555,7 +680,7 @@ class Charts:
                 trace['x'] = list(_data[_t])
                 trace['y'] = list(_data[indicator])
                 trace['text'] = list(_data[indicator])
-        if chart in self.abtest_promotions + self.abtest_products:
+        if chart in self.abtest_promotions + self.abtest_products + self.abtest_segments:
             trace = self.ab_test_of_trace(_data, chart)
         if chart == 'user_counts_per_order_seq':
             trace['x'] = list(_data['order_seq_num'])
@@ -575,14 +700,29 @@ class Charts:
             x_column = 'products' if 'products' in chart.split("_") else 'category'
             trace['x'], trace['y'] = list(_data[x_column]), list(_data['order_count'])
         if 'recency' in chart.split("_") or 'frequency' in chart.split("_") or 'monetary' in chart.split("_"):
-            trace['x'] = list(_data[chart.split("_")[0]])
-            trace['y'] = list(_data[chart.split("_")[1]])
-            trace['marker']['color'] = list(_data['segments_numeric'])  # segments are numerical values.
-
+            if 'clusters' in chart.split("_"):
+                _segment_column = chart.split("_")[0] + '_segment'
+                trace['x'] = list(_data[chart.split("_")[0]])
+                trace['y'] = list(_data['client_count'])
+                trace['marker']['size'] = [s * 16 for s in list(_data[_segment_column])]
+                trace['marker']['color'] = list(_data[_segment_column])
+            else:
+                trace['x'] = list(_data[chart.split("_")[0]])
+                trace['y'] = list(_data[chart.split("_")[1]])
+                trace['marker']['color'] = list(_data['segments_numeric'])  # segments are numerical values.
+        if 'clv' in chart.split("_"):
+            trace = []
+            for data_type in ["prediction", "actual"]:
+                 _data_dt = _data.query("data_type == @data_type")
+                 trace.append(go.Scatter(x=list(_data_dt['date']), y=list(_data_dt['payment_amount']), name=data_type,
+                     mode="lines+markers+text", fill='tozeroy'))
+        if chart == 'clvsegments_amount':
+            trace['labels'] = list(_data['segments'])
+            trace['values'] = list(_data['payment_amount'])
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 
-    def get_layout(self, layout, chart, index, annotation=None):
-        _data = self.get_data(chart, index)[0]
+    def get_layout(self, layout, chart, index, date, annotation=None):
+        _data = self.get_data(chart, index, date)[0]
         if 'cohort' in chart.split("_"):
             _t = chart.split("_")[0]
             _t_str = ' day' if _t == 'daily' else ' week'
@@ -608,19 +748,26 @@ class Charts:
             layout['yaxis'] = {"range": [
                 round(max(0, min(min(_data[columns[0]]), min(_data[columns[1]])) - 0.02), 2),
                 round(max(0, max(max(_data[columns[0]]), max(_data[columns[1]])) - 0.02), 2)]}
+        if 'change' in chart.split("_"):
+            columns = ['mean_control', 'mean_validation']
+            layout['yaxis'] = {"range": [
+                round(max(0, min(min(_data[columns[0]]), min(_data[columns[1]])) - 0.02), 2),
+                round(max(0, max(max(_data[columns[0]]), max(_data[columns[1]])) - 0.02), 2)]}
+        if 'change' in chart.split("_"):
+            return layout
+        else:
+            return [layout] if 'usage' not in chart.split("_") else layout
 
-        return [layout] if 'usage' not in chart.split("_") else layout
-
-    def get_values(self, kpi, index):
+    def get_values(self, kpi, index, date):
         """
         get data related KPI
         :param kpi: .e.g.total_orders, total_visitors, ...
         :return: dictionary with KPIs in keys
         """
-        _data = self.get_data(kpi, index)[0].to_dict('results')[0]
-        return _data
+        _data, is_real_data = self.get_data(kpi, index, date)
+        return _data.to_dict('results')[0], is_real_data
 
-    def get_chart(self, target, index='main'):
+    def get_chart(self, target, index='main', date=None):
         """
         related to 'target', charts and KPIs are collected in order to show on-page.
         The main aim here, fill the self.graph_json dictionary with serialized dictionaries.
@@ -629,23 +776,41 @@ class Charts:
         """
         # collecting charts
         self.graph_json['charts'] = {}
+        self.data_type = {}
+        self.filters = {"dimensions": self.reals.get_report_dimensions()}
         for c in charts[target]['charts']:
-            trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index)
+            trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index, date)
             self.get_widths_heights(chart=c, target=target)
+            annotation = charts[target]['charts'][c]['annotation'] if 'cohort' in c.split("_") else None
             layout = self.get_layout(charts[target]['charts'][c]['layout'], c,
-                                     annotation=charts[target]['charts'][c]['annotation'] if target == 'cohort' else None, index=index)
+                                     annotation=annotation, index=index, date=date)
+            self.data_type[c] = is_real_data
             self.graph_json['charts'][c] = {'trace': trace,
                                             'layout': layout, 'is_real_data': is_real_data}
         # collecting KPIs
         self.graph_json['kpis'] = {}
         for k in charts[target]['kpis']:
-            _obj = self.get_values(k, index)
+            _obj, is_real_data = self.get_values(k, index, date)
             for _k in charts[target]['kpis'][k]:
                 try:
+                    self.data_type[_k] = is_real_data
                     self.graph_json['kpis'][_k] = '{:,}'.format(int(_obj[_k])).replace(",", ".")
                 except Exception as e:
                     print()
-        return self.graph_json
+                    print()
+        return self.graph_json, self.data_type, self.filters
+
+    def get_individual_chart(self, target, chart, index='main', date=None):
+        self.graph_json['charts'] = {}
+        c = charts[target]['charts'][chart]
+        trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index, date)
+        self.get_widths_heights(chart=c, target=target)
+        annotation = charts[target]['charts'][c]['annotation'] if 'cohort' in c.split("_") else None
+        layout = self.get_layout(charts[target]['charts'][c]['layout'], c,
+                                 annotation=annotation, index=index, date=date)
+        self.data_type[c] = is_real_data
+        self.graph_json['charts'][c] = {'trace': trace,
+                                        'layout': layout, 'is_real_data': is_real_data}
 
     def get_json_format(self, chart):
         return json.dumps({"trace": chart['trace'],

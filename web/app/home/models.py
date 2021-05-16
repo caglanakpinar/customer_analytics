@@ -1,4 +1,4 @@
-import sys, os, inspect
+import sys, os, inspect, logging
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
@@ -16,11 +16,14 @@ from data_storage_configurations import connection_check, create_index, check_el
 from exploratory_analysis import ea_configs
 from ml_process import ml_configs
 from utils import sqlite_string_converter
+from data_storage_configurations.logger import LogsBasicConfeger, logger_str
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
                        connect_args={'check_same_thread': False})
 metadata = MetaData(bind=engine)
 con = engine.connect()
+
+LogsBasicConfeger()
 
 
 class RouterRequest:
@@ -53,7 +56,6 @@ class RouterRequest:
         _query += " SET " + ", ".join([i[0] + " = '" + i[1] + "'" for i in values])
         _query +=" WHERE " + condition
         _query = _query.replace("\\", "")
-        print(_query)
         return _query
 
     def delete_query(self, table, condition):
@@ -71,15 +73,39 @@ class RouterRequest:
             con.execute(self.sqlite_queries[table])
 
     def logs_update(self, logs):
+        """
+        logs table in sqlite table is updated.
+        chats table in sqlite table is updated.
+        """
         try:
             self.check_for_table_exits(table='logs')
         except Exception as e:
+            logging.error(e)
+
+        try:
+            self.check_for_table_exits(table='chat')
+        except Exception as e:
             print(e)
+
         try:
             logs['login_user'] = current_user
             logs['log_time'] = str(current_date_to_day())[0:19]
             con.execute(self.insert_query(table='logs',
                                           columns=self.sqlite_queries['columns']['logs'][1:],
+                                          values=logs
+                                          ))
+        except Exception as e:
+            logging.error(e)
+
+        try:
+            logs['user'] = 'info'
+            logs['date'] = str(current_date_to_day())[0:19]
+            logs['user_logo'] = 'info.jpeg'
+            logs['chat_type'] = 'info'
+            logs['general_message'] = logs['info']
+            logs['message'] = ""
+            con.execute(self.insert_query(table='chat',
+                                          columns=self.sqlite_queries['columns']['chat'][1:],
                                           values=logs
                                           ))
         except Exception as e:
@@ -98,7 +124,7 @@ class RouterRequest:
             if query_str is not None:
                 data = data.query(query_str)
         except Exception as e:
-            print(e)
+            logging.error(e)
         return data
 
     def get_intersect_columns_with_request(self, requests, table):
@@ -109,7 +135,7 @@ class RouterRequest:
             return connection_check(request={col: requests[col] for col in columns}, index=requests['data_type'],
                                 type=requests['data_type'])
         except Exception as e:
-            print(e)
+            logging.error(e)
 
     def check_for_both_sessions_and_customers_data_source(self, data_connection):
         if data_connection['orders_data_source_tag'] not in ['None', None] and \
@@ -128,7 +154,7 @@ class RouterRequest:
                 if col not in columns:
                     requests[col] = None
         except Exception as e:
-            print(e)
+            logging.error(e)
         return requests
 
     def check_for_session_and_customer_product_connect(self):
@@ -155,7 +181,7 @@ class RouterRequest:
         try:
             data_connection = self.collect_data_from_table(table='data_connection')
         except Exception as e:
-            print(e)
+            logging.error(e)
         prev_schedule = self.collect_data_from_table(table='schedule_data')
         if len(prev_schedule) != 0:
             self.message['schedule_check'] = True
@@ -170,7 +196,7 @@ class RouterRequest:
             else:
                 self.message['es_connection'] = '....'
         except Exception as e:
-            print(e)
+            logging.error(e)
 
         try:
             logs = self.collect_data_from_table(table='logs')
@@ -180,7 +206,7 @@ class RouterRequest:
             else:
                 self.message['logs'] = '....'
         except Exception as e:
-            print(e)
+            logging.error(e)
 
         if len(data_connection) != 0:
             if self.check_for_both_sessions_and_customers_data_source(data_connection.to_dict('results')[-1]):
@@ -222,7 +248,7 @@ class RouterRequest:
                                               columns=self.sqlite_queries['columns']['data_connection'][1:],
                                               values=requests))
             except Exception as e:
-                print(e)
+                logging.error(e)
         else:
             data_connections = data_connections.to_dict('results')[-1]
             try:
@@ -230,7 +256,7 @@ class RouterRequest:
                                               condition=" id = " + str(data_connections['id']),
                                               columns=columns, values=requests))
             except Exception as e:
-                print(e)
+                logging.error(e)
 
     def update_data_columns_match_table(self, requests, columns):
         try:
@@ -243,16 +269,16 @@ class RouterRequest:
                                                   columns=self.sqlite_queries['columns']['data_columns_integration'][1:],
                                                   values=requests))
                 except Exception as e:
-                    print(e)
+                    logging.error(e)
             else:
                 try:
                     con.execute(self.update_query(table='data_columns_integration',
                                                   condition=" id = 1 ",
                                                   columns=columns, values=requests))
                 except Exception as e:
-                    print(e)
+                    logging.error(e)
         except Exception as e:
-            print(e)
+            logging.error(e)
 
     def remove_data_type_action(self, requests):
         prev_actions = self.collect_data_from_table(table='actions')
@@ -303,7 +329,7 @@ class RouterRequest:
                                    "info": self.success_data_execute + " ".join(requests['time_period'].split("_")),
                                    "color": "green"})
         except Exception as e:
-            print(e)
+            logging.error(e)
         return requests['tag']
 
     def update_data_query_path_on_schedule(self, request):
@@ -331,14 +357,16 @@ class RouterRequest:
                     con.execute(self.insert_query(table='es_connection',
                                                   columns=self.sqlite_queries['columns']['es_connection'][1:],
                                                   values=requests))
+                    logging.info(logger_str("es-connect-create"))
                 except Exception as e:
-                    print(e)
+                    logging.error(e)
 
         if requests.get('delete', None) is not None:
             try:
                 con.execute("DROP table es_connection")
+                logging.info(logger_str("es-connect-delete"))
             except Exception as e:
-                print(e)
+                logging.error(e)
 
     def data_connections(self, requests):
         # for orders index choose ElasticSearch Connection from es_connection table (only status == 'on')
@@ -354,18 +382,22 @@ class RouterRequest:
                 self.update_actions_table(requests)
                 self.update_data_connection_table(requests, _columns)
                 self.update_data_columns_match_table(requests, _columns_2)
+                logging.info(logger_str("ds-" + requests['data_type'] + "_connect-create"))
 
     def data_execute(self, requests):
         if requests.get('schedule', None) is not None:
             es_tag = self.update_schedule_table(requests)
+            logging.info(logger_str("schedule-start"))
             create_index(tag=es_tag, ea_configs=ea_configs, ml_configs=ml_configs)
+            logging.info(logger_str("schedule-end"))
         if requests.get('edit', None) is not None:
             self.update_data_query_path_on_schedule(requests)
         if requests.get('delete', None) is not None:
             try:
                 con.execute("DELETE FROM schedule_data")
+                logging.info(logger_str("schedule-delete"))
             except Exception as e:
-                print(e)
+                logging.error(e)
 
     def check_for_request(self, _r):
         _r_updated = {}
@@ -386,12 +418,10 @@ class RouterRequest:
                     _r_updated['schedule'] = True
 
         except Exception as e:
-            print(e)
+            logging.error(e)
         return _r_updated
 
     def execute_request(self, req, template):
-        print("template :", template, "request :", req)
-        self.update_message_and_tables()
         if req != {}:
             if template == 'data-es':
                 self.manage_data_integration(self.check_for_request(req))
@@ -417,7 +447,7 @@ class RouterRequest:
                 else:
                     self.message['es_connection'] = '....'
             except Exception as e:
-                print(e)
+                logging.error(e)
         if template == 'data-execute':
             self.values_for_schedule_data()
 

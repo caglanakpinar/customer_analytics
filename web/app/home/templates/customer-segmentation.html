@@ -14,22 +14,98 @@
 				<div class="card">
 					<div class="card-body">
 						<div class="row">
+							<div class="accordion" id="accordionExample">
+								<div class="card">
+									<div class="card-header" id="headingOne">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Filters
+											</a>
+										</h5>
+									</div>
+									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+										<div class="row">
+											<div class="col-md-6">
+												<div class="card">
+													<div class="card-body">
+														<div class="card">
+															<div class="card-header">
+																<h5 class="card-title mb-0">Dimension selection</h5>
+															</div>
+															<div class="card-body">
+																<select name="index" id="index" class="form-control">
+																	{% for d in filters['dimensions'] %}
+																		{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																			<option value= "main">{{ d }}</option>
+																		{% endif %}
+																		{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																			<option value="{{ d }}">{{ d }}</option>
+																		{% endif %}
+																	{% endfor %}
+																</select>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="card flex-fil">
+													<div class="card-body col-12">
+														<div class="col-12 ">
+															<div class="align-self-center w-100">
+																<div class="chart">
+																	<input name="date" id="datetimepicker-dashboard" hidden>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											<div class="card-header">
+											<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+										</div>
+
+										</div>
+									</div>
+								</div>
+
+								<div class="card">
+									<div class="card-header" id="headingTwo">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Infos
+											</a>
+										</h5>
+									</div>
+									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+										<div class="card-body">
+											Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch.
+											Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch
+											et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat
+											craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+										</div>
+									</div>
+								</div>
+							</div>
+
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Daily Orders</h5>
+										<h5 class="card-title">Customer Segmentation {% if data_type['segmentation'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 									</div>
 
-									<div  id="d_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									<div  id="segment_id" class="plotly-gra ph-div" style="height:400px;"></div>
 								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Hourly Orders</h5>
+										<h5 class="card-title">Frequency Segmentation {% if data_type['frequency_clusters'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 									</div>
 									<div class="card-body">
-										<div  id="h_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="f_segment_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
@@ -38,20 +114,20 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Weekly Orders</h5>
+										<h5 class="card-title">Monetary Segmentation {% if data_type['monetary_clusters'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 									</div>
 									<div class="card-body">
-										<div  id="w_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="m_segment_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Monthly Orders</h5>
+										<h5 class="card-title">Recency Segmentation {% if data_type['recency_clusters'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 									</div>
 									<div class="card-body">
-										<div  id="m_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="r_segment_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
@@ -70,25 +146,29 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 	<script>
 
-			var d_orders = {{daily_orders | safe}};
+			var segment = {{segmentation | safe}};
 
-	        Plotly.plot('d_orders_id', // the ID of the div, created above
-						d_orders.trace, d_orders.layout, {});
+	        Plotly.plot('segment_id', // the ID of the div, created above
+						segment.trace, segment.layout, {});
 
-			var h_orders = {{hourly_orders | safe}};
+			var f_segment = {{frequency_clusters | safe}};
 
-	        Plotly.plot('h_orders_id', // the ID of the div, created above
-						h_orders.trace, h_orders.layout, {});
+	        Plotly.plot('f_segment_id', // the ID of the div, created above
+						f_segment.trace, f_segment.layout, {});
 
-			var w_orders = {{weekly_orders | safe}};
+			var m_segment = {{monetary_clusters | safe}};
 
-	        Plotly.plot('w_orders_id', // the ID of the div, created above
-						w_orders.trace, w_orders.layout, {});
+	        Plotly.plot('m_segment_id', // the ID of the div, created above
+						m_segment.trace, m_segment.layout, {});
 
-			var m_orders = {{monthly_orders | safe}};
+			var r_segment = {{recency_clusters | safe}};
 
-	        Plotly.plot('m_orders_id', // the ID of the div, created above
-						m_orders.trace, m_orders.layout, {});
+	        Plotly.plot('r_segment_id', // the ID of the div, created above
+						r_segment.trace, r_segment.layout, {});
+
+
+
+
 
 
 	function myFunction() {
