@@ -124,15 +124,50 @@ class CreateIndex:
         return total_insert_str
 
     def logs_update(self, logs):
+        """
+        logs table in sqlite table is updated.
+        chats table in sqlite table is updated.
+        """
         try:
             self.check_for_table_exits(table='logs')
         except Exception as e:
             print(e)
+
+        try:
+            self.check_for_table_exits(table='chat')
+        except Exception as e:
+            print(e)
+
         try:
             logs['login_user'] = current_user
             logs['log_time'] = str(current_date_to_day())[0:19]
             con.execute(self.insert_query(table='logs',
                                           columns=self.sqlite_queries['columns']['logs'][1:],
+                                          values=logs
+                                          ))
+        except Exception as e:
+            print(e)
+
+        try:
+            logs['login_user'] = current_user
+            logs['log_time'] = str(current_date_to_day())[0:19]
+            logs['general_message'] = logs['info']
+            con.execute(self.insert_query(table='logs',
+                                          columns=self.sqlite_queries['columns']['logs'][1:],
+                                          values=logs
+                                          ))
+        except Exception as e:
+            print(e)
+
+        try:
+            logs['user'] = 'info'
+            logs['date'] = str(current_date_to_day())[0:19]
+            logs['user_logo'] = 'info.jpeg'
+            logs['chat_type'] = 'info'
+            logs['message'] = ""
+            logs['general_message'] = logs['info']
+            con.execute(self.insert_query(table='chat',
+                                          columns=self.sqlite_queries['columns']['chat'][1:],
                                           values=logs
                                           ))
         except Exception as e:

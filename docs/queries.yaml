@@ -99,16 +99,14 @@ actions:
 chat:
   CREATE TABLE chat (
   id INTEGER NOT NULL,
-  epoch VARCHAR,
   date VARCHAR,
   message VARCHAR,
   general_message VARCHAR,
   user VARCHAR,
   chat_type VARCHAR,
-  user_pic VARCHAR,
+  user_logo VARCHAR,
   PRIMARY KEY (id)
   )
-
 
 columns:
   es_connection:
@@ -192,13 +190,12 @@ columns:
 
   chat:
     - id
-    - epoch
     - date
     - message
     - general_message
     - user
     - chat_type
-    - user_pic
+    - user_logo
 
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'

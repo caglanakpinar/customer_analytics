@@ -413,8 +413,12 @@ class RealData:
     Each dimension of reports will be created as .csv file.
     """
     kpis = {}
-    es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
-    folder = join(es_tag['directory'], "build_in_reports", "")
+    try:
+        es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
+        folder = join(es_tag['directory'], "build_in_reports", "")
+    except:
+        es_tag, folder = {}, []
+
 
     def get_report_dimensions(self):
         """
@@ -435,11 +439,13 @@ class RealData:
         """
         checks for 'build_in_reports' while platform is running.
         """
+
+
         try:
             es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
             _path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
             if date is not None:
-                _path = oin(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
+                _path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
             return exists(_path)
         except:
             return False
@@ -793,6 +799,18 @@ class Charts:
                     print()
                     print()
         return self.graph_json, self.data_type, self.filters
+
+    def get_individual_chart(self, target, chart, index='main', date=None):
+        self.graph_json['charts'] = {}
+        c = charts[target]['charts'][chart]
+        trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index, date)
+        self.get_widths_heights(chart=c, target=target)
+        annotation = charts[target]['charts'][c]['annotation'] if 'cohort' in c.split("_") else None
+        layout = self.get_layout(charts[target]['charts'][c]['layout'], c,
+                                 annotation=annotation, index=index, date=date)
+        self.data_type[c] = is_real_data
+        self.graph_json['charts'][c] = {'trace': trace,
+                                        'layout': layout, 'is_real_data': is_real_data}
 
     def get_json_format(self, chart):
         return json.dumps({"trace": chart['trace'],
