@@ -469,6 +469,7 @@ class ABTests:
                 self.insert_into_reports_index(self.decision,
                                                abtest_type=_name,
                                                index=self.order_index)
+                del ab
 
                 # self.decision.to_csv(join(self.path, _name + ".csv"), index=False)
 
@@ -509,6 +510,8 @@ class ABTests:
             self.insert_into_reports_index(self.promotion_comparison,
                                            abtest_type='promotion_comparison',
                                            index=self.order_index)
+            del self.promotion_comparison
+            self.promotion_comparison = None
 
     def insert_into_reports_index(self,
                                   abtest,
