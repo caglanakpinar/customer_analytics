@@ -10,7 +10,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from configs import descriptive_reports, product_analytics, abtest_reports
+from configs import descriptive_reports, product_analytics, abtest_reports, non_dimensional_reports, clv_prediction_reports
 from utils import *
 from data_storage_configurations.query_es import QueryES
 
@@ -103,6 +103,7 @@ class Reports:
         self.descriptive_reports = descriptive_reports
         self.product_analytics = product_analytics
         self.abtest_reports = abtest_reports
+        self.clv_prediction_reports = clv_prediction_reports
         self.double_reports = {'promotion_usage_before_after_amount': ['promotion_usage_before_after_amount_accept',
                                                                        'promotion_usage_before_after_amount_reject',
                                                                        'order_and_payment_amount_differences'],
@@ -115,7 +116,7 @@ class Reports:
                               }
         self.p_usage_ba_orders = ['promotion_usage_before_after_orders', 'promotion_usage_before_after_amount']
         self.rfm_reports = ['rfm', 'segmentation']
-        self.clv_reports = ["clv_prediction", "stats"]
+        self.clv_reports = ["clv_prediction", "stats", "segmentation"]
         self.rfm_metrics = {'recency', 'monetary', 'frequency'}
         self.day_folder = str(current_date_to_day())[0:10]
         self.rfm_metrics_reports = ['frequency_recency', 'recency_monetary', 'monetary_frequency',
@@ -251,8 +252,12 @@ class Reports:
 
         if r_name == 'user_counts_per_order_seq':
             query = " report_name == 'stats' and type == 'user_counts_per_order_seq' "
-        if 'clv' in r_name.split("_"):
-            query = "report_name in ( 'clv_prediction', 'stats') and type != type or type == 'daily_revenue'"
+        if r_name in self.clv_prediction_reports:
+            query = "report_name in ( 'clv_prediction', "
+            if r_name == 'daily_clv':
+                query += " 'stats') and type != type or type == 'daily_revenue' "
+            if r_name == 'clvsegments_amount':
+                query += " 'segmentation') and type != type "
         return query
 
     def get_promotion_comparison(self, x):
@@ -301,22 +306,28 @@ class Reports:
         """
         usage_orders = self.required_aggregation(
             r_name=self.p_usage_ba_orders[0], data=pd.DataFrame(list(reports.query("abtest_type == '{}'".format(
-                self.p_usage_ba_orders[0])).sort_values('report_date',  ascending=False)['data'])[0]))
+                self.p_usage_ba_orders[0]))['data'])[0]))
         usage_amount = self.required_aggregation(
             r_name=self.p_usage_ba_orders[1], data=pd.DataFrame(list(reports.query("abtest_type == '{}'".format(
-                self.p_usage_ba_orders[1])).sort_values('report_date', ascending=False)['data'])[0]))
+                self.p_usage_ba_orders[1]))['data'])[0]))
         return pd.merge(usage_orders,
                         usage_amount.rename(columns={'diff': 'diff_amount'}),
                         on='promotions', how='inner')[['diff_amount', 'diff', 'promotions']]
 
-    def get_clv_report(self, reports):
+    def get_clv_report(self, reports, r_name, index):
         clv = pd.DataFrame(list(reports.query("report_name == '{}' and type != type'".format(
-                self.clv_reports[0])).sort_values('report_date',  ascending=False)['data'])[0])
-        daily_revenue = pd.DataFrame(list(reports.query("report_name == '{}' and type == 'daily_revenue'".format(
-                self.clv_reports[0])).sort_values('report_date',  ascending=False)['data'])[0])
-        clv['type'] = 'prediction'
-        daily_revenue['type'] = "actual"
-        reports = pd.concat([clv, daily_revenue])[['date', 'payment_amount', 'data_type']]
+                self.clv_reports[0]))['data'])[0])
+        if index != 'main':
+            clv = clv.query("dimension == @index")
+        if r_name == 'daily_clv':
+            daily_revenue = pd.DataFrame(list(reports.query("report_name == '{}' and type == 'daily_revenue'".format(
+                    self.clv_reports[1]))['data'])[0])
+            clv['type'] = 'prediction'
+            daily_revenue['type'] = "actual"
+            reports = pd.concat([clv, daily_revenue])[['date', 'payment_amount', 'data_type']]
+        if r_name == 'clvsegments_amount':
+            segments = pd.DataFrame(list(reports.query("report_name == '{}'".format(self.clv_reports[2]))['data'])[0])
+            reports = pd.merge(reports, segments, on='client', how='left').groupby("segments").agg({"payment_amount": "sum"})
         return reports
 
     def radomly_sample_data(self, data):
@@ -325,13 +336,10 @@ class Reports:
         return data
 
     def get_rfm_reports(self, reports, metrics=[]):
-        rfm = pd.DataFrame(list(reports.query("report_name == '{}'".format(
-                self.rfm_reports[0])).sort_values('report_date',  ascending=False)['data'])[0])
-        segmentation = pd.DataFrame(list(reports.query("report_name == '{}'".format(
-                self.rfm_reports[1])).sort_values('report_date',  ascending=False)['data'])[0])
+        rfm = pd.DataFrame(list(reports.query("report_name == '{}'".format(self.rfm_reports[0]))['data'])[0])
+        segmentation = pd.DataFrame(list(reports.query("report_name == '{}'".format(self.rfm_reports[1]))['data'])[0])
         report = pd.merge(rfm, segmentation, on='client', how='left')
         if len(metrics) != 0:
-
             if 'clusters' not in metrics:
                 report = report[metrics + ['segments_numeric']]
             else:
@@ -348,14 +356,13 @@ class Reports:
             if f.split(".")[1] == 'csv':
                 self.sample_report_names.append("_".join(f.split(".")[0].split("_")[2:]))
 
-    def get_related_report(self, reports, r_name):
+    def get_related_report(self, reports, r_name, index):
         """
         Last exit before import data as .csv format
         """
         report_data = pd.DataFrame()
         report = reports.query(self.split_report_name(r_name))
         if len(report) != 0:
-            report['report_date'] = report['report_date'].apply(lambda x: convert_to_day(x))
             if r_name == 'order_and_payment_amount_differences':
                 report_data = self.get_order_and_payment_amount_differences(report)
             if r_name == 'rfm':
@@ -363,10 +370,9 @@ class Reports:
             if r_name in self.rfm_metrics_reports: # rfm rec. - mon.,
                 report_data = self.get_rfm_reports(report, metrics=r_name.split("_"))
             if r_name not in ['order_and_payment_amount_differences', 'rfm', 'daily_clv'] + self.rfm_metrics_reports:
-                report = report.sort_values('report_date', ascending=False)
                 report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
-            if r_name == 'daily_clv':
-                report_data = self.get_clv_report(reports)
+            if r_name in ['daily_clv', "clvsegments_amount"]:
+                report_data = self.get_clv_report(reports, r_name, index)
         report_data = self.radomly_sample_data(report_data)
         return report_data
 
@@ -391,6 +397,15 @@ class Reports:
         else:
             return join(self.es_tag['directory'], "build_in_reports", index, self.day_folder, r_name) + ".csv"
 
+    def collect_non_dimensional_reports(self):
+        additional_reports = []
+        for r in non_dimensional_reports:
+            additional_reports.append(self.collect_reports(port=self.es_tag['port'],
+                                                           host=self.es_tag['host'],
+                                                           index='main',
+                                                           query={"report_name": r}))
+        return additional_reports
+
     def create_build_in_reports(self):
         """
         This is the main process of importing data into the given directory in .csv format.
@@ -406,6 +421,9 @@ class Reports:
             dimensions = self.collect_dimensions_for_data_works(has_dimensions)
             for index in dimensions:
                 reports = self.collect_reports(self.es_tag['port'], self.es_tag['host'], index)
+                reports = pd.concat([reports] + self.collect_non_dimensional_reports())
+                reports['report_date'] = reports['report_date'].apply(lambda x: convert_to_day(x))
+                reports = reports.sort_values(['report_name', 'report_date'],  ascending=False)
                 if len(reports) != 0:  # if there has NOT been created any report, yet
                     try:
                         os.mkdir(join(self.es_tag['directory'], "build_in_reports", index))
@@ -417,7 +435,7 @@ class Reports:
                         print("folder already exists")
                     for r_name in self.sample_report_names:
                         print("index :", index, "|| report : ", r_name)
-                        _data = self.get_related_report(reports, r_name)
+                        _data = self.get_related_report(reports, r_name, index)
                         if len(_data) != 0:
                             _data.to_csv(self.get_import_file_path(r_name, index), index=False)
                             _data.to_csv(self.get_import_file_path(r_name, index, day_folder=True), index=False)
