@@ -95,12 +95,29 @@ class Anomaly:
         self.query_es = QueryES(port=port, host=host)
         self.reports = pd.DataFrame()
 
+    def collect_clv(self):
+        """
+        clv prediction results are not stored with dimensions.
+        Need to query individually.
+        """
+        if get_index_group(self.order_index) != 'main':
+            clv = self.report_execute.collect_reports(self.port, self.host, 'main',
+                                                            query={"report_name": "clv_prediction"})
+            clv['report_date'] = clv['report_date'].apply(lambda x: convert_to_date(x))
+            clv = pd.DataFrame(list(clv.sort_values(['report_name', 'report_date'], ascending=False)['data'])[0])
+            clv = clv[clv['dimension'] == get_index_group(self.order_index)]
+            if len(clv) != 0:
+                self.clv_prediction = clv.rename(columns={"date": "session_start_date"})
+
+        else:
+            self.clv_prediction = pd.DataFrame(list(self.reports.query("report_name == 'clv_prediction'")['data'])[0])
+        print(self.clv_prediction.head())
+
     def get_reports(self, date=None):
         """
         collecting all reports from reports index.
         """
         date = current_date_to_day() if date is None else convert_to_date(date)
-        start_date = date - datetime.timedelta(days=1)
         end_date = date.isoformat()
         self.reports = self.report_execute.collect_reports(self.port,
                                                            self.host,
@@ -109,6 +126,7 @@ class Anomaly:
                                                                   'end': end_date})
         self.reports['report_date'] = self.reports['report_date'].apply(lambda x: convert_to_date(x))
         self.reports = self.reports.sort_values(['report_name', 'report_date'], ascending=False)
+        self.collect_clv()
 
     def detect_outlier(self, value, _mean, _var, _sample_size, left_tail=False):
         """
@@ -329,7 +347,7 @@ class Anomaly:
         self.daily_orders_comparison = self.daily_orders_comparison[['diff_perc', 'anomalities', 'daily']]
 
     def clv_segmentation_change(self):
-        self.clv_prediction = pd.DataFrame(list(self.reports.query("report_name == 'clv_prediction'")['data'])[0])
+        self.collect_clv()
         self.rfm = pd.DataFrame(list(self.reports.query("report_name == 'rfm'")['data'])[0])
         self.clv_prediction['session_start_date'] = self.clv_prediction['session_start_date'].apply(
             lambda x: convert_to_date(x))
