@@ -86,9 +86,11 @@
               				</a>
 
 							<a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#" data-toggle="dropdown">
-                				<img src="/static/assets/img/avatars/avatar-1.png" class="avatar img-fluid rounded mr-1" alt="Charles Hall" />
+								{% if pic != 'None' %}
+                					<img src="/static/assets/img/avatars/{{ pic }}" class="avatar img-fluid rounded mr-1" />
+								{% endif %}
 								<span class="text-dark">
-									{{ current_user.username }}	
+									{{ current_user.username }}
 								</span>
               				</a>
 

@@ -797,20 +797,18 @@ class Charts:
                     self.graph_json['kpis'][_k] = '{:,}'.format(int(_obj[_k])).replace(",", ".")
                 except Exception as e:
                     print()
-                    print()
         return self.graph_json, self.data_type, self.filters
 
     def get_individual_chart(self, target, chart, index='main', date=None):
         self.graph_json['charts'] = {}
         c = charts[target]['charts'][chart]
-        trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index, date)
-        self.get_widths_heights(chart=c, target=target)
-        annotation = charts[target]['charts'][c]['annotation'] if 'cohort' in c.split("_") else None
-        layout = self.get_layout(charts[target]['charts'][c]['layout'], c,
+        trace, is_real_data = self.get_trace(c['trace'], chart, index, date)
+        self.get_widths_heights(chart=chart, target=target)
+        annotation = c['annotation'] if 'cohort' in chart.split("_") else None
+        layout = self.get_layout(c['layout'], chart,
                                  annotation=annotation, index=index, date=date)
-        self.data_type[c] = is_real_data
-        self.graph_json['charts'][c] = {'trace': trace,
-                                        'layout': layout, 'is_real_data': is_real_data}
+        self.data_type[chart] = is_real_data
+        return {'trace': trace, 'layout': layout, 'is_real_data': is_real_data}
 
     def get_json_format(self, chart):
         return json.dumps({"trace": chart['trace'],

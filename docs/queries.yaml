@@ -104,7 +104,16 @@ chat:
   general_message VARCHAR,
   user VARCHAR,
   chat_type VARCHAR,
+  chart VARCHAR,
   user_logo VARCHAR,
+  PRIMARY KEY (id)
+  )
+
+user_avatar:
+  CREATE TABLE user_avatar (
+  id INTEGER NOT NULL,
+  user VARCHAR,
+  user_avatar VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -195,7 +204,13 @@ columns:
     - general_message
     - user
     - chat_type
+    - chart
     - user_logo
+
+  user_avatar:
+    - id
+    - user
+    - user_avatar
 
 tables:
   SELECT name, tbl_name FROM sqlite_master where type ='table'

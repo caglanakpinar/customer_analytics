@@ -38,6 +38,20 @@
 
 		</div>
 	</div>
+	<style>
+
+#profileImage {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: #512DA8;
+  font-size: 35px;
+  color: #fff;
+  text-align: center;
+  line-height: 150px;
+  margin: 20px 0;
+}
+	</style>
 
 	{% include 'includes/scripts.html' %}
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
@@ -45,7 +59,26 @@
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 	<!-- Specific Page JS goes HERE  -->
 	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    {% block javascripts %}{% endblock javascripts %}
+    {% block javascripts %}
+		<script>
+
+		$(document).ready(function(){
+  var firstName = $('#firstName').text();
+  var lastName = $('#lastName').text();
+  var intials = $('#firstName').text().charAt(0) + $('#lastName').text().charAt(0);
+  var profileImage = $('#profileImage').text(intials);
+});
+
+		$(document).ready(function(){
+  var firstName = $('#firstName').text();
+  var lastName = $('#lastName').text();
+  var intials = $('#firstName').text().charAt(0) + $('#lastName').text().charAt(0);
+  var profileImage = $('#profileImageTop').text(intials);
+});
+
+	</script>
+
+	{% endblock javascripts %}
 
 </body>
 </html>

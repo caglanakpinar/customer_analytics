@@ -42,7 +42,7 @@ def login():
             return redirect(url_for('base_blueprint.route_default'))
 
         # Something (user or pass) is not ok
-        return render_template( 'accounts/login.html', msg='Wrong user or password', form=login_form)
+        return render_template('accounts/login.html', msg='Wrong user or password', form=login_form)
 
     if not current_user.is_authenticated:
         return render_template( 'accounts/login.html',
