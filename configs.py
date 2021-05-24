@@ -234,14 +234,6 @@ non_dimensional_reports = ["clv"]
 
 clv_prediction_reports = ["daily_clv", "clvsegments_amount"]
 
-
-messages = {'ds_connect': "{} Data Source is created or updated",
-            'es_connect': "ElasticSearch Connection is created.",
-            'es_delete': "ElasticSearch Connection is deleted.",
-            'schedule_start': "Scheduling Process is initialized.",
-            'schedule_end': "Scheduling Process is done.",
-            'schedule_delete': "Scheduling Process is deleted."}
-
 chart_names = {
     "Sessions Of Actions Funnel":
         {"Daily Funnel": "funnel*daily_funnel",
@@ -314,3 +306,11 @@ chart_names = {
         {"Customer Journey": "index*customer_journey",
          "Total Number Customer Breakdown with Purchased Order Count": "clv*clvsegments_amount"}}
 
+
+ALLOWED_IMAGE_EXTENSIONS = ["JPEG", "JPG", "PNG", "GIF"]
+MAX_IMAGE_FILESIZE = 0.5 * 1024 * 1024
+
+TIME_DIFF_STR = [(0, "1m ago"), (60, "1m ago"), (60 * 60, "m ago "), (60 * 60 * 24, "hr ago "),
+                 (60 * 60 * 24 * 7, "d ago "), (60 * 60 * 24 * 7 * 4, "w ago "), (60 * 60 * 24 * 7 * 4 * 12, "y ago ")]
+
+DATE_DIFF_STR = [(0, "today "), (60 * 60 * 24, "today"), (60 * 60 * 24 * 2, "yesterday")]

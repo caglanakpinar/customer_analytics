@@ -30,7 +30,7 @@ class LogsBasicConfeger:
         except:
             user = 'logs'
 
-        file_path = join(directory, user + ".log")
+        file_path = join(currentdir, "logs.log")
         logging.basicConfig(filename=file_path,
                             level=logging.INFO,
                             format='%(asctime)s:%(levelname)s:%(message)s')

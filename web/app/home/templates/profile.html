@@ -19,13 +19,30 @@
 							<h5 class="card-title mb-0">Profile Details</h5>
 						</div>
 						<div class="card-body text-center">
-							<img src="/static/assets/img/avatars/avatar-1.png"
-							    alt="Jodie Drewer" class="img-fluid rounded-circle mb-2" width="128" height="128" />
+							{% if pic == 'None' %}
+								<div class="card-body text-center" style="text-allign:center;">
+									<span id="firstName" hidden>{{ current_user.username }} </span>
+									<span id="lastName" hidden>{{ current_user.email }} </span>
+									<div id="profileImage" width="128" height="128" align="center"></div>
+								</div>
+							{% endif %}
+							{% if pic != 'None' %}
+							<img src="/static/assets/img/avatars/{{ pic }}" alt="Jodie Drewer" class="img-fluid rounded-circle mb-2" width="128" height="128" />
+							{% endif %}
 
-							<div class="row">
-								<input type="file" name="file" id="file" class="inputfile" style="color:green;"/>
-								<label for="file" style="color:green;">change pic</label>
-							</div>
+
+
+	  						<form action="/upload-image" method="POST" enctype="multipart/form-data">
+      						  <div class="form-group">
+      						    <div class="custom-file mb-1">
+									<label for="image" class="btn" style="color:green;">Select Image</label>
+      						        <input type="file" class="custom-file-input"  style="visibility:hidden;" name="image" id="image" required>
+									<button type="submit" class="btn btn-primary">Upload</button>
+      						    </div>
+      						  </div>
+
+      						</form>
+
 
 
 							<h5 class="card-title mb-0">
@@ -180,89 +197,77 @@
 							<h5 class="card-title mb-0">Activities</h5>
 						</div>
 						<div class="card-body h-100">
+							{% if messages != None %}
+								{% for m in messages %}
+									<div class="d-flex align-items-start">
+										{% if m['user_avatar'] == 'None' %}
+											<div class="card-body text-center" style="text-allign:center;">
+												<span id="firstName" hidden>{{ m['username'] }} </span>
+												<span id="lastName" hidden>{{  m['email'] }} </span>
+												<div id="profileImage" width="128" height="128" align="center"></div>
+											</div>
+										{% endif %}
+										{% if m['user_avatar'] != None %}
+											<img src="/static/assets/img/avatars/{{ m['user_avatar'] }}" class="img-fluid rounded-circle mb-2" width="128" height="128" />
+										{% endif %}
+										<div class="flex-grow-1">
+											<small class="float-right text-navy">{{ m['date_1'] }}</small>
+											<strong>{{ m['user'] }}</strong> {{ m['general_message'] }}<br />
+											<small class="text-muted">{{ m['date_2'] }}</small><br />
 
-							<div class="d-flex align-items-start">
-								<img src="/static/assets/img/avatars/avatar-4.png" width="36" height="36" class="rounded-circle mr-2" alt="John Gorn">
-								<div class="flex-grow-1">
-									<small class="float-right text-navy">5m ago</small>
-									<strong>John Gorn</strong> created CLV Prediction <strong> Weekly Schedule</strong><br />
-									<small class="text-muted">Today 7:51 pm</small><br />
-								</div>
-							</div>
-
-							<hr />
-							<div class="d-flex align-items-start">
-								<img src="/static/assets/img/avatars/avatar-1.png" width="36" height="36" class="rounded-circle mr-2" alt="Stacie Scull">
-								<div class="flex-grow-1">
-									<small class="float-right text-navy">30m ago</small>
-									<strong>Stacie Scull</strong> created Downloads to 1st Orders Cohort <strong> Weekly</strong><br />
-									<small class="text-muted">Today 7:21 pm</small>
-								</div>
-							</div>
-
-							<hr />
-							<div class="d-flex align-items-start">
-								<img src="/static/assets/img/avatars/avatar-4.png" width="36" height="36" class="rounded-circle mr-2" alt="John Gorn">
-								<div class="flex-grow-1">
-									<small class="float-right text-navy">1h ago</small>
-									<strong>John Gorn</strong> created AB - Test for Customer Segmentation<br />
-									<small class="text-muted">Today 6:35 pm</small>
-								</div>
-							</div>
+											<div class="card-body">
+												<div  id="{{ m['chart_name'] }}" class="plotly-gra ph-div"></div>
+											</div>
 
 
-							<hr />
-							<div class="d-flex align-items-start">
-								<img src="/static/assets/img/avatars/avatar-2.png" width="36" height="36" class="rounded-circle mr-2" alt="William Harris">
-								<div class="flex-grow-1">
-									<small class="float-right text-navy">1d ago</small>
-									<strong>William Harris</strong> posted a comment on  <strong>John Gorn</strong>`s  created CLV Prediction Weekly Schedule <br />
-									<small class="text-muted">Yesterday 3:12 pm</small>
-									<div class="d-flex align-items-start mt-1 col-md-12">
-
-<div class="row">
-
-										<div class="accordion col-md-12" id="accordionExample">
-											<div class="card col-md-12" style="border:none;">
-												<div class="card-header" id="headingOne" >
-													<h5 class="card-title my-1">
-														<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="border:none; color:green;font-size:12px; ">
-															recent replies
-														</a>
-													</h5>
-												</div>
-												<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample" style="border:none; color:green;font-size:12px; ">
-
-
-													<div class="row">
-
-
-														<div class="col-md-12">
-															<div class="flex-grow-1">
-																<input class="border text-sm text-muted p-2 mt-1"
-																	   type="text" style=" width: 800px; outline: none; border-radius: 25px; border: 2px solid #73AD21;"/>
-																       <button class="btn btn-pill btn-outline-primary">send</button>
+											{% if m['message'] != '' %}
+												{% for sub_m in m['message'] %}
+													<div class="d-flex align-items-start">
+														{% if sub_m['user_avatar'] == 'None' %}
+															<div class="card-body text-center" style="text-allign:center;">
+																<span id="firstName" hidden>{{ sub_m['user'] }} </span>
+																<span id="lastName" hidden>{{  sub_m['user'] }} </span>
+																<div id="profileImage" width="128" height="128" align="center"></div>
 															</div>
-
+														{% endif %}
+														{% if sub_m['user_avatar'] != None %}
+															<img src="/static/assets/img/avatars/{{ sub_m['user_avatar'] }}" class="img-fluid rounded-circle mb-2" width="128" height="128" />
+														{% endif %}
+														<div class="flex-grow-1 mb-1">
+															<strong>{{ sub_m['user'] }}</strong> <br />
+															<div class="border text-sm text-muted p-2 mt-1">{{ sub_m['message'] }}</div>
+															<small class="text-muted">{{ sub_m['date_2'] }}</small><br />
+														</div>
+													</div>
+												{% endfor %}
+											{% endif %}
+											<div class="d-flex align-items-start">
+												{% if pic == 'None' %}
+													<span id="firstName" hidden>{{ current_user.username }} </span>
+													<span id="lastName" hidden>{{ current_user.email }} </span>
+													<div id="profileImage" width="128" height="128" align="center"></div>
+												{% endif %}
+												{% if pic != 'None' %}
+													<img src="/static/assets/img/avatars/{{ pic }}" alt="Jodie Drewer" class="img-fluid rounded-circle mb-2" width="128" height="128" />
+												{% endif %}
+												<div class="flex-grow-1">
+													<strong>{{ current_user.username }}</strong> <br />
+													<div class="col-md-12">
+														<div class="flex-grow-1">
+															<form method="POST">
+																<input name="message" class="border text-sm text-muted p-2 mt-1"
+																   type="text" style=" width: 790px; outline: none; border-radius: 25px; border: 2px solid #73AD21;"/>
+																   <button type="submit" name="id" value="{{ m['id'] }}" class="btn btn-pill btn-outline-primary">send</button>
+															</form>
 														</div>
 													</div>
 												</div>
 											</div>
-
-
-										</div>
-
-	<div class="row">
-
-
-
-
-</div>
 										</div>
 									</div>
-								</div>
-							</div>
-
+									<hr />
+								{% endfor %}
+							{% endif %}
 							<hr />
 						</div>
 					</div>
@@ -275,48 +280,701 @@
 	</main>
 
 		<style>
-			/* width */
-::-webkit-scrollbar {
-  width: 10px;
-}
+				/* width */
+				::-webkit-scrollbar {
+				  width: 10px;
+				}
 
-/* Track */
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
+				/* Track */
+				::-webkit-scrollbar-track {
+				  background: #f1f1f1;
+				}
 
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: #888;
-}
+				/* Handle */
+				::-webkit-scrollbar-thumb {
+				  background: #888;
+				}
 
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
+				/* Handle on hover */
+				::-webkit-scrollbar-thumb:hover {
+				  background: #555;
+				}
+				.inputfile {
+
+					opacity: 8;
+					overflow: hidden;
+					position: absolute;
+					z-index: -1;
+				}
+
+				.inputfile + label {
+					cursor: pointer; /* "hand" cursor */
+				}
 
 
-
-
-
-.inputfile {
-
-	opacity: 8;
-	overflow: hidden;
-	position: absolute;
-	z-index: -1;
-}
-
-.inputfile + label {
-	cursor: pointer; /* "hand" cursor */
-}
 		</style>
 
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 	<script>
+		try {
+        var plot1 = {{chart.daily_funnel | safe}};
+
+        Plotly.plot(daily_funnel, // the ID of the div, created above
+         plot1.trace,
+         plot1.layout, {});
+		}
+		catch (e) {};
+
+		try {
+
+
+		var plot2 = {{chart.weekly_funnel | safe}};
+
+
+        Plotly.plot(weekly_funnel, // the ID of the div, created above
+         plot2.trace,
+         plot2.layout, {});
+		         }
+		catch (e) {};
+
+		try {
+		  var plot34 = {{chart.product_usage_before_after_amount_accept | safe}};
+
+        Plotly.plot(product_usage_before_after_amount_accept, // the ID of the div, created above
+         plot34.trace,
+         plot34.layout, {});
+         }
+		catch (e) {};
+
+
+				try {
+
+
+		var plot2 = {{chart.weekly_funnel | safe}};
+
+
+        Plotly.plot(weekly_funnel, // the ID of the div, created above
+         plot2.trace,
+         plot2.layout, {});
+		         }
+		catch (e) {};
+				try {
+
+
+		var plot2 = {{chart.weekly_funnel | safe}};
+
+
+        Plotly.plot(weekly_funnel, // the ID of the div, created above
+         plot2.trace,
+         plot2.layout, {});
+		         }
+		catch (e) {};
+
+
+        try {
+        var plot1 = {{chart.daily_funnel | safe}};
+
+        Plotly.plot(daily_funnel, // the ID of the div, created above
+         plot1.trace,
+         plot1.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot2 = {{chart.weekly_funnel | safe}};
+
+        Plotly.plot(weekly_funnel, // the ID of the div, created above
+         plot2.trace,
+         plot2.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot3 = {{chart.monthly_funnel | safe}};
+
+        Plotly.plot(monthly_funnel, // the ID of the div, created above
+         plot3.trace,
+         plot3.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot4 = {{chart.hourly_funnel | safe}};
+
+        Plotly.plot(hourly_funnel, // the ID of the div, created above
+         plot4.trace,
+         plot4.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot5 = {{chart.daily_funnel_downloads | safe}};
+
+        Plotly.plot(daily_funnel_downloads, // the ID of the div, created above
+         plot5.trace,
+         plot5.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot6 = {{chart.weekly_funnel_downloads | safe}};
+
+        Plotly.plot(weekly_funnel_downloads, // the ID of the div, created above
+         plot6.trace,
+         plot6.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot7 = {{chart.monthly_funnel_downloads | safe}};
+
+        Plotly.plot(monthly_funnel_downloads, // the ID of the div, created above
+         plot7.trace,
+         plot7.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot8 = {{chart.hourly_funnel_downloads | safe}};
+
+        Plotly.plot(hourly_funnel_downloads, // the ID of the div, created above
+         plot8.trace,
+         plot8.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot9 = {{chart.daily_cohort_downloads | safe}};
+
+        Plotly.plot(daily_cohort_downloads, // the ID of the div, created above
+         plot9.trace,
+         plot9.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot10 = {{chart.daily_cohort_from_1_to_2 | safe}};
+
+        Plotly.plot(daily_cohort_from_1_to_2, // the ID of the div, created above
+         plot10.trace,
+         plot10.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot11 = {{chart.daily_cohort_from_2_to_3 | safe}};
+
+        Plotly.plot(daily_cohort_from_2_to_3, // the ID of the div, created above
+         plot11.trace,
+         plot11.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot12 = {{chart.daily_cohort_from_3_to_4 | safe}};
+
+        Plotly.plot(daily_cohort_from_3_to_4, // the ID of the div, created above
+         plot12.trace,
+         plot12.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot13 = {{chart.weekly_cohort_downloads | safe}};
+
+        Plotly.plot(weekly_cohort_downloads, // the ID of the div, created above
+         plot13.trace,
+         plot13.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot14 = {{chart.weekly_cohort_from_1_to_2 | safe}};
+
+        Plotly.plot(weekly_cohort_from_1_to_2, // the ID of the div, created above
+         plot14.trace,
+         plot14.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot15 = {{chart.weekly_cohort_from_2_to_3 | safe}};
+
+        Plotly.plot(weekly_cohort_from_2_to_3, // the ID of the div, created above
+         plot15.trace,
+         plot15.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot16 = {{chart.weekly_cohort_from_3_to_4 | safe}};
+
+        Plotly.plot(weekly_cohort_from_3_to_4, // the ID of the div, created above
+         plot16.trace,
+         plot16.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot17 = {{chart.daily_orders | safe}};
+
+        Plotly.plot(daily_orders, // the ID of the div, created above
+         plot17.trace,
+         plot17.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot18 = {{chart.hourly_orders | safe}};
+
+        Plotly.plot(hourly_orders, // the ID of the div, created above
+         plot18.trace,
+         plot18.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot19 = {{chart.weekly_orders | safe}};
+
+        Plotly.plot(weekly_orders, // the ID of the div, created above
+         plot19.trace,
+         plot19.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot20 = {{chart.monthly_orders | safe}};
+
+        Plotly.plot(monthly_orders, // the ID of the div, created above
+         plot20.trace,
+         plot20.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot21 = {{chart.weekly_average_session_per_user | safe}};
+
+        Plotly.plot(weekly_average_session_per_user, // the ID of the div, created above
+         plot21.trace,
+         plot21.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot22 = {{chart.weekly_average_payment_amount | safe}};
+
+        Plotly.plot(weekly_average_payment_amount, // the ID of the div, created above
+         plot22.trace,
+         plot22.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot23 = {{chart.purchase_amount_distribution | safe}};
+
+        Plotly.plot(purchase_amount_distribution, // the ID of the div, created above
+         plot23.trace,
+         plot23.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot24 = {{chart.weekly_average_payment_amount | safe}};
+
+        Plotly.plot(weekly_average_payment_amount, // the ID of the div, created above
+         plot24.trace,
+         plot24.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot25 = {{chart.most_combined_products | safe}};
+
+        Plotly.plot(most_combined_products, // the ID of the div, created above
+         plot25.trace,
+         plot25.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot26 = {{chart.most_ordered_products | safe}};
+
+        Plotly.plot(most_ordered_products, // the ID of the div, created above
+         plot26.trace,
+         plot26.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot27 = {{chart.most_ordered_categories | safe}};
+
+        Plotly.plot(most_ordered_categories, // the ID of the div, created above
+         plot27.trace,
+         plot27.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot28 = {{chart.promotion_comparison | safe}};
+
+        Plotly.plot(promotion_comparison, // the ID of the div, created above
+         plot28.trace,
+         plot28.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot29 = {{chart.order_and_payment_amount_differences | safe}};
+
+        Plotly.plot(order_and_payment_amount_differences, // the ID of the div, created above
+         plot29.trace,
+         plot29.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot30 = {{chart.promotion_usage_before_after_amount_accept | safe}};
+
+        Plotly.plot(promotion_usage_before_after_amount_accept, // the ID of the div, created above
+         plot30.trace,
+         plot30.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot31 = {{chart.promotion_usage_before_after_amount_reject | safe}};
+
+        Plotly.plot(promotion_usage_before_after_amount_reject, // the ID of the div, created above
+         plot31.trace,
+         plot31.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot32 = {{chart.promotion_usage_before_after_orders_accept | safe}};
+
+        Plotly.plot(promotion_usage_before_after_orders_accept, // the ID of the div, created above
+         plot32.trace,
+         plot32.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot33 = {{chart.promotion_usage_before_after_orders_reject | safe}};
+
+        Plotly.plot(promotion_usage_before_after_orders_reject, // the ID of the div, created above
+         plot33.trace,
+         plot33.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot34 = {{chart.product_usage_before_after_amount_accept | safe}};
+
+        Plotly.plot(product_usage_before_after_amount_accept, // the ID of the div, created above
+         plot34.trace,
+         plot34.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot35 = {{chart.product_usage_before_after_amount_reject | safe}};
+
+        Plotly.plot(product_usage_before_after_amount_reject, // the ID of the div, created above
+         plot35.trace,
+         plot35.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot36 = {{chart.product_usage_before_after_orders_accept | safe}};
+
+        Plotly.plot(product_usage_before_after_orders_accept, // the ID of the div, created above
+         plot36.trace,
+         plot36.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot37 = {{chart.product_usage_before_after_orders_reject | safe}};
+
+        Plotly.plot(product_usage_before_after_orders_reject, // the ID of the div, created above
+         plot37.trace,
+         plot37.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot38 = {{chart.segments_change_daily_before_after_orders | safe}};
+
+        Plotly.plot(segments_change_daily_before_after_orders, // the ID of the div, created above
+         plot38.trace,
+         plot38.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot39 = {{chart.segments_change_weekly_before_after_orders | safe}};
+
+        Plotly.plot(segments_change_weekly_before_after_orders, // the ID of the div, created above
+         plot39.trace,
+         plot39.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot40 = {{chart.segments_change_weekly_before_after_orders | safe}};
+
+        Plotly.plot(segments_change_weekly_before_after_orders, // the ID of the div, created above
+         plot40.trace,
+         plot40.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot41 = {{chart.segments_change_daily_before_after_amount | safe}};
+
+        Plotly.plot(segments_change_daily_before_after_amount, // the ID of the div, created above
+         plot41.trace,
+         plot41.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot42 = {{chart.segments_change_weekly_before_after_amount | safe}};
+
+        Plotly.plot(segments_change_weekly_before_after_amount, // the ID of the div, created above
+         plot42.trace,
+         plot42.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot43 = {{chart.segments_change_weekly_before_after_amount | safe}};
+
+        Plotly.plot(segments_change_weekly_before_after_amount, // the ID of the div, created above
+         plot43.trace,
+         plot43.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot44 = {{chart.rfm | safe}};
+
+        Plotly.plot(rfm, // the ID of the div, created above
+         plot44.trace,
+         plot44.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot45 = {{chart.frequency_recency | safe}};
+
+        Plotly.plot(frequency_recency, // the ID of the div, created above
+         plot45.trace,
+         plot45.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot46 = {{chart.monetary_frequency | safe}};
+
+        Plotly.plot(monetary_frequency, // the ID of the div, created above
+         plot46.trace,
+         plot46.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot47 = {{chart.recency_monetary | safe}};
+
+        Plotly.plot(recency_monetary, // the ID of the div, created above
+         plot47.trace,
+         plot47.layout, {});
+        } catch (e) {};
+
+
+
+
+
+
+
+
+        try {
+        var plot49 = {{chart.frequency_clusters | safe}};
+
+        Plotly.plot(frequency_clusters, // the ID of the div, created above
+         plot49.trace,
+         plot49.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot50 = {{chart.monetary_clusters | safe}};
+
+        Plotly.plot(monetary_clusters, // the ID of the div, created above
+         plot50.trace,
+         plot50.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot51 = {{chart.recency_clusters | safe}};
+
+        Plotly.plot(recency_clusters, // the ID of the div, created above
+         plot51.trace,
+         plot51.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot52 = {{chart.daily_clv | safe}};
+
+        Plotly.plot(daily_clv, // the ID of the div, created above
+         plot52.trace,
+         plot52.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot53 = {{chart.daily_clv | safe}};
+
+        Plotly.plot(daily_clv, // the ID of the div, created above
+         plot53.trace,
+         plot53.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot54 = {{chart.customer_journey | safe}};
+
+        Plotly.plot(customer_journey, // the ID of the div, created above
+         plot54.trace,
+         plot54.layout, {});
+        } catch (e) {};
+
+
+
+
+        try {
+        var plot55 = {{chart.clvsegments_amount | safe}};
+
+        Plotly.plot(clvsegments_amount, // the ID of the div, created above
+         plot55.trace,
+         plot55.layout, {});
+        } catch (e) {};
+
+
+
+
+
 		document.addEventListener("DOMContentLoaded", function() {
 			document.getElementById("datetimepicker-dashboard").flatpickr({
 				inline: true,
@@ -326,7 +984,26 @@
 			});
 		});
 
+		$(document).ready(function(){
+  			var firstName = $('#firstName').text();
+  			var lastName = $('#lastName').text();
+  			var intials = $('#firstName').text().charAt(0) + $('#lastName').text().charAt(0);
+  			var profileImage = $('#profileImage').text(intials);
+		});
 
+		$(document).ready(function(){
+		  var firstName = $('#firstName').text();
+		  var lastName = $('#lastName').text();
+		  var intials = $('#firstName').text().charAt(0) + $('#lastName').text().charAt(0);
+		  var profileImage = $('#profileImageTop').text(intials);
+		});
+
+		imgInp.onchange = evt => {
+		  const [file] = imgInp.files
+		  if (file) {
+		    blah.src = URL.createObjectURL(file)
+		  }
+		}
 	</script>
 
 {% endblock javascripts %}

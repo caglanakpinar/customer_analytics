@@ -19,6 +19,16 @@ setuptools.setup(
     py_modules=['clv', 'clv/docs'],
     # TODO: will be updated
     install_requires=[
+        "flask_login",
+        "flask",
+        "python-decouple",
+        "flask_migrate",
+        "flask_wtf",
+        "sqlalchemy",
+        "email-validator",
+        "screeninfo"
+
+
     ],
     url="https://github.com/caglanakpinar/clv_prediction",
     include_package_data=True,

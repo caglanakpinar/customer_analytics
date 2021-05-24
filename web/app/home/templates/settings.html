@@ -9,17 +9,13 @@
 
 	<main class="content">
 		<div class="container-fluid p-0">
-
 			<h1 class="h3 mb-3">Settings</h1>
-
 			<div class="row">
 				<div class="col-md-3 col-xl-2">
-
 					<div class="card">
 						<div class="card-header">
 							<h5 class="card-title mb-0">Profile Settings</h5>
 						</div>
-
 						<div class="list-group list-group-flush" role="tablist">
 							<a class="list-group-item list-group-item-action active" data-toggle="list" href="#account" role="tab">
 							Account
@@ -33,14 +29,11 @@
 						</div>
 					</div>
 				</div>
-
 				<div class="col-md-9 col-xl-10">
 					<div class="tab-content">
 						<div class="tab-pane fade show active" id="account" role="tabpanel">
-
 							<div class="card">
 								<div class="card-header">
-
 									<h5 class="card-title mb-0">Public info</h5>
 								</div>
 								<div class="card-body">
@@ -58,24 +51,36 @@
 											</div>
 											<div class="col-md-4">
 												<div class="text-center">
-													<img alt="Charles Hall" src="/static/assets/img/avatars/avatar-1.png" class="rounded-circle img-responsive mt-2" width="128" height="128" />
-													<div class="mt-2">
-														<span class="btn btn-primary"><i class="fas fa-upload"></i> Upload</span>
-													</div>
+													{% if pic == 'None' %}
+														<div class="card-body text-center" style="text-allign:center;">
+															<span id="firstName" hidden>{{ current_user.username }} </span>
+															<span id="lastName" hidden>{{ current_user.email }} </span>
+															<div id="profileImage" width="128" height="128" align="center"></div>
+														</div>
+													{% endif %}
+													{% if pic != 'None' %}
+														<img src="/static/assets/img/avatars/{{ pic }}"class="img-fluid rounded-circle mb-2" width="128" height="128" />
+													{% endif %}
+													<form action="/upload-image" method="POST" enctype="multipart/form-data">
+      												  <div class="form-group">
+      												    <div class="custom-file mb-1">
+															<label for="image" class="btn" style="color:green;">Select Image</label>
+      												        <input type="file" class="custom-file-input"  style="visibility:hidden;" name="image" id="image" required>
+															<button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i>Upload</button>
+      												    </div>
+      												  </div>
+      												</form>
 													<small>choose an avatar with .png format</small>
 												</div>
 											</div>
 										</div>
-
 										<button type="submit" class="btn btn-primary">Save changes</button>
 									</form>
 
 								</div>
 							</div>
-
 							<div class="card">
 								<div class="card-header">
-
 									<h5 class="card-title mb-0">Private info</h5>
 								</div>
 								<div class="card-body">
@@ -121,16 +126,13 @@
 										</div>
 										<button type="submit" class="btn btn-primary">Save changes</button>
 									</form>
-
 								</div>
 							</div>
-
 						</div>
 						<div class="tab-pane fade" id="password" role="tabpanel">
 							<div class="card">
 								<div class="card-body">
 									<h5 class="card-title">Password</h5>
-
 									<form>
 										<div class="mb-3">
 											<label class="form-label" for="inputPasswordCurrent">Current password</label>
@@ -147,18 +149,57 @@
 										</div>
 										<button type="submit" class="btn btn-primary">Save changes</button>
 									</form>
-
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-
 		</div>
 	</main>
+<style>
+
+					.inputfile {
+
+					opacity: 8;
+					overflow: hidden;
+					position: absolute;
+					z-index: -1;
+				}
+
+				.inputfile + label {
+					cursor: pointer; /* "hand" cursor */
+				}
+
+</style>
 
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script>
+
+		$(document).ready(function(){
+  			var firstName = $('#firstName').text();
+  			var lastName = $('#lastName').text();
+  			var intials = $('#firstName').text().charAt(0) + $('#lastName').text().charAt(0);
+  			var profileImage = $('#profileImage').text(intials);
+		});
+
+		$(document).ready(function(){
+		  var firstName = $('#firstName').text();
+		  var lastName = $('#lastName').text();
+		  var intials = $('#firstName').text().charAt(0) + $('#lastName').text().charAt(0);
+		  var profileImage = $('#profileImageTop').text(intials);
+		});
+
+		imgInp.onchange = evt => {
+		  const [file] = imgInp.files
+		  if (file) {
+		    blah.src = URL.createObjectURL(file)
+		  }
+		}
+</script>
+
+{% endblock javascripts %}
