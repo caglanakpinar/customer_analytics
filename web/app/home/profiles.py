@@ -121,6 +121,7 @@ class Profiles:
                      m.split(self.message_key_sep)}
                 d['date_1'] = self.get_time_diff_string(convert_to_date(d['date']))
                 d['date_2'] = self.get_date_diff_string(convert_to_date(d['date']))
+                d['user_avatar'] = self.fetch_pic(user=d['user'])
                 updated_messages.append(d)
         return updated_messages
 
@@ -198,20 +199,23 @@ class Profiles:
         return {"messages": recent_chats.to_dict('results') if len(recent_chats) != 0 else None,
                 'charts': charts_for_profiles, 'filters': self.filters}
 
-    def fetch_pic(self):
+    def fetch_pic(self, user=None):
+        _user_name = current_user.username
+        if user is not None:
+            _user_name = user
         try:
             logo = list(pd.read_sql("""
                                         SELECT user_avatar 
                                         FROM user_avatar 
                                         WHERE user = '{}'
-                                    """.format(current_user.username), con)['user_avatar'])[0]
+                                    """.format(_user_name), con)['user_avatar'])[0]
         except Exception as e:
             print(e)
             logo = pd.read_sql("""
                                         SELECT user_avatar 
                                         FROM user_avatar 
                                         WHERE user = '{}'
-                                    """.format(current_user.username), con)
+                                    """.format(_user_name), con)
         return logo
 
     def add_pic(self, request):
