@@ -34,6 +34,32 @@ exploratory_analysis = {'funnel': Funnels,
                         'stats': Stats}
 
 
+def create_exploratory_analyse(configs, ml):
+    ea = {a: exploratory_analysis[a](**configs[a]) for a in exploratory_analysis}
+    if ml == 'funnel':
+        print("*"*5, " Funnels ", "*"*5)
+        ea['funnel'].purchase_action_funnel(start_date=configs['date'])
+        ea['funnel'].download_signup_session_order_funnel(start_date=configs['date'])
+        ea['funnel'].overall_funnel(start_date=configs['date'])
+        del ea['funnel']
+    if ml == 'cohort':
+        print("*" * 5, " Cohorts ", "*" * 5)
+        ea['cohort'].execute_cohort(start_date=configs['date'])
+        del ea['cohort']
+    if ml == 'rfm':
+        print("*" * 5, " RFM ", "*" * 5)
+        ea['rfm'].execute_rfm(start_date=configs['date'])
+        del ea['rfm']
+    if ml == 'stats':
+        print("*" * 5, " Descriptive Statistics ", "*" * 5)
+        ea['stats'].execute_descriptive_stats(start_date=configs['date'])
+        del ea['stats']
+    if ml == 'products':
+        print("*" * 5, " Product Analytics ", "*" * 5)
+        ea['products'].execute_product_analysis(end_date=configs['date'])
+        del ea
+
+
 def create_exploratory_analysis(configs):
     ea = {a: exploratory_analysis[a](**configs[a]) for a in exploratory_analysis}
     print("*"*5, " Funnels ", "*"*5)

@@ -84,7 +84,6 @@ class QueryES:
             self.date_queries = date_queries
 
         self.match['query'] = {"bool": {"must": self.boolean_queries + self.date_queries}}
-        print(self.match)
 
     def get_data_from_es(self, index='orders'):
         """
@@ -118,10 +117,8 @@ class QueryES:
         If the index has not been created, yet, This can handle the creation of the index task.
         :param index: index name for the creation
         """
-        try:
-            self.es.indices.create(index, body=elasticsearch_settings_reports)
-        except Exception as e:
-            print("index already exists !!!")
+        try: self.es.indices.create(index, body=elasticsearch_settings_reports)
+        except: print("index already exists !!!")
 
     def check_index_exists(self, index):
         """

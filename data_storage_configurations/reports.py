@@ -315,19 +315,22 @@ class Reports:
                         on='promotions', how='inner')[['diff_amount', 'diff', 'promotions']]
 
     def get_clv_report(self, reports, r_name, index):
-        clv = pd.DataFrame(list(reports.query("report_name == '{}' and type != type'".format(
+        clv = pd.DataFrame(list(reports.query("report_name == '{}' and type != type".format(
                 self.clv_reports[0]))['data'])[0])
         if index != 'main':
             clv = clv.query("dimension == @index")
         if r_name == 'daily_clv':
             daily_revenue = pd.DataFrame(list(reports.query("report_name == '{}' and type == 'daily_revenue'".format(
-                    self.clv_reports[1]))['data'])[0])
-            clv['type'] = 'prediction'
-            daily_revenue['type'] = "actual"
+                    self.clv_reports[1]))['data'])[0]).rename(columns={"daily": "date"})
+            clv['data_type'] = 'prediction'
+            daily_revenue['data_type'] = "actual"
+            print(clv.query("client == 'newcomers'"))
             reports = pd.concat([clv, daily_revenue])[['date', 'payment_amount', 'data_type']]
+            reports = reports.groupby(['date', 'data_type']).agg({'payment_amount': 'sum'}).reset_index()
         if r_name == 'clvsegments_amount':
             segments = pd.DataFrame(list(reports.query("report_name == '{}'".format(self.clv_reports[2]))['data'])[0])
-            reports = pd.merge(reports, segments, on='client', how='left').groupby("segments").agg({"payment_amount": "sum"})
+            reports = pd.merge(clv, segments, on='client', how='left').groupby("segments").agg(
+                {"payment_amount": "sum"}).reset_index()
         return reports
 
     def radomly_sample_data(self, data):
@@ -406,6 +409,20 @@ class Reports:
                                                            query={"report_name": r}))
         return additional_reports
 
+    def check_for_folder(self):
+        try:
+            os.mkdir(join(self.es_tag['directory'], "build_in_reports"))
+        except:
+            print("folder already exists")
+
+    def check_for_index_folder(self, index):
+        try: os.mkdir(join(self.es_tag['directory'], "build_in_reports", index))
+        except: print("folder already exists")
+
+    def check_for_day_folder(self, index):
+        try: os.mkdir(join(self.es_tag['directory'], "build_in_reports", index, self.day_folder))
+        except: print("folder already exists")
+
     def create_build_in_reports(self):
         """
         This is the main process of importing data into the given directory in .csv format.
@@ -413,10 +430,8 @@ class Reports:
         """
         self.get_sample_report_names()
         tag, has_dimensions = self.connections()
-        try:
-            os.mkdir(join(self.es_tag['directory'], "build_in_reports"))
-        except:
-            print("folder already exists")
+        self.check_for_folder()
+
         if len(self.get_report_count(self.es_tag)) != 0:
             dimensions = self.collect_dimensions_for_data_works(has_dimensions)
             for index in dimensions:
@@ -425,14 +440,8 @@ class Reports:
                 reports['report_date'] = reports['report_date'].apply(lambda x: convert_to_day(x))
                 reports = reports.sort_values(['report_name', 'report_date'],  ascending=False)
                 if len(reports) != 0:  # if there has NOT been created any report, yet
-                    try:
-                        os.mkdir(join(self.es_tag['directory'], "build_in_reports", index))
-                    except:
-                        print("folder already exists")
-                    try:
-                        os.mkdir(join(self.es_tag['directory'], "build_in_reports", index, self.day_folder))
-                    except:
-                        print("folder already exists")
+                    self.check_for_index_folder(index)
+                    self.check_for_day_folder(index)
                     for r_name in self.sample_report_names:
                         print("index :", index, "|| report : ", r_name)
                         _data = self.get_related_report(reports, r_name, index)

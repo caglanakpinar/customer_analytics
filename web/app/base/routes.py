@@ -11,11 +11,13 @@ from web.app import db, login_manager
 from web.app.base import blueprint
 from web.app.base.forms import LoginForm, CreateAccountForm
 from web.app.base.models import User
-from data_storage_configurations.logger import LogsBasicConfeger, logger_str
+from data_storage_configurations.logger import LogsBasicConfeger
 
 from web.app.base.util import verify_pass
 
+
 LogsBasicConfeger()
+
 
 @blueprint.route('/')
 def route_default():
@@ -38,7 +40,7 @@ def login():
         if user and verify_pass( password, user.password):
 
             login_user(user)
-            logging.info(logger_str("login"))
+
             return redirect(url_for('base_blueprint.route_default'))
 
         # Something (user or pass) is not ok

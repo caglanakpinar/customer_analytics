@@ -30,20 +30,24 @@ mls = {'segmentation': CustomerSegmentation,
        }
 
 
-def create_mls(configs):
+def create_ml(configs, ml):
     ea = {a: mls[a](**configs[a]) for a in mls}
-    print("*" * 5, " Customer Segmentation ", "*" * 5)
-    ea['segmentation'].execute_customer_segment(start_date=configs['date'])
-    del ea['segmentation']
-    print("*" * 5, " CLV Prediction ", "*" * 5)
-    ea['clv_prediction'].execute_clv(start_date=configs['date'], time_period=configs['time_period'])
-    del ea['clv_prediction']
-    print("*" * 5, " A/B Test ", "*" * 5)
-    ea['abtest'].build_in_tests(date=configs['date'])
-    del ea['abtest']
-    print("*" * 5, " Anomaly Detection ", "*" * 5)
-    ea['anomaly'].execute_anomaly(date=configs['date'])
-    del ea
+    if ml == 'segmentation':
+        print("*" * 5, " Customer Segmentation ", "*" * 5)
+        ea['segmentation'].execute_customer_segment(start_date=configs['date'])
+        del ea['segmentation']
+    if ml == 'clv_prediction':
+        print("*" * 5, " CLV Prediction ", "*" * 5)
+        ea['clv_prediction'].execute_clv(start_date=configs['date'], time_period=configs['time_period'])
+        del ea['clv_prediction']
+    if ml == 'abtest':
+        print("*" * 5, " A/B Test ", "*" * 5)
+        ea['abtest'].build_in_tests(date=configs['date'])
+        del ea['abtest']
+    if ml == 'anomaly':
+        print("*" * 5, " Anomaly Detection ", "*" * 5)
+        ea['anomaly'].execute_anomaly(date=configs['date'])
+        del ea
 
 
 def query_mls(configs, queries, ea):

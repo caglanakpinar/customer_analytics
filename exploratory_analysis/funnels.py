@@ -329,8 +329,6 @@ class Funnels:
         :param funnel_type: orders, downloads
         :param index: dimentionality of data index orders_location1 ;  dimension = location1
         """
-        print("is for dimension :", get_index_group(index))
-        print(index)
         list_of_obj = []
         for t in self.time_periods:
             insert_obj = {"id": np.random.randint(200000000),

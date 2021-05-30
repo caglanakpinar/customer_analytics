@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import sys, os, inspect
+import warnings
+warnings.filterwarnings("ignore")
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)

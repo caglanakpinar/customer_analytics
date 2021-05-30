@@ -100,18 +100,14 @@ class Anomaly:
         clv prediction results are not stored with dimensions.
         Need to query individually.
         """
+        clv = self.report_execute.collect_reports(self.port, self.host, 'main',
+                                                        query={"report_name": "clv_prediction"})
+        clv['report_date'] = clv['report_date'].apply(lambda x: convert_to_date(x))
+        clv = pd.DataFrame(list(clv.sort_values(['report_name', 'report_date'], ascending=False)['data'])[0])
         if get_index_group(self.order_index) != 'main':
-            clv = self.report_execute.collect_reports(self.port, self.host, 'main',
-                                                            query={"report_name": "clv_prediction"})
-            clv['report_date'] = clv['report_date'].apply(lambda x: convert_to_date(x))
-            clv = pd.DataFrame(list(clv.sort_values(['report_name', 'report_date'], ascending=False)['data'])[0])
             clv = clv[clv['dimension'] == get_index_group(self.order_index)]
-            if len(clv) != 0:
-                self.clv_prediction = clv.rename(columns={"date": "session_start_date"})
-
-        else:
-            self.clv_prediction = pd.DataFrame(list(self.reports.query("report_name == 'clv_prediction'")['data'])[0])
-        print(self.clv_prediction.head())
+        if len(clv) != 0:
+            self.clv_prediction = clv.rename(columns={"date": "session_start_date"})
 
     def get_reports(self, date=None):
         """
@@ -347,6 +343,10 @@ class Anomaly:
         self.daily_orders_comparison = self.daily_orders_comparison[['diff_perc', 'anomalities', 'daily']]
 
     def clv_segmentation_change(self):
+        """
+        Each client of monetary and frequency change related to CLV Predictions.
+        On CLV Prediction customers of future expected order date and purchase_amount values can be detected.
+        """
         self.collect_clv()
         self.rfm = pd.DataFrame(list(self.reports.query("report_name == 'rfm'")['data'])[0])
         self.clv_prediction['session_start_date'] = self.clv_prediction['session_start_date'].apply(

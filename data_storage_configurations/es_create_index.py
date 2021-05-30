@@ -15,7 +15,7 @@ from dateutil.parser import parse
 from sqlalchemy import create_engine, MetaData
 from flask_login import current_user
 
-from utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format
+from utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format, formating_numbers
 from configs import query_path, default_es_port, default_es_host
 from configs import orders_index_columns, downloads_index_columns, not_required_columns, not_required_default_values
 from os.path import abspath, join
@@ -88,6 +88,11 @@ class CreateIndex:
         self.latest_session_transaction_date = None
         self.result_data = pd.DataFrame()
         self.job_start_date = None
+        self.info_logs_for_chat = lambda info: {'user': 'info',
+                                                'date': str(current_date_to_day())[0:19],
+                                                'user_logo': 'info.jpeg',
+                                                'chat_type': 'info', 'chart': '',
+                                                'general_message': info, 'message': ''}
 
     def insert_query(self, table, columns, values):
         values = [values[col] for col in columns]
@@ -115,28 +120,16 @@ class CreateIndex:
         except Exception as e:
             print(e)
 
-    def get_insert_str(self, total_insert):
-        total_insert_str = str(total_insert)
-        if total_insert > 1000:
-            total_insert_str = str(round((total_insert / 1000), 2)) + ' K' if (total_insert / 1000) > 1000 else total_insert
-        if total_insert > 1000000:
-            total_insert_str = str(round((total_insert / 1000000), 2)) + ' M' if (total_insert / 1000) > 1000000 else total_insert
-        return total_insert_str
-
     def logs_update(self, logs):
         """
         logs table in sqlite table is updated.
         chats table in sqlite table is updated.
         """
-        try:
-            self.check_for_table_exits(table='logs')
-        except Exception as e:
-            print(e)
+        try: self.check_for_table_exits(table='logs')
+        except Exception as e: print(e)
 
-        try:
-            self.check_for_table_exits(table='chat')
-        except Exception as e:
-            print(e)
+        try: self.check_for_table_exits(table='chat')
+        except Exception as e: print(e)
 
         try:
             logs['login_user'] = current_user
@@ -145,8 +138,7 @@ class CreateIndex:
                                           columns=self.sqlite_queries['columns']['logs'][1:],
                                           values=logs
                                           ))
-        except Exception as e:
-            print(e)
+        except Exception as e: print(e)
 
         try:
             logs['login_user'] = current_user
@@ -159,19 +151,9 @@ class CreateIndex:
         except Exception as e:
             print(e)
 
-        try:
-            logs['user'] = 'info'
-            logs['date'] = str(current_date_to_day())[0:19]
-            logs['user_logo'] = 'info.jpeg'
-            logs['chat_type'] = 'info'
-            logs['message'] = ""
-            logs['general_message'] = logs['info']
-            con.execute(self.insert_query(table='chat',
-                                          columns=self.sqlite_queries['columns']['chat'][1:],
-                                          values=logs
-                                          ))
-        except Exception as e:
-            print(e)
+        try: con.execute(self.insert_query(table='chat', columns=self.sqlite_queries['columns']['chat'][1:],
+                                           values=self.info_logs_for_chat(logs['info'])))
+        except Exception as e: print(e)
 
     def update_schedule(self, date):
         self.check_for_table_exits(table='schedule_data')
@@ -378,7 +360,6 @@ class CreateIndex:
         try:
             _insert = []
             data = data.to_dict('results')
-            # total_insert_str = self.get_insert_str(len(data))
             if index == 'orders':
                 for i in data:
                     _obj = {i: None for i in orders_index_columns}
@@ -416,13 +397,14 @@ class CreateIndex:
                     self.query_es.insert_data_to_index(_insert, index)
                 # insert logs into the sqlite logs table for sessions data insert process
                 self.logs_update(logs={"page": "data-execute",
-                                       "info": " SESSIONS index Done! - Number of documents :", # + total_insert_str,
+                                       "info": " SESSIONS index Done! - Number of documents :" + formating_numbers(len(data)),
                                        "color": "green"})
             _insert = []
             if index == 'downloads':
                 for i in data:
                     _keys = list(i.keys())
                     _obj = {i: None for i in downloads_index_columns}
+                    # TODO : id must be the counter not randomly selected
                     _obj['id'] = np.random.randint(200000000)
                     _obj['client'] = i['client']
                     _obj['download_date'] = convert_to_iso_format(i['download_date'])
@@ -446,15 +428,16 @@ class CreateIndex:
                     self.query_es.insert_data_to_index(_insert, index)
                 # insert logs into the sqlite logs table for customers data insert process
                 self.logs_update(logs={"page": "data-execute",
-                                       "info": " CUSTOMERS index Done! - Number of documents :" , # + total_insert_str,
+                                       "info": " CUSTOMERS index Done! - Number of documents :" + formating_numbers(len(data)),
                                        "color": "green"})
 
         except Exception as e:
-            print(e)
-            err_str = str(e).replace("'", " ")
-            err_str = err_str[0:100] if len(err_str) >= 100 else err_str
+            try:
+                err_str = " - " + str(e).replace("'", " ")
+                err_str = err_str[0:100] if len(err_str) >= 100 else err_str
+            except: err_str = " "
             self.logs_update(logs={"page": "data-execute",
-                                   "info": "indexes Creation is failed! While " + index + " is creating. - " + err_str,
+                                   "info": "indexes Creation is failed! While " + index + " is creating. " + err_str,
                                    "color": "red"})
 
     def execute_index(self):
@@ -485,15 +468,17 @@ class CreateIndex:
             self.end_date = current_date_to_day()
 
             spent_hour = round(abs(self.job_start_date - self.end_date).total_seconds() / 60 / 60, 2)
-            total_time_str = str(spent_hour) + " hr. " if spent_hour >= 1 else str(spent_hour * 60) + " min. "
+            total_time_str = str(roud(spent_hour, 2)) + " hr. " if spent_hour >= 1 else str(round(spent_hour * 60, 2)) + " min. "
             comment = "indexes are created safely. Total spent time : " + total_time_str
             self.logs_update(logs={"page": "data-execute",
                                    "info": comment,
                                    "color": "green"})
 
         except Exception as e:
+            try: err_str = " - " + str(e).replace("'", " ")
+            except: err_str = " "
             self.logs_update(logs={"page": "data-execute",
-                                   "info": "indexes Creation is failed!  - " + str(e).replace("'", " "),
+                                   "info": "indexes Creation is failed!  " + err_str,
                                    "color": "red"})
 
 

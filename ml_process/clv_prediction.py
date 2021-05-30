@@ -61,7 +61,7 @@ class CLVPrediction:
         self.temp_folder = join(temporary_export_path, "temp_purchase_amount_results", "*.csv")
         self.results = join(temporary_export_path, "results_*.csv")
         self.clv_fields = ["client", "session_start_date", "payment_amount", "dimension"]
-        self.result_query = "data_type == 'prediction' and session_start_date == session_start_date"
+        self.result_query = "session_start_date == session_start_date"
         self.result_columns = ['session_start_date', 'client', 'payment_amount']
         self.clv_predictions = pd.DataFrame()
         self.client_dimensions = pd.DataFrame()
@@ -71,10 +71,10 @@ class CLVPrediction:
     def get_customers_dimesions(self, _data):
         _data["dimension"] = _data["dimension"].fillna("main")
         if list(_data['dimension'].unique()) != 1:
-            _data_pv = _data.groupby(["client", "dimension"]).agg({"session_start_date": "count"}).reset_index().rename(columns={"session_start_date": "order_count"})
-            _data_pv['order_seq_num'] = _data_pv.sort_values(by=["client",
-                                                                 "dimension",
-                                                                 "order_count"], ascending=False).groupby(["client"]).cumcount() + 1
+            _data_pv = _data.groupby(["client", "dimension"]).agg({"session_start_date": "count"}).reset_index().rename(
+                columns={"session_start_date": "order_count"})
+            _data_pv['order_seq_num'] = _data_pv.sort_values(
+                by=["client", "dimension", "order_count"], ascending=False).groupby(["client"]).cumcount() + 1
             _data_pv = _data_pv.query("order_seq_num == 1")
             _data_pv[["client", "dimension"]].groupby("client").agg({"dimension": "first"}).reset_index()
             self.client_dimensions = pd.merge(_data.drop('dimension', axis=1), _data_pv, on='client', how='left')
@@ -99,12 +99,14 @@ class CLVPrediction:
         """
         check if the last clv prediction is applied in 7 days.
         """
-        _reports = self.collect_reports.collect_reports(self.port, self.host, 'main',
-                                                        query={"report_name": "clv_prediction"})
-        if len(_reports) != 0:
-            _reports['report_date'] = _reports['report_date'].apply(lambda x: convert_to_date(x))
-            if abs(max(list(_reports['report_date'])) - current_date_to_day()). total_seconds() / 60 / 60 / 24 < 7:
-                self.has_prev_clv = True
+        try:
+            _reports = self.collect_reports.collect_reports(self.port, self.host, 'main',
+                                                            query={"report_name": "clv_prediction"})
+            if len(_reports) != 0:
+                _reports['report_date'] = _reports['report_date'].apply(lambda x: convert_to_date(x))
+                if abs(max(list(_reports['report_date'])) - current_date_to_day()). total_seconds() / 60 / 60 / 24 < 7:
+                    self.has_prev_clv = True
+        except: pass
 
     def insert_into_reports_index(self, clv_predictions, time_period, date=None, index='orders'):
         """
@@ -202,11 +204,11 @@ class CLVPrediction:
                            export_path=self.path)
             self.clv.clv_prediction()
             self.clv_predictions = self.clv.get_result_data().query(self.result_query)[self.result_columns]
+            self.clv_predictions = pd.read_csv("/Users/mac/Downloads/es-7.10.0/results_week_20210603_20210529.csv")
             self.clv_predictions['session_start_date'] = self.clv_predictions['session_start_date'].apply(lambda x: str(x))
             self.clv_predictions = self.clv_predictions.rename(columns={"session_start_date": "date"})
-            if len(self.client_dimensions) != 0:
-                self.clv_predictions = pd.merge(self.clv_predictions,
-                                                self.client_dimensions[['client', 'dimension']], on="client", how="left")
+            self.add_dimensions()
+            self.clv_predictions = self.clv_predictions[['dimension', 'date', 'payment_amount', 'client']]
             self.insert_into_reports_index(self.clv_predictions,
                                            time_period=time_period,
                                            date=start_date,
@@ -215,8 +217,31 @@ class CLVPrediction:
             del self.clv_predictions
             self.clv = None
             self.clv_predictions = pd.DataFrame()
-
             self.remove_temp_files()
+
+    def add_dimensions(self):
+        if len(self.client_dimensions) != 0:
+            _clv_predictions_newcomers = self.clv_predictions.query("client == 'newcomers'")
+            print(_clv_predictions_newcomers.head())
+            self.clv_predictions = pd.merge(self.clv_predictions.query("client != 'newcomers'"),
+                                            self.client_dimensions[['client', 'dimension']], on="client", how="left")
+            print(self.clv_predictions.head())
+            # add newcomers of dimensions
+            _dimension_user_ratios = self.clv_predictions.groupby('dimension').agg(
+                {'client': lambda x: len(np.unique(x))}).reset_index().rename(columns={'client': 'ratio'})
+            _dimension_user_ratios['ratio'] = _dimension_user_ratios['ratio'] / len(
+                self.clv_predictions['client'].unique())
+            _clv_predictions_newcomers = _clv_predictions_newcomers.groupby("date").agg(
+                {"payment_amount": "sum"}).reset_index().rename(columns={'payment_amount': 'pa'})
+            _clv_predictions_newcomers['client'] = 'newcomers'
+            dfs = []
+            for _ratio in list(_dimension_user_ratios['ratio']):
+                _clv_predictions_newcomers['payment_amount'] = _clv_predictions_newcomers['pa'] * _ratio
+                dfs.append(_clv_predictions_newcomers)
+
+            self.clv_predictions = pd.concat(
+                [self.clv_predictions.query("client != 'newcomers'")] + dfs)
+        else: self.clv_predictions['dimension'] = 'main'
 
     def fetch(self, end_date=None, time_period='weekly'):
         """

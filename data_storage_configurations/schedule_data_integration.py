@@ -11,27 +11,26 @@ from sqlalchemy import create_engine, MetaData
 from os.path import abspath, join
 from data_storage_configurations.es_create_index import CreateIndex
 from data_storage_configurations.query_es import QueryES
+from data_storage_configurations.data_works_pipeline import DataPipelines
 from flask_login import current_user
 try:
-    from exploratory_analysis.__init__ import create_exploratory_analysis
+    from exploratory_analysis.__init__ import create_exploratory_analysis, create_exploratory_analyse
 except Exception as e:
-    from exploratory_analysis import create_exploratory_analysis
-try:
-    from ml_process.__init__ import create_mls
-except Exception as e:
-    from ml_process import create_mls
+    from exploratory_analysis import create_exploratory_analysis, create_exploratory_analyse
+# try:
+#     from ml_process.__init__ import create_ml
+# except Exception as e:
+#     from ml_process import create_ml
 
 from utils import current_date_to_day, convert_to_day, abspath_for_sample_data, read_yaml
 from configs import query_path
 from data_storage_configurations.reports import Reports
-from data_storage_configurations.logger import LogsBasicConfeger, logger_str
+
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
                        convert_unicode=True, connect_args={'check_same_thread': False})
 metadata = MetaData(bind=engine)
 con = engine.connect()
-
-LogsBasicConfeger()
 
 
 class Scheduler:
@@ -125,27 +124,27 @@ class Scheduler:
         self.create_index = CreateIndex(data_connection_structure=data_connection_structure,
                                         data_columns=data_columns, actions=actions)
         self.create_build_in_reports = Reports()
+        self.data_pipelines = DataPipelines(es_tag,
+                                            data_connection_structure,
+                                            ea_connection_structure,
+                                            ml_connection_structure,
+                                            data_columns,
+                                            actions)
         self.query_es = QueryES(host=self.es_con['host'], port=self.es_con['port'])
         self.unique_dimensions = []
         self.schedule = True
         self.sqlite_queries = read_yaml(query_path, "queries.yaml")
         self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
-        self.suc_log_for_ea = """
-                               Exploratory Analysis are Created! Check Funnel, Cohort, 
-                               Descriptive Stats sections.
-                              """
-        self.suc_log_for_ml = """
-                               ML Works are Created! Check CLV Prediction, AB Test, Anomaly,
-                               Customer Segmentation sections.
-                              """
-        self.suc_log_for_br = """
-                              Daily reports are created in a .csv format in Directory.
-                              """
-        self.fail_log_for_ea = " Exploratory Analysis Creation is failed! - "
-        self.fail_log_for_ml = " ML Works Creation is failed! - "
-        self.fail_log_for_br = """
-                              Daily reports are craetion is failed!
-                              """
+        self.separator = lambda dim: [print("*" * 20) for i in range(3)] + [print("*"*10, " "," DIMENSION : ",dim, "*"*10)]
+        self.info_logs_for_chat = lambda info: {'user': 'info',
+                                                'date': str(current_date_to_day())[0:19],
+                                                'user_logo': 'info.jpeg',
+                                                'chat_type': 'info', 'chart': '',
+                                                'general_message': info, 'message': ''}
+        self.suc_log_for_data_works = lambda x: " {0} is created! Check {0} sections. ".format(
+            DATA_WORKS_READABLE_FORM[x])
+        self.fail_log_for_data_works = lambda x, e: " {0} is is failed! Check {0} sections. - {1}".format(
+            DATA_WORKS_READABLE_FORM[x])
 
     def query_schedule_status(self):
         """
@@ -176,8 +175,7 @@ class Scheduler:
         try:
             if table not in list(self.tables['name']):
                 con.execute(self.sqlite_queries[table])
-        except Exception as e:
-            print(e)
+        except Exception as e: print(e)
 
     def insert_query(self, table, columns, values):
         """
@@ -199,15 +197,11 @@ class Scheduler:
         logs table in sqlite table is updated.
         chats table in sqlite table is updated.
         """
-        try:
-            self.check_for_table_exits(table='logs')
-        except Exception as e:
-            print(e)
+        try: self.check_for_table_exits(table='logs')
+        except Exception as e: print(e)
 
-        try:
-            self.check_for_table_exits(table='chat')
-        except Exception as e:
-            print(e)
+        try: self.check_for_table_exits(table='chat')
+        except Exception as e: print(e)
 
         try:
             logs['login_user'] = current_user
@@ -216,23 +210,44 @@ class Scheduler:
                                           columns=self.sqlite_queries['columns']['logs'][1:],
                                           values=logs
                                           ))
+        except Exception as e: print(e)
+
+        try:
+            con.execute(self.insert_query(table='chat', columns=self.sqlite_queries['columns']['chat'][1:],
+                                          values=self.info_logs_for_chat(logs['info'])))
         except Exception as e:
             print(e)
 
-        try:
-            logs['user'] = 'info'
-            logs['date'] = str(current_date_to_day())[0:19]
-            logs['user_logo'] = 'info.jpeg'
-            logs['chat_type'] = 'info'
-            logs['general_message'] = logs['info']
-            logs['message'] = ""
-            con.execute(self.insert_query(table='chat',
-                                          columns=self.sqlite_queries['columns']['chat'][1:],
-                                          values=logs
-                                          ))
-        except Exception as e:
-            pint("Schedule process")
-            print(e)
+    def info_log_create(self, type, dim=None):
+        """
+        Logging system on creating E.A. or ML Works. This print processes are also shown at profile.html activities.
+        This gives the information of the process are done.
+        """
+        _info = self.suc_log_for_data_works(type)
+        if dim is not None:
+            _info += " || dimension : " + dim
+        print("-- Process Info --")
+        print(_info)
+        self.logs_update(logs={"page": "data-execute", "info": _info, "color": "green"})
+
+    def fail_log_create(self, e, type, dim=None):
+        """
+        Logging system on creating E.A. or ML Works. This print processes are also shown at profile.html activities.
+        This gives the information of the process are failed.
+        """
+        e_str = ''
+        if e is not None:
+            e_str = str(e)
+            e_str = e_str[:min(len(e_str), 100)]
+        fail_message = fail_log_for_data_works(type, e_str)
+        if dim is not None:
+            fail_message += " || dimension : " + dim
+        print(" FAIL ---- !!!!!!!!")
+        print("-- message :", fail_message)
+        print(" ----- description ::::::", e_str)
+        self.logs_update(logs={"page": "data-execute",
+                               "info": fail_message.replace("'", " "),
+                               "color": "red"})
 
     def create_schedule(self):
         tag = self.query_schedule_status()
@@ -276,73 +291,66 @@ class Scheduler:
                 if int(time_diff) == 0:
                     accept = False
         if accept:
-            # First execute whole data for EA and ML Works
-            try:
-                print("Exploratory Analysis are initialized !")
-                print("arguments : ")
-                print(self.ea_connection_structure)
-                create_exploratory_analysis(self.ea_connection_structure)
-                self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_ea, "color": "green"})
-                logging.info(logger_str("job-ea-main-done"))
-            except Exception as e:
-                e = str(e) if e is not None else ''
-                self.logs_update(logs={"page": "data-execute",
-                                       "info": self.fail_log_for_ea + str(e)[:min(len(str(e)), 100)].replace("'", " "),
-                                       "color": "red"})
-            try:
-                print("ML Works are initialized !")
-                print("arguments : ")
-                print(self.ml_connection_structure)
-                create_mls(self.ml_connection_structure)
-                self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_ml, "color": "green"})
-                logging.info(logger_str("job-ml-main-done"))
-            except Exception as e:
-                e = str(e) if e is not None else ''
-                self.logs_update(logs={"page": "data-execute",
-                                       "info": self.fail_log_for_ml + str(e)[:min(len(str(e)), 100)].replace("'", " "),
-                                       "color": "red"})
-            # Second execute EA and ML Works per dimension. Before execution, checking for dimensions
+            self.data_pipelines.data_work_pipelines_execution(ml_connection_structure=self.ml_connection_structure,
+                                                              ea_connection_structure=self.ea_connection_structure)
+
             try:
                 # checks if there is executable dimensions are stored in 'orders' index.
                 self.collect_dimensions_for_data_works()
                 if len(self.unique_dimensions) > 1:
-                    print("Execute Ml Works and Exploratory Analysis for the Dimensions!")
+                    print("-" * 5, "Execute Ml Works and Exploratory Analysis for the Dimensions!", "-" * 5)
                     for dim in self.unique_dimensions:  # iteratively execute EA and ML works for each dimension
-                        print("*" * 20)
-                        print("*"*10, " ", " Dimension Name : ", dim, "*"*10)
-                        for i in [{"executor": create_exploratory_analysis,
-                                   "config": self.ea_connection_structure},
-                                  {"executor": create_mls,
-                                   "config": self.ml_connection_structure}]:
-                            # no need to execute for clv per dimension
-                            i['config'] = {c: i['config'][c] for c in i['config'] if c not in ['clv']}
-                            for ea in i['config']:
-                                if ea not in ['date', 'time_period']:
-                                    i['config'][ea]['order_index'], i['config'][ea]['download_index'] = dim, dim
-                            try:
-                                print("configs :")
-                                print(i['config'])
-                                i['executor'](i['config'])
-                                _type = 'ml' if i['executor'] == create_mls else 'ea'
-                                _info = self.suc_log_for_ml if _type == 'ml' else self.suc_log_for_ea
-                                _info += " || dimension : " + dim
-                                self.logs_update(logs={"page": "data-execute", "info": _info, "color": "green"})
-                                logging.info(logger_str("job-" + _type + "-" + dim + "-done"))
-                            except Exception as e:
-                                e = str(e) if e is not None else ''
-                                fail_message = self.fail_log_for_ml if i['executor'] == create_mls else self.fail_log_for_ea
-                                fail_message += e[:min(len(e), 100)]
-                                self.logs_update(logs={"page": "data-execute", "info": fail_message, "color": "red"})
-            except Exception as e:
-                print(e)
+                        self.separator(dim=dim)
+                        self.data_pipelines.data_work_pipelines_execution(
+                            ml_connection_structure=self.ml_connection_structure,
+                            ea_connection_structure=self.ea_connection_structure, dim=dim)
+            except Exception as e: print(e)
 
-            try:
-                self.create_build_in_reports.create_build_in_reports()
-                self.logs_update(logs={"page": "data-execute", "info": self.suc_log_for_br, "color": "green"})
-            except Exception as e:
-                e = str(e) if e is not None else ''
-                fail_message = self.fail_log_for_br + e[:min(len(e), 100)] if e is not None else self.fail_log_for_br
-                self.logs_update(logs={"page": "data-execute", "info": fail_message, "color": "red"})
+            self.create_build_in_reports.create_build_in_reports()
+
+            # # First execute whole data for EA and ML Works
+            # try:
+            #     print("-"*5, " Exploratory Analysis ", "-"*5)
+            #     create_exploratory_analysis(self.ea_connection_structure)
+            #     self.info_log_create(i={'executor': create_exploratory_analysis})
+            # except Exception as e: self.fail_log_create(e=e, i={'executor': create_exploratory_analysis})
+#
+            # # create executed reports
+            # self.create_build_in_reports.create_build_in_reports()
+#
+            # try:
+            #     print("-" * 5, " ML Works ", "-" * 5)
+            #     # create_mls(self.ml_connection_structure)
+            #     self.ml_execute_pipeline(self.ml_connection_structure)
+            #     self.info_log_create(i={'executor': self.ml_execute_pipeline})
+            # except Exception as e: self.fail_log_create(e=e, i={'executor': self.ml_execute_pipeline})
+#
+            # # create executed reports
+            # self.create_build_in_reports.create_build_in_reports()
+#
+            # # Second execute EA and ML Works per dimension. Before execution, checking for dimensions
+            # try:
+            #     # checks if there is executable dimensions are stored in 'orders' index.
+            #     self.collect_dimensions_for_data_works()
+            #     if len(self.unique_dimensions) > 1:
+            #         print("-" * 5, "Execute Ml Works and Exploratory Analysis for the Dimensions!", "-" * 5)
+            #         for dim in self.unique_dimensions:  # iteratively execute EA and ML works for each dimension
+            #             self.separator(dim=dim)
+            #             for i in [{"executor": create_exploratory_analysis,  "config": self.ea_connection_structure},
+            #                       {"executor": self.ml_execute_pipeline, "config": self.ml_connection_structure}]:
+            #                 # no need to execute for clv per dimension
+            #                 _conf = {c: i['config'][c] for c in i['config'] if c not in ['clv']}
+            #                 for ea in i['config']:
+            #                     if ea not in ['date', 'time_period']:
+            #                         _conf[ea]['order_index'], _conf[ea]['download_index'] = dim, dim
+            #                 try:
+            #                     i['executor'](_conf)
+            #                     self.info_log_create(i=i, dim=dim)
+            #                 except Exception as e: self.fail_log_create(e=e, i=i, dim=dim)
+            # except Exception as e:  print(e)
+
+            # create executed reports
+            # self.create_build_in_reports.create_build_in_reports()
 
     def jobs(self):
         """
@@ -355,7 +363,6 @@ class Scheduler:
                                         data_columns=self.data_columns,
                                         actions=self.actions)
         print("Orders and Downloads Indexes Creation processes are ended!")
-        logging.info(logger_str("job-index-done"))
         self.data_works()
         print("Exploratory Analysis and ML Works Creation processes are ended!")
 
@@ -386,7 +393,6 @@ class Scheduler:
                         self.schedule = False
                 except Exception as e:
                     self.schedule = False
-                # time.sleep(721*60)
                 time.sleep(100)
                 print("waiting ....")
 
@@ -397,7 +403,6 @@ class Scheduler:
         process = threading.Thread(target=function, kwargs={} if args is None else args)
         process.daemon = True
         process.start()
-        # process.join()
         print("scheduling is triggered!!")
 
 

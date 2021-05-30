@@ -211,11 +211,7 @@ class Profiles:
                                     """.format(_user_name), con)['user_avatar'])[0]
         except Exception as e:
             print(e)
-            logo = pd.read_sql("""
-                                        SELECT user_avatar 
-                                        FROM user_avatar 
-                                        WHERE user = '{}'
-                                    """.format(_user_name), con)
+            logo = None
         return logo
 
     def add_pic(self, request):

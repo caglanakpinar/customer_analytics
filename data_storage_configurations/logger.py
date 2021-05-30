@@ -20,34 +20,16 @@ con = engine.connect()
 
 
 class LogsBasicConfeger:
-        try:
-            directory = pd.read_sql("select * from es_connection", con).to_dict('results')[-1]['directory']
-        except:
-            directory = currentdir
+        try: directory = pd.read_sql("select * from es_connection", con).to_dict('results')[-1]['directory']
+        except: directory = currentdir
 
-        try:
-            user = current_user['email']
-        except:
-            user = 'logs'
+        try: user = current_user['email']
+        except: user = 'logs'
 
         file_path = join(currentdir, "logs.log")
         logging.basicConfig(filename=file_path,
                             level=logging.INFO,
                             format='%(asctime)s:%(levelname)s:%(message)s')
 
-
-def logger_str(value):
-    try:
-        user = current_user.email
-    except:
-        user = 'not_assigned'
-    return "".join(["*" * 3, user, "*" * 3, value])
-
-
-class ParseLogs:
-    def __init__(self, user):
-        """
-
-        """
 
 

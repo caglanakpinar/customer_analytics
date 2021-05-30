@@ -165,3 +165,20 @@ def dimension_decision(order_index):
         return True
     else:
         return False
+
+
+def formating_numbers(num):
+    """
+    Human formatting for long numbers as strings
+    """
+    magnitude = 0
+    while abs(num) >= 1000:
+        magnitude += 1
+        num /= 1000.0
+    # add more suffixes if you need them
+    if num % 1 == 0:
+        num = int(num)
+        return num + ['', 'K', 'M', 'G', 'T', 'P'][magnitude]
+
+    else:
+        return '%.2f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
