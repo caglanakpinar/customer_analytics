@@ -304,7 +304,13 @@ chart_names = {
          "CLV Predicted Nex Week Customers of Segments of Total Purchase Amounts": "clv*daily_clv"},
     "Overall":
         {"Customer Journey": "index*customer_journey",
-         "Total Number Customer Breakdown with Purchased Order Count": "clv*clvsegments_amount"}}
+         "Total Number Customer Breakdown with Purchased Order Count": "clv*clvsegments_amount"},
+    "Anomaly":
+        {"Daily Funnel Anomaly": "anomaly*dfunnel_anomaly",
+         "Daily Cohort Anomaly": "anomaly*dcohort_anomaly",
+         "Daily Cohort Anomaly With Scores": "anomaly*dcohort_anomaly_2",
+         "Daily Cohort Anomaly ": "anomaly*dorders_anomaly", "CLV RFM Vs Current RFM": "anomaly*clvrfm_anomaly"}
+}
 
 
 ALLOWED_IMAGE_EXTENSIONS = ["JPEG", "JPG", "PNG", "GIF"]
@@ -314,3 +320,10 @@ TIME_DIFF_STR = [(0, "1m ago"), (60, "1m ago"), (60 * 60, "m ago "), (60 * 60 * 
                  (60 * 60 * 24 * 7, "d ago "), (60 * 60 * 24 * 7 * 4, "w ago "), (60 * 60 * 24 * 7 * 4 * 12, "y ago ")]
 
 DATE_DIFF_STR = [(0, "today "), (60 * 60 * 24, "today"), (60 * 60 * 24 * 2, "yesterday")]
+
+DATA_WORKS_READABLE_FORM = {'clv_prediction': 'CLV Prediction',
+                            'abtest': 'A/B Test', 'funnel': 'Session Actions & Customers Actions Funnels',
+                            'cohort': 'Cohorts', 'rfm': 'RFM', 'stats': 'Descriptive Statistics',
+                            'products': 'Product Analytics', 'segmentation': 'Customer Segmentation',
+                            'anomaly': 'Anomaly Detection'
+                            }

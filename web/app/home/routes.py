@@ -12,8 +12,10 @@ import json
 from web.app.home.models import RouterRequest
 from web.app.home.forms import SampleData, RealData, Charts, charts
 from web.app.home.profiles import Profiles
+from data_storage_configurations.logger import LogsBasicConfeger
 
 
+LogsBasicConfeger()
 samples = SampleData()
 real = RealData()
 charts = Charts(samples.kpis, real)
@@ -283,6 +285,24 @@ def route_template(template):
                                        graph_json['charts']['daily_clv']),
                                    clvsegments_amount=charts.get_json_format(
                                        graph_json['charts']['clvsegments_amount']),
+                                   data_type=data_type,
+                                   filters=filters)
+
+        if template == 'anomaly.html':
+            graph_json, data_type, filters = charts.get_chart(target='anomaly', index=index, date=date)
+            return render_template(template,
+                                   segment=segment,
+                                   pic=pic,
+                                   dfunnel_anomaly=charts.get_json_format(
+                                       graph_json['charts']['dfunnel_anomaly']),
+                                   dcohort_anomaly=charts.get_json_format(
+                                       graph_json['charts']['dcohort_anomaly']),
+                                   dcohort_anomaly_2=charts.get_json_format(
+                                       graph_json['charts']['dcohort_anomaly_2']),
+                                   dorders_anomaly=charts.get_json_format(
+                                       graph_json['charts']['dorders_anomaly']),
+                                   clvrfm_anomaly=charts.get_json_format(
+                                       graph_json['charts']['clvrfm_anomaly']),
                                    data_type=data_type,
                                    filters=filters)
 

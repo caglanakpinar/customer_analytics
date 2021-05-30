@@ -378,7 +378,25 @@ charts = {
                    'clvsegments_amount': {'trace': go.Pie(labels=[], values=[], hole=.3), 'layout': go.Layout()}
                    },
         "kpis": {}
-    }
+    },
+    "anomaly": {"charts":{"dfunnel_anomaly": {'trace': [go.Scatter(name="anomaly score (0 - 1)",  x=[], y=[],
+                                                         marker=dict(color="blue")),
+                                              go.Bar(name="outlier detection (0/1)", x=[], y=[],
+                                                     marker=dict(color='#FECB52'))],
+                                    'layout': go.Layout()},
+                "dcohort_anomaly_2": {'trace': [go.Scatter(name="anomaly score",  x=[], y=[],
+                                                         marker=dict(color="blue")),
+                                              go.Bar(name="outlier detection (0/1)", x=[], y=[],
+                                                     marker=dict(color='#FECB52'))],
+                                    'layout': go.Layout()},
+                "dcohort_anomaly": {'trace': go.Scatter(name=None, x=[], y=[],  marker=dict(color="red")),
+                                      'layout': go.Layout()},
+                "dorders_anomaly": {'trace': go.Bar(name=None, x=[], y=[]), 'layout': go.Layout()},
+                "clvrfm_anomaly": {'trace': go.Scatter(name=None, x=[], y=[], mode='markers'), 'layout': go.Layout()}},
+    "kpis": {}}
+
+
+
 }
 
 
@@ -416,9 +434,7 @@ class RealData:
     try:
         es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
         folder = join(es_tag['directory'], "build_in_reports", "")
-    except:
-        es_tag, folder = {}, []
-
+    except: es_tag, folder = {}, []
 
     def get_report_dimensions(self):
         """
@@ -432,23 +448,19 @@ class RealData:
                 if len(_dims) != 0:
                     dimensions = _dims
             return dimensions
-        except:
-            return dimensions
+        except: return dimensions
     
     def check_for_the_report(self, report_name, index='main', date=None):
         """
         checks for 'build_in_reports' while platform is running.
         """
-
-
         try:
             es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
             _path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
             if date is not None:
                 _path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
             return exists(_path)
-        except:
-            return False
+        except: return False
 
     def fetch_report(self, report_name, index='main', date=None):
         """
@@ -461,8 +473,7 @@ class RealData:
                 date_file_path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
                 file_path = date_file_path if exists(date_file_path) else file_path
             return pd.read_csv(file_path)
-        except:
-            return False
+        except: return False
 
     # this will collect the report in the 'build_in_reports'.
     # whole data of reports will be stored in 'main' folder. dimensions are stored seperatelly
@@ -475,8 +486,7 @@ class RealData:
                     kpis[index][f.split(".")[0]] = pd.read_csv(join(_folder, f))
                 except Exception as e:
                     print(e)
-    except Exception as e:
-        print(e)
+    except Exception as e: print(e)
             
 
 def cohort_human_readable_form(cohort, tp):
@@ -563,7 +573,7 @@ class Charts:
 
     def decide_trace_type(self, trace, chart):
         if len(set(['funnel', 'distribution', 'clv']) & set(chart.split("_"))) != 0:
-            return trace
+            return trace if type(trace) == list else [trace]
         else:
             if type(trace) == list:
                 return trace
@@ -719,6 +729,34 @@ class Charts:
         if chart == 'clvsegments_amount':
             trace['labels'] = list(_data['segments'])
             trace['values'] = list(_data['payment_amount'])
+        if chart in ['dfunnel_anomaly', 'dcohort_anomaly_2']:
+            trace[0]['x'] = list(_data['daily'])
+            trace[0]['y'] = list(_data['Anomaly Score Download to First Order'])
+            trace[1]['x'] = list(_data['daily'])
+            trace[1]['y'] = list(_data['outlier'])
+        if chart == 'dcohort_anomaly':
+            _days = list(set(_data.columns) - {'days'})
+            _colors = list(map(lambda x: 'red' if x.split("_")[-1] == 'outlier' else 'blue', _days))
+            _days_updated = list(map(lambda x: x.split("_")[0] if x.split("_")[-1] == 'outlier' else x, _days))
+            trace = []
+            for col1, col2, color in zip(_days, _days_updated, _colors):
+                _trace = go.Scatter(x=list(_data['days']), y=list(_data[col1]), name=col2, marker={'color': color})
+                trace.append(_trace)
+        if chart == 'dorders_anomaly':
+            _trace = trace
+            trace = []
+            for _filter in ['no change', 'decrease', 'increase']:
+                __data = _data.query("anomalities ==  @_filter")
+                _trace = go.Bar(name=_filter, x=list(__data['daily']), y=list(__data['diff_perc']))
+                trace.append(_trace)
+        if chart == 'clvrfm_anomaly':
+            trace = []
+            clusters = sorted(list(_data['naming'].unique()))
+            for cluster in clusters:
+                __data = _data.query("naming ==  @cluster")
+                _trace = go.Scatter(name=cluster, x=list(__data['monetary_diff']), y=list(__data['frequency_diff']),
+                                    mode='markers')
+                trace.append(_trace)
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 
     def get_layout(self, layout, chart, index, date, annotation=None):
@@ -741,7 +779,6 @@ class Charts:
                     annotation['y'] = y[n]
                     annotations.append(annotation)
             layout['annotations'] = annotations
-
         if 'usage' in chart.split("_") or chart == 'customer_journey':
             columns = ['mean_control', 'mean_validation']
             columns = ['hourly order differences'] * 2 if chart == 'customer_journey' else columns
@@ -753,7 +790,11 @@ class Charts:
             layout['yaxis'] = {"range": [
                 round(max(0, min(min(_data[columns[0]]), min(_data[columns[1]])) - 0.02), 2),
                 round(max(0, max(max(_data[columns[0]]), max(_data[columns[1]])) - 0.02), 2)]}
-        if 'change' in chart.split("_"):
+        if chart == 'dfunnel_anomaly':
+            min_value = round(min(_data['Anomaly Score Download to First Order']) - 0.01, 2)
+            max_value = round(max(_data['Anomaly Score Download to First Order']) + 0.01, 2)
+            layout['yaxis'] = {"range": [min_value, max_value]}
+        if 'change' in chart.split("_") or 'dfunnel' in chart.split("_"):
             return layout
         else:
             return [layout] if 'usage' not in chart.split("_") else layout
