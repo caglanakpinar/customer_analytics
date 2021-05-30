@@ -77,12 +77,48 @@
 							</h5>
 						</div>
 						<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
-							<div class="card-body">
-								{{ data_type }}
-								Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch.
-								Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch
-								et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat
-								craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+							<div class="card-body ">
+								<ul>
+								  <li>
+									  <strong style="color:green;">Customers Funnels</strong> are aggregated count of events per cutomer according to time periods.
+									  They are started to be counted from the user first engagement event such as download or signup.
+								  </li>
+								  <li>
+									  <div class="card-header">
+									  	<h5 class="card-title" style="color:green;">What is the Customer of Action?</h5>
+									  	After the user creation event, there might be more events which are probably stored in your system which they are called
+									    <strong style="color:green;">Customer Actions</strong>. Example of these kind of actions; Adding Payment Method, Adding Location,first order transaction, etc.
+
+									  	Customer Actions are able to be added to ElasticSearch indexes manually while it is connecting the Customers data Source.
+								      	In the page <strong style="color:green;">Sessions & Customers Data Source</strong>, columns name of the actions are specified in the
+								      	<strong style="color:green;">Action Column Names in Data Source</strong>.
+									  </div>
+
+								  </li>
+
+								  <li>
+									  <div class="card-header">
+									  	<h5 class="card-title" style="color:green;">What are Time Periods of Funnels?</h5>
+									  	There are daily, weekly, monthly and hourly Funnels. daily, weekly, monthly Funnels are calculated as total transaction count per action per day/week/month.
+									  	Hourly Funnel is calculated as average of total transaction count per action per hour
+									  </div>
+								  </li>
+									<li>
+									  <div class="card-header">
+									  	<h5 class="card-title" style="color:green;">How do I see the Dimensional Funnel?</h5>
+        									Each Dimensionally Funnels is created individually for dimension.
+										    Dimension columns are also specified in the page <strong style="color:green;">Sessions & Customers Data Source</strong>.
+										    After that, you may select dimension from filters section.
+									  </div>
+								  </li>
+
+									<li>
+									  <div class="card-header">
+									  	<h5 class="card-title" style="color:green;">How do I select Funnels of start - end dates?</h5>
+										  	Funnels of start date is not able to be selected. However it is possible to select end date from filters section.
+									  </div>
+								  </li>
+								</ul>
 							</div>
 						</div>
 					</div>
