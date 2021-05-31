@@ -24,50 +24,52 @@
 										</h5>
 									</div>
 									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
-										<div class="row">
-											<div class="col-md-6">
-												<div class="card">
-													<div class="card-body">
-														<div class="card">
-															<div class="card-header">
-																<h5 class="card-title mb-0">Dimension selection</h5>
-															</div>
-															<div class="card-body">
-																<select name="index" id="index" class="form-control">
-																	{% for d in filters['dimensions'] %}
-																		{% if d == 'There is no available report. Please execute Schedule Data Process' %}
-																			<option value= "main">{{ d }}</option>
-																		{% endif %}
-																		{% if d != 'There is no available report. Please execute Schedule Data Process' %}
-																			<option value="{{ d }}">{{ d }}</option>
-																		{% endif %}
-																	{% endfor %}
-																</select>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-
-											<div class="col-md-6">
-												<div class="card flex-fil">
-													<div class="card-body col-12">
-														<div class="col-12 ">
-															<div class="align-self-center w-100">
-																<div class="chart">
-																	<input name="date" id="datetimepicker-dashboard" hidden>
+										<form method="POST">
+											<div class="row">
+												<div class="col-md-6">
+													<div class="card">
+														<div class="card-body">
+															<div class="card">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Dimension selection</h5>
+																</div>
+																<div class="card-body">
+																	<select name="index" id="index" class="form-control">
+																		{% for d in filters['dimensions'] %}
+																			{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value= "main">{{ d }}</option>
+																			{% endif %}
+																			{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value="{{ d }}">{{ d }}</option>
+																			{% endif %}
+																		{% endfor %}
+																	</select>
 																</div>
 															</div>
 														</div>
 													</div>
 												</div>
+
+												<div class="col-md-6">
+													<div class="card flex-fil">
+														<div class="card-body col-12">
+															<div class="col-12 ">
+																<div class="align-self-center w-100">
+																	<div class="chart">
+																		<input name="date" id="datetimepicker-dashboard" hidden>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="card-header">
+													<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+												</div>
 											</div>
+										</form>
 
-											<div class="card-header">
-											<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
-										</div>
-
-										</div>
 									</div>
 								</div>
 
@@ -80,12 +82,70 @@
 										</h5>
 									</div>
 									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
-										<div class="card-body">
-											Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch.
-											Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch
-											et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat
-											craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+										<div class="card-body ">
+											<ul>
+											  <li>
+												  <strong style="color:green;">A/B Test Promotions </strong> are bunch of testes which compares effect of Promotions to the business.
+												  There are two metrics which help us to measure comparison values.
+												  These are Number of orders counts per promotion and Average purchase amount per promotion.
+												  Promotion of Usage related to these metrics are tested with Before - After Analysis
+												  in order to th answer the question that is "Is thre any significant increase/decrease
+												  on Order Count / Average Payment Amount per User after the Promotion is used?"
+												  While we need to see to Promotion which increases/decreases the number of orders and the average purchase amount,
+												  This Section can help us to find the right promotion.
+
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">How Promotions are Tested?</h5>
+												  	Each combination promotions are tested individually. Number of order after the promotion used per customer in same time period.
+													  For instance, their
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Download to First Order Cohort</h5>
+														If there isn`t any downloaded date, you may assign any date which is related to customers of first event with your business.
+														This cohort of date column represent download date. If it is Weekly Cohort it will represent the mondays of each week.
+													  	Otherwise it will represent days.
+													 	Each Numeric column from 0 to 15 are the day differences after the downloaded date.
+													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
+													    this refers that there are 100 customers who have downloads in  2021-05-06 and have first orders 10 days later.
+												  </div>
+											  </li>
+											   <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">First to Second Order Cohort</h5>
+														This cohort of date column represent first order date. If it is Weekly Cohort it will represent the mondays of each week.
+													  	Otherwise it will represent days.
+													 	Each Numeric column from 0 to 15 are the day differences after the first order date.
+													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
+													    this refers that there are 100 customers who have first orders in 2021-05-06 and have second orders 10 days later.
+												  </div>
+											  </li>
+										       <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Second to Third Order Cohort</h5>
+														This cohort of date column represent second order date. If it is Weekly Cohort it will represent the mondays of each week.
+													  	Otherwise it will represent days.
+													 	Each Numeric column from 0 to 15 are the day differences after the second order date.
+													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
+													    this refers that there are 100 customers who have second orders in 2021-05-06 and have third orders 10 days later.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Third to Fourth Order Cohort</h5>
+														This cohort of date column represent third order date. If it is Weekly Cohort it will represent the mondays of each week.
+													  	Otherwise it will represent days.
+													 	Each Numeric column from 0 to 15 are the day differences after the third order date.
+													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
+													    this refers that there are 100 customers who have third orders in 2021-05-06 and have fourth orders 10 days later.
+												  </div>
+											  </li>
+											</ul>
 										</div>
+
 									</div>
 								</div>
 							</div>

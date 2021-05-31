@@ -446,7 +446,9 @@ class RealData:
             if exists(join(es_tag['directory'], "build_in_reports")):
                 _dims = listdir(dirname(join(es_tag['directory'], "build_in_reports")))
                 if len(_dims) != 0:
-                    dimensions = _dims
+                    _dims = listdir(dirname(join(es_tag['directory'], "build_in_reports", "")))
+                    if len(_dims) != 0:
+                        dimensions = _dims
             return dimensions
         except: return dimensions
     

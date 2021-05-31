@@ -24,50 +24,51 @@
 										</h5>
 									</div>
 									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
-										<div class="row">
-											<div class="col-md-6">
-												<div class="card">
-													<div class="card-body">
-														<div class="card">
-															<div class="card-header">
-																<h5 class="card-title mb-0">Dimension selection</h5>
-															</div>
-															<div class="card-body">
-																<select name="index" id="index" class="form-control">
-																	{% for d in filters['dimensions'] %}
-																		{% if d == 'There is no available report. Please execute Schedule Data Process' %}
-																			<option value= "main">{{ d }}</option>
-																		{% endif %}
-																		{% if d != 'There is no available report. Please execute Schedule Data Process' %}
-																			<option value="{{ d }}">{{ d }}</option>
-																		{% endif %}
-																	{% endfor %}
-																</select>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-
-											<div class="col-md-6">
-												<div class="card flex-fil">
-													<div class="card-body col-12">
-														<div class="col-12 ">
-															<div class="align-self-center w-100">
-																<div class="chart">
-																	<input name="date" id="datetimepicker-dashboard" hidden>
+										<form method="POST">
+											<div class="row">
+												<div class="col-md-6">
+													<div class="card">
+														<div class="card-body">
+															<div class="card">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Dimension selection</h5>
+																</div>
+																<div class="card-body">
+																	<select name="index" id="index" class="form-control">
+																		{% for d in filters['dimensions'] %}
+																			{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value= "main">{{ d }}</option>
+																			{% endif %}
+																			{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value="{{ d }}">{{ d }}</option>
+																			{% endif %}
+																		{% endfor %}
+																	</select>
 																</div>
 															</div>
 														</div>
 													</div>
 												</div>
+
+												<div class="col-md-6">
+													<div class="card flex-fil">
+														<div class="card-body col-12">
+															<div class="col-12 ">
+																<div class="align-self-center w-100">
+																	<div class="chart">
+																		<input name="date" id="datetimepicker-dashboard" hidden>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+												<div class="card-header">
+													<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+												</div>
 											</div>
+										</form>
 
-											<div class="card-header">
-											<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
-										</div>
-
-										</div>
 									</div>
 								</div>
 
