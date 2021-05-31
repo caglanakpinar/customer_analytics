@@ -121,6 +121,9 @@ class Reports:
         self.day_folder = str(current_date_to_day())[0:10]
         self.rfm_metrics_reports = ['frequency_recency', 'recency_monetary', 'monetary_frequency',
                                     'monetary_clusters', 'frequency_clusters', 'recency_clusters']
+        self.naming_decision = lambda x: 'no change' if x.split(" ")[1] == 'decrease/increase' else x.split(" ")[1]
+        self.naming = lambda x1, x2: "Frequency; {0}, Monetary ; {1}".format(self.naming_decision(x1),
+                                                                             self.naming_decision(x2))
 
     def connections(self):
         """
@@ -258,6 +261,16 @@ class Reports:
                 query += " 'stats') and type != type or type == 'daily_revenue' "
             if r_name == 'clvsegments_amount':
                 query += " 'segmentation') and type != type "
+        if 'anomaly' in r_name.split("_"):
+            if r_name in ['dcohort_anomaly', 'dcohort_anomaly_2']:
+                _type = 'cohort_d'
+            if r_name == 'dfunnel_anomaly':
+                _type = 'daily_funnel'
+            if r_name == 'dorders_anomaly':
+                _type = 'daily_orders_comparison'
+            if r_name == 'clvrfm_anomaly':
+                _type = 'clv_prediction'
+            query = " report_name == 'anomaly' and type == '{}' ".format(_type)
         return query
 
     def get_promotion_comparison(self, x):
@@ -351,6 +364,50 @@ class Reports:
                     {"client": lambda x: len(np.unique(x))}).reset_index().rename(columns={"client": "client_count"})
         return report
 
+    def naming(self, metric):
+        if metric == 'nomal decrease/increase':
+            return 'no change'
+        if metric == 'significant decrease':
+            return 'decrease'
+        if metric == 'significant increase':
+            return 'increase'
+
+    def get_anomaly_reports(self, r_name, report):
+        report_data = pd.DataFrame(list(report['data'])[0])
+        if r_name == 'dfunnel_anomaly':
+            min_as = round(min(report_data['anomaly_scores']) - 0.01, 2)
+            max_as = round(max(report_data['anomaly_scores']) + 0.01, 2)
+            report_data['outlier'] = report_data['outlier'].apply(lambda x: max_as + 0.01 if x == 1 else min_as - 0.01)
+            report_data = report_data.rename(columns={"anomaly_scores":"Anomaly Score Download to First Order"})
+        if r_name == 'dcohort_anomaly':
+            report_data['daily'] = report_data['daily'].apply(lambda x: convert_to_day(x))
+            max_date = str(max(report_data['daily']) - datetime.timedelta(days=30))[0:10]
+            report_data = report_data.query("daily > @max_date")
+            outlier_days = list(report_data.query("outlier == 1")['daily'])
+            _days = list(map(lambda x: str(x)[0:10] + '_outlier' if x in outlier_days else x, list(report_data['daily'])))
+            report_data = report_data[[str(i) for i in list(range(0, 5))]].transpose().reset_index()
+            report_data.columns = ['days'] + _days
+        if r_name == 'dcohort_anomaly_2':
+            report_data = report_data[['daily', 'anomaly_scores_from_d_to_1', 'outlier']
+              ].rename(columns={"anomaly_scores_from_d_to_1": "Anomaly Score Download to First Order"})
+        if r_name == 'dorders_anomaly':
+            columns = ['diff_perc', 'daily', 'anomalities']
+            report_data['anomalities'] = report_data['anomalities'].apply(lambda x: self.naming_decision(x))
+            _normal = report_data.query("anomalities == 'no change'")[columns]
+            _decrease = report_data.query("anomalities == 'decrease'")[columns]
+            _increase = report_data.query("anomalities == 'increase'")[columns]
+            report_data = pd.concat([_normal, _decrease, _increase])
+        if r_name == 'clvrfm_anomaly':
+            report_data['naming'] = report_data.apply(lambda row: self.naming(row['f_anomaly'], row['m_anomaly']), axis=1)
+        return report_data
+
+
+
+
+
+
+
+
     def get_sample_report_names(self):
         """
         Collect all sample reports in sample_data folder
@@ -376,6 +433,8 @@ class Reports:
                 report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
             if r_name in ['daily_clv', "clvsegments_amount"]:
                 report_data = self.get_clv_report(reports, r_name, index)
+            if 'anomaly' in r_name.split("_"):
+                report_data = self.get_anomaly_reports(r_name, report)
         report_data = self.radomly_sample_data(report_data)
         return report_data
 
