@@ -81,12 +81,73 @@
 										</h5>
 									</div>
 									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
-										<div class="card-body">
+										<div class="card-body ">
+											<ul>
+											  <li>
+												  <strong style="color:green;">A/B Test Promotions </strong> are bunch of testes which compares effect of Promotions to the business.
+												  There are two metrics which help us to measure comparison values.
+												  These are Number of orders counts per promotion and Average purchase amount per promotion.
+												  Promotion of Usage related to these metrics are tested with Before - After Analysis
+												  in order to th answer the question that is "Is there any significant increase/decrease
+												  on Order Count / Average Payment Amount per User after the Promotion is used?"
+												  While we need to see to Promotion which increases/decreases the number of orders and the average purchase amount,
+												  This Section can help us to find the right promotion.
+											  </li>
+											  <li>
+												  <div class="card-header">
+													  <h5 class="card-title" style="color:green;">Hypothesis are;</h5>
+													  <div class="card-header">
+														  <div class="row">H0 : These is no significant Difference with A - B of order count / purchase amount.</div>
+														  <div class="row">H1 : These is significant Difference with A - B of order count / purchase amount.</div>
+													  </div>
+												  </div>
+											  </li>
+											  <li>
+											    <div class="card-header">
+											  	  <h5 class="card-title" style="color:green;">Bootstrapping Method;</h5>
+											  	  <div class="card-header">
+											  		  <div class="row">
+											  		    Each test process are applied with Boostraping Method.
+											  	        So, Iteratively randomly selected A and B sample customers of order count / average purchase amount will be tested acceptable enough time.
+											  	        Each iteration A - B samples are randomly selected.
+											  	        Accepted ratio will show us the confidence of our test results. For instance, There are 100 tests and 75 of them are ended with H0 Accepted.
+											  	        So, test are % 75  our test are H0 Accepted.
+											  		  </div>
+											  	  </div>
+											    </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">How are Promotions Compared?</h5>
+												  	  Each combination promotions are tested individually. Average of Purchase Payment Amount per User Sample for Promotion (1) is compared to
+													  Average of Purchase Payment Amount per User Sample for Promotion (2).
+													  Hypothesis are;
+													  H0: These is no significant Difference on average purchase amount of customers who used promotion A and B.
+													  H1: These is significant Difference on average purchase amount of customers who used promotion A and B.
+													  Combination of Promotions are shown at 'Promotion Comparison' chart with number test results which are accepted and
+													  H0 rejected test ratio (H0 rejected test count/total test count)
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">How are Before - After Promo Usage Tests designed?</h5>
+													    It might be very confusion and it might seem very sophisticated A/B Test process,
+													    however it basically compares promotions related to customers of usage.
+													    Each promotion of usage is tested separately.
+													    Each promotion of used users and their used timestamp are collected for each promotion.
+													    Each customers of one week before promotion usage and one week after the promotion use time periods are compared with to metrics which are
+													    order count and average purchase amount. We aim to detect significant increase after time period
+													    while comparing to before time period about purchase amount or order count
 
-											Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch.
-											Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch
-											et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat
-											craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+
+													  	Before - After Promo Usage Tests are shown at 'Order And Payment Amount Difference for Before And After Promotion Usage',
+													    'Before - After Time Periods Customers' Average Purchase Payment Amount Test (Test Accepted!) ',
+													    'Before - After Time Periods Customers' Average Purchase Payment Amount Test (Test Rejected!)',
+													    'Before - After Time Periods Customers' Total Purchase Count Test (Test Accepted!)',
+													    'Before - After Time Periods Customers' Total Purchase Count Test (Test Rejected!)'
+												  </div>
+											  </li>
+											</ul>
 										</div>
 									</div>
 								</div>

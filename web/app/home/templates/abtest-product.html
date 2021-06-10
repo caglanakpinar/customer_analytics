@@ -85,62 +85,61 @@
 										<div class="card-body ">
 											<ul>
 											  <li>
-												  <strong style="color:green;">A/B Test Promotions </strong> are bunch of testes which compares effect of Promotions to the business.
+												  <strong style="color:green;">A/B Test Products </strong> are bunch of testes which compares effect of Products to the business.
 												  There are two metrics which help us to measure comparison values.
-												  These are Number of orders counts per promotion and Average purchase amount per promotion.
-												  Promotion of Usage related to these metrics are tested with Before - After Analysis
-												  in order to th answer the question that is "Is thre any significant increase/decrease
-												  on Order Count / Average Payment Amount per User after the Promotion is used?"
-												  While we need to see to Promotion which increases/decreases the number of orders and the average purchase amount,
-												  This Section can help us to find the right promotion.
+												  These are Number of orders counts per product and Average purchase amount per product.
+												  Products of Purchasement related to these metrics are tested with Before - After Analysis
+												  in order to th answer the question that is "Is there any significant increase/decrease
+												  on Order Count / Average Payment Amount per User after the Products is purchased?"
+												  While we need to see to the product which increases/decreases the number of orders and the average purchase amount,
+												  This Section can help us to find the right product for the business.
+											  </li>
 
-											  </li>
 											  <li>
 												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">How Promotions are Tested?</h5>
-												  	Each combination promotions are tested individually. Number of order after the promotion used per customer in same time period.
-													  For instance, their
-												  </div>
-											  </li>
-											  <li>
-												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">Download to First Order Cohort</h5>
-														If there isn`t any downloaded date, you may assign any date which is related to customers of first event with your business.
-														This cohort of date column represent download date. If it is Weekly Cohort it will represent the mondays of each week.
-													  	Otherwise it will represent days.
-													 	Each Numeric column from 0 to 15 are the day differences after the downloaded date.
-													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
-													    this refers that there are 100 customers who have downloads in  2021-05-06 and have first orders 10 days later.
-												  </div>
-											  </li>
-											   <li>
-												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">First to Second Order Cohort</h5>
-														This cohort of date column represent first order date. If it is Weekly Cohort it will represent the mondays of each week.
-													  	Otherwise it will represent days.
-													 	Each Numeric column from 0 to 15 are the day differences after the first order date.
-													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
-													    this refers that there are 100 customers who have first orders in 2021-05-06 and have second orders 10 days later.
-												  </div>
-											  </li>
-										       <li>
-												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">Second to Third Order Cohort</h5>
-														This cohort of date column represent second order date. If it is Weekly Cohort it will represent the mondays of each week.
-													  	Otherwise it will represent days.
-													 	Each Numeric column from 0 to 15 are the day differences after the second order date.
-													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
-													    this refers that there are 100 customers who have second orders in 2021-05-06 and have third orders 10 days later.
+													  <h5 class="card-title" style="color:green;">Hypothesis are;</h5>
+													  <div class="card-header">
+														  <div class="row">H0 : These is no significant Difference with A - B of order count / purchase amount.</div>
+														  <div class="row">H1 : These is significant Difference with A - B of order count / purchase amount.</div>
+													  </div>
 												  </div>
 											  </li>
 											  <li>
+											    <div class="card-header">
+											  	  <h5 class="card-title" style="color:green;">Bootstrapping Method;</h5>
+											  	  <div class="card-header">
+											  		  <div class="row">
+											  		    Each test process are applied with Boostraping Method.
+											  	        So, Iteratively randomly selected A and B sample customers of order count / average purchase amount will be tested acceptable enough time.
+											  	        Each iteration A - B samples are randomly selected.
+											  	        Accepted ratio will show us the confidence of our test results. For instance, There are 100 tests and 75 of them are ended with H0 Accepted.
+											  	        So, test are % 75  our test are H0 Accepted.
+											  		  </div>
+											  	  </div>
+											    </div>
+											  </li>
+
+											  <li>
 												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">Third to Fourth Order Cohort</h5>
-														This cohort of date column represent third order date. If it is Weekly Cohort it will represent the mondays of each week.
-													  	Otherwise it will represent days.
-													 	Each Numeric column from 0 to 15 are the day differences after the third order date.
-													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
-													    this refers that there are 100 customers who have third orders in 2021-05-06 and have fourth orders 10 days later.
+												  	<h5 class="card-title" style="color:green;">How are Before - After Product Usage Tests designed?</h5>
+													    It might be very confusion and it might seem very sophisticated A/B Test process,
+													    however it basically compares products related to customers of product selection at the basket.
+													    Each product selection at the basket is tested separately.
+													    Each timestamp of the selected product at the basket are collected for each product per customer individually.
+													    Each customers of one week before product selection and one week after the product selection time periods are compared with to metrics which are
+													    order count and average purchase amount. We aim to detect significant increase after time period
+													    while comparing to before time period about purchase amount or order count.
+
+														<div class="card-header">
+															<div class="row" style="color:green;">related charts are;</div>
+															<div class="card-header">
+																<div class="row mb-1">'Before - After the Product Selection Tests are shown at 'Order And Payment Amount Difference for Before And After the Product Selection',</div>
+																<div class="row mb-1">'Before - After Time Periods Customers' Average Purchase Payment Amount Test (Test Accepted!) ',</div>
+																<div class="row mb-1">'Before - After Time Periods Customers' Average Purchase Payment Amount Test (Test Rejected!)',</div>
+																<div class="row mb-1">'Before - After Time Periods Customers' Total Purchase Count Test (Test Accepted!)',</div>
+																<div class="row mb-1">'Before - After Time Periods Customers' Total Purchase Count Test (Test Rejected!)'</div>
+															</div>
+														</div>
 												  </div>
 											  </li>
 											</ul>
