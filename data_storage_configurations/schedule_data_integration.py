@@ -13,14 +13,15 @@ from data_storage_configurations.es_create_index import CreateIndex
 from data_storage_configurations.query_es import QueryES
 from data_storage_configurations.data_works_pipeline import DataPipelines
 from flask_login import current_user
+
 try:
     from exploratory_analysis.__init__ import create_exploratory_analysis, create_exploratory_analyse
 except Exception as e:
     from exploratory_analysis import create_exploratory_analysis, create_exploratory_analyse
-# try:
-#     from ml_process.__init__ import create_ml
-# except Exception as e:
-#     from ml_process import create_ml
+try:
+    from ml_process.__init__ import create_ml
+except Exception as e:
+    from ml_process import create_ml
 
 from utils import current_date_to_day, convert_to_day, abspath_for_sample_data, read_yaml
 from configs import query_path
@@ -261,6 +262,12 @@ class Scheduler:
         if time_period == 'once':
             return 'once'
 
+    def get_dim_configs(self, _conf, dim):
+        for ea in _conf:
+            if ea not in ['date', 'time_period']:
+                _conf[ea]['order_index'], _conf[ea]['download_index'] = dim, dim
+        return _conf
+
     def data_works(self):
         """
         Execute Exploratory Analysis and Machine Learning Works which are implemented in the platform.
@@ -302,8 +309,8 @@ class Scheduler:
                     for dim in self.unique_dimensions:  # iteratively execute EA and ML works for each dimension
                         self.separator(dim=dim)
                         self.data_pipelines.data_work_pipelines_execution(
-                            ml_connection_structure=self.ml_connection_structure,
-                            ea_connection_structure=self.ea_connection_structure, dim=dim)
+                            ml_connection_structure=self.get_dim_configs(self.ml_connection_structure, dim),
+                            ea_connection_structure=self.get_dim_configs(self.ea_connection_structure, dim), dim=dim)
             except Exception as e: print(e)
 
             self.create_build_in_reports.create_build_in_reports()
