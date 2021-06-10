@@ -12,14 +12,15 @@ from os.path import abspath, join
 from data_storage_configurations.es_create_index import CreateIndex
 from data_storage_configurations.query_es import QueryES
 from flask_login import current_user
+
 try:
     from exploratory_analysis.__init__ import create_exploratory_analysis, create_exploratory_analyse
 except Exception as e:
     from exploratory_analysis import create_exploratory_analysis, create_exploratory_analyse
-# try:
-#     from ml_process.__init__ import create_mls_1, create_mls_2, create_mls_3, create_ml
-# except Exception as e:
-#     from ml_process import create_mls_1, create_mls_2, create_mls_3, create_ml
+try:
+    from ml_process.__init__ import create_ml
+except Exception as e:
+    from ml_process import create_ml
 
 from utils import current_date_to_day, convert_to_day, abspath_for_sample_data, read_yaml
 from configs import query_path, DATA_WORKS_READABLE_FORM
@@ -190,12 +191,11 @@ class DataPipelines:
 
     def data_work_pipelines_execution(self, ml_connection_structure, ea_connection_structure, dim=None):
         _kwargs = {"ml_connection_structure": ml_connection_structure,
-                   'ea_connection_structure': ea_connection_structure, 'dim': None}
-        self.pipe_1(**_kwargs)
+                   'ea_connection_structure': ea_connection_structure, 'dim': dim}
+        if dim is None:
+            self.pipe_1(**_kwargs)
         self.pipe_2(**_kwargs)
         pipes = [self.pipe_3, self.pipe_4]
-        if dim is not None:
-            pipes = [self.pipe_3, self.pipe_4]
         for pipe in pipes:
             process = threading.Thread(target=pipe, kwargs=_kwargs)
             process.daemon = True

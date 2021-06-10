@@ -229,7 +229,7 @@ product_analytics = ['most_ordered_products',
                      'most_combined_products']
 
 
-non_dimensional_reports = ["clv"]
+non_dimensional_reports = ["clv_prediction", "segmentation"]
 
 
 clv_prediction_reports = ["daily_clv", "clvsegments_amount"]

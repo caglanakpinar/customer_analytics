@@ -134,9 +134,9 @@ class Reports:
         """
         tag, has_dimension = {}, False
         try:
-            tag = pd.read_sql("SELECT * FROM schedule_data", con).to_dict('resutls')[-1]
-            self.es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
-            dimensions = pd.read_sql("SELECT  * FROM data_columns_integration", con).to_dict('results')[0]
+            tag = pd.read_sql("SELECT * FROM schedule_data", con).to_dict('results')[-1]
+            self.es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            dimensions = pd.read_sql("SELECT  * FROM data_connection", con).to_dict('results')[0]
             if dimensions['dimension'] not in ['None', None]:
                 has_dimension = True
         except Exception as e:
@@ -337,7 +337,6 @@ class Reports:
                     self.clv_reports[1]))['data'])[0]).rename(columns={"daily": "date"})
             clv['data_type'] = 'prediction'
             daily_revenue['data_type'] = "actual"
-            print(clv.query("client == 'newcomers'"))
             reports = pd.concat([clv, daily_revenue])[['date', 'payment_amount', 'data_type']]
             reports = reports.groupby(['date', 'data_type']).agg({'payment_amount': 'sum'}).reset_index()
         if r_name == 'clvsegments_amount':
@@ -400,13 +399,6 @@ class Reports:
         if r_name == 'clvrfm_anomaly':
             report_data['naming'] = report_data.apply(lambda row: self.naming(row['f_anomaly'], row['m_anomaly']), axis=1)
         return report_data
-
-
-
-
-
-
-
 
     def get_sample_report_names(self):
         """

@@ -21,7 +21,8 @@ from tensorflow.keras.optimizers import RMSprop
 from configs import default_es_port, default_es_host
 from data_storage_configurations.query_es import QueryES
 from data_storage_configurations.reports import Reports
-from utils import current_date_to_day, convert_to_date, calculate_time_diff, get_index_group, convert_to_iso_format
+from utils import current_date_to_day, convert_to_date, calculate_time_diff, \
+    get_index_group, convert_to_iso_format, convert_to_day
 
 
 class Anomaly:
@@ -103,6 +104,7 @@ class Anomaly:
         clv = self.report_execute.collect_reports(self.port, self.host, 'main',
                                                         query={"report_name": "clv_prediction"})
         clv['report_date'] = clv['report_date'].apply(lambda x: convert_to_date(x))
+
         clv = pd.DataFrame(list(clv.sort_values(['report_name', 'report_date'], ascending=False)['data'])[0])
         if get_index_group(self.order_index) != 'main':
             clv = clv[clv['dimension'] == get_index_group(self.order_index)]
@@ -276,7 +278,6 @@ class Anomaly:
             else:
                 self.cohorts = pd.merge(self.cohorts, _cohort[['daily', _name]], on='daily', how='left')
             _features.append(_name)
-        print(self.cohorts.head())
         self.cohorts['anomaly_score'] = self.build_model(self.cohorts[_features].values, _features, self.p_cohort)
         _mean, _var, _sample_size = np.mean(self.cohorts['anomaly_score']), np.var(self.cohorts['anomaly_score']), len(self.cohorts)
         self.cohorts['outlier'] = self.cohorts['anomaly_score'].apply(
@@ -288,10 +289,6 @@ class Anomaly:
             list(self.reports.query(
                 "report_name == 'cohort' and time_period == 'daily' and type == 'downloads'")['data'])[0])
         self.features = [str(i) for i in list(range(7))]
-        print(self.cohorts_d[self.features].values.shape)
-        print(self.cohorts_d[self.features].head())
-        print(np.mean(self.cohorts_d[self.features]))
-        print(self.features)
         self.cohorts_d['anomaly_scores_from_d_to_1'] = self.build_model(self.cohorts_d[self.features].values,
                                                                         self.features, self.p_cohort)
         _mean, _var, _sample_size = np.mean(self.cohorts_d['anomaly_scores_from_d_to_1']), np.var(
@@ -314,8 +311,6 @@ class Anomaly:
                 _data[_diff[1]] = _data.sort_values(["daily", "isoweekday"], ascending=True).groupby("isoweekday")[
                     _diff[1]].shift(-_diff[0])
                 _data[_diff[1]] = _data[_diff[1]].fillna(True)
-
-            print(_data.columns)
             _last_month_recent_day_compare = _data.query("is_last_month == True").groupby(
                 ["is_last_order", "isoweekday"]).agg({"orders": "mean"}).reset_index()
 
@@ -350,7 +345,7 @@ class Anomaly:
         self.collect_clv()
         self.rfm = pd.DataFrame(list(self.reports.query("report_name == 'rfm'")['data'])[0])
         self.clv_prediction['session_start_date'] = self.clv_prediction['session_start_date'].apply(
-            lambda x: convert_to_date(x))
+            lambda x: convert_to_day(x))
         self.clv_prediction['session_start_date_prev'] = self.clv_prediction.sort_values(
             by=['client', 'session_start_date']).groupby(['client'])['session_start_date'].shift(-1)
 
