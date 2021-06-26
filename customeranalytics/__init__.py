@@ -48,6 +48,11 @@ def request_url(url):
 
 
 def create_user_interface():
+    """
+    This process triggers web interface
+    port: port is stored at web_interface.yaml
+    host: host is stored at web_interface.yaml
+    """
     path = join(abspath_for_sample_data(), "web", "run.py")
     cmd = "python " + path
     print('http://' + str(web_configs['host']) + ':' + str(web_configs['port']))
@@ -55,6 +60,9 @@ def create_user_interface():
 
 
 def kill_user_interface():
+    """
+    This process kills the thread for web interface
+    """
     print('http://' + str(web_configs['host']) + ':' + str(web_configs['port']) + '/shutdown')
     request_url(url='http://' + str(web_configs['host']) + ':' + str(web_configs['port']) + '/shutdown')
 
