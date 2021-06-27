@@ -76,6 +76,8 @@ charts = {
                                   'layout': go.Layout()},
              "most_ordered_products": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
              "most_ordered_categories": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
+             "churn": {'trace': go.Pie(labels=[], values=[]), 'layout': go.Layout()},
+             "churn_weekly": {'trace': go.Bar(x=[], y=[]), 'layout': go.Layout()},
              },
         ## TODO  organic - promoted ratio
         # KPIs - total_orders, total_visits, total_unique_visitors. index.html left top
@@ -759,6 +761,13 @@ class Charts:
                 _trace = go.Scatter(name=cluster, x=list(__data['monetary_diff']), y=list(__data['frequency_diff']),
                                     mode='markers')
                 trace.append(_trace)
+        if chart == 'churn':
+            trace['labels'] = ['churn %', 'not churn %']
+            trace['values'] = [list(_data['churn'])[0], 1 - list(_data['churn'])[0]]
+        if chart == 'churn_weekly':
+            trace['x'] = list(_data['weekly'])
+            trace['y'] = list(_data['churn'])
+
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 
     def get_layout(self, layout, chart, index, date, annotation=None):
