@@ -268,8 +268,9 @@ class Anomaly:
         _features = []
         for o in [2, 3, 4]:
             print("********* number of orders :", o)
+            print("report_name == 'cohort' and time_period == 'daily' and _to == " + str(o) + " ")
             _cohort = pd.DataFrame(list(self.reports.query(
-                "report_name == 'cohort' and time_period == 'daily' and _to == '" + str(o) + "' ")['data'])[0])
+                "report_name == 'cohort' and time_period == 'daily' and _to == " + str(o) + " ")['data'])[0])
             _name = 'anomaly_scores_' + str(o)
             _cohort[_name] = self.build_model(_cohort[self.feature_cohort].values,
                                               self.feature_cohort, self.p_cohort)
