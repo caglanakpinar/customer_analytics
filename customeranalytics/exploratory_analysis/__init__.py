@@ -33,7 +33,8 @@ exploratory_analysis = {'funnel': Funnels,
                         'cohort': Cohorts,
                         'products': ProductAnalytics,
                         'rfm': RFM,
-                        'stats': Stats}
+                        'stats': Stats,
+                        'churn': Churn}
 
 
 def create_exploratory_analyse(configs, ml):
@@ -62,7 +63,7 @@ def create_exploratory_analyse(configs, ml):
         del ea['products']
     if ml == 'churn':
         print("*" * 5, " Churn ", "*" * 5)
-        ea['churn'].execute_churn(end_date=configs['date'])
+        ea['churn'].execute_churn(start_date=configs['date'])
         del ea
 
 
@@ -86,7 +87,7 @@ def create_exploratory_analysis(configs):
     ea['products'].execute_product_analysis(end_date=configs['date'])
     del ea['products']
     print("*" * 5, " Churn ", "*" * 5)
-    ea['churn'].execute_churn(end_date=configs['date'])
+    ea['churn'].execute_churn(start_date=configs['date'])
     del ea
 
 
