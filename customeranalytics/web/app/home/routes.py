@@ -41,7 +41,9 @@ def index():
     :return: render_template
     """
     pic = profile.fetch_pic()
-    graph_json, data_type, filters = charts.get_chart(target='index') # collect charts on index.html
+    index = dict(request.form).get('index', 'main')
+    date = dict(request.form).get('date', None)
+    graph_json, data_type, filters = charts.get_chart(target='index', index=index, date=date)  # collect charts on index.html
     return render_template('index.html',
                            segment='index',
                            pic=pic,

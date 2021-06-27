@@ -554,10 +554,9 @@ class Charts:
                     return self.samples[chart], False
                 else:
                     return self.reals.fetch_report(report_name=chart, index=index), True
-            else:
-                return self.reals.kpis[index][chart], True
+            else: return self.samples[chart], False
         except Exception as e:
-            print()
+            print(e)
             return self.samples[chart], False
 
     def get_widths_heights(self, target, chart):
@@ -816,7 +815,7 @@ class Charts:
         :param kpi: .e.g.total_orders, total_visitors, ...
         :return: dictionary with KPIs in keys
         """
-        _data, is_real_data = self.get_data(kpi, index, date)
+        _data, is_real_data = self.get_data('kpis', index, date)
         return _data.to_dict('results')[0], is_real_data
 
     def get_chart(self, target, index='main', date=None):
