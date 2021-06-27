@@ -103,7 +103,12 @@
 											{% if values['es_connection'] != '....' %}
 												<div class="mb-3">
 													<h5 class="mb-3" style="color:green;">connected ElasticSearch!</h5>
-													<a href="{{ values['es_connection']['tag'] }} - {{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ values['es_connection']['tag'] }} - {{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a>
+													<a class="mb-3" href="{{ values['es_connection']['tag'] }} - {{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}"
+													   target="_blank">{{ values['es_connection']['tag'] }} - {{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}
+													</a>
+													<div class="mb-3">
+														<strong style="color:green;"> Temporary Folder Directory; </strong> {{ values['es_connection']['directory'] }}
+													</div>
 
 												</div>
 												<div class="mb-3">
