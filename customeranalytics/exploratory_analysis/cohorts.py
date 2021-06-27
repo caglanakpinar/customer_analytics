@@ -193,23 +193,26 @@ class Cohorts:
         !!!!
 
         """
-        if self.has_download:
-            self.download_to_first_order = pd.merge(self.orders,
-                                                    self.downloads,
-                                                    on='client',
-                                                    how='left')
-            self.download_to_first_order = self.get_time_period(self.download_to_first_order, 'session_start_date')
-            for p in self.time_periods:
-                self.download_to_first_order['downloads_to_first_order_' + p] = self.download_to_first_order.apply(
-                    lambda row: calculate_time_diff(row['download_date'], row[p], period=p), axis=1)
-                self.cohorts['downloads_to_1st_order'][p] = self.download_to_first_order.sort_values(
-                by=['downloads_to_first_order_' + p, p],
-                ascending=True).pivot_table(index=p,
-                                            columns='downloads_to_first_order_'+p,
-                                            aggfunc={"client": lambda x: len(np.unique(x))}
-                                            ).reset_index().rename(columns={"client": "client_count"})
-                self.cohorts['downloads_to_1st_order'][p] = self.convert_cohort_to_readable_form(
-                self.cohorts['downloads_to_1st_order'][p], time_period=p)
+        try:
+            if self.has_download:
+                self.download_to_first_order = pd.merge(self.orders,
+                                                        self.downloads,
+                                                        on='client',
+                                                        how='left')
+                self.download_to_first_order = self.get_time_period(self.download_to_first_order, 'session_start_date')
+                for p in self.time_periods:
+                    self.download_to_first_order['downloads_to_first_order_' + p] = self.download_to_first_order.apply(
+                        lambda row: calculate_time_diff(row['download_date'], row[p], period=p), axis=1)
+                    self.cohorts['downloads_to_1st_order'][p] = self.download_to_first_order.sort_values(
+                    by=['downloads_to_first_order_' + p, p],
+                    ascending=True).pivot_table(index=p,
+                                                columns='downloads_to_first_order_'+p,
+                                                aggfunc={"client": lambda x: len(np.unique(x))}
+                                                ).reset_index().rename(columns={"client": "client_count"})
+                    self.cohorts['downloads_to_1st_order'][p] = self.convert_cohort_to_readable_form(
+                    self.cohorts['downloads_to_1st_order'][p], time_period=p)
+        except Exception as e:
+            print(e)
 
     def get_order_cohort(self, order_seq_num, time_period='daily'):
         """
@@ -289,12 +292,15 @@ class Cohorts:
         """
         for o in self.order_seq:
             for p in self.time_periods:
-                print("order_seq :", o, " || time_periods :", p)
-                _cohort_name = "orders_from_" + str(o) + "_to_" + str(o+1)
-                self.cohort_time_difference_and_order_sequence(p)
-                self.cohorts[_cohort_name][p] = self.get_order_cohort(order_seq_num=[o], time_period=p)
-                self.cohorts[_cohort_name][p] = self.convert_cohort_to_readable_form(self.cohorts[_cohort_name][p],
-                                                                                     time_period=p)
+                try:
+                    print("order_seq :", o, " || time_periods :", p)
+                    _cohort_name = "orders_from_" + str(o) + "_to_" + str(o+1)
+                    self.cohort_time_difference_and_order_sequence(p)
+                    self.cohorts[_cohort_name][p] = self.get_order_cohort(order_seq_num=[o], time_period=p)
+                    self.cohorts[_cohort_name][p] = self.convert_cohort_to_readable_form(self.cohorts[_cohort_name][p],
+                                                                                         time_period=p)
+                except Exception as e:
+                    print(e)
 
     def customer_average_journey(self):
         """
@@ -306,52 +312,56 @@ class Cohorts:
             average 2 orders, 1st orders avg 30.3£, 2nd orders avg 33.3£
         4.  Calculate average recent hours customers last order to a recent date.
             """
-        # convert session start date to datetime format
-        self.orders['session_start_date'] = self.orders['session_start_date'].apply(lambda x: convert_to_date(x))
-        # e.g. the average is 3; customers of 1st, 2nd 3rd orders have involved the process.
-        avg_order_count = int(np.mean(self.orders['order_seq_num']))
-        # max date for calculate average recency value (hour).
-        max_date = max(self.orders['session_start_date'])
-        # first orders per customer
-        self.orders['first_order_date'] = self.orders['session_start_date']
-        self.orders['last_order_date'] = self.orders['session_start_date']
-        first_last_orders = self.orders.groupby("client").agg(
-            {"first_order_date": "min", "last_order_date": "max", "order_seq_num": "max"}).reset_index().rename(
-            columns={"order_seq_num": "max_order_seq"})
-        first_last_orders = pd.merge(self.downloads.drop('id', axis=1), first_last_orders,
-                                     on='client',
-                                     how='left')
-        first_last_orders = first_last_orders.query("first_order_date == first_order_date")
-        self.orders = pd.merge(self.orders, first_last_orders[['client', 'max_order_seq']], on='client', how='left')
+        try:
+            # convert session start date to datetime format
+            self.orders['session_start_date'] = self.orders['session_start_date'].apply(lambda x: convert_to_date(x))
+            # e.g. the average is 3; customers of 1st, 2nd 3rd orders have involved the process.
+            avg_order_count = int(np.mean(self.orders['order_seq_num']))
+            # max date for calculate average recency value (hour).
+            max_date = max(self.orders['session_start_date'])
+            # first orders per customer
+            self.orders['first_order_date'] = self.orders['session_start_date']
+            self.orders['last_order_date'] = self.orders['session_start_date']
+            first_last_orders = self.orders.groupby("client").agg(
+                {"first_order_date": "min", "last_order_date": "max", "order_seq_num": "max"}).reset_index().rename(
+                columns={"order_seq_num": "max_order_seq"})
+            first_last_orders = pd.merge(self.downloads.drop('id', axis=1), first_last_orders,
+                                         on='client',
+                                         how='left')
+            first_last_orders = first_last_orders.query("first_order_date == first_order_date")
+            self.orders = pd.merge(self.orders, first_last_orders[['client', 'max_order_seq']], on='client', how='left')
 
-        first_last_orders = pd.merge(first_last_orders,
-                                     self.orders.query("order_seq_num == 1").groupby(
-                                         "client").agg({"payment_amount": 'mean'}).reset_index().rename(
-                                         columns={"payment_amount": "first_order_amount"})
-                                     , on='client', how='left')
+            first_last_orders = pd.merge(first_last_orders,
+                                         self.orders.query("order_seq_num == 1").groupby(
+                                             "client").agg({"payment_amount": 'mean'}).reset_index().rename(
+                                             columns={"payment_amount": "first_order_amount"})
+                                         , on='client', how='left')
 
-        first_last_orders['download_to_first_order_hourly'] = first_last_orders.apply(
-            lambda row: calculate_time_diff(row['download_date'], row['first_order_date'], 'hourly'), axis=1)
+            first_last_orders['download_to_first_order_hourly'] = first_last_orders.apply(
+                lambda row: calculate_time_diff(row['download_date'], row['first_order_date'], 'hourly'), axis=1)
 
-        first_last_orders['diff_hours_recency'] = first_last_orders.apply(
-            lambda row: calculate_time_diff(row['last_order_date'], max_date, 'hourly'), axis=1)
+            first_last_orders['diff_hours_recency'] = first_last_orders.apply(
+                lambda row: calculate_time_diff(row['last_order_date'], max_date, 'hourly'), axis=1)
 
-        x_axis, y_axis = [0, np.mean(first_last_orders['download_to_first_order_hourly'])], [0, np.mean(
-            first_last_orders['first_order_amount'])]
-        self.orders['download_to_first_order_hourly'] = first_last_orders.apply(
-            lambda row: calculate_time_diff(row['download_date'], row['first_order_date'], 'hourly'), axis=1)
-        
-        for o in range(1, avg_order_count):  # iterate each order and calculate hour difference and avg. payment amount.
-            _orders = self.orders.query("order_seq_num == @o and next_order_date == next_order_date")
-            y_axis.append(np.mean(_orders['payment_amount']))
-            x_val = x_axis[-1] + np.mean(list(_orders.query("order_seq_num != 0").groupby("diff_days").agg(
-                {"id": "count"}).reset_index().sort_values(by='id', ascending=False)['diff_days'])[0])
-            x_axis.append(x_val)
-        # recency value is added as the last point on the x-axis
-        x_axis += [x_axis[-1] + np.mean(first_last_orders['diff_hours_recency'])]
-        y_axis += [0]
-        self.cohorts['customers_journey']['hourly'] = pd.DataFrame(
-            zip(x_axis, y_axis)).rename(columns={0: "hourly order differences", 1: "customers` average Purchase Value"})
+            x_axis, y_axis = [0, np.mean(first_last_orders['download_to_first_order_hourly'])], [0, np.mean(
+                first_last_orders['first_order_amount'])]
+            self.orders['download_to_first_order_hourly'] = first_last_orders.apply(
+                lambda row: calculate_time_diff(row['download_date'], row['first_order_date'], 'hourly'), axis=1)
+
+            for o in range(1, avg_order_count):  # iterate each order and calculate hour diff. and avg. payment amount.
+                _orders = self.orders.query("order_seq_num == @o and next_order_date == next_order_date")
+                y_axis.append(np.mean(_orders['payment_amount']))
+                x_val = x_axis[-1] + np.mean(list(_orders.query("order_seq_num != 0").groupby("diff_days").agg(
+                    {"id": "count"}).reset_index().sort_values(by='id', ascending=False)['diff_days'])[0])
+                x_axis.append(x_val)
+            # recency value is added as the last point on the x-axis
+            x_axis += [x_axis[-1] + np.mean(first_last_orders['diff_hours_recency'])]
+            y_axis += [0]
+            self.cohorts['customers_journey']['hourly'] = pd.DataFrame(
+                zip(x_axis, y_axis)).rename(columns={0: "hourly order differences",
+                                                     1: "customers` average Purchase Value"})
+        except Exception as e:
+            print(e)
 
     def insert_into_reports_index(self,
                                   cohort,
@@ -440,22 +450,28 @@ class Cohorts:
             if _c != 'customers_journey':
                 for p in self.cohorts[_c]:
                     _cohort_type, _from, _to = self.get_cohort_name('cohort_' +_c)
-                    self.cohorts[_c][p][p] = self.cohorts[_c][p][p].apply(lambda x: str(x)[0:10])
-                    self.insert_into_reports_index(self.cohorts[_c][p],
-                                                   start_date,
-                                                   _from=_from,
-                                                   _to=_to,
-                                                   time_period=p,
-                                                   cohort_type=_cohort_type,
-                                                   index=self.order_index)
+                    try:
+                        self.cohorts[_c][p][p] = self.cohorts[_c][p][p].apply(lambda x: str(x)[0:10])
+                        self.insert_into_reports_index(self.cohorts[_c][p],
+                                                       start_date,
+                                                       _from=_from,
+                                                       _to=_to,
+                                                       time_period=p,
+                                                       cohort_type=_cohort_type,
+                                                       index=self.order_index)
+                    except Exception as e:
+                        print(e)
 
-        self.insert_into_reports_index(self.cohorts['customers_journey']['hourly'],
-                                       start_date,
-                                       time_period='hourly',
-                                       _from=0,
-                                       _to=100,
-                                       cohort_type='customers_journey',
-                                       index=self.order_index)
+        try:
+            self.insert_into_reports_index(self.cohorts['customers_journey']['hourly'],
+                                           start_date,
+                                           time_period='hourly',
+                                           _from=0,
+                                           _to=100,
+                                           cohort_type='customers_journey',
+                                           index=self.order_index)
+        except Exception as e:
+            print(e)
 
     def fetch(self, cohort_name, start_date=None, end_date=None):
         """
