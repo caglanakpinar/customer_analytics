@@ -89,7 +89,7 @@ class Stats:
                                   "payment_amount", "discount_amount", "actions.purchased"]
         self.stats = ["total_orders", "last_week_orders",
                       "total_revenue", "last_week_revenue",
-                      "total_visits", "last_week_visitors",
+                      "total_visitors", "last_week_visitors",
                       "total_discount", "last_week_discount",
                       "average_basket_value_per_user",
                       "hourly_orders", "daily_orders", "weekly_orders", "monthly_orders",
