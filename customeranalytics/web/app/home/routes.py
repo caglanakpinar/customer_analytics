@@ -50,6 +50,8 @@ def index():
                            customer_journey=charts.get_json_format(graph_json['charts']['customer_journey']),
                            top_products=charts.get_json_format(graph_json['charts']['most_ordered_products']),
                            top_categories=charts.get_json_format(graph_json['charts']['most_ordered_categories']),
+                           churn=charts.get_json_format(graph_json['charts']['churn']),
+                           churn_weekly=charts.get_json_format(graph_json['charts']['churn_weekly']),
                            kpis=graph_json['kpis'],
                            data_type=data_type,
                            filters=filters)
