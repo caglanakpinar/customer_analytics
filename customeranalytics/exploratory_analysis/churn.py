@@ -152,9 +152,10 @@ class Churn:
         _purc_clients = self.orders[self.orders['actions.purchased'] == True].groupby(time_period).agg(
             {"client": lambda x: len(np.unique(x))}).reset_index().rename(
             columns={"client": "client_count"}).sort_values(time_period, ascending=True)
-        _purc_clients['weekly_whole_orders'] = list(_purc_clients.groupby([time_period])['client_count'].cumsum())
-        _purc_clients['churn'] = (_purc_clients['weekly_whole_orders'] - _purc_clients['churn']) / _purc_clients[
+        _purc_clients['weekly_whole_orders'] = list(_purc_clients['client_count'].cumsum())
+        _purc_clients['churn'] = (_purc_clients['weekly_whole_orders'] - _purc_clients['client_count']) / _purc_clients[
             'weekly_whole_orders']
+        print(_purc_clients)
         _purc_clients['churn'] = _purc_clients['churn'].apply(lambda x: x if x > 0 else 0)
         return _purc_clients[[time_period, 'churn']]
 
