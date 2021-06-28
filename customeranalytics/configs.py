@@ -302,7 +302,7 @@ chart_names = {
          "Frequency Segmentation": "customer-segmentation*frequency_clusters",
          "Monetary Segmentation": "customer-segmentation*monetary_clusters",
          "Recency Segmentation": "customer-segmentation*recency_clusters"},
-    "CLv Prediction":
+    "CLV Prediction":
         {"Next Week CLV Predictions": "clv*daily_clv",
          "CLV Predicted Nex Week Customers of Segments of Total Purchase Amounts": "clv*daily_clv"},
     "Overall":
