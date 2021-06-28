@@ -271,6 +271,11 @@ class Reports:
             if r_name == 'clvrfm_anomaly':
                 _type = 'clv_prediction'
             query = " report_name == 'anomaly' and type == '{}' ".format(_type)
+        if 'churn' in r_name.split("_"):
+            _type = 'overall'
+            _time_period = list({'weekly', 'monthly'} & set(r_name.split("_")))
+            _type = _time_period[0] if len(_time_period) != 0 else _type
+            query = " report_name == 'churn' and type == '{}' ".format(_type)
         return query
 
     def get_promotion_comparison(self, x):
