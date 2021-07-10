@@ -226,7 +226,7 @@ class CreateIndex:
             res = self.query_es.es.search(index=index, body=match)['hits']['hits']
             return convert_to_date([r['_source'][date_column] for r in res][0])
         except Exception as e:
-            print(e)
+            print("session_start_date/download_date is not inserted into the indexes.")
             return None
 
     def collect_prev_downloads(self):
@@ -306,7 +306,7 @@ class CreateIndex:
 
         if len(orders) != 0:
             try:
-                if product_source['data_query_path'] is not None:
+                if product_source.get('data_query_path', None) is not None:
                     products = self.get_data(conf=product_source, data_source_type='products')
                     products['basket'] = products.apply(
                         lambda row: {row['product']: {'price': row['price'],
@@ -317,8 +317,10 @@ class CreateIndex:
                     orders = pd.merge(orders, products, on='order_id', how='left')
                     orders['basket'] = orders['basket'].fillna({})
                     del products
+                else: orders['basket'] = None
             except Exception as e:
                 print(e)
+                orders['basket'] = None
         return orders
 
     def insert_to_index(self, data, index):
