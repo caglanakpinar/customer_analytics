@@ -43,7 +43,7 @@
 								<button name="schedule" type="submit" value="True" class="btn btn-primary mb-1">Create Schedule Job</button>
 							</form>
 							<form method="POST">
-								<button style="background-color: #92a8d1;" name="delete" type="submit" value="True" class="btn btn-primary">Delete Create Schedule Job</button>
+								<button style="background-color: #92a8d1;" name="delete" type="submit" value="True" class="btn btn-primary">Delete Schedule Job</button>
 							</form>
 						{% endif %}
 						{% if values['connect_accept'] != True %}
@@ -57,23 +57,18 @@
 						<div class="card-header">
 							<h5 class="card-title">DATA CONNECTIONS</h5>
 							<div class="mb-2">
-								<h6 class="card-subtitle text-muted">whole picture of all connections.
-									Check <i class="align-middle mr-2" data-feather="alert-circle" style="color:#FF0000;"></i> connections.
-									Same color of Flags (<i class="align-middle mr-2" data-feather="flag" style="color:#FF0000;"></i>) represents same ElasticSearch Server of Connections.
+								<h6 class="card-subtitle text-muted">This is the overall picture of all connections which are
+									<strong style="color:#F1B600;">Sessions</strong>,
+									<strong style="color:#40E0D0;">Customers</strong>,
+									<strong style="color:#9797C3;">Products</strong>.
+									At the table below they are with individual colors.
+									Each connection has information such as data source type, data/query path, data source name, etc.
+									There are also columns for the scheduling process which are
+									<strong style="color:#40A0E0;;">Last Time Triggered Scheduling Job</strong>,
+									<strong style="color:#40A0E0;;">Schedule Time Period</strong>,
+									<strong style="color:#40A0E0;;">Schedule Status</strong>
 								</h6>
 							</div>
-							<div class="mb-1">
-								<h6 class="card-subtitle text-muted">whole picture of all connections.
-									You may edit time periods of the schedule with <i class="align-middle mr-2" data-feather="edit-2" style="color:#FF0000;"></i>.
-									You may delete schedule process with <i class="align-middle mr-2" data-feather="trash" style="color:#FF0000;"></i>.
-								</h6>
-							</div>
-							<div class="mb-1">
-								<h6 class="card-subtitle text-muted">whole picture of all connections.
-									You may edit your <code style="color:green;">Data Query/Path</code> for both Sessions and Customers Connection even it is scheduled.
-								</h6>
-							</div>
-
 						</div>
 						{% if values['connect_accept'] != True %}
 							<div class="card-header">
@@ -94,7 +89,6 @@
 										</h6>
 
 								</div>
-
 								</div>
 
 							{% endif %}
@@ -277,24 +271,7 @@
 					{% if values['tag'] != '....' %}
 						<div class="card">
 							<div class="row">
-								<div class="col-md-6 mb-3">
-									<div class="card">
-										<div class="card-header">
-											<h5 class="card-title">Logs</h5>
-											<h6 class="card-subtitle text-muted">Last 10 events of logs.</h6>
-										</div>
-										<div class="card-body scroll">
-											{% if values['logs'] != '....' %}
-												{% for i in values['logs'] %}
-													<div class="mb-2">
-														<h6 class="card-subtitle" style="{{ i['color'] }}">{{ i['info'] }}</h6>
-													</div>
-												{% endfor %}
-											{% endif %}
-										</div>
-									</div>
-								</div>
-								<div class="col-md-6 mb-3">
+								<div class="col-md-12 mb-3">
 									<div class="card">
 										<div class="card-header">
 											<h5 class="card-title">Logs</h5>
