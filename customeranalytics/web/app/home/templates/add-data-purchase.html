@@ -79,7 +79,7 @@
 												- Session Start Date (Whatever you will give as column) must be convinient date format.
 											</div>
 											<div class="row">
-												- Payment Amount must for each session transaction must be assigned as Null value.
+												- Payment Amount for each session transaction must be assigned as Null value.
 											</div>
 											<div class="row">
 												- There must be Purchased (True/False) column which is required.
@@ -95,6 +95,14 @@
 											</div>
 											<div class="row">
 												-  Each action names must be assigned. No need to add as action for 'Has Session' and 'Has Purchase'.
+											</div>
+											<div class="row">
+												-  Promotion Column is optional. But, It is good to be added. A/B test Promotions are related to Promotions.
+											</div>
+											<div class="row">
+												-  It is possible to add dimensional columns. For instance, you would like to add 'location' as a column to the process and
+												   calculate all charts, dashboards, ML and Analysis processes breakdown with 'location',
+												   you are able to add to the Dimensional Column Name in Data Source
 											</div>
 										</h6>
 									</div>
@@ -166,7 +174,7 @@
 																This will also create new ElasticSearch Index per unique Dimension on that column of values.
 															</h10>
 														</div>
-														<input name="dimension" type="text" class="form-control mb-3" id="actions" placeholder="has_basket, has_order_screen, e.g.">
+														<input name="dimension" type="text" class="form-control mb-3" id="actions" placeholder="location, region, order_type, order_category, e.g.">
 													</div>
 
 													<div class="mb-4 col-md-6">
@@ -176,7 +184,7 @@
 																If Data Source has Promotion, please add as promotion IDs column
 															</h10>
 														</div>
-														<input name="promotion_id" type="text" class="form-control mb-3" id="promotion_id" placeholder="has_basket, has_order_screen, e.g.">
+														<input name="promotion_id" type="text" class="form-control mb-3" id="promotion_id" placeholder="">
 													</div>
 												</div>
 
@@ -236,7 +244,7 @@
 										<h5 class="card-title"><strong style="color:green;">Customers</strong></h5>
 
 
-										<h6 class="card-subtitle text-muted mb-4">
+										<h6 class="card-subtitle text-muted mb-7">
 											<div class="row">
 												- Each customer ID must be unique. Customer IDs are eligible to join with Session of client IDs.
 											</div>
@@ -244,10 +252,10 @@
 												- Download Date is required.
 											</div>
 											<div class="row">
-												- At Least signup Date or Download Date must be assigned.
+												- Signup Date is optional
 											</div>
 											<div class="row">
-												- Even there is no download date is available please make sure assign any date valuable for the business
+												- Even there is no download date is available please make sure assign any date valuable for the business.
 											</div>
 											<div class="row">
 												-  Actions must be date rather than True/False columns just like Sessions Data Source of Actions.
@@ -256,7 +264,8 @@
 												-  Actions are optional. But It is good to be added. Funnels, Anomaly are related to Actions.
 											</div>
 											<div class="row">
-												-  If there is an assigned dimensional column on Session Data Source, make sure customers Data Source includes the clients for all dimension.
+												-  If there is an assigned dimensional column on Session Data Source,
+												make sure customers Data Source includes the clients for all dimension.
 											</div>
 										</h6>
 
