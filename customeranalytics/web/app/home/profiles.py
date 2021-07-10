@@ -105,7 +105,7 @@ class Profiles:
     def read_chats(self):
         try:
             return pd.read_sql("""
-                                SELECT * 
+                                SELECT chat.*, user_avatar.user_avatar
                                 FROM chat LEFT JOIN (SELECT user, user_avatar FROM user_avatar) AS user_avatar 
                                 ON chat.user = user_avatar.user
             """, con)
@@ -212,7 +212,7 @@ class Profiles:
                                     """.format(_user_name), con)['user_avatar'])[0]
         except Exception as e:
             print(e)
-            logo = "info.pic"
+            logo = "info.jpeg"
         return logo
 
     def add_pic(self, request):

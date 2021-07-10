@@ -502,6 +502,7 @@ class ABTests:
             self.get_unique_promotions()
             self.promotion_combinations = list(filter(lambda x: x[0] != x[1],
                                                       list(product(self.promotions, self.promotions))))
+            print("promotion combination :", len(self.promotion_combinations))
 
             for p in self.promotion_combinations:
                 self.promotion_comparison = pd.concat([self.promotion_comparison,
