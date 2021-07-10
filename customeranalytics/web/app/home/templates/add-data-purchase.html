@@ -73,28 +73,28 @@
 										<h5 class="card-title"><strong style="color:green;">Sessions</strong></h5>
 										<h6 class="card-subtitle text-muted">
 											<div class="row">
-												- Each session ID must be unique. Sessions must cover both non purchased and purchase transactions.
+												- Each session ID must be unique. Sessions must cover both non-purchased and purchase transactions.
 											</div>
 											<div class="row">
-												- Session Start Date (Whatever you will give as column) must be convinient date format.
+												- Session Start Date (Whatever you will give as a column) must be a convenient date format.
 											</div>
 											<div class="row">
-												- Payment Amount for each session transaction must be assigned as Null value.
+												- The payment Amount for each session transaction must be assigned as a Null value.
 											</div>
 											<div class="row">
-												- There must be Purchased (True/False) column which is required.
+												- There must be a purchased (True/False) column which is required.
 											</div>
 											<div class="row">
 												-  Discount Amount and session end date columns are optional.
 											</div>
 											<div class="row">
-												-  Make sure client IDs are also in data set for Customers Data Source.
+												-  Make sure client IDs are also in the data set for Customers Data Sources.
 											</div>
 											<div class="row">
-												-  Actions are optional. But It is good to be added. Funnels, Anomaly are related to Action
+												-  Actions are optional. But It is good to be added. Funnels, Anomaly is related to Action.
 											</div>
 											<div class="row">
-												-  Each action names must be assigned. No need to add as action for 'Has Session' and 'Has Purchase'.
+												-  Each action name must be assigned. No need to add as an action for 'Has Session' and 'Has Purchase'.
 											</div>
 											<div class="row">
 												-  Promotion Column is optional. But, It is good to be added. A/B test Promotions are related to Promotions.
@@ -102,7 +102,7 @@
 											<div class="row">
 												-  It is possible to add dimensional columns. For instance, you would like to add 'location' as a column to the process and
 												   calculate all charts, dashboards, ML and Analysis processes breakdown with 'location',
-												   you are able to add to the Dimensional Column Name in Data Source
+												   you are able to add to the Dimensional Column Name in Data Source.
 											</div>
 										</h6>
 									</div>
@@ -170,8 +170,8 @@
 														<label class="form-label mb-2" for="order_id_tag">Dimensional Column Name in Data Source</label>
 														<div class="mb-2">
 															<h10 class="text-muted">
-																Dimensional Column will be you grouping column in Exploratory Analysis, Machine Learning Processes, Dashboard and Charts
-																This will also create new ElasticSearch Index per unique Dimension on that column of values.
+																Dimensional Column will be you grouping column in Exploratory Analysis, Machine Learning Processes, Dashboard, and Charts
+																This will also create a new ElasticSearch Index per unique Dimension on that column of values.
 															</h10>
 														</div>
 														<input name="dimension" type="text" class="form-control mb-3" id="actions" placeholder="location, region, order_type, order_category, e.g.">
@@ -181,7 +181,7 @@
 														<label class="form-label mb-2" for="order_id_tag">Promotion Column </label>
 														<div class="mb-2">
 															<h10 class="text-muted">
-																If Data Source has Promotion, please add as promotion IDs column
+																If Data Source has Promotion, please add as promotion IDs column.
 															</h10>
 														</div>
 														<input name="promotion_id" type="text" class="form-control mb-3" id="promotion_id" placeholder="">
@@ -193,8 +193,8 @@
 														<label class="form-label mb-2" for="order_id_tag">Action Column Names in Data Source </label>
 														<div class="mb-2">
 															<h10 class="text-muted">
-																Action Columns are typed below with comma seperated form. These action names must be the exact column name on data set.
-																Each Action column must have values with True/False. More actions means more understanding of Customers
+																Action Columns are typed below with comma separated form. These action names must be the exact column name on the data set.
+																Each Action column must have values with True/False. More actions mean more understanding of Customers.
 															</h10>
 														</div>
 														<input name="actions" type="text" class="form-control mb-3" id="actions" placeholder="has_basket, has_order_screen, e.g.">
@@ -246,22 +246,22 @@
 
 										<h6 class="card-subtitle text-muted mb-7">
 											<div class="row">
-												- Each customer ID must be unique. Customer IDs are eligible to join with Session of client IDs.
+												- Each customer ID must be unique. Customer IDs are eligible to join with the Session of client IDs.
 											</div>
 											<div class="row">
 												- Download Date is required.
 											</div>
 											<div class="row">
-												- Signup Date is optional
+												- Signup Date is optional.
 											</div>
 											<div class="row">
-												- Even there is no download date is available please make sure assign any date valuable for the business.
+												- Even there is no download date is available please make sure to assign any date valuable for the business.
 											</div>
 											<div class="row">
 												-  Actions must be date rather than True/False columns just like Sessions Data Source of Actions.
 											</div>
 											<div class="row">
-												-  Actions are optional. But It is good to be added. Funnels, Anomaly are related to Actions.
+												-  Actions are optional. But It is good to be added. Funnels, Anomaly is related to Actions.
 											</div>
 											<div class="row">
 												-  If there is an assigned dimensional column on Session Data Source,
@@ -325,8 +325,8 @@
 														<label class="form-label mb-2" for="order_id_tag">Action Column Names in Data Source </label>
 														<div class="mb-3">
 															<h10 class="text-muted">
-																Action Columns are typed below with comma seperated form. These action names must be the exact column name on data set.
-																Each Action column must have values with True/False. More actions means more understanding of Customers
+																Action Columns are typed below with comma separated form. These action names must be the exact column name on the data set.
+																Each Action column must have values with True/False. More actions mean more understanding of Customers.
 															</h10>
 														</div>
 
