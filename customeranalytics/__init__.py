@@ -2,9 +2,9 @@ import sys, os, inspect
 from os.path import join
 import subprocess
 import pandas as pd
-from sqlalchemy import create_engine, MetaData
 import urllib
 import time
+from sqlalchemy import create_engine, MetaData
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
@@ -22,6 +22,23 @@ from customeranalytics.web.config import config_dict
 
 try: from web.config import web_configs
 except: from customeranalytics.web.config import web_configs
+
+try: from data_storage_configurations import get_data_connection_arguments, \
+    decision_for_product_conn, decision_for_promotion_conn, get_ea_and_ml_config
+except: from customeranalytics.data_storage_configurations import get_data_connection_arguments, \
+    decision_for_product_conn, decision_for_promotion_conn, get_ea_and_ml_config
+
+try: from .exploratory_analysis import ea_configs
+except: from customeranalytics.exploratory_analysis import ea_configs
+
+try: from .exploratory_analysis import ml_configs
+except: from customeranalytics.ml_process import ml_configs
+
+
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
+                       convert_unicode=True, connect_args={'check_same_thread': False})
+metadata = MetaData(bind=engine)
+con = engine.connect()
 
 
 r = RouterRequest()
@@ -67,11 +84,45 @@ def kill_user_interface():
     request_url(url='http://' + str(web_configs['host']) + ':' + str(web_configs['port']) + '/shutdown')
 
 
-def create_ElasticSearch_connection(port, host, temporary_path):
+def collect_data_source():
     """
 
+            _ds = {'data_source': connection[index + '_data_source_type'],
+            'date': date,
+            'data_query_path': sqlite_string_converter(connection[index + '_data_query_path'], back_to_normal=True),
+            'test': test,
+            'config': {'host': connection[index + '_host'],
+                       'port': connection[index + '_port'],
+                       'password': connection[index + '_password'],
+                       'user': connection[index + '_user'], 'db': connection[index + '_db']}}
     """
-    request = {"port": port, 'host': host, 'temporary_path': temporary_path, "connect": 'True'}
+    columns, data_configs = get_data_connection_arguments()[1:]
+    has_product_connection = decision_for_product_conn(data_configs)
+    has_promotion_connection = decision_for_promotion_conn(columns)
+    _ea_configs, _ml_configs, _actions = get_ea_and_ml_config(ea_configs, ml_configs,
+                                                              has_product_connection, has_promotion_connection)
+
+    for ds in data_configs:
+        for c in data_configs[ds]['config']:
+            if c == 'password':
+                data_configs[ds]['config']['password'] = "*****"
+
+    return data_configs
+
+
+def create_ElasticSearch_connection(port, host, temporary_path):
+    """
+    ElasticSearch configurations with host and port.
+    Another requirement which is temporary path is for importing files such as CLV Prediction model files and
+    .csv format files with build_in_reports folder.
+
+    :param port: elasticsearch port
+    :param host: elasticsearch host
+    :param temporary_path: folder path for importing data into the given directory in .csv format.
+    """
+    request = {'tag': 'es_con',
+               'url': "http://{host}:{port}/".format(**{'host': str(host), 'port': str(port)}),
+               "port": str(port), 'host': str(host), 'directory': temporary_path, "connect": 'True'}
     r.manage_data_integration(r.check_for_request(request))
 
 
@@ -115,13 +166,13 @@ def create_schedule(time_period):
 
 def collect_report(report_name, date=None, dimension='main'):
     """
-
+    If there is a report need as .csv format.
     """
     reports.fetch_report(report_name, index=dimension, date=date)
 
 
 def report_names():
     """
-
+    Collect all possible report names. These report names are .csv files at sample_data folder.
     """
     return sample_reports.kpis
