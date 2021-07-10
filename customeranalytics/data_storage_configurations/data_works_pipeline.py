@@ -75,7 +75,7 @@ class DataPipelines:
                               """
         self.suc_log_for_data_works = lambda x: " {0} is created! Check {0} sections. ".format(
             DATA_WORKS_READABLE_FORM[x])
-        self.fail_log_for_data_works = lambda x, e: " {0} is is failed! Check {0} sections. - {1}".format(
+        self.fail_log_for_data_works = lambda x, e: " {0} is failed! Check {0} sections. - {1}".format(
             DATA_WORKS_READABLE_FORM[x], e)
 
     def check_for_table_exits(self, table):
