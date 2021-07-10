@@ -447,11 +447,11 @@ class Reports:
         Check if the reports are stored in to the reports index.
         """
         reports_index_count = {}
-        # try:
-        qs = QueryES(host=es_tag['host'], port=es_tag['port'])
-        reports_index_count = qs.es.cat.count('reports', params={"format": "json"})
-        # except Exception as e:
-        #     print(e)
+        try:
+            qs = QueryES(host=es_tag['host'], port=es_tag['port'])
+            reports_index_count = qs.es.cat.count('reports', params={"format": "json"})
+        except Exception as e:
+            print(e)
         return reports_index_count
 
     def get_import_file_path(self, r_name, index, day_folder=False):
@@ -500,22 +500,21 @@ class Reports:
 
             for index in dimensions:
                 reports = self.collect_reports(self.es_tag['port'], self.es_tag['host'], index)
-
                 reports = pd.concat([reports] + self.collect_non_dimensional_reports())
                 reports['report_date'] = reports['report_date'].apply(lambda x: convert_to_day(x))
                 reports = reports.sort_values(['report_name', 'report_date'],  ascending=False)
                 if len(reports) != 0:  # if there has NOT been created any report, yet
-                    # try:
-                    self.check_for_index_folder(index)
-                    self.check_for_day_folder(index)
-                    for r_name in self.sample_report_names:
-                        print("index :", index, "|| report : ", r_name)
-                        _data = self.get_related_report(reports, r_name, index)
-                        if len(_data) != 0:
-                            _data.to_csv(self.get_import_file_path(r_name, index), index=False)
-                            _data.to_csv(self.get_import_file_path(r_name, index, day_folder=True), index=False)
-                    # except Exception as e:
-                    #    print(e)
+                    try:
+                        self.check_for_index_folder(index)
+                        self.check_for_day_folder(index)
+                        for r_name in self.sample_report_names:
+                            print("index :", index, "|| report : ", r_name)
+                            _data = self.get_related_report(reports, r_name, index)
+                            if len(_data) != 0:
+                                _data.to_csv(self.get_import_file_path(r_name, index), index=False)
+                                _data.to_csv(self.get_import_file_path(r_name, index, day_folder=True), index=False)
+                    except Exception as e:
+                      pass
 
     def query_es_for_report(self, report_name, index, date=datetime.datetime.now()):
         ## TODO: will be updated
