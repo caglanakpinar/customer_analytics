@@ -233,7 +233,7 @@
 				<div class="col-12 col-md-6 col-xxl-3 d-flex order-2 order-xxl-3">
 					<div class="card flex-fill w-100">
 						<div class="card-header">
-							<h5 class="card-title mb-0">Churn Rate (%)</h5>
+							<h5 class="card-title mb-0" >Churn Rate (%) {% if data_type['churn'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 						<div class="card-body d-flex">
 
@@ -245,7 +245,7 @@
 				<div class="col-12 col-md-6 col-xxl-3 d-flex order-2 order-xxl-3">
 					<div class="card flex-fill w-100">
 						<div class="card-header">
-							<h5 class="card-title mb-0">Churn Rate Weekly (%)</h5>
+							<h5 class="card-title mb-0" >Churn Rate Weekly (%) {% if data_type['churn_weekly'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 						</div>
 						<div class="card-body d-flex">
 
