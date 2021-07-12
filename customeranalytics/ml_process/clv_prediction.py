@@ -68,7 +68,7 @@ class CLVPrediction:
         self.temp_folder = join(temporary_export_path, "temp_purchase_amount_results", "*.csv")
         self.results = join(temporary_export_path, "results_*.csv")
         self.clv_fields = ["client", "session_start_date", "payment_amount", "dimension"]
-        self.result_query = "session_start_date == session_start_date data_type != 'actual'"
+        self.result_query = "session_start_date == session_start_date and data_type != 'actual'"
         self.result_columns = ['session_start_date', 'client', 'payment_amount']
         self.clv_predictions = pd.DataFrame()
         self.client_dimensions = pd.DataFrame()
@@ -111,7 +111,6 @@ class CLVPrediction:
             _reports = self.collect_reports.collect_reports(self.port, self.host, 'main',
                                                             query={"report_name": "clv_prediction"})
             if len(_reports) != 0:
-
                 try:
                     _directory = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]['directory']
                     print(_directory)
@@ -271,6 +270,7 @@ class CLVPrediction:
                 dfs.append(_clv_predictions_newcomers)
             self.clv_predictions = pd.concat([self.clv_predictions.query("client != 'newcomers'")] + dfs)
         else: self.clv_predictions['dimension'] = 'main'
+        self.clv_predictions['dimension'] = self.clv_predictions['dimension'].apply(lambda x: str(x))
         self.clv_predictions = self.clv_predictions.query("date > @_prediction_start_date")
 
     def fetch(self, end_date=None, time_period='weekly'):
