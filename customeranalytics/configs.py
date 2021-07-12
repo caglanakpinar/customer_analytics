@@ -330,3 +330,7 @@ DATA_WORKS_READABLE_FORM = {'clv_prediction': 'CLV Prediction',
                             'products': 'Product Analytics', 'segmentation': 'Customer Segmentation',
                             'anomaly': 'Anomaly Detection'
                             }
+
+none_types = [None, 'None', '-']
+session_columns = {'order_id', 'client', 'session_start_date', 'end_date', 'amount', 'discount', 'purchase'}
+customer_columns = {'client', 'download_date', 'signup_date'}
