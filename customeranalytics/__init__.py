@@ -200,8 +200,15 @@ def create_connections(
 
 def create_schedule(time_period):
     """
+    There are 3 options for scheduling;
+        - Once; it is started for only once that triggers all processes but it is never triggered again.
+        - Daily; Every day at 00:00, it is started for all processes includes exploratory analyisis, Ml Processes,
+                 Data Transferring to the ElasticSearch.
+        - 12 Hours; Every 12 hours data transferring is going to be started. And every 24 hours all processes includes
+                    exploratory analysis, Ml Processes, Data Transferring to the ElasticSearch are triggered together.
 
     """
+    delete_schedule()
     es_tag = list(pd.read_sql("select tag from es_connection", con)['tag'])[0]
     request = {'schedule': 'True', 'time_period': time_period, "es_tag": es_tag}
     r.data_execute(request)
@@ -222,7 +229,11 @@ def collect_report(report_name, date=None, dimension='main'):
     """
     If there is a report need as .csv format.
     """
-    reports.fetch_report(report_name, index=dimension, date=date)
+    report = reports.fetch_report(report_name, index=dimension, date=date)
+    if report is False:
+        print("reports is not created")
+        return None
+    else: return report
 
 
 def report_names():
