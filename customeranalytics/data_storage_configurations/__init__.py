@@ -144,25 +144,6 @@ def create_index(tag, ea_configs, ml_configs):
     s.run_schedule_on_thread(function=s.execute_schedule)
 
 
-def connection_elasticsearch_check(request):
-    """
-
-    :param request: elasticsearch connected tag name
-    :return:
-    """
-
-    url = request['url']
-    if request['url'] == 'None':
-        url = 'http://' + str(request['host']) + ':' + str(request['port'])
-
-    try:
-        res = requests.get(url)
-        return True, 'Connected!'
-    except Exception as e:
-        print(e)
-        return False, 'Connection Failed!', elasticsearch_connection_refused_comment
-
-
 def get_columns_condition(request, _columns, index):
     desire_column_count = 0
     if index == 'orders':
