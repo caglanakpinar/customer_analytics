@@ -92,7 +92,6 @@ def register():
 
 @blueprint.route('/logout')
 def logout():
-    logging.info(logger_str("logout"))
     logout_user()
     return redirect(url_for('base_blueprint.login'))
 
