@@ -203,7 +203,7 @@ def create_connections(customers_connection,
 
     args = {"sessions": [sessions_fields, "orders", sessions_connection, dimension_sessions, actions_sessions],
             "products": [product_fields, "products", products_connection],
-            "customers": [customer_fields, "downloads", customers_connection, dimension_customers, actions_customers]}
+            "customers": [customer_fields, "downloads", customers_connection, "", actions_customers]}
 
     # check it is eligible to insert data source
     ready_for_insert = True
