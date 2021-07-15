@@ -207,6 +207,17 @@ def create_schedule(time_period):
     r.data_execute(request)
 
 
+def delete_schedule():
+    """
+    In order to stop schedule, you need to delete schedule process.
+    Schedule with time_period='once', can only stop with ending running process.
+    """
+    try:
+        con.execute("delete from schedule_data where id = 1")
+    except Exception as e:
+        print(e)
+
+
 def collect_report(report_name, date=None, dimension='main'):
     """
     If there is a report need as .csv format.
