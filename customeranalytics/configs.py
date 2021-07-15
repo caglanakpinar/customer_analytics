@@ -332,5 +332,7 @@ DATA_WORKS_READABLE_FORM = {'clv_prediction': 'CLV Prediction',
                             }
 
 none_types = [None, 'None', '-']
-session_columns = {'order_id', 'client', 'session_start_date', 'end_date', 'amount', 'discount', 'purchase'}
-customer_columns = {'client', 'download_date', 'signup_date'}
+session_columns = {'order_id', 'client', 'session_start_date', 'date', 'payment_amount',
+                   'discount_amount', 'has_purchased'}
+customer_columns = {'client_2', 'download_date', 'signup_date'}
+product_columns = {'order_id', 'product', 'price', 'category'}
