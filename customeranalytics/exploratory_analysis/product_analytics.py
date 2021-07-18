@@ -57,14 +57,16 @@ class ProductAnalytics:
         self.download_index = download_index
         self.order_index = order_index
         self.query_es = QueryES(port=port, host=host)
-        self.fields_products = ["id", "client", "basket", "session_start_date", "payment_amount"]
+        self.fields_products = ["id", "client", "basket", "session_start_date", "payment_amount", "discount_amount"]
         self.products = pd.DataFrame()
         self.hourly_products = pd.DataFrame()
         self.hourly_product_cat = pd.DataFrame()
         self.product_pairs = pd.DataFrame()
+        self.daily_products = pd.DataFrame()
+        self.product_kpis = pd.DataFrame()
         self.analysis = ["most_ordered_products", "most_ordered_categories",
                          "hourly_products_of_sales", "hourly_categories_of_sales",
-                         "most_combined_products"]
+                         "most_combined_products", 'daily_products_of_sales', 'product_kpis']
 
     def dimensional_query(self, boolean_query=None):
         if dimension_decision(self.order_index):
@@ -108,14 +110,15 @@ class ProductAnalytics:
             lambda row: list(zip([row['id']] * len(row['products']),
                                  [row['client']] * len(row['products']),
                                  [row['payment_amount']] * len(row['products']),
+                                 [row['discount_amount']] * len(row['products']),
                                  [row['session_start_date']] * len(row['products']),
                                  row['products'],
                                  row['category'],
                                  row['price'])), axis=1)
         # concatenate products columns and convert it to dataframe with columns produc_id and price
         self.products = pd.DataFrame(np.concatenate(list(self.products['products']))).rename(
-            columns={0: "id", 1: "client", 2: "payment_amount", 3: "session_start_date",
-                     4: "products", 5: "category", 6: "price"})
+            columns={0: "id", 1: "client", 2: "payment_amount", 3: "discount_amount",
+                     4: 'session_start_date', 5: "products", 6: "category", 7: "price"})
         # subtract price from payment amount.
         # This will works to see how product of addition affects the total basket of payment amount
         self.products['payment_amount'] = self.products['payment_amount'].apply(lambda x: float(x))
@@ -211,6 +214,43 @@ class ProductAnalytics:
         self.product_pairs = self.product_pairs.groupby("product_pair").agg({"total_pairs": "first"}).reset_index()
         return self.product_pairs
 
+    def get_daily_product_sales(self):
+        """
+        Which product is preferred to purchase via purchased day?
+        """
+        self.products['daily'] = self.products['session_start_date'].apply(lambda x: convert_dt_to_day_str(x))
+        self.products = self.products.dataquery("payment_amount == payment_amount")
+        self.products['payment_amount'] = self.products['payment_amount'].apply(lambda x: float(x))
+        self.daily_products = self.products.reset_index().groupby(["daily", "products"]).agg(
+            {"payment_amount": "sum", 'index': 'count'}).reset_index().rename(columns={"index": "order_count"})
+        return self.daily_products
+
+    def get_product_kpis(self):
+
+        kpi_1 = self.products[['products', 'client']].reset_index().groupby(["client", "products"]).agg(
+            {"index": "count"}).reset_index().groupby("products").agg(
+            {"index": "mean"}).reset_index().rename(columns={"index": "average_product_sold_per_user_kpi"})
+        kpi_2 = self.products[['products', 'payment_amount']].groupby("products").agg(
+            {"payment_amount": "sum"}).reset_index().rename(columns={"payment_amount": "total_product_revenue_kpi"})
+        try:
+            kpi_3 = self.products[['products', 'discount_amount']].query("discount_amount == discount_amount").groupby(
+                "products").agg(
+                {"discount_amount": "sum"}).reset_index().rename(
+                columns={"discount_amount": "total_product_discount_kpi"})
+        except:
+            kpi_3 = self.products[['products']]
+            kpi_3['total_product_discount_kpi'] = 0
+
+        kpi_4 = self.products[['products', 'client']].groupby("products").agg(
+            {"client": lambda x: len(np.unique(x))}).reset_index().rename(columns={"client": "total_product_cust_kpi"})
+
+        self.product_kpis = pd.DataFrame(self.products.groupby('products').count().reset_index()[['products']]).merge(
+            kpi_1, on='products', how='left').merge(
+            kpi_2, on='products', how='left').merge(
+            kpi_3, on='products', how='left').merge(kpi_4, on='products', how='left').fillna(0)
+
+        return self.product_kpis
+
     def execute_product_analysis(self, end_date=None):
         """
             1. Check for products data available on elasticsearch orders index.
@@ -222,7 +262,8 @@ class ProductAnalytics:
             self.get_products(end_date=convert_to_iso_format(current_date_to_day() if end_date is None else end_date))
             for ins in list(zip(self.analysis, [self.get_most_ordered_products, self.get_most_ordered_categories,
                                                 self.get_hourly_products_of_sales, self.get_hourly_categories_of_sales,
-                                                self.get_most_combined_products])):
+                                                self.get_most_combined_products, self.get_daily_product_sales,
+                                                self.get_product_kpis])):
                 _result = ins[1]()
                 self.insert_into_reports_index(product_analytic=_result,
                                                pa_type=ins[0], start_date=end_date, index=self.order_index)
