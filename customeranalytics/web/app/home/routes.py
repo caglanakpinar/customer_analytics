@@ -10,6 +10,7 @@ from jinja2 import TemplateNotFound
 import json
 
 from customeranalytics.web.app.home.models import RouterRequest
+from customeranalytics.web.app.home.search import Search
 from customeranalytics.web.app.home.forms import SampleData, RealData, Charts, charts
 from customeranalytics.web.app.home.profiles import Profiles
 from customeranalytics.data_storage_configurations.logger import LogsBasicConfeger
@@ -21,6 +22,7 @@ real = RealData()
 charts = Charts(samples.kpis, real)
 reqs = RouterRequest()
 profile = Profiles()
+search = Search()
 
 
 def get_segment(request):
@@ -31,6 +33,31 @@ def get_segment(request):
         return segment
     except:
         return None
+
+
+@blueprint.route('/search', methods=["GET", "POST"])
+@login_required
+def search_data():
+    """
+    When logged In, Platform start with General Dashboard running on index.html
+    :return: render_template
+    """
+    pic = profile.fetch_pic()
+    search = dict(request.form).get('search', '')
+    date = dict(request.form).get('date', None)
+    search_type = search.search_results(search)
+    graph_json, data_type, filters = charts.get_chart(target='search_' + search_type)  # collect charts on index.html
+    return render_template('search.html',
+                           segment='search',
+                           pic=pic,
+                           chart_1=charts.get_json_format(graph_json['charts']['chart_1_search']),
+                           chart_2=charts.get_json_format(graph_json['charts']['chart_2_search']),
+                           chart_3=charts.get_json_format(graph_json['charts']['chart_3_search']),
+                           chart_4=charts.get_json_format(graph_json['charts']['chart_4_search']),
+                           chart_5=charts.get_json_format(graph_json['charts']['chart_5_search']),
+                           kpis=graph_json['kpis'],
+                           data_type=data_type,
+                           search_type=search_type)
 
 
 @blueprint.route('/index', methods=["GET", "POST"])

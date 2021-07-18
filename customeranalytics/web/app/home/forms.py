@@ -395,7 +395,35 @@ charts = {
                                       'layout': go.Layout()},
                 "dorders_anomaly": {'trace': go.Bar(name=None, x=[], y=[]), 'layout': go.Layout()},
                 "clvrfm_anomaly": {'trace': go.Scatter(name=None, x=[], y=[], mode='markers'), 'layout': go.Layout()}},
-    "kpis": {}}
+    "kpis": {}},
+
+
+    "search_product": {"charts": {_f: {'trace': go.Bar(),
+                                       'layout': go.Layout(
+                                           legend=dict(
+                                               orientation="h",
+                                               yanchor="bottom",
+                                               y=1.02,
+                                               xanchor="right",
+                                               x=1),
+                                           margin=dict(r=1, t=1))} if _f != "chart_1_search"  else
+    {'trace': go.Scatter(mode="lines+markers+text",
+                         line=dict(color='firebrick', width=4),
+                         textposition="bottom center",
+                         textfont=dict(
+                             family="sans serif",
+                             size=30,
+                             color="crimson")),
+     'layout': go.Layout()}
+                   for _f in ["chart_{}_search".format(str(i)) for i in range(1, 6)]},
+
+
+
+
+"kpis": {}}
+
+
+
 
 
 
