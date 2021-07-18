@@ -9,8 +9,29 @@ elasticsearch_settings = {
                                         "index.query.default_field": 10000000,
                                         "index.max_result_window": 10000000,
                                         "index": {
-                                            "analysis": {},
-                                        },
+                                            "analysis": {
+
+                                                "filter": {
+                                                    "autocomplete_filter": {
+                                                        "type": "edge_ngram",
+                                                        "min_gram": 1,
+                                                        "max_gram": 10
+                                                    }
+                                                },
+                                                "analyzer": {
+                                                    "autocomplete": {
+                                                        "type": "custom",
+                                                        "tokenizer": "standard",
+                                                        "filter": [
+                                                            "lowercase",
+                                                            "autocomplete_filter"
+                                                        ]
+                                                    }
+                                                }
+
+
+                                            }
+                                        }
 
                               },
                                 "mappings": {
@@ -33,6 +54,7 @@ elasticsearch_settings = {
 
                             }
 
+
 elasticsearch_settings_downloads = {
                                     "settings": {
                                         "number_of_shards": 2,
@@ -41,7 +63,29 @@ elasticsearch_settings_downloads = {
                                         "index.query.default_field": 10000000,
                                         "index.max_result_window": 10000000,
                                         "index": {
-                                            "analysis": {},
+                                            "analysis": {
+
+                                                "filter": {
+                                                    "autocomplete_filter": {
+                                                        "type": "edge_ngram",
+                                                        "min_gram": 1,
+                                                        "max_gram": 10
+                                                    }
+                                                },
+                                                "analyzer": {
+                                                    "autocomplete": {
+                                                        "type": "custom",
+                                                        "tokenizer": "standard",
+                                                        "filter": [
+                                                            "lowercase",
+                                                            "autocomplete_filter"
+                                                        ]
+                                                    }
+                                                }
+
+
+
+                                            },
                                         },
 
                               },
@@ -61,7 +105,31 @@ elasticsearch_settings_reports = {
                                         "index.query.default_field": 10000000,
                                         "index.max_result_window": 10000000,
                                         "index": {
-                                            "analysis": {},
+                                            "analysis": {
+
+                                                "filter": {
+                                                    "autocomplete_filter": {
+                                                        "type": "edge_ngram",
+                                                        "min_gram": 1,
+                                                        "max_gram": 10
+                                                    }
+                                                },
+                                                "analyzer": {
+                                                    "autocomplete": {
+                                                        "type": "custom",
+                                                        "tokenizer": "standard",
+                                                        "filter": [
+                                                            "lowercase",
+                                                            "autocomplete_filter"
+                                                        ]
+                                                    }
+                                                }
+
+
+
+
+
+                                            },
                                         },
 
                               },
@@ -229,7 +297,9 @@ product_analytics = ['most_ordered_products',
                      'most_ordered_categories',
                      'hourly_products_of_sales',
                      'hourly_categories_of_sales',
-                     'most_combined_products']
+                     'most_combined_products',
+                     'daily_products',
+                     'product_kpis']
 
 
 non_dimensional_reports = ["clv_prediction", "segmentation"]
