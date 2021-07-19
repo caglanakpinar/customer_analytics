@@ -7,8 +7,8 @@ from sqlalchemy import create_engine, MetaData
 from os.path import abspath, join
 from numpy import mean
 
-try: from utils import convert_dt_to_day_str
-except: from customeranalytics.utils import convert_dt_to_day_str
+try: from utils import convert_dt_to_day_str, abspath_for_sample_data
+except: from customeranalytics.utils import convert_dt_to_day_str, abspath_for_sample_data
 
 try: from configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
 except: from customeranalytics.configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
@@ -57,7 +57,6 @@ class Search:
         self.search_metrics = ['promotion', 'product', 'dimension', 'client']
         self.query_body = {"query": {}}
         self.intersect_count = lambda x, y: len(set(x) & set(y))
-        self.
         self.user_data = pd.DataFrame()
 
     def create_es_query_body(self, key, value):
@@ -90,6 +89,7 @@ class Search:
                 search_result, similarity_score = self.get_search_similarity_score(search_value, products)
 
         except: search_result = search_value
+        print(search_result, similarity_score)
         return search_result, similarity_score
 
     def collect_report(self, report_name):
@@ -104,27 +104,38 @@ class Search:
             return report
 
     def visualization_data_for_product_search(self, value):
-        for data_type in [('product_kpis', 'product_kpis'),
-                          ('chart_1', 'daily_products'),
-                          ('chart_2', 'product_usage_before_after_amount_accept'),
-                          ('chart_3', 'product_usage_before_after_amount_reject'),
-                          ('chart_4', 'product_usage_before_after_orders_accept'),
-                          ('chart_5', 'product_usage_before_after_orders_reject')]:
+        for data_type in [('chart_1', ['product_kpis']),
+                          ('chart_2', ['daily_products']),
+                          ('chart_3', ['product_usage_before_after_amount_accept',
+                                       'product_usage_before_after_amount_reject']),
+                          ('chart_4', ['product_usage_before_after_orders_accept',
+                                       'product_usage_before_after_orders_reject']),
+                          ]:
             try:
-                result = self.collect_report(data_type[1]).query("products == @value")
+                result = pd.DataFrame()
+                for r in data_type[1]:
+                    result = pd.concat([result, self.collect_report(r).query("products == @value")])
                 result.to_csv(join(self.temporary_path, "build_in_reports", "main", data_type[0] + '_search.csv'),
                               index=False)
             except Exception as e:
                 print(e)
 
     def search_results(self, search_value):
-        for m in self.search_metrics:
-            search_value, similarity_score = self.get_serach_value(m, search_value)
-            if len(_data) != 0:
-                break
-        if m == 'product':
-            self.visualization_data_for_product_search(_data, search_value)
-        return m
+        results = {'search_type': 'product', 'has_results': False}
+        try:
+            data = []
+            for m in self.search_metrics:
+                search_value, similarity_score = self.get_serach_value(m, search_value)
+                data.append({'search_value': search_value, 'similarity_score': similarity_score, 'search_type': m})
+            data = pd.DataFrame(data).query("similarity_score != 0")
+            if len(data) != 0:
+                data = data.sort_values(by='similarity_score', ascending=False).to_dict('results')[0]
+                if data['search_type'] == 'product':
+                    self.visualization_data_for_product_search(results['similarity_score'])
+                data['has_results'] = True
+                results = data.to_dict('results')
+        except: results = {'search_type': 'product', 'has_results': False}
+        return results
 
 
 
