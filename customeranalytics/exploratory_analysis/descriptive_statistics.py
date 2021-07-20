@@ -97,7 +97,7 @@ class Stats:
                       "weekly_average_session_per_user", "weekly_average_payment_amount", "user_counts_per_order_seq",
                       "hourly_revenue", "daily_revenue", "weekly_revenue", "monthly_revenue"]
         self.last_week = None
-        self.time_periods = time_periods# ["daily", "weekly", 'monthly']
+        self.time_periods = time_periods  # ["daily", "weekly", 'monthly']
         self.orders = pd.DataFrame()
         self.results = {}
 

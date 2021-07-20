@@ -171,7 +171,12 @@
 										<h5 class="card-title mb-4">Orders  {% if data_type['total_orders'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 										<h1 class="mt-1 mb-3">{{ kpis.total_orders }}</h1>
 										<div class="mb-1">
-											<span class="text-danger"> <i class="mdi mdi-arrow-bottom-right"></i> -3.65% </span>
+											{% if kpis.since_last_week_orders[0] == '-' %}
+												<span class="text-danger"> <i class="mdi mdi-arrow-bottom-right"></i> {{ kpis.since_last_week_orders }}% </span>
+											{% endif %}
+											{% if kpis.since_last_week_orders[0] != '-' %}
+												<span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> {{ kpis.since_last_week_orders }}% </span>
+											{% endif %}
 											<span class="text-muted">Since last week</span>
 										</div>
 									</div>
@@ -181,7 +186,12 @@
 										<h5 class="card-title mb-4">Visitors {% if data_type['total_visitors'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 										<h1 class="mt-1 mb-3">{{ kpis.total_visitors }}</h1>
 										<div class="mb-1">
-											<span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> 5.25% </span>
+											{% if kpis.since_last_week_total_visitors[0] == '-' %}
+												<span class="text-danger"> <i class="mdi mdi-arrow-bottom-right"></i> {{ kpis.since_last_week_total_visitors }}% </span>
+											{% endif %}
+											{% if kpis.since_last_week_total_visitors[0] != '-' %}
+												<span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> {{ kpis.since_last_week_total_visitors }}% </span>
+											{% endif %}
 											<span class="text-muted">Since last week</span>
 										</div>
 									</div>
@@ -193,7 +203,12 @@
 										<h5 class="card-title mb-4">Revenue {% if data_type['total_revenue'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 										<h1 class="mt-1 mb-3">{{ kpis.total_revenue }}</h1>
 										<div class="mb-1">
-											<span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> 6.65% </span>
+											{% if kpis.since_last_week_revenue[0] == '-' %}
+												<span class="text-danger"> <i class="mdi mdi-arrow-bottom-right"></i> {{ kpis.since_last_week_revenue }}% </span>
+											{% endif %}
+											{% if kpis.since_last_week_revenue[0] != '-' %}
+												<span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> {{ kpis.since_last_week_revenue }}% </span>
+											{% endif %}
 											<span class="text-muted">Since last week</span>
 										</div>
 									</div>
@@ -203,7 +218,12 @@
 										<h5 class="card-title mb-4">Discount {% if data_type['total_discount'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 										<h1 class="mt-1 mb-3">{{ kpis.total_discount }}</h1>
 										<div class="mb-1">
-											<span class="text-danger"> <i class="mdi mdi-arrow-bottom-right"></i> -2.25% </span>
+											{% if kpis.since_last_week_total_discount[0] == '-' %}
+												<span class="text-danger"> <i class="mdi mdi-arrow-bottom-right"></i> {{ kpis.since_last_week_total_discount }}% </span>
+											{% endif %}
+											{% if kpis.since_last_week_total_discount[0] != '-' %}
+												<span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> {{ kpis.since_last_week_total_discount }}% </span>
+											{% endif %}
 											<span class="text-muted">Since last week</span>
 										</div>
 									</div>

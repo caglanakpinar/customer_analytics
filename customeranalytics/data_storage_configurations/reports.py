@@ -114,6 +114,9 @@ class Reports:
                                'product_usage_before_after_orders': ['product_usage_before_after_orders_accept',
                                                                      'product_usage_before_after_orders_reject']
                               }
+        self.index_kpis = ['total_orders', 'total_visitors', 'total_revenue', 'total_discount',
+                           'since_last_week_orders', 'since_last_week_revenue',
+                           'since_last_week_total_visitors', 'since_last_week_total_discount']
         self.p_usage_ba_orders = ['promotion_usage_before_after_orders', 'promotion_usage_before_after_amount']
         self.rfm_reports = ['rfm', 'segmentation']
         self.clv_reports = ["clv_prediction", "stats", "segmentation"]
@@ -420,6 +423,28 @@ class Reports:
             if f.split(".")[1] == 'csv':
                 self.sample_report_names.append("_".join(f.split(".")[0].split("_")[2:]))
 
+    def get_last_week_kpis(self, report):
+        """
+        KPIs at index.html are stored at stats report. However there are reports
+        which must be calculated calculated before store in built_in reports
+        """
+        report_data = pd.DataFrame(list(report['data'])[0])
+        report_data['since_last_week_orders'] = round(list(report_data['last_week_orders'])[0] /
+                                                      (list(report_data['total_orders'])[0] -
+                                                       list(report_data['last_week_orders'])[0]) * 100, 2)
+        report_data['since_last_week_revenue'] = round(list(report_data['last_week_revenue'])[0] /
+                                                       (list(report_data['total_revenue'])[0] -
+                                                        list(report_data['last_week_revenue'])[0]) * 100, 2)
+        report_data['since_last_week_total_visitors'] = round(list(report_data['last_week_visitors'])[0] /
+                                                             (list(report_data['total_visitors'])[0] -
+                                                              list(report_data['last_week_visitors'])[0]) * 100, 2)
+        report_data['since_last_week_total_discount'] = round(list(report_data['last_week_discount'])[0] /
+                                                              (list(report_data['total_discount'])[0] -
+                                                               list(report_data['last_week_discount'])[0]) * 100, 2)
+
+        return report_data[self.index_kpis]
+
+
     def get_related_report(self, reports, r_name, index):
         """
         Last exit before import data as .csv format
@@ -439,6 +464,8 @@ class Reports:
                 report_data = self.get_clv_report(reports, r_name, index)
             if 'anomaly' in r_name.split("_"):
                 report_data = self.get_anomaly_reports(r_name, report)
+            if r_name == 'kpis':
+                report_data = self.get_last_week_kpis(report)
         report_data = self.radomly_sample_data(report_data)
         return report_data
 
