@@ -43,21 +43,24 @@ def search_data():
     :return: render_template
     """
     pic = profile.fetch_pic()
-    search = dict(request.form).get('search', '')
-    date = dict(request.form).get('date', None)
-    search_type = search.search_results(search)
-    graph_json, data_type, filters = charts.get_chart(target='search_' + search_type)  # collect charts on index.html
+    search_value = dict(request.form).get('search', '')
+    print("search")
+    results = search.search_results(search_value)
+    # print(search_type)
+    graph_json, data_type, filters = charts.get_chart(target='search_' + results['search_type'])
+    chart_names = search.get_search_chart_names(results['search_type'])
+    kpis = search.convert_kpi_names_to_numeric_names(graph_json)
     return render_template('search.html',
                            segment='search',
                            pic=pic,
-                           chart_1=charts.get_json_format(graph_json['charts']['chart_1_search']),
                            chart_2=charts.get_json_format(graph_json['charts']['chart_2_search']),
                            chart_3=charts.get_json_format(graph_json['charts']['chart_3_search']),
                            chart_4=charts.get_json_format(graph_json['charts']['chart_4_search']),
-                           chart_5=charts.get_json_format(graph_json['charts']['chart_5_search']),
-                           kpis=graph_json['kpis'],
-                           data_type=data_type,
-                           search_type=search_type)
+                           kpis=kpis,
+                           chart_names=chart_names,
+                           search_type=results['search_type'],
+                           has_results=results['has_results'],
+                           data_type=data_type)
 
 
 @blueprint.route('/index', methods=["GET", "POST"])
