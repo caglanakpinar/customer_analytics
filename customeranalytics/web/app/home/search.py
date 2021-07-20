@@ -58,6 +58,12 @@ class Search:
         self.query_body = {"query": {}}
         self.intersect_count = lambda x, y: len(set(x) & set(y))
         self.user_data = pd.DataFrame()
+        self.product_kpis = ['Average Product Sold Per Customer',
+                             'Total Product Revenue',
+                             'Total Product Discount', 'Number of Customer who purchase the Product']
+        self.product_charts = ["Daily Product",
+                               "Before - After Time Periods Customers' Total Purchase Count Test (Test Accepted!)",
+                               "Before - After Time Periods Customers' Total Purchase Count Test (Test Rejected!)"]
 
     def create_es_query_body(self, key, value):
         if key == 'product':
@@ -136,6 +142,22 @@ class Search:
                 results = data.to_dict('results')
         except: results = {'search_type': 'product', 'has_results': False}
         return results
+
+    def get_search_chart_names(self, search_type):
+        chart_names = {}
+        if search_type == 'product':
+            for i in zip(range(2, 5), self.product_charts):
+                chart_names["chart_{}_search".format(str(i[0]))] = i[1]
+            for i in zip(range(1, 5), self.product_kpis):
+                chart_names['kpi_' + str(i[0])] = i[1]
+        return chart_names
+
+    def convert_kpi_names_to_numeric_names(self, graph_json):
+        return {'kpi_' + str(k[1]): graph_json['kpis'][k[0]] for k in zip(list(graph_json['kpis'].keys()), range(1, 5))}
+
+
+
+
 
 
 
