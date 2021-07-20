@@ -14,154 +14,54 @@
 				<div class="card">
 					<div class="card-body">
 						<div class="row">
-							<div class="accordion" id="accordionExample">
-								<div class="card">
-									<div class="card-header" id="headingOne">
-										<h5 class="card-title my-1">
-											<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
-												Filters
-											</a>
-										</h5>
-									</div>
-									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
-										<form method="POST">
-											<div class="row">
-												<div class="col-md-6">
-													<div class="card">
-														<div class="card-body">
-															<div class="card">
-																<div class="card-header">
-																	<h5 class="card-title mb-0">Dimension selection</h5>
-																</div>
-																<div class="card-body">
-																	<select name="index" id="index" class="form-control">
-																		{% for d in filters['dimensions'] %}
-																			{% if d == 'There is no available report. Please execute Schedule Data Process' %}
-																				<option value= "main">{{ d }}</option>
-																			{% endif %}
-																			{% if d != 'There is no available report. Please execute Schedule Data Process' %}
-																				<option value="{{ d }}">{{ d }}</option>
-																			{% endif %}
-																		{% endfor %}
-																	</select>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-
-												<div class="col-md-6">
-													<div class="card flex-fil">
-														<div class="card-body col-12">
-															<div class="col-12 ">
-																<div class="align-self-center w-100">
-																	<div class="chart">
-																		<input name="date" id="datetimepicker-dashboard" hidden>
-																	</div>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-
-												<div class="card-header">
-													<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+							<div class="col-xl-6 col-xxl-5 d-flex">
+								<div class="w-100">
+									<div class="row">
+										<div class="col-sm-6">
+											<div class="card" style="height:200px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">
+														{{ chart_names.kpi_1 }}  {% if data_type['kpi_1'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.kpi_1 }}</h1>
 												</div>
 											</div>
-										</form>
-
-									</div>
-								</div>
-
-								<div class="card">
-									<div class="card-header" id="headingTwo">
-										<h5 class="card-title my-1">
-											<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
-												Infos
-											</a>
-										</h5>
-									</div>
-									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
-										<div class="card-body ">
-											<ul>
-											  <li>
-												  <strong style="color:green;">A/B Test Products </strong> are bunch of testes which compares effect of Products to the business.
-												  There are two metrics which help us to measure comparison values.
-												  These are Number of orders counts per product and Average purchase amount per product.
-												  Products of Purchasement related to these metrics are tested with Before - After Analysis
-												  in order to th answer the question that is "Is there any significant increase/decrease
-												  on Order Count / Average Payment Amount per User after the Products is purchased?"
-												  While we need to see to the product which increases/decreases the number of orders and the average purchase amount,
-												  This Section can help us to find the right product for the business.
-											  </li>
-
-											  <li>
-												  <div class="card-header">
-													  <h5 class="card-title" style="color:green;">Hypothesis are;</h5>
-													  <div class="card-header">
-														  <div class="row">H0 : These is no significant Difference with A - B of order count / purchase amount.</div>
-														  <div class="row">H1 : These is significant Difference with A - B of order count / purchase amount.</div>
-													  </div>
-												  </div>
-											  </li>
-											  <li>
-											    <div class="card-header">
-											  	  <h5 class="card-title" style="color:green;">Bootstrapping Method;</h5>
-											  	  <div class="card-header">
-											  		  <div class="row">
-											  		    Each test process are applied with Boostraping Method.
-											  	        So, Iteratively randomly selected A and B sample customers of order count / average purchase amount will be tested acceptable enough time.
-											  	        Each iteration A - B samples are randomly selected.
-											  	        Accepted ratio will show us the confidence of our test results. For instance, There are 100 tests and 75 of them are ended with H0 Accepted.
-											  	        So, test are % 75  our test are H0 Accepted.
-											  		  </div>
-											  	  </div>
-											    </div>
-											  </li>
-
-											  <li>
-												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">How are Before - After Product Usage Tests designed?</h5>
-													    It might be very confusion and it might seem very sophisticated A/B Test process,
-													    however it basically compares products related to customers of product selection at the basket.
-													    Each product selection at the basket is tested separately.
-													    Each timestamp of the selected product at the basket are collected for each product per customer individually.
-													    Each customers of one week before product selection and one week after the product selection time periods are compared with to metrics which are
-													    order count and average purchase amount. We aim to detect significant increase after time period
-													    while comparing to before time period about purchase amount or order count.
-
-														<div class="card-header">
-															<div class="row" style="color:green;">related charts are;</div>
-															<div class="card-header">
-																<div class="row mb-1">'Before - After the Product Selection Tests are shown at 'Order And Payment Amount Difference for Before And After the Product Selection',</div>
-																<div class="row mb-1">'Before - After Time Periods Customers' Average Purchase Payment Amount Test (Test Accepted!) ',</div>
-																<div class="row mb-1">'Before - After Time Periods Customers' Average Purchase Payment Amount Test (Test Rejected!)',</div>
-																<div class="row mb-1">'Before - After Time Periods Customers' Total Purchase Count Test (Test Accepted!)',</div>
-																<div class="row mb-1">'Before - After Time Periods Customers' Total Purchase Count Test (Test Rejected!)'</div>
-															</div>
-														</div>
-												  </div>
-											  </li>
-											</ul>
+											<div class="card" style="height:200px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">
+														{{ chart_names.kpi_2 }}  {% if data_type['kpi_2'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.kpi_2 }}</h1>
+												</div>
+											</div>
 										</div>
+										<div class="col-sm-6">
+											<div class="card" style="height:200px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">
+														{{ chart_names.kpi_3 }}  {% if data_type['kpi_3'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.kpi_3 }}</h1>
+												</div>
+											</div>
 
+											<div class="card" style="height:200px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">
+														{{ chart_names.kpi_4 }}  {% if data_type['kpi_4'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.kpi_4 }}</h1>
+												</div>
+											</div>
+
+										</div>
 									</div>
 								</div>
 							</div>
-
-							<div class="col-md-6">
-								<div class="card">
+							<div class="col-md-7">
+								<div class="card" style="height:200px;">
 									<div class="card-header">
-										<h5 class="card-title">Before - After Time Periods Customers' Average Purchase <strong> Payment Amount</strong> Test <strong> (Test Rejected!)</strong> {% if data_type['product_usage_before_after_amount_reject'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %} </h5>
-										<div class="row">
-											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Avg. purc. amount  <strong style="color:green;"> Before the basket with selected product</strong> per customer, per product.</h6>
-											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Avg. purc. amount  <strong style="color:green;"> After the basket with selected product</strong> per customer, per product</h6>
-											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Rejected :</strong>  <strong style="color:green;" > Significant Decrease</strong> on Avg. purc. amount  after the product is selected in ordered basket.</h6>
-											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per product).</h6>
-										</div>
+										<h5 class="card-title">{{ chart_names.chart_2_search }}</strong> </h5>
+
 									</div>
 									<div class="card-body">
-										<div  id="product_usage_ba_a_reject_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="chart_2_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
@@ -170,32 +70,20 @@
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Before - After Time Periods Customers' <strong> Total Purchase Count</strong> Test <strong> (Test Accepted!)</strong> {% if data_type['product_usage_before_after_orders_accept'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
-										<div class="row">
-											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Total P. Count <strong style="color:green;"> Before the basket with selected product</strong> per customer, per product.</h6>
-											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Total P. Count <strong style="color:green;"> After the basket with selected product</strong> per customer, per product</h6>
-											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Accepted :</strong>  <strong style="color:green;" > Significant Increase</strong> on Total P. Counts after the product is selected in ordered basket.</h6>
-											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per product).</h6>
-										</div>
+										<h5 class="card-title">{{ chart_names.chart_3_search }}</strong> </h5>
 									</div>
 									<div class="card-body">
-										<div  id="product_usage_ba_o_accept_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="chart_3_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
 							<div class="col-md-6">
 								<div class="card">
 									<div class="card-header">
-										<h5 class="card-title">Before - After Time Periods Customers' <strong> Total Purchase Count</strong> Test <strong> (Test Rejected!)</strong> {% if data_type['product_usage_before_after_orders_reject'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
-										<div class="row">
-											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> A :</strong> Total P. Count <strong style="color:green;"> Before the basket with selected product</strong> per customer, per product.</h6>
-											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> B :</strong> Total P. Count <strong style="color:green;"> After the basket with selected product</strong> per customer, per product</h6>
-											<h6 class="card-subtitle text-muted mb-1">- <strong style="color:green;"> Test Rejected :</strong>  <strong style="color:green;" > Significant Decrease</strong> on Total P. Counts after the product is selected in ordered basket.</h6>
-											<h6 class="card-subtitle text-muted mb-1">- Each Test are applied individually (per product).</h6>
-										</div>
+										<h5 class="card-title">{{ chart_names.chart_4_search }}</strong> </h5>
 									</div>
 									<div class="card-body">
-										<div  id="product_usage_ba_o_reject_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										<div  id="chart_4_id" class="plotly-gra ph-div" style="height:400px;"></div>
 									</div>
 								</div>
 							</div>
@@ -215,29 +103,21 @@
 	<script>
 
 
+			var chart_2_v = {{chart_2 | safe}};
 
-			var product_usage_ba_a_a = {{product_use_ba_a_accept | safe}};
+	        Plotly.plot('chart_2_id', // the ID of the div, created above
+						chart_2_v.trace, chart_2_v.layout, {});
 
-	        Plotly.plot('product_usage_ba_a_accept_id', // the ID of the div, created above
-						product_usage_ba_a_a.trace, product_usage_ba_a_a.layout, {});
+			var chart_3_v = {{chart_3 | safe}};
 
+	        Plotly.plot('chart_3_id', // the ID of the div, created above
+			chart_3_v.trace, chart_3_v.layout, {});
 
-			var product_usage_ba_a_r = {{product_use_ba_a_reject | safe}};
+			var chart_4_v = {{chart_4 | safe}};
 
-	        Plotly.plot('product_usage_ba_a_reject_id', // the ID of the div, created above
-						product_usage_ba_a_r.trace, product_usage_ba_a_r.layout, {});
+	        Plotly.plot('chart_4_id', // the ID of the div, created above
+			chart_4_v.trace, chart_4_v.layout, {});
 
-
-			var product_usage_ba_o_a = {{product_use_ba_o_accept | safe}};
-
-	        Plotly.plot('product_usage_ba_o_accept_id', // the ID of the div, created above
-						product_usage_ba_o_a.trace, product_usage_ba_o_a.layout, {});
-
-
-			var product_usage_ba_o_r = {{product_use_ba_o_reject | safe}};
-
-	        Plotly.plot('product_usage_ba_o_reject_id', // the ID of the div, created above
-						product_usage_ba_o_r.trace, product_usage_ba_o_r.layout, {});
 
 
 	function myFunction() {
