@@ -81,7 +81,9 @@ charts = {
              },
         ## TODO  organic - promoted ratio
         # KPIs - total_orders, total_visits, total_unique_visitors. index.html left top
-        "kpis": {"kpis": ['total_orders', 'total_visitors', 'total_revenue', 'total_discount']}},
+        "kpis": {"kpis": ['total_orders', 'total_visitors', 'total_revenue', 'total_discount',
+                          'since_last_week_orders', 'since_last_week_revenue',
+                          'since_last_week_total_visitors', 'since_last_week_total_discount']}},
     # index2.html of Charts and KPIs
     "index2": {
         # charts - rfm
@@ -406,7 +408,7 @@ charts = {
                                                y=1.02,
                                                xanchor="right",
                                                x=1),
-                                           margin=dict(r=1, t=1))} if _f != "chart_1_search"  else
+                                           margin=dict(r=1, t=1))} if _f != "chart_2_search" else
     {'trace': go.Scatter(mode="lines+markers+text",
                          line=dict(color='firebrick', width=4),
                          textposition="bottom center",
@@ -415,12 +417,13 @@ charts = {
                              size=30,
                              color="crimson")),
      'layout': go.Layout()}
-                   for _f in ["chart_{}_search".format(str(i)) for i in range(1, 6)]},
+                   for _f in ["chart_{}_search".format(str(i)) for i in range(2, 5)]},
 
 
 
 
-"kpis": {}}
+"kpis": {"chart_1_search": ['average_product_sold_per_user_kpi', 'total_product_revenue_kpi',
+                            'total_product_discount_kpi', 'total_product_cust_kpi']}}
 
 
 
@@ -655,12 +658,14 @@ class Charts:
                                 name='markers')
         return _trace
 
-    def get_trace(self, trace, chart, index, date):
+    def get_trace(self, trace, chart, index, date, target):
         """
         fill more variables on charts dictionary. At this process, data sets are stored in the trace.
 
         :param trace: e.g. [{go.Scatter()}]
         :param chart: e.g. rfm, segmentation, ...
+        :param index: by default 'main'. it is the dimension filter for charts
+        :param date: by default the latest date. it is the date filter for charts
         :return:
         """
         _data, is_real_data = self.get_data(chart, index, date)  # collect data
@@ -794,6 +799,21 @@ class Charts:
         if chart == 'churn_weekly':
             trace['x'] = list(_data['weekly'])
             trace['y'] = list(_data['churn'])
+        if 'search' in chart.split("_"):
+            if target == 'search_product':
+                if chart == "chart_2_search":
+                    trace['x'] = list(_data['daily'])
+                    trace['y'] = list(_data['order_count'])
+                if chart == "chart_3_search":
+                    trace = [
+                        go.Bar(name='asd', x=_data['products'], y=_data['mean_control']),
+                        go.Bar(name='asd2', x=_data['products'], y=_data['mean_validation'])
+                    ]
+                if chart == "chart_4_search":
+                    trace = [
+                        go.Bar(name='asd', x=_data['products'], y=_data['mean_control']),
+                        go.Bar(name='asd2', x=_data['products'], y=_data['mean_validation'])
+                    ]
 
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 
@@ -843,7 +863,7 @@ class Charts:
         :param kpi: .e.g.total_orders, total_visitors, ...
         :return: dictionary with KPIs in keys
         """
-        _data, is_real_data = self.get_data('kpis', index, date)
+        _data, is_real_data = self.get_data(kpi, index, date)
         return _data.to_dict('results')[0], is_real_data
 
     def get_chart(self, target, index='main', date=None):
@@ -858,7 +878,7 @@ class Charts:
         self.data_type = {}
         self.filters = {"dimensions": self.reals.get_report_dimensions()}
         for c in charts[target]['charts']:
-            trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index, date)
+            trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index, date, target)
             self.get_widths_heights(chart=c, target=target)
             annotation = charts[target]['charts'][c]['annotation'] if 'cohort' in c.split("_") else None
             layout = self.get_layout(charts[target]['charts'][c]['layout'], c,
