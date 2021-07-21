@@ -4,6 +4,7 @@ import inspect
 from os.path import join
 import yaml
 
+from customeranalytics.configs import none_types
 
 def current_date_to_day():
     """
@@ -47,7 +48,7 @@ def convert_to_date(date):
     :param date: str format; %Y-%m-%d %H:%M:%S
     :return:
     """
-    if date == date:
+    if date == date and date not in none_types:
         return datetime.datetime.strptime(str(date)[0:10] + ' ' + str(date)[11:19], "%Y-%m-%d %H:%M:%S")
     else:
         return None
