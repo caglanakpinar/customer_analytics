@@ -73,8 +73,11 @@ def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion
                                  'order_index': 'orders'},
                       "cohort": {"has_download": True, "host": 'localhost', "port": '9200',
                                  'download_index': 'downloads', 'order_index': 'orders'},
-                      "products": {"has_product_connection": True, "has_download": True,
+                      "product": {"has_product_connection": True, "has_download": True,
                                    "host": 'localhost', "port": '9200'},
+                      "promotions": {"has_promotion_connection": True,
+                             "host": 'localhost', "port": '9200',
+                             "download_index": 'downloads', "order_index": 'orders'},
                       "rfm": {"host": 'localhost', "port": '9200',
                               'download_index': 'downloads', 'order_index': 'orders'},
                       "stats": {"host": 'localhost', "port": '9200',
@@ -112,7 +115,7 @@ def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion
                 if ea in ['products', 'abtest']:
                     conf[ea]['has_product_connection'] = False
             if not has_promotion_conn:
-                if ea == 'abtest':
+                if ea in ['abtest', 'promotions']:
                     conf[ea]['has_promotion_connection'] = False
 
         configs += [conf]
