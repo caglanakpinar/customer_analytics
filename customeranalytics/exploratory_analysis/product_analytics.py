@@ -34,7 +34,7 @@ class ProductAnalytics:
         !!!!
         ******* ******** *****
         Dimensional Product Analytic:
-        Funnels must be created individually for dimensions. For instance, the Data set contains locations dimension.
+        Product Analytic must be created individually for dimensions. For instance, the Data set contains locations dimension.
         In this case, each location of 'orders' and 'downloads' indexes must be created individually.
         by using 'download_index' and 'order_index' dimension can be assigned in order to create a Product Analyse
 
@@ -219,23 +219,25 @@ class ProductAnalytics:
         Which product is preferred to purchase via purchased day?
         """
         self.products['daily'] = self.products['session_start_date'].apply(lambda x: convert_dt_to_day_str(x))
-        self.products = self.products.dataquery("payment_amount == payment_amount")
+        self.products = self.products.query("payment_amount == payment_amount")
         self.products['payment_amount'] = self.products['payment_amount'].apply(lambda x: float(x))
         self.daily_products = self.products.reset_index().groupby(["daily", "products"]).agg(
             {"payment_amount": "sum", 'index': 'count'}).reset_index().rename(columns={"index": "order_count"})
         return self.daily_products
 
     def get_product_kpis(self):
+        """
 
+        """
         kpi_1 = self.products[['products', 'client']].reset_index().groupby(["client", "products"]).agg(
             {"index": "count"}).reset_index().groupby("products").agg(
             {"index": "mean"}).reset_index().rename(columns={"index": "average_product_sold_per_user_kpi"})
         kpi_2 = self.products[['products', 'payment_amount']].groupby("products").agg(
             {"payment_amount": "sum"}).reset_index().rename(columns={"payment_amount": "total_product_revenue_kpi"})
         try:
-            kpi_3 = self.products[['products', 'discount_amount']].query("discount_amount == discount_amount").groupby(
-                "products").agg(
-                {"discount_amount": "sum"}).reset_index().rename(
+            kpi_3 = self.products[['products', 'discount_amount']].query("discount_amount == discount_amount")
+            kpi_3['discount_amount'] = kpi_3['discount_amount'].apply(lambda x: float(x))
+            kpi_3 = kpi_3.groupby("products").agg({"discount_amount": "sum"}).reset_index().rename(
                 columns={"discount_amount": "total_product_discount_kpi"})
         except:
             kpi_3 = self.products[['products']]
