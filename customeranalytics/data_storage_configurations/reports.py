@@ -10,7 +10,8 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from customeranalytics.configs import descriptive_reports, product_analytics, abtest_reports, non_dimensional_reports, clv_prediction_reports
+from customeranalytics.configs import descriptive_reports, product_analytics, abtest_reports, non_dimensional_reports, \
+    clv_prediction_reports, promotion_analytics
 from customeranalytics.utils import *
 from customeranalytics.data_storage_configurations.query_es import QueryES
 
@@ -48,42 +49,80 @@ class Reports:
 
     Here are the reports;
         index : main || report :  weekly_funnel
+        index : main || report :  daily_clv
         index : main || report :  daily_funnel
         index : main || report :  daily_funnel_downloads
         index : main || report :  weekly_average_payment_amount
+        index : main || report :  product_usage_before_after_orders_reject
+        index : main || report :  recency_clusters
         index : main || report :  weekly_cohort_from_2_to_3
         index : main || report :  daily_cohort_from_3_to_4
         index : main || report :  promotion_comparison
         index : main || report :  promotion_usage_before_after_orders_reject
         index : main || report :  most_ordered_products
+        index : main || report :  daily_organic_orders
+        index : main || report :  monetary_clusters
+        index : main || report :  frequency_recency
+        index : main || report :  segments_change_monthly_before_after_amount
+        index : main || report :  daily_promotion_revenue
         index : main || report :  daily_cohort_from_2_to_3
         index : main || report :  weekly_cohort_from_3_to_4
+        index : main || report :  product_usage_before_after_orders_accept
+        index : main || report :  frequency_clusters
         index : main || report :  monthly_orders
+        index : main || report :  daily_products_of_sales
         index : main || report :  hourly_funnel
         index : main || report :  weekly_average_order_per_user
+        index : main || report :  daily_inorganic_ratio
         index : main || report :  daily_cohort_downloads
+        index : main || report :  hourly_inorganic_ratio
+        index : main || report :  promotion_number_of_customer
+        index : main || report :  inorganic_orders_per_promotion_per_day
         index : main || report :  promotion_usage_before_after_orders_accept
+        index : main || report :  recency_monetary
+        index : main || report :  segments_change_monthly_before_after_orders
         index : main || report :  customer_journey
         index : main || report :  purchase_amount_distribution
+        index : main || report :  dfunnel_anomaly
+        index : main || report :  dcohort_anomaly_2
+        index : main || report :  segments_change_weekly_before_after_orders
         index : main || report :  user_counts_per_order_seq
         index : main || report :  daily_cohort_from_1_to_2
+        index : main || report :  hourly_organic_orders
         index : main || report :  weekly_cohort_downloads
         index : main || report :  hourly_funnel_downloads
+        index : main || report :  product_usage_before_after_amount_accept
+        index : main || report :  dorders_anomaly
+        index : main || report :  churn
         index : main || report :  monthly_funnel_downloads
+        index : main || report :  most_combined_products
+        index : main || report :  avg_order_count_per_promo_per_cust
+        index : main || report :  dcohort_anomaly
         index : main || report :  weekly_cohort_from_1_to_2
+        index : main || report :  segments_change_daily_before_after_orders
         index : main || report :  rfm
         index : main || report :  promotion_usage_before_after_amount_accept
         index : main || report :  monthly_funnel
         index : main || report :  kpis
+        index : main || report :  churn_weekly
+        index : main || report :  clvsegments_amount
         index : main || report :  order_and_payment_amount_differences
         index : main || report :  hourly_orders
+        index : main || report :  clvrfm_anomaly
         index : main || report :  weekly_funnel_downloads
+        index : main || report :  product_usage_before_after_amount_reject
         index : main || report :  weekly_average_session_per_user
+        index : main || report :  daily_promotion_discount
+        index : main || report :  product_kpis
+        index : main || report :  segments_change_weekly_before_after_amount
         index : main || report :  daily_orders
         index : main || report :  weekly_orders
         index : main || report :  segmentation
+        index : main || report :  segments_change_daily_before_after_amount
         index : main || report :  most_ordered_categories
         index : main || report :  promotion_usage_before_after_amount_reject
+        index : main || report :  monetary_frequency
+        index : main || report :  promotion_kpis
 
     There are some reports which still needs manipulation even they have been applied for data manipulation;
         - promotion_comparison
@@ -102,8 +141,10 @@ class Reports:
                                                                                                                    x[2])
         self.descriptive_reports = descriptive_reports
         self.product_analytics = product_analytics
+        self.promotion_analytics = promotion_analytics
         self.abtest_reports = abtest_reports
         self.clv_prediction_reports = clv_prediction_reports
+        self.unexpected_reports = ["chart_{}_search".format(str(i)) for i in range(1, 5)]
         self.double_reports = {'promotion_usage_before_after_amount': ['promotion_usage_before_after_amount_accept',
                                                                        'promotion_usage_before_after_amount_reject',
                                                                        'order_and_payment_amount_differences'],
@@ -235,6 +276,8 @@ class Reports:
             query = " report_name == 'stats' and type == '{}'".format(r_name)
         if r_name in self.product_analytics:
             query = " report_name == 'product_analytic' and type == '{}'".format(r_name)
+        if r_name in self.promotion_analytics:
+            query = " report_name == 'promotion_analytic' and type == '{}'".format(r_name)
         if r_name in 'segmentation':
             query = " report_name == 'segmentation'"
         if r_name in 'customer_journey':
@@ -421,7 +464,15 @@ class Reports:
         """
         for f in listdir(dirname(self.folder)):
             if f.split(".")[1] == 'csv':
-                self.sample_report_names.append("_".join(f.split(".")[0].split("_")[2:]))
+                _file = "_".join(f.split(".")[0].split("_")[2:])
+                if _file not in self.unexpected_reports:
+                    self.sample_report_names.append(_file)
+
+    def calculate_last_week_ratios(self, k1, k2, k3):
+        """
+
+        """
+        return k1 / (k2 - k3) if k2 - k3 != 0 else 0
 
     def get_last_week_kpis(self, report):
         """
@@ -429,21 +480,15 @@ class Reports:
         which must be calculated calculated before store in built_in reports
         """
         report_data = pd.DataFrame(list(report['data'])[0])
-        report_data['since_last_week_orders'] = round(list(report_data['last_week_orders'])[0] /
-                                                      (list(report_data['total_orders'])[0] -
-                                                       list(report_data['last_week_orders'])[0]) * 100, 2)
-        report_data['since_last_week_revenue'] = round(list(report_data['last_week_revenue'])[0] /
-                                                       (list(report_data['total_revenue'])[0] -
-                                                        list(report_data['last_week_revenue'])[0]) * 100, 2)
-        report_data['since_last_week_total_visitors'] = round(list(report_data['last_week_visitors'])[0] /
-                                                             (list(report_data['total_visitors'])[0] -
-                                                              list(report_data['last_week_visitors'])[0]) * 100, 2)
-        report_data['since_last_week_total_discount'] = round(list(report_data['last_week_discount'])[0] /
-                                                              (list(report_data['total_discount'])[0] -
-                                                               list(report_data['last_week_discount'])[0]) * 100, 2)
-
+        report_data['since_last_week_orders'] = report_data.apply(
+            lambda row: self.calculate_last_week_ratios(row['total_orders'], row['last_week_orders'], row['last_week_revenue']), axis=1)
+        report_data['since_last_week_revenue'] = report_data.apply(
+            lambda row: self.calculate_last_week_ratios(row['last_week_revenue'], row['total_revenue'], row['last_week_revenue']), axis=1)
+        report_data['since_last_week_total_visitors'] = report_data.apply(
+            lambda row: self.calculate_last_week_ratios(row['last_week_visitors'], row['total_visitors'], row['last_week_visitors']), axis=1)
+        report_data['since_last_week_total_discount'] = report_data.apply(
+            lambda row: self.calculate_last_week_ratios(row['last_week_discount'], row['total_discount'], row['last_week_discount']), axis=1)
         return report_data[self.index_kpis]
-
 
     def get_related_report(self, reports, r_name, index):
         """
@@ -456,16 +501,20 @@ class Reports:
                 report_data = self.get_order_and_payment_amount_differences(report)
             if r_name == 'rfm':
                 report_data = self.get_rfm_reports(report)
-            if r_name in self.rfm_metrics_reports: # rfm rec. - mon.,
+            if r_name in self.rfm_metrics_reports:  # rfm rec. - mon.
                 report_data = self.get_rfm_reports(report, metrics=r_name.split("_"))
-            if r_name not in ['order_and_payment_amount_differences', 'rfm', 'daily_clv'] + self.rfm_metrics_reports:
-                report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
             if r_name in ['daily_clv', "clvsegments_amount"]:
                 report_data = self.get_clv_report(reports, r_name, index)
             if 'anomaly' in r_name.split("_"):
                 report_data = self.get_anomaly_reports(r_name, report)
             if r_name == 'kpis':
                 report_data = self.get_last_week_kpis(report)
+            if r_name in self.promotion_analytics + self.product_analytics:
+                report_data = pd.DataFrame(list(report['data'])[0])
+            if r_name not in ['order_and_payment_amount_differences', 'rfm',
+                              'daily_clv', 'clvsegments_amount', 'kpis'] + self.rfm_metrics_reports and \
+                    'anomaly' in r_name.split("_"):
+                report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
         report_data = self.radomly_sample_data(report_data)
         return report_data
 
