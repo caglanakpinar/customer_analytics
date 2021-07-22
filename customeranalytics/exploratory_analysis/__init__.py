@@ -7,6 +7,7 @@ sys.path.insert(0, parentdir)
 from customeranalytics.exploratory_analysis.funnels import Funnels
 from customeranalytics.exploratory_analysis.cohorts import Cohorts
 from customeranalytics.exploratory_analysis.product_analytics import ProductAnalytics
+from customeranalytics.exploratory_analysis.promotion_analytics import PromotionAnalytics
 from customeranalytics.exploratory_analysis.rfm import RFM
 from customeranalytics.exploratory_analysis.descriptive_statistics import Stats
 from customeranalytics.exploratory_analysis.churn import Churn
@@ -23,6 +24,9 @@ ea_configs = {"date": None,
                          'download_index': 'downloads', 'order_index': 'orders'},
               "products": {"has_product_connection": True, "host": 'localhost', "port": '9200',
                            "download_index": 'downloads', "order_index": 'orders'},
+              "promotions": {"has_promotion_connection": True,
+                             "host": 'localhost', "port": '9200',
+                             "download_index": 'downloads', "order_index": 'orders'},
               "rfm": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
               "stats": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
               "churn": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
@@ -34,7 +38,8 @@ exploratory_analysis = {'funnel': Funnels,
                         'products': ProductAnalytics,
                         'rfm': RFM,
                         'stats': Stats,
-                        'churn': Churn}
+                        'churn': Churn,
+                        'promotions': PromotionAnalytics}
 
 
 def create_exploratory_analyse(configs, ml):
@@ -61,6 +66,10 @@ def create_exploratory_analyse(configs, ml):
         print("*" * 5, " Product Analytics ", "*" * 5)
         ea['products'].execute_product_analysis(end_date=configs['date'])
         del ea['products']
+    if ml == 'promotions':
+        print("*" * 5, " Promotion Analytics ", "*" * 5)
+        ea['promotions'].execute_promotion_analysis(end_date=configs['date'])
+        del ea['promotions']
     if ml == 'churn':
         print("*" * 5, " Churn ", "*" * 5)
         ea['churn'].execute_churn(start_date=configs['date'])
@@ -86,6 +95,9 @@ def create_exploratory_analysis(configs):
     print("*" * 5, " Product Analytics ", "*" * 5)
     ea['products'].execute_product_analysis(end_date=configs['date'])
     del ea['products']
+    print("*" * 5, " Promotions Analytics ", "*" * 5)
+    ea['promotions'].execute_promotion_analysis(end_date=configs['date'])
+    del ea['promotions']
     print("*" * 5, " Churn ", "*" * 5)
     ea['churn'].execute_churn(start_date=configs['date'])
     del ea
