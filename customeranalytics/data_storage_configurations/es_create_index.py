@@ -17,7 +17,7 @@ from flask_login import current_user
 from os.path import abspath, join
 
 from customeranalytics.utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format, formating_numbers
-from customeranalytics.configs import query_path, default_es_port, default_es_host
+from customeranalytics.configs import query_path, default_es_port, default_es_host, none_types
 from customeranalytics.configs import orders_index_columns, downloads_index_columns, not_required_columns, not_required_default_values
 from customeranalytics.data_storage_configurations.query_es import QueryES
 from customeranalytics.data_storage_configurations.data_access import GetData
@@ -208,16 +208,27 @@ class CreateIndex:
             data['client'] = data['client'].apply(lambda x: str(x))
         if data_source_type == 'orders':
             data['session_start_date'] = data['session_start_date'].apply(lambda x: parse(x))
-            data['payment_amount'] = data['payment_amount'].apply(lambda x: float(x))
+            data['payment_amount'] = data['payment_amount'].apply(
+                lambda x: float(x) if x == x and x not in ['None', None, 'nan'] else None)
             if 'discount_amount' in columns:
-                data['discount_amount'] = data['discount_amount'].apply(lambda x: float(x) if x == x else None)
+                data['discount_amount'] = data['discount_amount'].apply(
+                    lambda x: float(x) if x == x and x not in ['None', None, 'nan'] else None)
             if 'date' in columns:
-                data['date'] = data['date'].apply(lambda x: parse(x) if x == x else None)
+                data['date'] = data['date'].apply(
+                    lambda x: parse(x) if x == x and x not in ['None', None, 'nan'] else None)
+            if 'promotion_id' in columns:
+                data['promotion_id'] = data['promotion_id'].apply(
+                    lambda x: x if x == x and x not in ['None', None, 'nan'] else None)
         if data_source_type == 'downloads':
-            data['download_date'] = data['download_date'].apply(lambda x: parse(x) if x == x else None)
+            data['download_date'] = data['download_date'].apply(
+                lambda x: parse(x) if x == x and x not in ['None', None, 'nan'] else None)
+            if 'signup_date' in columns:
+                data['signup_date'] = data['signup_date'].apply(
+                    lambda x: parse(x) if x == x and x not in ['None', None, 'nan'] else None)
         if data_source_type == 'products':
             if 'price' in columns:
-                data['price'] = data['price'].apply(lambda x: float(x) if x == x else None)
+                data['price'] = data['price'].apply(
+                    lambda x: float(x) if x == x and x not in ['None', None, 'nan'] else None)
         return data
 
     def get_index_of_last_date(self, date_column, index):
