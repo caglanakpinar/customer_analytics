@@ -186,6 +186,7 @@ class DataPipelines:
     def pipe_5(self, ml_connection_structure, ea_connection_structure, dim=None):
         self.execute_pipe(ml_connection_structure, create_ml, 'abtest', dim=dim)
         self.execute_pipe(ea_connection_structure, create_exploratory_analyse, 'products', dim=dim)
+        self.execute_pipe(ea_connection_structure, create_exploratory_analyse, 'promotions', dim=dim)
 
     def pipe_6(self, ml_connection_structure, ea_connection_structure, dim=None):
         self.execute_pipe(ml_connection_structure, create_ml, 'anomaly', dim=dim)
