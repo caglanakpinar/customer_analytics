@@ -293,13 +293,20 @@ abtest_reports = ['product_usage_before_after_amount',
                   'segments_change_weekly_before_after_amount',
                   'segments_change_weekly_before_after_orders']
 
-product_analytics = ['most_ordered_products',
-                     'most_ordered_categories',
+product_analytics = ['daily_products_of_sales',
+                     'product_kpis',
+                     'most_ordered_products',
                      'hourly_products_of_sales',
-                     'hourly_categories_of_sales',
                      'most_combined_products',
-                     'daily_products',
-                     'product_kpis']
+                     'most_ordered_categories',
+                     'hourly_categories_of_sales']
+
+promotion_analytics = ['daily_organic_orders', 'daily_inorganic_ratio',
+                       'daily_promotion_revenue', 'daily_promotion_discount',
+                       'avg_order_count_per_promo_per_cust',
+                       'promotion_number_of_customer', 'promotion_kpis',
+                       'inorganic_orders_per_promotion_per_day', 'hourly_inorganic_ratio',
+                       'hourly_organic_orders']
 
 
 non_dimensional_reports = ["clv_prediction", "segmentation"]
@@ -398,7 +405,7 @@ DATA_WORKS_READABLE_FORM = {'clv_prediction': 'CLV Prediction',
                             'abtest': 'A/B Test', 'funnel': 'Session Actions & Customers Actions Funnels',
                             'cohort': 'Cohorts', 'rfm': 'RFM', 'stats': 'Descriptive Statistics',
                             'products': 'Product Analytics', 'segmentation': 'Customer Segmentation',
-                            'anomaly': 'Anomaly Detection'
+                            'anomaly': 'Anomaly Detection', 'promotions': 'Promotion Analytics', 'churn': 'Churn'
                             }
 
 none_types = [None, 'None', '-']
