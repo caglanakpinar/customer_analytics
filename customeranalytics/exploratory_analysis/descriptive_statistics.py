@@ -319,6 +319,9 @@ class Stats:
             {"payment_amount": "mean"}).reset_index()
 
     def user_order_count_per_order_seq(self):
+        """
+        Customers' number of orders are calculated. The number of unique customer per total order count are calculated.
+        """
         self.orders['order_seq_num'] = self.orders.sort_values(by=['client', 'date'],
                                                                ascending=True).groupby(['client'])['client'].cumcount() + 1
         self.orders_freq = self.orders.query("order_seq_num != 1")
