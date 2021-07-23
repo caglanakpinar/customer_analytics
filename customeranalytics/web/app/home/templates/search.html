@@ -9,7 +9,15 @@
 
 	<main class="content">
 		<div class="container-fluid p-0">
-			<h5 class="h3 mb-3">Search Results</h5>
+			<h5 class="h3 mb-3">Search Results {% if search_results.has_results  == False %}  <strong style="color:red;"> no result is found. (sample data) </strong> {% endif %}</h5>
+
+			{% if search_results.has_results  == True %}
+				<h5 class="card-title mb-4" style="color:green;">
+					search_value : {{ search_results.search_value }} ||
+					similarity_score : {{ search_results.similarity_score }} ||
+					search_type: {{ search_results.search_type }}
+				</h5>
+			{% endif %}
 			<div class="col-md-12">
 				<div class="card">
 					<div class="card-body">
@@ -21,14 +29,16 @@
 											<div class="card" style="height:200px;">
 												<div class="card-body">
 													<h5 class="card-title mb-4">
-														{{ chart_names.kpi_1 }}  {% if data_type['kpi_1'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+														{{ chart_names.kpi_1 }}  {% if data_type['kpi_1'] == False %}  <strong style="color:red;"> sample data </strong>
+														{% endif %} {% if search_results.has_results  == False %}  <strong style="color:red;"> no result is found. (sample data) </strong> {% endif %}</h5>
 													<h1 class="mt-1 mb-3">{{ kpis.kpi_1 }}</h1>
 												</div>
 											</div>
 											<div class="card" style="height:200px;">
 												<div class="card-body">
 													<h5 class="card-title mb-4">
-														{{ chart_names.kpi_2 }}  {% if data_type['kpi_2'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+														{{ chart_names.kpi_2 }}  {% if data_type['kpi_2'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}
+														{% if search_results.has_results  == False %}  <strong style="color:red;"> no result is found. (sample data) </strong> {% endif %}</h5>
 													<h1 class="mt-1 mb-3">{{ kpis.kpi_2 }}</h1>
 												</div>
 											</div>
@@ -37,7 +47,8 @@
 											<div class="card" style="height:200px;">
 												<div class="card-body">
 													<h5 class="card-title mb-4">
-														{{ chart_names.kpi_3 }}  {% if data_type['kpi_3'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+														{{ chart_names.kpi_3 }}  {% if data_type['kpi_3'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}
+														{% if search_results.has_results  == False %}  <strong style="color:red;"> no result is found. (sample data) </strong> {% endif %}</h5>
 													<h1 class="mt-1 mb-3">{{ kpis.kpi_3 }}</h1>
 												</div>
 											</div>
@@ -45,7 +56,8 @@
 											<div class="card" style="height:200px;">
 												<div class="card-body">
 													<h5 class="card-title mb-4">
-														{{ chart_names.kpi_4 }}  {% if data_type['kpi_4'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+														{{ chart_names.kpi_4 }}  {% if data_type['kpi_4'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}
+														{% if search_results.has_results  == False %}  <strong style="color:red;"> no result is found. (sample data) </strong> {% endif %}</h5>
 													<h1 class="mt-1 mb-3">{{ kpis.kpi_4 }}</h1>
 												</div>
 											</div>
@@ -57,7 +69,8 @@
 							<div class="col-md-7">
 								<div class="card" style="height:200px;">
 									<div class="card-header">
-										<h5 class="card-title">{{ chart_names.chart_2_search }}</strong> </h5>
+										<h5 class="card-title">{{ chart_names.chart_2_search }}</strong>
+										{% if search_results.has_results  == False %}  <strong style="color:red;"> no result is found. (sample data) </strong> {% endif %}</h5>
 
 									</div>
 									<div class="card-body">
@@ -66,28 +79,34 @@
 								</div>
 							</div>
 						</div>
-						<div class="row">
-							<div class="col-md-6">
-								<div class="card">
-									<div class="card-header">
-										<h5 class="card-title">{{ chart_names.chart_3_search }}</strong> </h5>
+
+						{% if search_results.search_type ==  'product' or search_results.search_type ==  'promotion' %}
+							<div class="row">
+								<div class="col-md-6">
+									<div class="card">
+										<div class="card-header">
+											<h5 class="card-title">{{ chart_names.chart_3_search }}</strong>
+											{% if search_results.has_results  == False %}  <strong style="color:red;"> no result is found. (sample data) </strong> {% endif %}</h5>
+										</div>
+										<div class="card-body">
+											<div  id="chart_3_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										</div>
 									</div>
-									<div class="card-body">
-										<div  id="chart_3_id" class="plotly-gra ph-div" style="height:400px;"></div>
+								</div>
+								<div class="col-md-6">
+									<div class="card">
+										<div class="card-header">
+											<h5 class="card-title">{{ chart_names.chart_4_search }}</strong>
+											{% if search_results.has_results  == False %}  <strong style="color:red;"> no result is found. (sample data) </strong> {% endif %}</h5>
+										</div>
+										<div class="card-body">
+											<div  id="chart_4_id" class="plotly-gra ph-div" style="height:400px;"></div>
+										</div>
 									</div>
 								</div>
 							</div>
-							<div class="col-md-6">
-								<div class="card">
-									<div class="card-header">
-										<h5 class="card-title">{{ chart_names.chart_4_search }}</strong> </h5>
-									</div>
-									<div class="card-body">
-										<div  id="chart_4_id" class="plotly-gra ph-div" style="height:400px;"></div>
-									</div>
-								</div>
-							</div>
-						</div>
+						{% endif %}
+
 					</div>
 				</div>
 			</div>
