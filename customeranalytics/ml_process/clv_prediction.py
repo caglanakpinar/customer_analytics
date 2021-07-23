@@ -1,7 +1,6 @@
 import sys, os, inspect
 import pandas as pd
 import numpy as np
-import shutil
 import glob
 from clv.executor import CLV
 from sqlalchemy import create_engine, MetaData

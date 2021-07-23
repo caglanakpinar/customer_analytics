@@ -423,12 +423,21 @@ charts = {
 
 
 "kpis": {"chart_1_search": ['average_product_sold_per_user_kpi', 'total_product_revenue_kpi',
-                            'total_product_discount_kpi', 'total_product_cust_kpi']}}
+                            'total_product_discount_kpi', 'total_product_cust_kpi']}},
 
 
+    "search_promotion": {"charts": {_f:
+    {'trace': go.Scatter(mode="lines+markers+text",
+                         line=dict(color='firebrick', width=4),
+                         textposition="bottom center",
+                         textfont=dict(
+                             family="sans serif",
+                             size=30,
+                             color="crimson")),
+     'layout': go.Layout()}
+                   for _f in ["chart_{}_search".format(str(i)) for i in range(2, 5)]},
 
-
-
+     "kpis": {"chart_1_search": ['order_count', 'total_revenue', 'total_discount', 'client_count']}}
 
 }
 
@@ -806,14 +815,24 @@ class Charts:
                     trace['y'] = list(_data['order_count'])
                 if chart == "chart_3_search":
                     trace = [
-                        go.Bar(name='asd', x=_data['products'], y=_data['mean_control']),
-                        go.Bar(name='asd2', x=_data['products'], y=_data['mean_validation'])
+                        go.Bar(name='before', x=_data['products'], y=_data['mean_control']),
+                        go.Bar(name='after', x=_data['products'], y=_data['mean_validation'])
                     ]
                 if chart == "chart_4_search":
                     trace = [
-                        go.Bar(name='asd', x=_data['products'], y=_data['mean_control']),
-                        go.Bar(name='asd2', x=_data['products'], y=_data['mean_validation'])
+                        go.Bar(name='before', x=_data['products'], y=_data['mean_control']),
+                        go.Bar(name='after', x=_data['products'], y=_data['mean_validation'])
                     ]
+            if target == 'search_promotion':
+                if chart == "chart_2_search":
+                    trace['x'] = list(_data['daily'])
+                    trace['y'] = list(_data['inorganic_ratio'])
+                if chart == "chart_3_search":
+                    trace['x'] = list(_data['daily'])
+                    trace['y'] = list(_data['total_revenue'])
+                if chart == "chart_4_search":
+                    trace['x'] = list(_data['daily'])
+                    trace['y'] = list(_data['total_discount'])
 
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 

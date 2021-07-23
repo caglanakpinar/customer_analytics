@@ -95,7 +95,8 @@ class Stats:
                       "hourly_orders", "daily_orders", "weekly_orders", "monthly_orders",
                       "purchase_amount_distribution", "weekly_average_order_per_user",
                       "weekly_average_session_per_user", "weekly_average_payment_amount", "user_counts_per_order_seq",
-                      "hourly_revenue", "daily_revenue", "weekly_revenue", "monthly_revenue"]
+                      "hourly_revenue", "daily_revenue", "weekly_revenue", "monthly_revenue",
+                      "total_order_count_per_customer"]
         self.last_week = None
         self.time_periods = time_periods  # ["daily", "weekly", 'monthly']
         self.orders = pd.DataFrame()
@@ -331,6 +332,13 @@ class Stats:
         self.orders_freq['order_seq_num'] = self.orders_freq['order_seq_num'].apply(lambda x: str(x))
         return self.orders_freq
 
+    def get_customer_total_order_count(self):
+        """
+        total order count per customer
+        """
+        return self.orders.groupby("client").agg(
+            {"id": lambda x: len(np.unique(x))}).reset_index().rename(columns={"id": "order_count"})
+
     def execute_descriptive_stats(self, start_date=None):
         """
         1.  Get order data from the order index.
@@ -357,14 +365,16 @@ class Stats:
                                             self.weekly_average_payment_amount,
                                             self.user_order_count_per_order_seq,
                                             self.hourly_revenue, self.daily_revenue,
-                                            self.weekly_revenue, self.monthly_revenue
+                                            self.weekly_revenue, self.monthly_revenue,
+                                            self.get_customer_total_order_count
                                             ])):
             print("stat name :", metric[0])
             if metric[0] in ["hourly_revenue", "daily_revenue", "weekly_revenue", "monthly_revenue",
                              "hourly_orders", "weekly_orders", "monthly_orders", "daily_orders",
                              "purchase_amount_distribution", "weekly_average_order_per_user",
                              "weekly_average_session_per_user",
-                             "weekly_average_payment_amount", "user_counts_per_order_seq"]:
+                             "weekly_average_payment_amount", "user_counts_per_order_seq",
+                             "total_order_count_per_customer"]:
                 self.insert_into_reports_index(metric[1]().to_dict('results'),
                                                start_date,
                                                filters={"type": metric[0]},

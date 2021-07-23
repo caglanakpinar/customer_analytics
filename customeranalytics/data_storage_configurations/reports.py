@@ -322,6 +322,8 @@ class Reports:
             _time_period = list({'weekly', 'monthly'} & set(r_name.split("_")))
             _type = _time_period[0] if len(_time_period) != 0 else _type
             query = " report_name == 'churn' and type == '{}' ".format(_type)
+        if r_name == 'client_kpis':
+            query = " report_name in ('stats', 'rfm')"
         return query
 
     def get_promotion_comparison(self, x):
@@ -490,6 +492,16 @@ class Reports:
             lambda row: self.calculate_last_week_ratios(row['last_week_discount'], row['total_discount'], row['last_week_discount']), axis=1)
         return report_data[self.index_kpis]
 
+    def get_client_kpis(self, report):
+        total_order_count_per_customer = pd.DataFrame(list(report.query(
+            "report_name == 'stats' and type == 'total_order_count_per_customer'").sort_values(
+            'report_date', ascending=False)['data'])[0])
+        rfm = pd.DataFrame(list(report.query(
+            "report_name == 'rfm' and type == '{}'").sort_values(
+            'report_date', ascending=False)['data'])[0])[['frequency', 'recency', 'monetary', 'client']]
+        report_data = pd.merge(total_order_count_per_customer, rfm, on='client', how='inner')
+        return report_data
+
     def get_related_report(self, reports, r_name, index):
         """
         Last exit before import data as .csv format
@@ -501,20 +513,20 @@ class Reports:
                 report_data = self.get_order_and_payment_amount_differences(report)
             if r_name == 'rfm':
                 report_data = self.get_rfm_reports(report)
-            if r_name in self.rfm_metrics_reports:  # rfm rec. - mon.
+            if r_name in self.rfm_metrics_reports: # rfm rec. - mon.,
                 report_data = self.get_rfm_reports(report, metrics=r_name.split("_"))
+            if r_name not in ['order_and_payment_amount_differences', 'rfm', 'daily_clv'] + self.rfm_metrics_reports:
+                report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
             if r_name in ['daily_clv', "clvsegments_amount"]:
                 report_data = self.get_clv_report(reports, r_name, index)
             if 'anomaly' in r_name.split("_"):
                 report_data = self.get_anomaly_reports(r_name, report)
+            if r_name in self.product_analytics + self.promotion_analytics:
+                report_data = pd.DataFrame(pd.DataFrame(list(report['data'])[0]))
             if r_name == 'kpis':
                 report_data = self.get_last_week_kpis(report)
-            if r_name in self.promotion_analytics + self.product_analytics:
-                report_data = pd.DataFrame(list(report['data'])[0])
-            if r_name not in ['order_and_payment_amount_differences', 'rfm',
-                              'daily_clv', 'clvsegments_amount', 'kpis'] + self.rfm_metrics_reports and \
-                    'anomaly' in r_name.split("_"):
-                report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
+            if r_name == 'client_kpis':
+                report_data = self.get_client_kpis(report)
         report_data = self.radomly_sample_data(report_data)
         return report_data
 

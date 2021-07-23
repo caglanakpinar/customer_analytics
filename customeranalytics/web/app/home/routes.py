@@ -50,6 +50,7 @@ def search_data():
     graph_json, data_type, filters = charts.get_chart(target='search_' + results['search_type'])
     chart_names = search.get_search_chart_names(results['search_type'])
     kpis = search.convert_kpi_names_to_numeric_names(graph_json)
+    search.delete_search_data(results)
     return render_template('search.html',
                            segment='search',
                            pic=pic,
@@ -58,8 +59,7 @@ def search_data():
                            chart_4=charts.get_json_format(graph_json['charts']['chart_4_search']),
                            kpis=kpis,
                            chart_names=chart_names,
-                           search_type=results['search_type'],
-                           has_results=results['has_results'],
+                           search_results=results,
                            data_type=data_type)
 
 
