@@ -13,7 +13,7 @@ from customeranalytics.web.app.base.forms import LoginForm, CreateAccountForm
 from customeranalytics.web.app.base.models import User
 from customeranalytics.data_storage_configurations.logger import LogsBasicConfeger
 
-from web.app.base.util import verify_pass
+from customeranalytics.web.app.base.util import verify_pass
 
 
 LogsBasicConfeger()

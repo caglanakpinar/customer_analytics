@@ -92,6 +92,7 @@ class Reports:
         index : main || report :  weekly_cohort_downloads
         index : main || report :  hourly_funnel_downloads
         index : main || report :  product_usage_before_after_amount_accept
+        index : main || report :  client_kpis
         index : main || report :  dorders_anomaly
         index : main || report :  churn
         index : main || report :  monthly_funnel_downloads
@@ -123,6 +124,7 @@ class Reports:
         index : main || report :  promotion_usage_before_after_amount_reject
         index : main || report :  monetary_frequency
         index : main || report :  promotion_kpis
+        index : main || report :  client_feature_predicted
 
     There are some reports which still needs manipulation even they have been applied for data manipulation;
         - promotion_comparison
@@ -323,7 +325,9 @@ class Reports:
             _type = _time_period[0] if len(_time_period) != 0 else _type
             query = " report_name == 'churn' and type == '{}' ".format(_type)
         if r_name == 'client_kpis':
-            query = " report_name in ('stats', 'rfm')"
+            query = "report_name in ('stats', 'rfm')"
+        if r_name == 'client_feature_predicted':
+            query = "report_name == 'clv_prediction' "
         return query
 
     def get_promotion_comparison(self, x):
@@ -493,14 +497,21 @@ class Reports:
         return report_data[self.index_kpis]
 
     def get_client_kpis(self, report):
+        """
+
+        """
         total_order_count_per_customer = pd.DataFrame(list(report.query(
             "report_name == 'stats' and type == 'total_order_count_per_customer'").sort_values(
             'report_date', ascending=False)['data'])[0])
         rfm = pd.DataFrame(list(report.query(
-            "report_name == 'rfm' and type == '{}'").sort_values(
+            "report_name == 'rfm'").sort_values(
             'report_date', ascending=False)['data'])[0])[['frequency', 'recency', 'monetary', 'client']]
         report_data = pd.merge(total_order_count_per_customer, rfm, on='client', how='inner')
         return report_data
+
+    def get_feature_predicted_data_per_customer(self, report):
+        report_data = pd.DataFrame(list(report['data'])[0])
+        return report_data.query("client != 'newcomers'")
 
     def get_related_report(self, reports, r_name, index):
         """
@@ -527,6 +538,8 @@ class Reports:
                 report_data = self.get_last_week_kpis(report)
             if r_name == 'client_kpis':
                 report_data = self.get_client_kpis(report)
+            if r_name == 'client_feature_predicted':
+                report_data = self.get_feature_predicted_data_per_customer(report)
         report_data = self.radomly_sample_data(report_data)
         return report_data
 

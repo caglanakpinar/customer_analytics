@@ -422,8 +422,8 @@ charts = {
 
 
 
-"kpis": {"chart_1_search": ['average_product_sold_per_user_kpi', 'total_product_revenue_kpi',
-                            'total_product_discount_kpi', 'total_product_cust_kpi']}},
+      "kpis": {"chart_1_search": ['average_product_sold_per_user_kpi', 'total_product_revenue_kpi',
+                                  'total_product_discount_kpi', 'total_product_cust_kpi']}},
 
 
     "search_promotion": {"charts": {_f:
@@ -437,7 +437,19 @@ charts = {
      'layout': go.Layout()}
                    for _f in ["chart_{}_search".format(str(i)) for i in range(2, 5)]},
 
-     "kpis": {"chart_1_search": ['order_count', 'total_revenue', 'total_discount', 'client_count']}}
+     "kpis": {"chart_1_search": ['order_count', 'total_revenue', 'total_discount', 'client_count']}},
+
+    "search_client": {"charts": {_f: {'trace': go.Scatter(mode="lines+markers+text",
+                                                          line=dict(color='firebrick', width=4),
+                                                          textposition="bottom center",
+                                                          textfont=dict(
+                                                              family="sans serif",
+                                                              size=30,
+                                                              color="crimson")),
+                                                    'layout': go.Layout()}
+                                 for _f in ["chart_{}_search".format(str(i)) for i in range(2, 5)]},
+
+                      "kpis": {"chart_1_search": ['order_count', 'frequency', 'monetary', 'recency']}}
 
 }
 

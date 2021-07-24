@@ -53,7 +53,7 @@ class Search:
 
         """
         self.temporary_path = None
-        self.search_metrics = ['promotion', 'product', 'dimension']
+        self.search_metrics = ['client'] # ['promotion', 'product', 'client', 'dimension']
         self.query_body = {"query": {}}
         self.intersect_count = lambda x, y: len(set(x) & set(y))
         self.user_data = pd.DataFrame()
@@ -70,6 +70,11 @@ class Search:
         self.promotion_charts = ["Daily Order Count with Promotion",
                                  "Daily Revenue with Promotion",
                                  "Daily Discount with Promotion"]
+        self.client_charts = ["Possible Future Purchase of the Customer"]
+        self.client_kpis = ["Total Order Count of the Customer",
+                            "Order Frequency of the Customer (hr)",
+                            "Total Hour Count from the last time the customer purchased (recency)",
+                            "Average Payment Amount of the Customer"]
 
     def get_temporary_path(self):
         try:
@@ -81,16 +86,16 @@ class Search:
             """
             self.temporary_path = None
 
-    def get_search_similarity_score(self, search_value, search_products):
-        if self.intersect_count(search_value, search_products) != 0:
+    def get_search_similarity_score(self, search_value, search_list):
+        if self.intersect_count(search_value, search_list) != 0:
             return search_value, 1
         else:
             sv_ngram = ngrams_2(search_value)
             ngrams_intersections = []
-            for i in search_products:
+            for i in search_list:
                 _ngram = ngrams_2(i)
                 ngrams_intersections.append((self.intersect_count(_ngram, sv_ngram), i))
-            search_value = list(sorted(ngrams_intersections))[0]
+            search_value = list(sorted(ngrams_intersections))[-1]
             score = search_value[0] / len(sv_ngram)
             return search_value[1], score
 
@@ -98,17 +103,18 @@ class Search:
         search_result, similarity_score = search_value, 0
         try:
             if type == 'product':
-                products = list(self.collect_report('product_kpis').query("products == @search_value")['products'].unique())
+                products = list(self.collect_report('product_kpis')['products'].unique())
                 search_result, similarity_score = self.get_search_similarity_score(search_value, products)
             if type == 'promotion':
                 promotions = self.collect_report('promotion_kpis')
-                promotions = list(promotions.query("promotion_id == @search_value")['promotion_id'].unique())
+                promotions = list(promotions['promotion_id'].unique())
                 search_result, similarity_score = self.get_search_similarity_score(search_value, promotions)
             if type == 'client':
                 clients = self.collect_report('client_kpis')
-                clients = list(clients.query("clients == @search_value")['clients'].unique())
+                clients = list(clients['client'].unique())
                 search_result, similarity_score = self.get_search_similarity_score(search_value, clients)
         except Exception as e:
+            print(e)
             search_result = search_value
         print(search_result, similarity_score)
         return search_result, similarity_score
@@ -160,23 +166,21 @@ class Search:
             except Exception as e:
                 print(e)
 
-    def visualization_data_for_client_search(self):
+    def visualization_data_for_client_search(self, value):
         for data_type in [('chart_1', ['client_kpis']),
-                          ('chart_2', ['clv_predicted']),
-                          ]:
+                          ('chart_2', ['client_feature_predicted'])]:
             try:
                 result = pd.DataFrame()
                 for r in data_type[1]:
                     _data = self.collect_report(r)
                     result = pd.concat([result, self.collect_report(r).query("client == @value")])
-                if 'daily' in list(result.columns):
-                    result['daily'] = result['daily'].apply(lambda x: convert_to_date(x))
-                    result = result.sort_values('daily', ascending=True)
+                if 'date' in list(result.columns):
+                    result['date'] = result['date'].apply(lambda x: convert_to_date(x))
+                    result = result.sort_values('date', ascending=True)
                 result.to_csv(join(self.temporary_path, "build_in_reports", "main", data_type[0] + '_search.csv'),
                               index=False)
             except Exception as e:
                 print(e)
-
 
     def search_results(self, search_value):
         self.get_temporary_path()
@@ -210,9 +214,12 @@ class Search:
         if search_type == 'promotion':
             _charts = self.promotion_charts
             _kpis = self.promotion_kpis
-        for i in zip(range(2, 5), _charts):
+        if search_type == 'client':
+            _charts = self.client_charts
+            _kpis = self.client_kpis
+        for i in zip(range(2, len(_charts) + 2), _charts):
             chart_names["chart_{}_search".format(str(i[0]))] = i[1]
-        for i in zip(range(1, 5), _kpis):
+        for i in zip(range(1, len(_kpis) + 1), _kpis):
             chart_names['kpi_' + str(i[0])] = i[1]
         return chart_names
 
