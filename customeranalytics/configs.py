@@ -413,3 +413,19 @@ session_columns = {'order_id', 'client', 'session_start_date', 'date', 'payment_
                    'discount_amount', 'has_purchased'}
 customer_columns = {'client_2', 'download_date', 'signup_date'}
 product_columns = {'order_id', 'product', 'price', 'category'}
+
+
+data_types_for_search = {"product": [('chart_1', ['product_kpis']),
+                                      ('chart_2', ['daily_products_of_sales']),
+                                      ('chart_3', ['product_usage_before_after_amount_accept',
+                                                   'product_usage_before_after_amount_reject']),
+                                      ('chart_4', ['product_usage_before_after_orders_accept',
+                                                   'product_usage_before_after_orders_reject']),
+                                      ],
+                         "promotion": [('chart_1', ['promotion_kpis']),
+                                       ('chart_2', ['daily_inorganic_ratio']),
+                                       ('chart_3', ['daily_promotion_revenue']),
+                                       ('chart_4', ['daily_promotion_discount']),
+                                       ],
+                         "client": [('chart_1', ['client_kpis']),
+                                    ('chart_2', ['client_feature_predicted'])]}
