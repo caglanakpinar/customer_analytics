@@ -9,8 +9,8 @@ from os.path import join
 try: from utils import convert_dt_to_day_str, abspath_for_sample_data, convert_to_date
 except: from customeranalytics.utils import convert_dt_to_day_str, abspath_for_sample_data
 
-try: from configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
-except: from customeranalytics.configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
+try: from configs import query_path, default_es_port, default_es_host, default_message, schedule_columns, data_types_for_search
+except: from customeranalytics.configs import query_path, default_es_port, default_es_host, default_message, schedule_columns, data_types_for_search
 
 
 import pandas as pd
@@ -40,6 +40,12 @@ reports = RealData()
 
 
 def ngrams_2(word):
+    """
+    word with string form is converted to 2 ngrams
+    Example;
+        'test'; (t, e), (e, s), (s, t)
+    :param word:
+    """
     ngrams = []
     for i in range(len(word)):
         if word[i] != word[-1]:
@@ -50,10 +56,37 @@ def ngrams_2(word):
 class Search:
     def __init__(self):
         """
+        There are 4 types of search;
+            - product
+            - client
+            - promotion
+            - dimension
+
+        Each type of search represents an individual dashboard with results.
+        When expected search value typed in the search bar;
+            1. Results are checked individually for each type of search.
+                a.  create ngrams of search value
+                b.  create ngrams for each list of search types.
+                c.  calculate the similarity between ngrams of search value and ngrams for each list of search types.
+                d.  remove score = 0.
+                e.  find the top score and assign it as a detected search result.
+            2. Create a temporary .csv file at temporary_folder_path that is assigned by the user.
+                These are 3 charts of .csv file;
+                 a. chart_2_search.csv is positioned ad right top,
+                 b. chart_3_search.csv is positioned ad left bottom,
+                 c. chart_4_search.csv is positioned ad right bottom,
+                There 4 KPIs with 1 .csv file;
+                 a. chart_1_search.csv is positioned ad the left top. These KPIs will be changed
+
+            3. Each created temporary file
+               (chart_1_search.csv, .., chart_4_search.csv)  will be removed after the dashboard is shown at the user interface.
+            4. Each search type has individual charts and KPIs.
+               So, each creation of charts and KPIs .csv files must be applied individually.
+
 
         """
         self.temporary_path = None
-        self.search_metrics = ['client'] # ['promotion', 'product', 'client', 'dimension']
+        self.search_metrics = ['promotion', 'product', 'client', 'dimension']
         self.query_body = {"query": {}}
         self.intersect_count = lambda x, y: len(set(x) & set(y))
         self.user_data = pd.DataFrame()
@@ -75,8 +108,13 @@ class Search:
                             "Order Frequency of the Customer (hr)",
                             "Total Hour Count from the last time the customer purchased (recency)",
                             "Average Payment Amount of the Customer"]
+        self.data_types = data_types_for_search
+        self.query_column = {'product': "products", "client": "client", "promotion": "promotion_id"}
 
     def get_temporary_path(self):
+        """
+        query for fetching the temporary folder path
+        """
         try:
             es_con = pd.read_sql(""" SELECT *  FROM es_connection """, con).to_dict('results')[0]
             self.temporary_path = es_con['directory']
@@ -87,126 +125,112 @@ class Search:
             self.temporary_path = None
 
     def get_search_similarity_score(self, search_value, search_list):
-        if self.intersect_count(search_value, search_list) != 0:
+        """
+        similarity score with ngrams 2
+        similarity score =
+                the total intersection of ngrams (searching word & word from the searching list) / count of ngrams of searching word
+
+        :param search_value: value for searching at products, dimensions, clients, promotions
+        :param search_list:  list of searching data
+        """
+        if self.intersect_count(search_value, search_list) > 0:
             return search_value, 1
         else:
-            sv_ngram = ngrams_2(search_value)
+            sv_ngram = ngrams_2(search_value)  # searching word of 2 ngrams
             ngrams_intersections = []
             for i in search_list:
-                _ngram = ngrams_2(i)
+                _ngram = ngrams_2(i)  # all possible search list of 2 ngrams
                 ngrams_intersections.append((self.intersect_count(_ngram, sv_ngram), i))
             search_value = list(sorted(ngrams_intersections))[-1]
             score = search_value[0] / len(sv_ngram)
             return search_value[1], score
 
-    def get_serach_value(self, type, search_value):
-        search_result, similarity_score = search_value, 0
+    def get_search_value(self, type, search_value):
+        """
+        :param type         : client, product, dimension, promotion
+        :param search_value : value for searching at products, dimensions, clients, promotions
+        """
+        search_result, similarity_score, searches = search_value, 0, []
         try:
-            if type == 'product':
-                products = list(self.collect_report('product_kpis')['products'].unique())
-                search_result, similarity_score = self.get_search_similarity_score(search_value, products)
-            if type == 'promotion':
-                promotions = self.collect_report('promotion_kpis')
-                promotions = list(promotions['promotion_id'].unique())
-                search_result, similarity_score = self.get_search_similarity_score(search_value, promotions)
-            if type == 'client':
-                clients = self.collect_report('client_kpis')
-                clients = list(clients['client'].unique())
-                search_result, similarity_score = self.get_search_similarity_score(search_value, clients)
-        except Exception as e:
-            print(e)
-            search_result = search_value
-        print(search_result, similarity_score)
+            if type == 'product':  # products list from product_kpis reports
+                searches = list(self.collect_report('product_kpis')['products'].unique())
+            if type == 'promotion':  # promotion list from promotion_kpis reports
+                searches = list(self.collect_report('promotion_kpis')['promotion_id'].unique())
+            if type == 'client':  # client list from client_kpis reports
+                searches = list(self.collect_report('client_kpis')['client'].unique())
+            search_result, similarity_score = self.get_search_similarity_score(search_value, searches)
+        except: search_result = search_value
         return search_result, similarity_score
 
     def collect_report(self, report_name):
         """
-        If there is a report need as .csv format.
+        If there is a report need as .csv format
+        :param report_name: name of the report fetch from build-in temporary report folder
         """
         report = reports.fetch_report(report_name)
         if report is False:
-            print("reports is not created")
+            print("reports is not generated")
             return pd.DataFrame()
         else:
             return report
 
-    def visualization_data_for_product_search(self, value):
-        for data_type in [('chart_1', ['product_kpis']),
-                          ('chart_2', ['daily_products_of_sales']),
-                          ('chart_3', ['product_usage_before_after_amount_accept',
-                                       'product_usage_before_after_amount_reject']),
-                          ('chart_4', ['product_usage_before_after_orders_accept',
-                                       'product_usage_before_after_orders_reject']),
-                          ]:
-            try:
-                result = pd.DataFrame()
-                for r in data_type[1]:
-                    result = pd.concat([result, self.collect_report(r).query("products == @value")])
-                result.to_csv(join(self.temporary_path, "build_in_reports", "main", data_type[0] + '_search.csv'),
-                              index=False)
-            except Exception as e:
-                print(e)
+    def visualization_data_for_search(self, type, value):
+        """
+        Each type of search is visualized individually.
+            Products; 4 KPIs and 3 charts
+            Promotions; 4 KPIs and 3 charts
+            Clients; 4 KPIs and 1 chart
+            Dimensions; 4 KPIs and 3 charts
 
-    def visualization_data_for_promotion_search(self, value):
-        for data_type in [('chart_1', ['promotion_kpis']),
-                          ('chart_2', ['daily_inorganic_ratio']),
-                          ('chart_3', ['daily_promotion_revenue']),
-                          ('chart_4', ['daily_promotion_discount']),
-                          ]:
+        Each chart and KPI of data fetch from imported .csv files at temporary report folder
+        after built-in report processes are finalized.
+        :param type: search type; promotions, products, clients, dimensions
+        :param value: value for searching
+        """
+        _query = "{} == @value".format(self.query_column[type])
+        for data_type in self.data_types[type]:
             try:
                 result = pd.DataFrame()
                 for r in data_type[1]:
-                    _data = self.collect_report(r)
-                    result = pd.concat([result, self.collect_report(r).query("promotion_id == @value")])
-                if 'daily' in list(result.columns):
-                    result['daily'] = result['daily'].apply(lambda x: convert_to_date(x))
-                    result = result.sort_values('daily', ascending=True)
-                result.to_csv(join(self.temporary_path, "build_in_reports", "main", data_type[0] + '_search.csv'),
-                              index=False)
-            except Exception as e:
-                print(e)
-
-    def visualization_data_for_client_search(self, value):
-        for data_type in [('chart_1', ['client_kpis']),
-                          ('chart_2', ['client_feature_predicted'])]:
-            try:
-                result = pd.DataFrame()
-                for r in data_type[1]:
-                    _data = self.collect_report(r)
-                    result = pd.concat([result, self.collect_report(r).query("client == @value")])
-                if 'date' in list(result.columns):
-                    result['date'] = result['date'].apply(lambda x: convert_to_date(x))
-                    result = result.sort_values('date', ascending=True)
+                    result = pd.concat([result, self.collect_report(r).query(_query)])
+                if len({'date', 'daily'} & set(list(result.columns))) != 0:  # covert date columns to timestamp
+                    date_column = list({'date', 'daily'} & set(list(result.columns)))[0]
+                    result[date_column] = result[date_column].apply(lambda x: convert_to_date(x))
+                    result = result.sort_values(date_column, ascending=True)
                 result.to_csv(join(self.temporary_path, "build_in_reports", "main", data_type[0] + '_search.csv'),
                               index=False)
             except Exception as e:
                 print(e)
 
     def search_results(self, search_value):
+        """
+        1. check for the temporary folder path.
+        2. check each search type separately and calculate the max similarity scores.
+        3. if there is not observed score of more than 0, show the sample data on search dashboard.
+
+        :param value: value for searching
+        """
         self.get_temporary_path()
         results = {'search_type': 'product', 'has_results': False, 'search_value': search_value}
         try:
             data = []
             for m in self.search_metrics:
-                search_value, similarity_score = self.get_serach_value(m, search_value)
-                data.append({'search_value': search_value, 'similarity_score': similarity_score, 'search_type': m})
+                _search_value, _similarity_score = self.get_search_value(m, search_value)
+                data.append({'search_value': _search_value, 'similarity_score': _similarity_score, 'search_type': m})
             data = pd.DataFrame(data).query("similarity_score != 0")
             if len(data) != 0:
                 data = data.sort_values(by='similarity_score', ascending=False).to_dict('results')[0]
-                if data['search_type'] == 'product':
-                    self.visualization_data_for_product_search(data['search_value'])
-                if data['search_type'] == 'promotion':
-                    self.visualization_data_for_promotion_search(data['search_value'])
-                if data['search_type'] == 'client':
-                    self.visualization_data_for_client_search(data['search_value'])
+                self.visualization_data_for_search(type=data['search_type'], value=data['search_value'])
                 data['has_results'] = True
                 results = data
-        except Exception as e:
-            print(e)
-            results = {'search_type': 'product', 'has_results': False}
+        except: results = {'search_type': 'product', 'has_results': False}
         return results
 
     def get_search_chart_names(self, search_type):
+        """
+        These are the title of the charts and KPIs at the search dashboard according to the search type.
+        :param search_type: search type; promotions, products, clients, dimensions
+        """
         chart_names = {}
         if search_type == 'product':
             _charts = self.product_charts
@@ -224,9 +248,15 @@ class Search:
         return chart_names
 
     def convert_kpi_names_to_numeric_names(self, graph_json):
+        """
+        :param graph_json: json file for charts and KPIs in order to show on .html file
+         """
         return {'kpi_' + str(k[1]): graph_json['kpis'][k[0]] for k in zip(list(graph_json['kpis'].keys()), range(1, 5))}
 
     def delete_search_data(self, results):
+        """
+        After showing the results in the dashboards, removing .csv files from the temporary folder path.
+        """
         if results['has_results']:
             for i in range(1, 5):
                 _file = join(self.temporary_path, "build_in_reports", "main", 'chart_{}_search.csv'.format(str(i)))
