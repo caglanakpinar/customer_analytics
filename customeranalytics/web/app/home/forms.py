@@ -449,7 +449,19 @@ charts = {
                                                     'layout': go.Layout()}
                                  for _f in ["chart_{}_search".format(str(i)) for i in range(2, 5)]},
 
-                      "kpis": {"chart_1_search": ['order_count', 'frequency', 'monetary', 'recency']}}
+                      "kpis": {"chart_1_search": ['order_count', 'frequency', 'monetary', 'recency']}},
+
+    "search_dimension": {"charts": {_f: {'trace': go.Scatter(mode="lines+markers+text",
+                                                          line=dict(color='firebrick', width=4),
+                                                          textposition="bottom center",
+                                                          textfont=dict(
+                                                              family="sans serif",
+                                                              size=30,
+                                                              color="crimson")),
+                                      'layout': go.Layout()}
+                                 for _f in ["chart_{}_search".format(str(i)) for i in range(2, 5)]},
+
+                      "kpis": {"chart_1_search": ['order_count', 'payment_amount', 'discount_amount', 'client_count']}}
 
 }
 
@@ -516,7 +528,8 @@ class RealData:
             if date is not None:
                 _path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
             return exists(_path)
-        except: return False
+        except Exception as e:
+            return False
 
     def fetch_report(self, report_name, index='main', date=None):
         """
@@ -845,6 +858,23 @@ class Charts:
                 if chart == "chart_4_search":
                     trace['x'] = list(_data['daily'])
                     trace['y'] = list(_data['total_discount'])
+
+            if target == 'search_client':
+                if chart == "chart_2_search":
+                    trace['x'] = list(_data['date'])
+                    trace['y'] = list(_data['payment_amount'])
+
+            if target == 'search_dimension':
+                print(_data)
+                if chart == "chart_2_search":
+                    trace['x'] = list(_data['daily'])
+                    trace['y'] = list(_data['order_count'])
+                if chart == "chart_3_search":
+                    trace['x'] = list(_data['daily'])
+                    trace['y'] = list(_data['payment_amount'])
+                if chart == "chart_4_search":
+                    trace['x'] = list(_data['daily'])
+                    trace['y'] = list(_data['client_count'])
 
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 

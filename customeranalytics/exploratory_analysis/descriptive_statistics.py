@@ -86,7 +86,7 @@ class Stats:
         self.order_index = order_index
         self.query_es = QueryES(port=port, host=host)
         self.orders_field_data = ["id", "session_start_date", "client",
-                                  "payment_amount", "discount_amount", "actions.purchased"]
+                                  "payment_amount", "discount_amount", "actions.purchased", "dimension"]
         self.stats = ["total_orders", "last_week_orders",
                       "total_revenue", "last_week_revenue",
                       "total_visitors", "last_week_visitors",
@@ -96,10 +96,12 @@ class Stats:
                       "purchase_amount_distribution", "weekly_average_order_per_user",
                       "weekly_average_session_per_user", "weekly_average_payment_amount", "user_counts_per_order_seq",
                       "hourly_revenue", "daily_revenue", "weekly_revenue", "monthly_revenue",
-                      "total_order_count_per_customer"]
+                      "total_order_count_per_customer", "dimension_kpis", "daily_dimension_values"]
         self.last_week = None
         self.time_periods = time_periods  # ["daily", "weekly", 'monthly']
         self.orders = pd.DataFrame()
+        self.dimension_kpis = pd.DataFrame()
+        self.daily_dimension_values = pd.DataFrame()
         self.results = {}
 
     def dimensional_query(self, boolean_query=None):
@@ -339,6 +341,27 @@ class Stats:
         return self.orders.groupby("client").agg(
             {"id": lambda x: len(np.unique(x))}).reset_index().rename(columns={"id": "order_count"})
 
+    def get_dimension_kpis(self):
+        if not dimension_decision(self.order_index):
+            _dimensions = list(self.orders['dimension'].unique())
+            print(_dimensions)
+            if len(_dimensions) > 1:
+                self.dimension_kpis = self.orders.groupby(["dimension"]).agg(
+                    {"id": lambda x: len(np.unique(x)), "payment_amount": "sum",
+                     "discount_amount": "sum", "client": lambda x: len(np.unique(x))
+                     }).reset_index().rename(columns={"id": "order_count", "client": "client_client_count"})
+        return self.dimension_kpis
+
+    def get_daily_dimension_values(self):
+        if not dimension_decision(self.order_index):
+            _dimensions = list(self.orders['dimension'].unique())
+            if len(_dimensions) > 1:
+                self.daily_dimension_values = self.orders.groupby(["dimension", "daily"]).agg(
+                    {"id": lambda x: len(np.unique(x)), "payment_amount": "sum",
+                     "discount_amount": "sum", "client": lambda x: len(np.unique(x))
+                     }).reset_index().rename(columns={"id": "order_count", "client": "client_count"})
+        return self.daily_dimension_values
+
     def execute_descriptive_stats(self, start_date=None):
         """
         1.  Get order data from the order index.
@@ -366,7 +389,9 @@ class Stats:
                                             self.user_order_count_per_order_seq,
                                             self.hourly_revenue, self.daily_revenue,
                                             self.weekly_revenue, self.monthly_revenue,
-                                            self.get_customer_total_order_count
+                                            self.get_customer_total_order_count,
+                                            self.get_dimension_kpis,
+                                            self.get_daily_dimension_values
                                             ])):
             print("stat name :", metric[0])
             if metric[0] in ["hourly_revenue", "daily_revenue", "weekly_revenue", "monthly_revenue",
@@ -374,12 +399,11 @@ class Stats:
                              "purchase_amount_distribution", "weekly_average_order_per_user",
                              "weekly_average_session_per_user",
                              "weekly_average_payment_amount", "user_counts_per_order_seq",
-                             "total_order_count_per_customer"]:
+                             "total_order_count_per_customer", "dimension_kpis", "daily_dimension_values"]:
                 self.insert_into_reports_index(metric[1]().to_dict('results'),
                                                start_date,
                                                filters={"type": metric[0]},
                                                index=self.order_index)
-
             else:
                 self.results[metric[0]] = metric[1]()
         self.insert_into_reports_index([self.results],

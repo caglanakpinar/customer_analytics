@@ -428,4 +428,12 @@ data_types_for_search = {"product": [('chart_1', ['product_kpis']),
                                        ('chart_4', ['daily_promotion_discount']),
                                        ],
                          "client": [('chart_1', ['client_kpis']),
-                                    ('chart_2', ['client_feature_predicted'])]}
+                                    ('chart_2', ['client_feature_predicted'])],
+
+                         "dimension": [('chart_1', ['dimension_kpis']),
+                                       ('chart_2', ['daily_dimension_values']),
+                                       ('chart_3', ['daily_dimension_values']),
+                                       ('chart_4', ['daily_dimension_values'])],
+
+
+                         }

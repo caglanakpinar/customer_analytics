@@ -328,6 +328,10 @@ class Reports:
             query = "report_name in ('stats', 'rfm')"
         if r_name == 'client_feature_predicted':
             query = "report_name == 'clv_prediction' "
+        if r_name == 'dimension_kpis':
+            query = "report_name == 'stats' and type == 'dimension_kpis'"
+        if r_name == 'daily_dimension_values':
+            query = "report_name == 'stats' and type == 'daily_dimension_values'"
         return query
 
     def get_promotion_comparison(self, x):
@@ -524,7 +528,7 @@ class Reports:
                 report_data = self.get_order_and_payment_amount_differences(report)
             if r_name == 'rfm':
                 report_data = self.get_rfm_reports(report)
-            if r_name in self.rfm_metrics_reports: # rfm rec. - mon.,
+            if r_name in self.rfm_metrics_reports:  # rfm rec. - mon.,
                 report_data = self.get_rfm_reports(report, metrics=r_name.split("_"))
             if r_name not in ['order_and_payment_amount_differences', 'rfm', 'daily_clv'] + self.rfm_metrics_reports:
                 report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
@@ -540,6 +544,9 @@ class Reports:
                 report_data = self.get_client_kpis(report)
             if r_name == 'client_feature_predicted':
                 report_data = self.get_feature_predicted_data_per_customer(report)
+            if r_name in ['dimension_kpis', 'daily_dimension_values']:
+                report_data = pd.DataFrame(list(report['data'])[0])
+
         report_data = self.radomly_sample_data(report_data)
         return report_data
 
@@ -615,7 +622,7 @@ class Reports:
                                 _data.to_csv(self.get_import_file_path(r_name, index), index=False)
                                 _data.to_csv(self.get_import_file_path(r_name, index, day_folder=True), index=False)
                     except Exception as e:
-                      pass
+                     pass
 
     def query_es_for_report(self, report_name, index, date=datetime.datetime.now()):
         ## TODO: will be updated

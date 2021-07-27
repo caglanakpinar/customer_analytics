@@ -86,7 +86,7 @@ class Search:
 
         """
         self.temporary_path = None
-        self.search_metrics = ['promotion', 'product', 'client', 'dimension']
+        self.search_metrics = ['dimension'] # ['promotion', 'product', 'client', 'dimension']
         self.query_body = {"query": {}}
         self.intersect_count = lambda x, y: len(set(x) & set(y))
         self.user_data = pd.DataFrame()
@@ -108,8 +108,14 @@ class Search:
                             "Order Frequency of the Customer (hr)",
                             "Total Hour Count from the last time the customer purchased (recency)",
                             "Average Payment Amount of the Customer"]
+        self.dimension_charts = ["Daily Total Order Count With Dimension",
+                                 "Daily Total Purchase Amount With Dimension",
+                                 "Daily Total Unique Client Count With Dimension"]
+        self.dimension_kpis = ["Total Order Count", "Total Purchase Amount",
+                               "Total Unique Client Count", "Total Discount Amount"]
         self.data_types = data_types_for_search
-        self.query_column = {'product': "products", "client": "client", "promotion": "promotion_id"}
+        self.query_column = {'product': "products", "client": "client",
+                             "promotion": "promotion_id", "dimension": "dimension"}
 
     def get_temporary_path(self):
         """
@@ -152,14 +158,18 @@ class Search:
         """
         search_result, similarity_score, searches = search_value, 0, []
         try:
-            if type == 'product':  # products list from product_kpis reports
+            if type == 'product':
                 searches = list(self.collect_report('product_kpis')['products'].unique())
-            if type == 'promotion':  # promotion list from promotion_kpis reports
+            if type == 'promotion':
                 searches = list(self.collect_report('promotion_kpis')['promotion_id'].unique())
-            if type == 'client':  # client list from client_kpis reports
+            if type == 'client':
                 searches = list(self.collect_report('client_kpis')['client'].unique())
+            if type == 'dimension':
+                searches = list(self.collect_report('dimension_kpis')['dimension'].unique())
             search_result, similarity_score = self.get_search_similarity_score(search_value, searches)
-        except: search_result = search_value
+        except Exception as e:
+            print(e)
+            search_result = search_value
         return search_result, similarity_score
 
     def collect_report(self, report_name):
@@ -223,7 +233,8 @@ class Search:
                 self.visualization_data_for_search(type=data['search_type'], value=data['search_value'])
                 data['has_results'] = True
                 results = data
-        except: results = {'search_type': 'product', 'has_results': False}
+        except Exception as e:
+            results = {'search_type': 'product', 'has_results': False}
         return results
 
     def get_search_chart_names(self, search_type):
@@ -241,6 +252,9 @@ class Search:
         if search_type == 'client':
             _charts = self.client_charts
             _kpis = self.client_kpis
+        if search_type == 'dimension':
+            _charts = self.dimension_charts
+            _kpis = self.dimension_kpis
         for i in zip(range(2, len(_charts) + 2), _charts):
             chart_names["chart_{}_search".format(str(i[0]))] = i[1]
         for i in zip(range(1, len(_kpis) + 1), _kpis):
