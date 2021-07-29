@@ -47,7 +47,7 @@ class GetData:
             self.conn = psycopg2.connect(user=user, password=pw, host=server, port=port, database=db)
         if self.data_source == 'googlebigquery':
             from google.cloud.bigquery.client import Client
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = join(self.data_query_path, "", self.config['db'])
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = self.config['db']
             self.conn = Client()
         print("db connection is done!")
 
