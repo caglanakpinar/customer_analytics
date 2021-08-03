@@ -84,14 +84,21 @@
 										<div class="card-body ">
 											<ul>
 											  <li>
-												  <strong style="color:green;">A/B Test Promotions </strong> are bunch of testes which compares effect of Promotions to the business.
+												  <strong style="color:green;">A/B Test Customer Segment Change </strong> are bunch of tests
+												  which compares the effect of Customers Segments of Change within Time Periods to the business.
+
+												  Before and After time periods are constants time periods which are day, week and month.
+												  Each segment of current day, current week and current month are compared
+												  with the last 4 weeks of same weekday of current weekday,
+												  last 4 weeks and last 4 months.
 												  There are two metrics which help us to measure comparison values.
-												  These are Number of orders counts per promotion and Average purchase amount per promotion.
-												  Promotion of Usage related to these metrics are tested with Before - After Analysis
-												  in order to th answer the question that is "Is there any significant increase/decrease
-												  on Order Count / Average Payment Amount per User after the Promotion is used?"
-												  While we need to see to Promotion which increases/decreases the number of orders and the average purchase amount,
-												  This Section can help us to find the right promotion.
+												  These are number of orders counts per segment and Average purchase amount per segment.
+												  Difference of Segments between before and after time periods related to these metrics are tested
+												  with Before - After Analysis.
+												  in order to the answer the question that is "Is there any significant increase/decrease
+												  on Order Count / Average Payment Amount per Customer Segment"
+												  While we need to see to Segment which increases/decreases the number of orders and the average purchase amount,
+												  This Section can help us to find the right Segment of Improvements.
 											  </li>
 											  <li>
 												  <div class="card-header">
@@ -115,37 +122,6 @@
 											  		  </div>
 											  	  </div>
 											    </div>
-											  </li>
-											  <li>
-												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">How are Promotions Compared?</h5>
-												  	  Each combination promotions are tested individually. Average of Purchase Payment Amount per User Sample for Promotion (1) is compared to
-													  Average of Purchase Payment Amount per User Sample for Promotion (2).
-													  Hypothesis are;
-													  H0: These is no significant Difference on average purchase amount of customers who used promotion A and B.
-													  H1: These is significant Difference on average purchase amount of customers who used promotion A and B.
-													  Combination of Promotions are shown at 'Promotion Comparison' chart with number test results which are accepted and
-													  H0 rejected test ratio (H0 rejected test count/total test count)
-												  </div>
-											  </li>
-											  <li>
-												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">How are Before - After Promo Usage Tests designed?</h5>
-													    It might be very confusion and it might seem very sophisticated A/B Test process,
-													    however it basically compares promotions related to customers of usage.
-													    Each promotion of usage is tested separately.
-													    Each promotion of used users and their used timestamp are collected for each promotion.
-													    Each customers of one week before promotion usage and one week after the promotion use time periods are compared with to metrics which are
-													    order count and average purchase amount. We aim to detect significant increase after time period
-													    while comparing to before time period about purchase amount or order count
-
-
-													  	Before - After Promo Usage Tests are shown at 'Order And Payment Amount Difference for Before And After Promotion Usage',
-													    'Before - After Time Periods Customers' Average Purchase Payment Amount Test (Test Accepted!) ',
-													    'Before - After Time Periods Customers' Average Purchase Payment Amount Test (Test Rejected!)',
-													    'Before - After Time Periods Customers' Total Purchase Count Test (Test Accepted!)',
-													    'Before - After Time Periods Customers' Total Purchase Count Test (Test Rejected!)'
-												  </div>
 											  </li>
 											</ul>
 										</div>
