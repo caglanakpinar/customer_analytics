@@ -186,7 +186,7 @@ charts = {
                                             textposition="bottom center",
                                             textfont=dict(
                                                 family="sans serif",
-                                                size=30,
+                                                size=20,
                                                 color="crimson")),
                         'layout': go.Layout(legend=dict(
                             orientation="h",
@@ -663,14 +663,15 @@ class Charts:
         "segments_change_daily_before_after_amount"
         "segments_change_monthly_before_after_orders"
         "segments_change_monthly_before_after_amount"
-
         """
         _trace = []
         if chart.split("_")[1] in ['usage', 'change']:
-            _type = -1 if chart.split("_")[1] == 'usage' else -2
+            print(chart)
+            _type = -2 if chart.split("_")[1] == 'usage' else -1
             _name = 'order count' if chart.split("_")[_type] == 'orders' else 'purchase amount'
             names = ["before average "+_name+"  per c.", "after average "+_name+" per c."]
             indicator = chart.split("_")[0] + 's' if chart.split("_")[1] == 'usage' else chart.split("_")[0]
+            print(_type, _name, names, indicator)
             _trace = [
                 go.Bar(name=names[0], x=data[indicator], y=data['mean_control']),
                 go.Bar(name=names[1], x=data[indicator], y=data['mean_validation'])
@@ -708,6 +709,7 @@ class Charts:
             try:
                 _t = 'date' if chart.split("_")[0] not in list(_data.columns) else chart.split("_")[0]
                 _data = _data.sort_values(by=_t, ascending=True)
+                _data['orders'] = _data['orders'].apply(lambda x: round(float(x), 2))
                 trace['x'] = list(_data[_t])
                 trace['y'] = list(_data['orders'])
                 if _t not in ['daily', 'weekly']:
@@ -757,6 +759,7 @@ class Charts:
                 _t = 'weekly'
                 indicator = list(set(list(_data.columns)) - set([_t]))[0]
                 _data = _data.sort_values(by=_t, ascending=True)
+                _data[indicator] = _data[indicator].apply(lambda x: round(float(x), 2))
                 trace['x'] = list(_data[_t])
                 trace['y'] = list(_data[indicator])
                 trace['text'] = list(_data[indicator])
