@@ -35,9 +35,10 @@ setuptools.setup(
         "schedule",
         "h2o",
         "psutil",
-        # "keras-tuner",
-        # "tensorflow",
-        # "clv-prediction"
+        "keras-tuner",
+        "tensorflow",
+        "clv-prediction",
+        "abtest"
     ],
     url="https://github.com/caglanakpinar/customer_analytics",
     include_package_data=True,
