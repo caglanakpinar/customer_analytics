@@ -179,13 +179,13 @@ class Reports:
             -   data_columns_integration
         """
         tag, has_dimension = {}, False
-        # try:
-        self.es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
-        dimensions = pd.read_sql("SELECT  * FROM data_connection", con).to_dict('results')[0]
-        if dimensions['dimension'] not in ['None', None]:
-            has_dimension = True
-        # except Exception as e:
-        #    print(e)
+        try:
+            self.es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            dimensions = pd.read_sql("SELECT  * FROM data_connection", con).to_dict('results')[0]
+            if dimensions['dimension'] not in ['None', None]:
+                has_dimension = True
+        except Exception as e:
+           print(e)
         return has_dimension
 
     def collect_dimensions_for_data_works(self, has_dimensions):
