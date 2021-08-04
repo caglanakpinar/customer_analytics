@@ -193,7 +193,7 @@ class RouterRequest:
             logs = self.collect_data_from_table(table='logs')
             if len(logs) != 0:
                 logs['color'] = logs['color'].apply(lambda x: 'color:' + x + ';')
-                self.message['logs'] = logs.to_dict('results')[-min(len(logs), 40):]
+                self.message['logs'] = logs.to_dict('results')[-min(len(logs), 20):]
             else:
                 self.message['logs'] = '....'
         except Exception as e: logging.error(e)
