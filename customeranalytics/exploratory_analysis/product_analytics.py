@@ -227,7 +227,8 @@ class ProductAnalytics:
 
     def get_product_kpis(self):
         """
-
+        These KPIs is for the searching bar, when searching text is detected as product. There are 4 KPIS
+        which are shown at the the left top of the dashboard.
         """
         kpi_1 = self.products[['products', 'client']].reset_index().groupby(["client", "products"]).agg(
             {"index": "count"}).reset_index().groupby("products").agg(
