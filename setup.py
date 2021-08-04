@@ -11,7 +11,10 @@ setuptools.setup(
     version="0.0.1",
     author="Caglan Akpinar",
     author_email="cakpinar23@gmail.com",
-    description=" ",
+    description="""
+                Funnels, Cohorts, A/B Tests, e-commerce, CLV Prediction, Product Analytics, Churn, Anomaly Detection,
+                Customer Segmentation, RFM, Statistics
+                """,
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords='Customer Analytics',
