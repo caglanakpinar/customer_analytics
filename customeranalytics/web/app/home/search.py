@@ -83,13 +83,13 @@ class Search:
             4. Each search type has individual charts and KPIs.
                So, each creation of charts and KPIs .csv files must be applied individually.
 
-
         """
         self.temporary_path = None
         self.search_metrics = ['dimension'] # ['promotion', 'product', 'client', 'dimension']
         self.query_body = {"query": {}}
         self.intersect_count = lambda x, y: len(set(x) & set(y))
         self.user_data = pd.DataFrame()
+        # product, promotion, dimension, client search charts and KPIs
         self.product_kpis = ['Average Product Sold Per Customer',
                              'Total Product Revenue',
                              'Total Product Discount', 'Number of Customer who purchase the Product']
@@ -113,6 +113,7 @@ class Search:
                                  "Daily Total Unique Client Count With Dimension"]
         self.dimension_kpis = ["Total Order Count", "Total Purchase Amount",
                                "Total Unique Client Count", "Total Discount Amount"]
+
         self.data_types = data_types_for_search
         self.query_column = {'product': "products", "client": "client",
                              "promotion": "promotion_id", "dimension": "dimension"}
