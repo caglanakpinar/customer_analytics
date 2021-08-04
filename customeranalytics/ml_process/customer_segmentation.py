@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import time
 import sys, os, inspect
 import h2o
 from h2o.estimators.kmeans import H2OKMeansEstimator
@@ -113,10 +112,8 @@ class CustomerSegmentation:
         """
         RFM values for segmentation can be fetched from the reports index with related dimensions.
         """
-        while len(self.rfm) == 0:
-            ea_configs['rfm']['order_index'] = self.order_index
-            self.rfm = query_exploratory_analysis(ea_configs, {"start_date": date}, "rfm")
-            time.sleep(100)
+        ea_configs['rfm']['order_index'] = self.order_index
+        self.rfm = query_exploratory_analysis(ea_configs, {"start_date": date}, "rfm")
 
     def segmentation(self, data, metric):
         """
