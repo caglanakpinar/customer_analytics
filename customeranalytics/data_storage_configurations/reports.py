@@ -195,17 +195,17 @@ class Reports:
         """
         dimensions = []
         if has_dimensions:
-            # try:
-            qs = QueryES(host=self.es_tag['host'], port=self.es_tag['port'])
-            _res = qs.es.search(index='orders', body={"size": 0,
-                                                            "aggs": {"langs": {
-                                                                     "terms": {"field": "dimension.keyword",
-                                                                               "size": 500}
-                                                                     }}})
-            _res = [r['key'] for r in _res['aggregations']['langs']['buckets']]
-            dimensions = unique(_res).tolist()
-            # except Exception as e:
-            #    print(e)
+            try:
+                qs = QueryES(host=self.es_tag['host'], port=self.es_tag['port'])
+                _res = qs.es.search(index='orders', body={"size": 0,
+                                                                "aggs": {"langs": {
+                                                                         "terms": {"field": "dimension.keyword",
+                                                                                   "size": 500}
+                                                                         }}})
+                _res = [r['key'] for r in _res['aggregations']['langs']['buckets']]
+                dimensions = unique(_res).tolist()
+            except Exception as e:
+               print(e)
             if dimensions not in ['None', None] and len(dimensions) != 1:
                 return ['main'] + dimensions
             else:
