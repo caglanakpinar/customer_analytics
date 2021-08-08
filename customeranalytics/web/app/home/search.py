@@ -63,7 +63,7 @@ class Search:
             - dimension
 
         Each type of search represents an individual dashboard with results.
-        When expected search value typed in the search bar;
+        When expected search value is typed in the search bar;
             1. Results are checked individually for each type of search.
                 a.  create ngrams of search value
                 b.  create ngrams for each list of search types.
@@ -71,21 +71,21 @@ class Search:
                 d.  remove score = 0.
                 e.  find the top score and assign it as a detected search result.
             2. Create a temporary .csv file at temporary_folder_path that is assigned by the user.
-                These are 3 charts of .csv file;
-                 a. chart_2_search.csv is positioned ad right top,
-                 b. chart_3_search.csv is positioned ad left bottom,
-                 c. chart_4_search.csv is positioned ad right bottom,
-                There 4 KPIs with 1 .csv file;
+                These are 3 charts of .csv files;
+                 a. chart_2_search.csv is positioned at right top,
+                 b. chart_3_search.csv is positioned at left bottom,
+                 c. chart_4_search.csv is positioned at right bottom,
+                There are 4 KPIs with 1 .csv file;
                  a. chart_1_search.csv is positioned ad the left top. These KPIs will be changed
 
-            3. Each created temporary file
+            3. Each chart of data is created at temporary file
                (chart_1_search.csv, .., chart_4_search.csv)  will be removed after the dashboard is shown at the user interface.
             4. Each search type has individual charts and KPIs.
                So, each creation of charts and KPIs .csv files must be applied individually.
 
         """
         self.temporary_path = None
-        self.search_metrics = ['dimension'] # ['promotion', 'product', 'client', 'dimension']
+        self.search_metrics = ['promotion', 'product', 'client', 'dimension']
         self.query_body = {"query": {}}
         self.intersect_count = lambda x, y: len(set(x) & set(y))
         self.user_data = pd.DataFrame()
@@ -140,7 +140,7 @@ class Search:
         :param search_value: value for searching at products, dimensions, clients, promotions
         :param search_list:  list of searching data
         """
-        if self.intersect_count(search_value, search_list) > 0:
+        if self.intersect_count([search_value], search_list) > 0:
             return search_value, 1
         else:
             sv_ngram = ngrams_2(search_value)  # searching word of 2 ngrams
