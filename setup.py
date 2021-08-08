@@ -22,6 +22,7 @@ setuptools.setup(
     py_modules=['customer_analytics', "customeranalytics/web", "customeranalytics/docs"],
     # TODO: will be updated
     install_requires=[
+        "psycopg2-binary",
         "urllib3",
         "flask_login",
         "flask",
