@@ -113,7 +113,14 @@ class CustomerSegmentation:
         RFM values for segmentation can be fetched from the reports index with related dimensions.
         """
         ea_configs['rfm']['order_index'] = self.order_index
-        self.rfm = query_exploratory_analysis(ea_configs, {"start_date": date}, "rfm")
+        _total_cols, _counter = 0, 0
+        while len(set(self.rfm.columns) & set(self.METRICS)) != 3:
+            self.rfm = query_exploratory_analysis(ea_configs, {"start_date": date}, "rfm")
+            if _counter >= 10:
+                _total_cols = 3
+            else:
+                _total_cols = len(set(self.rfm.columns) & set(self.METRICS))
+            _counter += 1
 
     def segmentation(self, data, metric):
         """
