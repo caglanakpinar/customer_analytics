@@ -825,6 +825,8 @@ class Charts:
         if chart == 'clvrfm_anomaly':
             trace = []
             clusters = sorted(list(_data['naming'].unique()))
+            _data['frequency_diff'] = _data['frequency_diff'].apply(lambda x: round(float(x), 2))
+            _data['monetary_diff'] = _data['monetary_diff'].apply(lambda x: round(float(x), 2))
             for cluster in clusters:
                 __data = _data.query("naming ==  @cluster")
                 _trace = go.Scatter(name=cluster, x=list(__data['monetary_diff']), y=list(__data['frequency_diff']),
@@ -965,7 +967,7 @@ class Charts:
     def get_individual_chart(self, target, chart, index='main', date=None):
         self.graph_json['charts'] = {}
         c = charts[target]['charts'][chart]
-        trace, is_real_data = self.get_trace(c['trace'], chart, index, date)
+        trace, is_real_data = self.get_trace(c['trace'], chart, index, date, target)
         self.get_widths_heights(chart=chart, target=target)
         annotation = c['annotation'] if 'cohort' in chart.split("_") else None
         layout = self.get_layout(c['layout'], chart,
@@ -976,3 +978,5 @@ class Charts:
     def get_json_format(self, chart):
         return json.dumps({"trace": chart['trace'],
                            "layout": chart['layout']}, cls=plotly.utils.PlotlyJSONEncoder)
+
+
