@@ -43,10 +43,7 @@ class Scheduler:
     There are 4 options for scheduling;
         - Once; Only once, it collects data store into the orders and downloads indexes,
           Exploratory Analysis and ML Processes Creation.
-        - 12 Hours, Every each 12 hours scheduling queries the data sources and
-          fetches the data and stores data into the indexes.
-          However, it waits for Exploratory Analysis and ML Processes Creation for the end of the day.
-          Exploratory Analysis and ML Processes are triggered daily.
+        - Weekly; every Mondays, fetching data and storing it into the indexes.
         - Daily; daily fetching data and storing it into the indexes.
 
     """
@@ -149,7 +146,7 @@ class Scheduler:
 
     def query_schedule_status(self):
         """
-        When the process is scheduled for daily, '12 hours',
+        When the process is scheduled for daily, 'weekly',
         before it starts, checks scheduling is still 'on' or not deleted.
         """
         return pd.read_sql("SELECT * FROM schedule_data ", con)
@@ -257,8 +254,6 @@ class Scheduler:
             return schedule.every().day.at("00:00")
         if time_period == 'weekly':
             return schedule.every().monday.at("00:00")
-        if time_period == '12_hours':
-            return schedule.every(720).minutes
         if time_period == 'once':
             return 'once'
 
@@ -286,78 +281,22 @@ class Scheduler:
                 - Anomaly Detection
 
         These jobs are created per main and dimensional models individually but, are stored in the 'reports' index.
-        If the scheduled time period is '12 Hours', the process will wait for day change.
         """
-        tag = self.query_schedule_status().to_dict('results')[0]
-        accept = True
-        # if time period is '12_hours', checking for time it is time for execute Exploratory Analysis and ML Works
-        if tag['time_period'] == '12_hours':
-            if tag['max_date_of_order_data'] != 'None':
-                time_diff = (convert_to_day(current_date_to_day()) -
-                             convert_to_day(tag['max_date_of_order_data'])).total_seconds() / 60 / 60 / 24
-                if int(time_diff) == 0:
-                    accept = False
-        if accept:
-            self.data_pipelines.data_work_pipelines_execution(ml_connection_structure=self.ml_connection_structure,
-                                                              ea_connection_structure=self.ea_connection_structure)
+        self.data_pipelines.data_work_pipelines_execution(ml_connection_structure=self.ml_connection_structure,
+                                                          ea_connection_structure=self.ea_connection_structure)
 
-            try:
-                # checks if there is executable dimensions are stored in 'orders' index.
-                self.collect_dimensions_for_data_works()
-                if len(self.unique_dimensions) > 1:
-                    print("-" * 5, "Execute Ml Works and Exploratory Analysis for the Dimensions!", "-" * 5)
-                    for dim in self.unique_dimensions:  # iteratively execute EA and ML works for each dimension
-                        self.separator(dim=dim)
-                        self.data_pipelines.data_work_pipelines_execution(
-                            ml_connection_structure=self.get_dim_configs(self.ml_connection_structure, dim),
-                            ea_connection_structure=self.get_dim_configs(self.ea_connection_structure, dim), dim=dim)
-            except Exception as e: print(e)
-
-            self.create_build_in_reports.create_build_in_reports()
-
-            # # First execute whole data for EA and ML Works
-            # try:
-            #     print("-"*5, " Exploratory Analysis ", "-"*5)
-            #     create_exploratory_analysis(self.ea_connection_structure)
-            #     self.info_log_create(i={'executor': create_exploratory_analysis})
-            # except Exception as e: self.fail_log_create(e=e, i={'executor': create_exploratory_analysis})
-#
-            # # create executed reports
-            # self.create_build_in_reports.create_build_in_reports()
-#
-            # try:
-            #     print("-" * 5, " ML Works ", "-" * 5)
-            #     # create_mls(self.ml_connection_structure)
-            #     self.ml_execute_pipeline(self.ml_connection_structure)
-            #     self.info_log_create(i={'executor': self.ml_execute_pipeline})
-            # except Exception as e: self.fail_log_create(e=e, i={'executor': self.ml_execute_pipeline})
-#
-            # # create executed reports
-            # self.create_build_in_reports.create_build_in_reports()
-#
-            # # Second execute EA and ML Works per dimension. Before execution, checking for dimensions
-            # try:
-            #     # checks if there is executable dimensions are stored in 'orders' index.
-            #     self.collect_dimensions_for_data_works()
-            #     if len(self.unique_dimensions) > 1:
-            #         print("-" * 5, "Execute Ml Works and Exploratory Analysis for the Dimensions!", "-" * 5)
-            #         for dim in self.unique_dimensions:  # iteratively execute EA and ML works for each dimension
-            #             self.separator(dim=dim)
-            #             for i in [{"executor": create_exploratory_analysis,  "config": self.ea_connection_structure},
-            #                       {"executor": self.ml_execute_pipeline, "config": self.ml_connection_structure}]:
-            #                 # no need to execute for clv per dimension
-            #                 _conf = {c: i['config'][c] for c in i['config'] if c not in ['clv']}
-            #                 for ea in i['config']:
-            #                     if ea not in ['date', 'time_period']:
-            #                         _conf[ea]['order_index'], _conf[ea]['download_index'] = dim, dim
-            #                 try:
-            #                     i['executor'](_conf)
-            #                     self.info_log_create(i=i, dim=dim)
-            #                 except Exception as e: self.fail_log_create(e=e, i=i, dim=dim)
-            # except Exception as e:  print(e)
-
-            # create executed reports
-            # self.create_build_in_reports.create_build_in_reports()
+        try:
+            # checks if there is executable dimensions are stored in 'orders' index.
+            self.collect_dimensions_for_data_works()
+            if len(self.unique_dimensions) > 1:
+                print("-" * 5, "Execute Ml Works and Exploratory Analysis for the Dimensions!", "-" * 5)
+                for dim in self.unique_dimensions:  # iteratively execute EA and ML works for each dimension
+                    self.separator(dim=dim)
+                    self.data_pipelines.data_work_pipelines_execution(
+                        ml_connection_structure=self.get_dim_configs(self.ml_connection_structure, dim),
+                        ea_connection_structure=self.get_dim_configs(self.ea_connection_structure, dim), dim=dim)
+        except Exception as e: print(e)
+        self.create_build_in_reports.create_build_in_reports()
 
     def jobs(self):
         """
