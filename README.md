@@ -1,12 +1,43 @@
 # CustomerAnalytics
  
-### **A.** Understanding the concept of CustomerAnalytics
-### **B.** How to use CustomerAnalytics
+[A. Understanding the concept of CustomerAnalytics](###A.Understanding the concept of CustomerAnalytics)
+----
+### B. How to use CustomerAnalytics
+----
+### C. Exploratory Analysis
+
+#### 1. Funnels
+
+##### a. Session of Actions Funnel
+
+##### i.   Session of Actions Funnel
+##### ii.  Session of Actions Funnel
+##### iii. Session of Actions Funnel
+##### iv.  Session of Actions Funnel
+
+##### b. Customer of Actions Funnel
+
+
+#### 2.
+#### 3. 
+#### 4.
+
+----
+### D. Machine Learning Works
+----
+### E. Configugraitions
+----
+### F. CustomerAnalytics DashBoard
+----
+### G. Searching
+----
+### H. Data Pipeline for ML Works and Exploratory Analysis
 
 
 
 
-### **A.** Understanding the concept of CustomerAnalytics
+
+### A. Understanding the concept of CustomerAnalytics
 
 This platform helps the business related to e-commerce. It also helps the business which has users (B2C) and has their data related to engagement to the business. 
 At this platform, There are parts which are Exploratory analysis and Machine Learning Works. These parts have sub analysis and works. These parts also have individual built-in dashboards in or to visualize the results of the outputs at them.  
