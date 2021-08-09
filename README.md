@@ -571,9 +571,49 @@ RFM is the most common Marketing measurement for each business. It is easy to ap
     ![image](https://user-images.githubusercontent.com/26736844/128723972-4bb8ec90-753e-4498-9961-ad4e03897d2e.png)
     
 
+##### b. Segmentation
 
+The customers, who are engaged with the business, are counted as millions. However, Each individual customers have their unique behavior with the business, mostly they can be clustered in the same way according to their engagement and attention to your business. In that case, Customer Segmentation allows us to see this similarity of customers by separating the customers' population to the individual homogeny sub-groups.
+
+-   ***Segments***
+
+    By using RFM values it is possible to segment each customer. We aim to find how they engage with the business which part of them can be encouraged to engage the business, who are gone? Who are new to the business? Here are the segments;
+    -   ***Champions :*** They love your business and are pleased with your services or products. Probably, They won`t let you down very soon. You are the rock start for them.
+Loyal Customer: Just like champions, they do love your business and not thinking to leave you soon. They are pleased about your service and products of quality. Just They do love your rock band and never miss your concert, however, they would like to watch it at the back.
+    -   ***Potential Loyalist:*** This group of customers would like to engage with your business recently, frequently, but they are still not sure that they would like to totally engage. They probably need a push.
+    -   ***Can`t lose them:*** Just like the ‘potential loyalist’ segment of customers, these are engaged customers, but their average basket value is a bit higher when we compare with loyal customers.
+    -   ***At risk:*** They probably leave and become churn customers. Make sure to keep them engaged in the business.
+    -   ***Need Attention :*** Just like ‘at risk’ segment of customers, these are going to become churn customers. Like the ‘at risk’ segment of customers, you have more chance to make them engaged again.
+    -   ***Lost :*** They are churn customers or very close to become the churn customers.
+    -   ***Newcommers :*** They have just arrived at your business. And we might not know about their satisfaction because of the lack of information about them. Track their behaviors and see how they become churn or champions in the future.
+
+-   How does Customer Segmentation work?
+
+    The calculated RFM values are segmented individually with 5 segments (K=5). New process will be the assigning of segment name according the top segments for RFM values. For instance, A customer who has recency; 0.2 hr (average recency; 3 days), monetary; 70 (average monetary is 30), frequency; 1 day (average frequency is 4 days). This customer's frequency segment will be 1, recency segment will be 1, monetary segment will be 1. This customer will be segmented as ‘Champions’.
     
+-   ***i. Customer Segmentation TreeMap*** 
     
+    This a treemap with % of total unique customer count per segment.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128728978-ca72e799-188f-4191-b789-3a380807edf6.png)
+    
+-   ***ii. Frequency Segmentation*** 
+
+    Each customer's average time difference is calculated (Frequency Calculation). Frequency values are clustered with K-Means clustering into the 5 clusters (K=5). According to each frequency value number of customers is counted per frequency segment. The X-axis represents average frequency values. Y-Axis represents the total number of client count per average frequency per frequency segment.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128729432-47dd0e7d-2fee-4d87-b5fe-ed1f0f995124.png)
+
+-   ***iii. Monetary Segmentation*** 
+
+    Each customer's average purchased amount is calculated (Monetary calculation). Monetary values are clustered with K-Means clustering into the 5 clusters (K=5). According to each monetary value number of customers is counted per monetary segment. The X-axis represents average monetary values. Y-Axis represents the total number of client count per average monetary per monetary segment.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128729272-fd7348b6-d5d1-4fd9-b3d1-73766b94cd35.png)
+
+-   ***iv. Recency Segmentation*** 
+    
+    Each customer's average time difference between the current date to last purchased date is calculated (recency calculation). Recency values are clustered with K-Means clustering into the 5 clusters (K=5). According to each recency value number of customers is counted per recency segment. The X-axis represents average recency values. Y-Axis represents the total number of client count per average recency per recency segment.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128729338-70b4b83d-cf05-4097-92c4-c98ec620a945.png)
     
     
     
