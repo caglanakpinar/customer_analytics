@@ -521,7 +521,7 @@ The main concept of the Customer Segment Change Analysis is for detecting the si
     
     ![image](https://user-images.githubusercontent.com/26736844/128720452-310adb5c-b11c-4501-9d2d-66f36eaaa2d1.png)
     
-#### 3. Customer Segmentation
+#### 2. Customer Segmentation
 
 Customer Segmentation is one of the popular arguments while analyzing the CustomerAnalytics. It uses one of the popular Segmentation perspective which is RFM (recency - monetary - frequency). 
 
@@ -616,11 +616,226 @@ Loyal Customer: Just like champions, they do love your business and not thinking
     ![image](https://user-images.githubusercontent.com/26736844/128729338-70b4b83d-cf05-4097-92c4-c98ec620a945.png)
     
     
+#### 3. CLV Prediction
+
+CLV Prediction enables us to see how the customers engage with the business, what this engagement brings to the businesses. In order to predict the future of customer engagement, each of them must be well understood. At CustomerAnalytics, it is applied for next 6 months. While it is scheduling, the predictions for the future 6 months is applied once in two weeks. 
+
+-   ****How does CLV Prediction work?***
+    
+    Each customer's next purchase date is predicted for the next 6 months. According to their purchase amount per their order predicted purchase dates of amounts are also predicted. However, we are only involved by using this mythology, newcomers of the total purchase amount are also predicted individually. CLV Prediction processes are not executed per day. It is executed per week. Each week the clv predictions are calculated for the next 6 months. You probably see overlapping days on the line chart. This is because of the weekly prediction process. In addition to that, This overlapping also helps us to track the CLV Performance about comparing Actual and Predicted Total Payment Amount per day.
+    
+-   ****i. Next Week CLV Prediction***
+
+    In the timeline, you probably see the daily total amount and predicted purchase amount per day. In that case, it is possible to see how well your business works. There are two main categorical data which are 'actual' and 'predicted'. Actual data is the total purchase amount per day. Predicted Data is the total predicted amount per day.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128742864-60140065-81cc-4d94-962e-8a179d12ab0c.png)
+    
+-   ****ii. Customers of Segments of Total Predicted Purchase Amounts***
+
+    This chart shows us the Predicted Customers of Segments. Their segments of % give us the idea of the business of growth.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128743015-81a9deae-552b-45b5-a656-201c3260b69a.png)
+    
+#### 4. Anomaly Detection
+
+In order to catch the significant increase/decrease, even we think that the business doing ok/not well, anomaly detection allows us the alarming days or weeks or time periods. This process also allows us to see where the business did well and where can be improved.
+
+- ***How does Anomaly Detection work?***
+
+    Anomaly Detection mainly concerns with the significant increase/decrease of a data point in the given metric. These metrics are Daily Funnel, Daily Cohort Anomaly, Daily Orders Anomaly, CLV Prediction of RFM Vs Current RFM Anomaly. Each metric of values of abnormal measurements is detected by AutoEncoder. AutoEncoder generates scores for each metric of the data point. Residuals (the difference between the actual value and predicted value) are calculated. The outliers of the residuals are the Abnormal values.
+ 
+- ***i. Daily Funnel Anomaly***
+  
+    Daily Funnel is the actions of totals per day. With the combination of all actions (from session count to purchase count per day), it is possible to detect abnormal days by using ML technique
+
+    ![image](https://user-images.githubusercontent.com/26736844/128743285-af511f1a-14f9-4c15-9d25-068224c19860.png)
+    
+- ***ii. Daily Cohort Anomaly***
+    
+    Date columns represent downloaded day and each purchase count column represents the day that the customers had the first order after they have download. If there is an abnormal date which has a significant low/high first purchase count related to the downloaded date, this chart allows us the see the exact downloaded date as the abnormal date.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128743450-01b542a6-d99f-4101-bdaa-e4c7bb2319f2.png)
+    
+- ***iii. Daily Cohort Anomaly With Scores (Download to First Order)***
+
+    Date columns represent downloaded day and each purchase count column represents the day that the customers had the first order after they have download. If there is an abnormal date that has a significant low/high first purchase count related to the downloaded date, this chart allows us the see the exact downloaded date as the abnormal date.
+
+    ![image](https://user-images.githubusercontent.com/26736844/128743539-93af915c-f7be-42e9-86fc-050a241ad1ad.png)
+
+- ***iv. Daily Order Anomaly***
+
+    This chart allows us to see the % of increase/decrease compared with previous days of purchase counts.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128743703-bb993946-fbcf-4c77-8d7b-9eb3b7ae4b63.png)
+    
+- ***v. CLV RFM Vs Current RFM***
+    
+    There are engaged customers whose purchases are predicted with CLV Prediction. We also know their Recency - Monetary - Frequency values that are calculated with their historic purchases. If we calculate their future RFM values via the CLV prediction and subtract them in order to detect a significant increase/decrease for each metric, we might clearly see how our customers ' behaviors might change in the future.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128743808-e0f61a58-13a6-495d-9863-1c8661d74e97.png)
+    
+---
+
+### F. Configugraitions
+
+CustomerAnalytics allows to change profile pictures and chat according to individual charts in the system. For instance, you would like to create a comment about anomaly increase on Feb 20, 2021, on the Daily Orders Chart. It is possible with creating the message.
+
+
+#### 1. Profiles
+
+At profiles, you can create messages or you can change your profile picture.
+
+![image](https://user-images.githubusercontent.com/26736844/128744089-df21bcee-8d52-4117-bf73-93815929bbb5.png)
+
+#### G. CustomerAnalytics DashBoard
+
+It is a dashboard with a combination of dashboards related to Exploratory analysis and Machine Learning Works. When it is logged to the CustomersAnalytics, first you are directed to the Overall Dashboard includes Orders - Revenue - Visitors - Discount KPIS, Daily Orders, Customer Journey, Churn Rate, Churn Rate Weekly, Top 10 Purchased Products, Top 10 Purchased Categories. At the other tab, you can see the Customer Dashboard includes Payment Amount Distribution, Total Number Customer Breakdown with Purchased Order Count, RFM, Download to First Order Cohort, Daily Funnel.
+
+![image](https://user-images.githubusercontent.com/26736844/128744178-8787c901-1907-4f00-88ff-18d2e320c996.png)
+
+#### 1. Overall Dashboard
+
+-   ***Orders - Revenue - Visitors - Discount***
+
+    Orders; Number of purchase count Revenue; Total Purchase Amount Visitors; Total Unique Visitors Count Discount; Total Discount Amount (Optional)
+    
+![image](https://user-images.githubusercontent.com/26736844/128744254-06a2a49a-72b0-4a5b-9b89-c08f6914cc90.png)
+
+
+-   ***Daily Orders***
+    
+    Total Number of Success Purchase Transaction per day.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128744944-ca12fee0-0537-4e51-a2b5-1e635d0dfd11.png)
+
+
+-   ***Customer Journey***
+
+    Customers Journey Calculation; 1. Calculate average Hour difference from Download to 1st orders. 2 . Calculate average order count 3. For each calculated average order count, calculate the average purchase amount, Example; average 2 orders, 1st orders avg 30.3£, 2nd orders avg 33.3£ Calculate average recent hours customers last order to a recent date.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128745079-9433a70d-53dc-46f4-9fe0-40e6f7707cdd.png)
+    
+-   ***Churn Rate***    
+    
+    First, the Frequency value is calculated for each user. Frequency is the time difference between each sequential order per customer. Each customer's last order date is not expected to be purchased before the average frequency day. In other words, Each customer is expected to order at most average frequency days before. A number of unique customers who have ordered between average frequency date before the current date and current date are engaged users Churn is engaged users divided by total unique ordered users.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128745140-95858dee-6a39-429e-81f1-25206dd15908.png)
+    
+-   ***Churn Rate Weekly***  
+
+    It is calculated the same as the churn rate per week (each Monday of the week).
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128745308-b6ed2d27-d279-425c-906c-c5263d490725.png)
+    
+-   ***Top 10 Purchased Products*** 
+    
+    The most preferred products for the customers. Each bar represents the total number of order per product (for more details check Product Analytics).
+    
+-   ***Top 10 Purchased Categories***   
+
+    The most preferred product categories for the customers. Each bar represents the total number of order per product category (for more details check Product Analytics).
+
+#### 1. Customers Dashboard
+
+-   ***Payment Amount Distribution*** 
+
+    The X-Axis is the purchase amount values with bins. Y-Axis is the number of Unique Customer count related to their average purchase amounts. This Distribution allows us the see how much customers are willing to pay for a purchase.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128745540-914b1a7c-5ca8-4b98-80bb-44fb2f6343b0.png)
+    
+-   ***Total Number Customer Breakdown with Purchased Order Count***
+    
+    X Axis is Order Counts staring with 1. Y Axis is number of Unique Customer count related to their order counts. This Distribution allows us the see overall potential of your business.
+    
+-   ***RFM***
+
+    X Axis represents 'recency'. Y Axis represents 'monetary'. Z Axis represents 'frequency'. Recency metric is a time difference between customers of last purchase transaction date to recent date. Monetary metric is average purchase amount per customer. Frequency metric is average time difference per between purchase date of each order per customer. There is a colored dots. These are represents the segmented customers according to their RFM values.
     
     
+![image](https://user-images.githubusercontent.com/26736844/128745680-700dc370-4040-4ec0-9cbf-5cd288fa2cac.png)
+
+-   ***Download to First Order Cohort***
+
+    If there isn`t any downloaded date, you may assign any date which is related to customers of first event with your business. This cohort of date column represent download date. If it is Weekly Cohort it will represent the mondays of each week. Otherwise it will represent days. Each Numeric column from 0 to 15 are the day differences after the downloaded date. For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100, this refers that there are 100 customers who have downloads in 2021-05-06 and have first orders 10 days later.
     
+    ![image](https://user-images.githubusercontent.com/26736844/128749399-e7ad990a-2ef5-48fc-9c4a-f873026d1f3f.png)
     
+-   ***Daily Funnel***   
     
+    X Axis represents days that are stored in ElasticSearch. Y Axis represents number of transactions such as order count, session count, add product the basket transaction count per day. In order to show actions such as add product the basket transaction count except order count, session count, these actions must be added to actions label while creating Sessions data source (For more information pls. check Create Data Source - Sessions & Customers).
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128749465-a21461f1-aa9b-4310-8ff2-555c2790e0e6.png)
+    
+-   ***CLV Prediction - Daily***   
+    
+    In a timeline, you probably see the daily total amount and predicted purchase amount per day. In that case, it is possible to see how well your business works. There are two main categorical data which are 'actual' and 'predicted'. Actual data is the total purchase amount per day. Predicted Data is the total predicted amount per day.
+    
+    ![image](https://user-images.githubusercontent.com/26736844/128749609-04cb015b-f849-4b1b-b2ca-b32ab01a3ebd.png)
+
+#### H. Searching
+
+There are 4 types of search;
+
+-   Products
+-   Clients
+-   Promotions
+-   Dimensions
+    
+Each type of search represents an individual dashboard with results. When the expected search value is typed on the search bar;
+
+-   ***Results are checked individually for each type of search.***
+    -   Create ngrams of search value.
+    -   Create ngrams for each list of search types (product IDs list, client IDs list, etc).
+    -   Calculate the similarity between ngrams of search value and ngrams for each list of each types.
+    -   Remove score = 0.
+    -   Find the top score and assign is as a detected search results.
+    
+-   ***Create a temporary .csv file at temporary_folder_path that is assigned by the user.***
+
+    There are 3 charts of .csv files;
+    -   chart_2_search.csv is positioned at right top.
+    -   chart_3_search.csv is positioned at left bottom.
+    -   chart_4_search.csv is positioned at right bottom.
+    
+    There are 4 KPIs with 1 .csv file;
+    -   chart_1_search.csv is positioned at left top. These KPIs will be changed.
+
+-   ***Each chart of data is created at temporary file.***
+
+    (chart_1_search.csv, .. , chart_4_search.csv) will be removed after the dashboard is shown at the user interface.
+    
+-   ***Each search type has individual charts and KPIs.***
+
+    So, each creation of charts and KPIs .csv files must be applied individually.
+    
+#### 1. Product
+
+Each product ID or name can be searched from the search bar. Product search is able to check unique product IDs or names at product columns that are created at Products Data Source. Once the scheduling process has been done, It is possible to search for unique products. In order to search for the new product name or ID, it must be rescheduled.
+
+![image](https://user-images.githubusercontent.com/26736844/128750165-fdb95ad3-b86b-4688-a953-fb63b9cfbbdf.png)
+
+
+#### 2. Client
+
+Each client or client ID can be searched from the search bar. Client search is able to check unique clients at the client column that is created at  Sessions Data Source and Customers Data Source. Once the scheduling process has been done, It is possible to search for unique clients. In order to search for the new client name or ID, it must be rescheduled.
+
+![image](https://user-images.githubusercontent.com/26736844/128750314-e4b49609-02a3-4703-b760-da9bedae59fc.png)
+
+#### 3. Promotion
+
+Each promotion or promotion ID can be searched from the search bar. Promotion search is able to check unique promotions at the promotion column that is created at  Sessions Data Source and it is the optional column. Once the scheduling process has been done, It is possible to search for unique promotions. In order to search for the new promotion name or ID, it must be rescheduled.
+    
+![image](https://user-images.githubusercontent.com/26736844/128750395-0dc1cdd1-8774-4e67-a59d-aed73eabe9e2.png)
+    
+### 4. Dimension
+
+Each dimension value can be searched from the search bar. Dimension search is able to check unique dimensions at the dimension column that is created at  Sessions Data Source and it is the optional column. Once the scheduling process has been done, It is possible to search unique dimensions. In order to search for the new dimension, it must be rescheduled.
+
+![image](https://user-images.githubusercontent.com/26736844/128750487-df620acc-23e4-4f62-af31-9097b70973a9.png)
+
+
+
+
     
     
     
