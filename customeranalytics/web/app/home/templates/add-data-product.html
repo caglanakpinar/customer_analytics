@@ -1,0 +1,177 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} basket data connection {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Baskets</h5>
+			<div class="col-md-12">
+				<form method="POST">
+					<div class="card">
+						<div class="card-header">
+							<h5 class="card-title"><strong>Sessions of Baskets Data Source</strong> </h5>
+							<div class="row">
+								<h6 class="card-subtitle text-muted mb-3">
+									<strong style="color:green;"> Baskets : </strong> The basket data source is the sub-data source for the sessions.
+									This data source is merging with Sessions data source and storing into he ElasticSerach
+									If any session has a basket, the Order ID of the session of basket information must be included at basket data source.
+									Basket Data Source is optional.
+									Product Analytics Dashboard and A/B Test for Products are calculated related to basket datasource.
+									If here is action in the Session data source related to basket creation,
+									make sure this action has True value while there is a created basket.
+								</h6>
+							</div>
+
+							<div class="row ">
+								<h6 class="card-subtitle text-muted">
+									{% if values['data_source_con_check'] == 'Connected' %}
+										{% if values['s_c_p_connection_check'] == 'False_False_False' %}
+											<strong style="color:green;">There isn`t any connection detected for Baskets.</strong>
+										{% endif %}
+										{% if values['s_c_p_connection_check'] == 'False_False_True' or values['s_c_p_connection_check'] == 'True_True_True' or values['s_c_p_connection_check'] == 'False_True_True' or values['s_c_p_connection_check'] == 'True_False_True' %}
+											<strong style="color:green;">Baskets Data Source is successfully created.</strong>
+										{% endif %}
+									{% endif %}
+									{% if values['data_source_con_check'] != 'Connected'  and values['data_source_con_check'] != '....' %}
+											<strong style="color:red;">Connection is failed! .</strong>
+									{% endif %}
+									{% if values['data_source_con_check'] == '....' %}
+										{% if values['s_c_p_connection_check'] == 'False_False_True' or values['s_c_p_connection_check'] == 'True_True_True' or values['s_c_p_connection_check'] == 'False_True_True' or values['s_c_p_connection_check'] == 'True_False_True' %}
+											<strong style="color:green;">Baskets Data Source is detected</strong>
+										{% endif %}
+									{% endif %}
+								</h6>
+							</div>
+						</div>
+						<div class="card-body">
+							<div class="row">
+								<div class="col-md-12">
+									<div class="card">
+										<div class="card-header">
+											<h5 class="card-title"><strong style="color:green;">Basket Data Source</strong></h5>
+											<h6 class="card-subtitle text-muted">
+												<div class="row">
+													- Each session ID (Order ID) must be unique. Sessions must cover both non-purchased and purchase transactions.
+												</div>
+												<div class="row">
+													- session IDs must be matched with Session IDs on Sessions Data Source.
+												</div>
+												<div class="row">
+													- Products are assigned as product IDs or product names.
+												</div>
+												<div class="row">
+													- Price will be the Amount * Price of the product.
+												</div>
+											</h6>
+										</div>
+										<div class="card-body">
+											{% if values['es_connection'] != '....' %}
+												<div class="mb-4 col-md-12">
+													{% if values['es_connection']['url'] == 'None' %}
+														<td>  <a href="{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a></td>
+													{% endif %}
+												</div>
+
+												<div class="mb-4 col-md-12">
+													<label class="form-label mb-2" for="input_name">Basket Connection Tag Name</label>
+													<input name="products_data_source_tag" type="text" class="form-control mb-3" id="input_name" placeholder="main_session connection" required>
+												</div>
+												<table class="table table-striped">
+													<thead>
+														<tr>
+														<th  style="width:16%;">
+															order ID
+														</th>
+														<th style="width:15%;">
+															product
+														</th>
+
+														<th style="width:15%;">
+															price
+														</th>
+
+														<th style="width:15%;">
+															category
+														</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td> <input name="order_id" type="text" class="form-control mb-3" id="order_id" required> </td>
+															<td> <input name="product" type="text" class="form-control mb-3" id="product" required> </td>
+															<td> <input name="price" type="text" class="form-control mb-3" id="price" required> </td>
+															<td> <input name="category" type="text" class="form-control mb-3" id="category" required> </td>
+														</tr>
+
+													</tbody>
+												</table>
+
+
+												<div class="row">
+													<div class="col-md-6">
+														<label class="form-label" for="inputState">data source</label>
+														<select size="3" name="products_data_source_type" id="products_data_source_type"  data-show-content="true" class="form-control mb-3" required>
+															<option>postgresql</option>
+															<option>google big query</option>
+															<option>aws redshift</option>
+															<option selected>csv</option>
+															<option>parquet</option>
+															<option>hdf5</option>
+														</select>
+														<label class="form-label">Data Query or Path</label>
+														<textarea name="products_data_query_path" class="form-control mb-3" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+													</div>
+													<div class="col-md-6">
+														<label class="form-label" for="inputPasswordNew2">user</label>
+														<input name="products_user" type="text" class="form-control mb-3" id="products_user">
+														<label class="form-label" for="inputPasswordNew">password</label>
+														<input name="products_password" type="password" class="form-control mb-3" id="inputPasswordNew">
+														<label class="form-label" for="inputPasswordNew2">port</label>
+														<input name="products_port" type="text" class="form-control mb-3" id="products_port">
+														<label class="form-label" for="inputPasswordNew2">host</label>
+														<input name="products_host" type="text" class="form-control mb-3" id="products_host">
+														<label class="form-label" for="inputPasswordNew2">database</label>
+														<input name="products_db" type="text" class="form-control" id="products_db">
+													</div>
+												</div>
+												<button name="connect" value="products" type="submit" class="btn btn-primary" >Connect</button>
+											{% endif %}
+
+											{% if values['es_connection'] == '....' %}
+												<strong style="color:red;">Please add ElasticSearch Connection</strong>
+											{% endif %}
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<script>
+function myFunction() {
+  // Get the checkbox
+  var checkBox = document.getElementById("myCheck");
+  // Get the output text
+  var text = document.getElementById("text");
+
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+  } else {
+    text.style.display = "none";
+  }
+}
+</script>
+{% block javascripts %}{% endblock javascripts %}

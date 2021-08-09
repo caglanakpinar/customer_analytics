@@ -1,0 +1,261 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Anomaly Detection {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Anomaly Detection</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="accordion" id="accordionExample">
+								<div class="card">
+									<div class="card-header" id="headingOne">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Filters
+											</a>
+										</h5>
+									</div>
+									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+										<form method="POST">
+											<div class="row">
+												<div class="col-md-6">
+													<div class="card">
+														<div class="card-body">
+															<div class="card">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Dimension selection</h5>
+																</div>
+																<div class="card-body">
+																	<select name="index" id="index" class="form-control">
+																		{% for d in filters['dimensions'] %}
+																			{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value= "main">{{ d }}</option>
+																			{% endif %}
+																			{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value="{{ d }}">{{ d }}</option>
+																			{% endif %}
+																		{% endfor %}
+																	</select>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-6">
+													<div class="card flex-fil">
+														<div class="card-body col-12">
+															<div class="col-12 ">
+																<div class="align-self-center w-100">
+																	<div class="chart">
+																		<input name="date" id="datetimepicker-dashboard" hidden>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="card-header">
+													<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+												</div>
+											</div>
+										</form>
+									</div>
+								</div>
+
+								<div class="card">
+									<div class="card-header" id="headingTwo">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Infos
+											</a>
+										</h5>
+									</div>
+									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+										<div class="card-body">
+											<ul>
+											  <li>
+												  <strong style="color:green;">Anomaly Detection </strong>
+													 In order to catch the significant increase/decrease,
+												     even we think that the business doing ok/not well,
+												     the anomaly detection allow us the the alarming days or weeks or time periods.
+												     This process also allows us to see where the business did well and where can be improved.
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">How does Anomaly Detection work?</h5>
+													  Anomaly Detection mainly concerns with the significant increase/decrease of a data point in the given metric.
+													  These metrics are
+													  Daily Funnel, Daily Cohort Anomaly, Daily Orders Anomaly, CLV Prediction of RFM Vs Current RFM Anomaly.
+													  Each metric of values of abnormal measurements is detected by AutoEncoder.
+													  AutoEncoder generates scores for each metric of the data point.
+													  Residuals (the difference between the actual value and predicted value) are calculated.
+													  The outliers of the residuals are the Abnormal values.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Daily Funnel Anomaly</h5>
+													  Daily Funnel is the actions of totals per day.
+													  With the combination of  all actions (from session count to purchase count per day)
+													  it is possible to detect abnormal days by using ML techniques.
+												  </div>
+											  </li>
+												<li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">
+														Daily Cohort Anomaly & Daily Cohort Anomaly With Scores (Download to First Order)</h5>
+        												Date columns represents downloaded day and
+													    each purchase count column represents the day that the customers had the first order after they have download.
+													    If there is a abnormal date which have significant low/high first purchase count related to downloaded date,
+													    this chart allow us the see the exact downloaded date as abnormal date.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">
+														Daily Orders Anomaly</h5>
+        												This chart allows us to see the % of increase/decrease compared with previous days of purchase counts.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">CLV RFM Vs Current RFM Anomaly</h5>
+        												There are engaged customers whose purchases are predicted with CLV Prediction.
+														We also know their Recency - Monetary - Frequency values ​​that are calculated with their historic purchases.
+														If we calculate their future RFM values ​​via the CLV prediction and
+														subtract them in order to detect a significant increase/decrease for each metric,
+														we might clearly see how our customers of behaviors might change in the future.
+												  </div>
+											  </li>
+
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Daily Funnel Anomaly {% if data_type['dfunnel_anomaly'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div  id="df_anomaly_id" class="plotly-gra ph-div" style="height:400px;"></div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Daily Cohort Anomaly (Download to First Order) {% if data_type['dcohort_anomaly'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="dc_anomaly_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Daily Cohort Anomaly With Scores (Download to First Order) {% if data_type['dcohort_anomaly_2'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="dc_anomaly_2_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Daily Orders Anomaly {% if data_type['dorders_anomaly'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="do_anomaly_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">CLV RFM Vs Current RFM {% if data_type['clvrfm_anomaly'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div id="clvrfm_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+			var df_anomaly = {{dfunnel_anomaly | safe}};
+
+	        Plotly.plot('df_anomaly_id', // the ID of the div, created above
+						df_anomaly.trace, df_anomaly.layout, {});
+
+			var dc_anomaly = {{dcohort_anomaly | safe}};
+
+	        Plotly.plot('dc_anomaly_id', // the ID of the div, created above
+						dc_anomaly.trace, dc_anomaly.layout, {});
+
+			var dc_anomaly_2 = {{dcohort_anomaly_2 | safe}};
+
+	        Plotly.plot('dc_anomaly_2_id', // the ID of the div, created above
+						dc_anomaly_2.trace, dc_anomaly_2.layout, {});
+
+			var do_anomaly = {{dorders_anomaly | safe}};
+
+	        Plotly.plot('do_anomaly_id', // the ID of the div, created above
+						do_anomaly.trace, do_anomaly.layout, {});
+
+			var clvrfm = {{clvrfm_anomaly | safe}};
+
+	        Plotly.plot('clvrfm_id', // the ID of the div, created above
+						clvrfm.trace, do_anomaly.layout, {});
+
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}

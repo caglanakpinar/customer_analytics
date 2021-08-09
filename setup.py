@@ -7,18 +7,23 @@ with open("README.md", "r") as fh:
 
 
 setuptools.setup(
-    name="customer_analytics",
+    name="customeranalytics",
     version="0.0.1",
     author="Caglan Akpinar",
     author_email="cakpinar23@gmail.com",
-    description="clv prediction applying with deep learning",
+    description="""
+                Funnels, Cohorts, A/B Tests, e-commerce, CLV Prediction, Product Analytics, Churn, Anomaly Detection,
+                Customer Segmentation, RFM, Statistics
+                """,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords='CLV, Customer Lifetime Value, Lifetime Prediction',
+    keywords='Customer Analytics',
     packages= find_packages(exclude='__pycache__'),
-    py_modules=['clv', 'clv/docs'],
+    py_modules=['customer_analytics', "customeranalytics/web", "customeranalytics/docs"],
     # TODO: will be updated
     install_requires=[
+        "psycopg2-binary",
+        "urllib3",
         "flask_login",
         "flask",
         "python-decouple",
@@ -26,11 +31,20 @@ setuptools.setup(
         "flask_wtf",
         "sqlalchemy",
         "email-validator",
-        "screeninfo"
-
-
+        "screeninfo",
+        "pandas",
+        "numpy",
+        "elasticsearch",
+        "pyyaml",
+        "schedule",
+        "h2o",
+        "psutil",
+        "keras-tuner",
+        "tensorflow",
+        "clv-prediction",
+        "abtest"
     ],
-    url="https://github.com/caglanakpinar/clv_prediction",
+    url="https://github.com/caglanakpinar/customer_analytics",
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",

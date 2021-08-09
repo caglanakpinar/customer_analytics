@@ -1,0 +1,254 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} RFM {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Recency - Monetary - Frequency Calculations for Customers</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="accordion" id="accordionExample">
+								<div class="card">
+									<div class="card-header" id="headingOne">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Filters
+											</a>
+										</h5>
+									</div>
+									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+										<form method="POST">
+											<div class="row">
+												<div class="col-md-6">
+													<div class="card">
+														<div class="card-body">
+															<div class="card">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Dimension selection</h5>
+																</div>
+																<div class="card-body">
+																	<select name="index" id="index" class="form-control">
+																		{% for d in filters['dimensions'] %}
+																			{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value= "main">{{ d }}</option>
+																			{% endif %}
+																			{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value="{{ d }}">{{ d }}</option>
+																			{% endif %}
+																		{% endfor %}
+																	</select>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-6">
+													<div class="card flex-fil">
+														<div class="card-body col-12">
+															<div class="col-12 ">
+																<div class="align-self-center w-100">
+																	<div class="chart">
+																		<input name="date" id="datetimepicker-dashboard" hidden>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="card-header">
+													<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+												</div>
+											</div>
+										</form>
+									</div>
+								</div>
+
+								<div class="card">
+									<div class="card-header" id="headingTwo">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Infos
+											</a>
+										</h5>
+									</div>
+									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+										<div class="card-body">
+											<ul>
+											  <li>
+												  <strong style="color:green;">
+													  RFM (Recency - Monetary - Frequency) </strong>
+												      RFM is the most common Marketing measurement for each business.
+												      It is easy to apply for any kind of business.
+												      It is the combination of 3 metrics which are Recency - Monetary - Frequency.
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Recency</h5>
+													  	It is a time difference measurement related to how recently the customer engages with the business.
+												  </div>
+											  </li>
+									          <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Monetary</h5>
+													  	It is the value of the purchases per customer.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Frequency</h5>
+													  	It is a time difference measurement related to how average hourly difference between 2 orders per customer in the business.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">RFM 3D Scatter</h5>
+														Each point represents individual customer`s of RFM values
+														The X-axis represents recency; Y-axis represents monetary, Z-Axis represents frequency values.
+												  </div>
+											  </li>
+												<li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Frequency - Recency Scatter</h5>
+        												The X-axis represents frequency; Y-axis represents recency values.
+													  Colors represent Customer Segments.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Monetary - Frequency Scatter</h5>
+        												The X-axis represents monetary; Y-axis represents frequency values.
+													    Colors represent Customer Segments
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Recency - Monetary Scatter</h5>
+        												The X-axis represents recency; Y-axis represents monetary values.
+														Colors represent Customer Segments.
+												  </div>
+											  </li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">RFM {% if data_type['rfm'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+
+									<div  id="rfm_vals_id" class="plotly-gra ph-div" style="height:400px;"></div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Frequency - Recency {% if data_type['frequency_recency'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="fr_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Monetary - Frequency {% if data_type['monetary_frequency'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="mf_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Recency - Monetary {% if data_type['recency_monetary'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="rm_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+			var rfm_vals = {{rfm | safe}};
+
+	        Plotly.plot('rfm_vals_id', // the ID of the div, created above
+						rfm_vals.trace, rfm_vals.layout, {});
+
+			var fr = {{frequency_recency | safe}};
+
+	        Plotly.plot('fr_id', // the ID of the div, created above
+						fr.trace, fr.layout, {});
+
+			var mf = {{monetary_frequency | safe}};
+
+	        Plotly.plot('mf_id', // the ID of the div, created above
+						mf.trace, mf.layout, {});
+
+			var rm = {{recency_monetary | safe}};
+
+	        Plotly.plot('rm_id', // the ID of the div, created above
+						rm.trace, rm.layout, {});
+
+
+
+
+
+
+
+
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}

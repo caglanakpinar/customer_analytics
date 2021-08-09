@@ -1,0 +1,211 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} CLV Prediction {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Customer Lifetime Value Calcualtion</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="accordion" id="accordionExample">
+								<div class="card">
+									<div class="card-header" id="headingOne">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Filters
+											</a>
+										</h5>
+									</div>
+									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+										<form method="POST">
+											<div class="row">
+												<div class="col-md-6">
+													<div class="card">
+														<div class="card-body">
+															<div class="card">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Dimension selection</h5>
+																</div>
+																<div class="card-body">
+																	<select name="index" id="index" class="form-control">
+																		{% for d in filters['dimensions'] %}
+																			{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value= "main">{{ d }}</option>
+																			{% endif %}
+																			{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value="{{ d }}">{{ d }}</option>
+																			{% endif %}
+																		{% endfor %}
+																	</select>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-6">
+													<div class="card flex-fil">
+														<div class="card-body col-12">
+															<div class="col-12 ">
+																<div class="align-self-center w-100">
+																	<div class="chart">
+																		<input name="date" id="datetimepicker-dashboard" hidden>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="card-header">
+													<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+												</div>
+											</div>
+										</form>
+									</div>
+								</div>
+
+								<div class="card">
+									<div class="card-header" id="headingTwo">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Infos
+											</a>
+										</h5>
+									</div>
+									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+										<div class="card-body">
+											<ul>
+											  <li>
+												  <strong style="color:green;">
+													  Customer Lifetime Value Prediction for Next 6 Months </strong>
+												  CLV Prediction enables us to see how the customers engage with the business,
+												  what this engagement brings to the businesses.
+												  In order to predict the future of customer engagement,
+												  each of them must be well understood.
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">How does CLV Prediction work?</h5>
+													  Each customer's next purchase date is predicted for the next 6 months.
+													  According to their purchase amount per their order predicted purchase dates of amounts are also predicted.
+													  However, we are only involved by using this mythology,
+													  newcomers of the total purchase amount are also predicted individually.
+													  CLV Prediction processes are not executed per day. It is executed per week.
+													  Each week the clv predictions are calculated for the next 6 months.
+													  You probably see overlapping days on the line chart.
+													  This is because of the weekly prediction process.
+													  In addition to that, This overlapping also helps us to track the CLV Performance
+													  about comparing Actual and Predicted Total Payment Amount per day.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">How can Customer Lifetime Value Prediction for the Next 6 Months be read? </h5>
+												  	  In a timeline, you probably see the daily total amount and predicted purchase amount per day.
+													  In that case, it is possible to see how well your business works.
+													  There are two main categorical data which are 'actual' and 'predicted'.
+													  Actual data is the total purchase amount per day.
+													  Predicted Data is the total predicted amount per day.
+												  </div>
+											  </li>
+												<li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">CLV Predicted Next Week Customers of Segments of Total Purchase Amounts</h5>
+        												This chart shows us the Predicted Customers of Segments.
+													  Their segments of % give us the idea of the business of growth.
+												  </div>
+											  </li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Next Week CLV Predictions {% if data_type['daily_clv'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+
+									<div  id="clv_id" class="plotly-gra ph-div" style="height:400px;"></div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Customers of Segments of Total Predicted Purchase Amounts {% if data_type['clvsegments_amount'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="clv_s_a_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+			var clv = {{daily_clv | safe}};
+
+	        Plotly.plot('clv_id', // the ID of the div, created above
+						clv.trace, clv.layout, {});
+
+			var clv_s_a = {{clvsegments_amount | safe}};
+
+	        Plotly.plot('clv_s_a_id', // the ID of the div, created above
+						clv_s_a.trace, clv_s_a.layout, {});
+
+
+
+
+
+
+
+
+
+
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}

@@ -1,0 +1,399 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} sessions & customers data connection {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Sessions & Customers Data Source</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title"><strong>Sessions Data Source</strong> </h5>
+						<div class="row">
+							<h6 class="card-subtitle text-muted mb-1">
+								<strong style="color:green;"> Sessions : </strong> This is a data source that includes All transactions
+							from the session start action to the last action that is purchased.</h6>
+						</div>
+						<div class="row">
+							<h6 class="card-subtitle text-muted mb-3">
+								<strong style="color:green;"> Customers : </strong>Unique customers with their unique actions such as download, signup, e.g</h6>
+						</div>
+						<div class="row ">
+							<h6 class="card-subtitle text-muted">
+
+								{% if values['data_source_con_check'] == 'Connected' %}
+									{% if values['s_c_p_connection_check'] == 'False_False_False' %}
+										<strong style="color:green;">There isn`t any connection detected for Sessions and Customers.</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'True_True_True' %}
+										<strong style="color:green;">connected successfully!</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'False_False_True' %}
+										<strong style="color:green;">There isn`t any connection detected for Sessions and Customers But There is a connection for Baskets.</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'False_True_True' or  values['s_c_p_connection_check'] == 'False_True_False' %}
+										<strong style="color:green;">There is a connection detected for Customers.</strong>
+										<strong style="color:red;">But There isn`t any connection detected for Sessions. Don`t forget to add Session connection.</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'True_False_True' or  values['s_c_p_connection_check'] == 'True_False_False' %}
+										<strong style="color:green;">There is a connection detected for Sessions.</strong>
+										<strong style="color:red;">But There isn`t any connection detected for Customers. Don`t forget to add Customers connection.</strong>
+									{% endif %}
+								{% endif %}
+								{% if values['data_source_con_check'] != 'Connected' and values['data_source_con_check'] != '....' %}
+										<strong style="color:red;">Connection is failed! .</strong>
+								{% endif %}
+								{% if values['data_source_con_check'] == '....' %}
+									{% if values['s_c_p_connection_check'] == 'True_False_False' or values['s_c_p_connection_check'] == 'True_False_True' %}
+										<strong style="color:green;">There is a connection detected for Sessions.</strong>
+										<strong style="color:red;">But There isn`t any connection detected for Customers. Don`t forget to add Customers connection.</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'False_True_False' or values['s_c_p_connection_check'] == 'False_True_True' %}
+										<strong style="color:green;">There is a connection detected for Customers.</strong>
+										<strong style="color:red;">But There isn`t any connection detected for Sessions. Don`t forget to add Session connection.</strong>
+									{% endif %}
+									{% if values['s_c_p_connection_check'] == 'True_True_False' or values['s_c_p_connection_check'] == 'True_True_True' %}
+										<strong style="color:green;">Both Sessions and Customers data Sources are detected.</strong>
+									{% endif %}
+								{% endif %}
+							</h6>
+						</div>
+
+					</div>
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title"><strong style="color:green;">Sessions</strong></h5>
+										<h6 class="card-subtitle text-muted">
+											<div class="row">
+												- Each session ID must be unique. Sessions must cover both non-purchased and purchase transactions.
+											</div>
+											<div class="row">
+												- Session Start Date (Whatever you will give as a column) must be a convenient date format.
+											</div>
+											<div class="row">
+												- The payment Amount for each session transaction must be assigned as a Null value.
+											</div>
+											<div class="row">
+												- There must be a purchased (True/False) column which is required.
+											</div>
+											<div class="row">
+												-  Discount Amount and session end date columns are optional.
+											</div>
+											<div class="row">
+												-  Make sure client IDs are also in the data set for Customers Data Sources.
+											</div>
+											<div class="row">
+												-  Actions are optional. But It is good to be added. Funnels, Anomaly is related to Action.
+											</div>
+											<div class="row">
+												-  Each action name must be assigned. No need to add as an action for 'Has Session' and 'Has Purchase'.
+											</div>
+											<div class="row">
+												-  Promotion Column is optional. But, It is good to be added. A/B test Promotions are related to Promotions.
+											</div>
+											<div class="row">
+												-  It is possible to add dimensional columns. For instance, you would like to add 'location' as a column to the process and
+												   calculate all charts, dashboards, ML and Analysis processes breakdown with 'location',
+												   you are able to add to the Dimensional Column Name in Data Source.
+											</div>
+										</h6>
+									</div>
+									<div class="card-body">
+
+
+										{% if values['es_connection'] != '....' %}
+											<form method="POST">
+												<div class="mb-4 col-md-12">
+													{% if values['es_connection']['url'] == 'None' %}
+														<td>  <a href="{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a></td>
+													{% endif %}
+												</div>
+
+												<div class="mb-4 col-md-12">
+													<label class="form-label mb-2" for="input_name">Session Connection Tag Name</label>
+													<input name="orders_data_source_tag" type="text" class="form-control mb-3" id="input_name" placeholder="main_session connection" required>
+												</div>
+
+												<table class="table table-striped">
+													<thead>
+														<tr>
+
+														<th  style="width:16%;">
+															order ID
+														</th>
+														<th style="width:15%;">
+															client
+														</th>
+
+														<th style="width:15%;">
+															start date
+														</th>
+
+														<th style="width:15%;">
+															end date
+														</th>
+														<th style="width:15%;">
+															amount
+														</th>
+														<th style="width:15%;">
+															discount
+														</th>
+														<th style="width:15%;">
+															purchase
+														</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td> <input name="order_id" type="text" class="form-control mb-3" id="order_id" required> </td>
+															<td> <input name="client" type="text" class="form-control mb-3" id="client" required> </td>
+															<td> <input name="session_start_date" type="text" class="form-control mb-3" id="session_start_date" required> </td>
+															<td> <input name="date" type="text" class="form-control mb-3" id="end_date" required> </td>
+															<td> <input name="payment_amount" type="text" class="form-control mb-3" id="payment_amount" required> </td>
+															<td> <input name="discount_amount" type="text" class="form-control mb-3" id="discount_amount" required> </td>
+															<td> <input name="has_purchased" type="text" class="form-control mb-3" id="has_purchased" required> </td>
+														</tr>
+
+													</tbody>
+												</table>
+
+												<div class="row">
+													<div class="mb-4 col-md-6">
+														<label class="form-label mb-2" for="order_id_tag">Dimensional Column Name in Data Source</label>
+														<div class="mb-2">
+															<h10 class="text-muted">
+																Dimensional Column will be you grouping column in Exploratory Analysis, Machine Learning Processes, Dashboard, and Charts
+																This will also create a new ElasticSearch Index per unique Dimension on that column of values.
+															</h10>
+														</div>
+														<input name="dimension" type="text" class="form-control mb-3" id="actions" placeholder="location, region, order_type, order_category, e.g.">
+													</div>
+
+													<div class="mb-4 col-md-6">
+														<label class="form-label mb-2" for="order_id_tag">Promotion Column </label>
+														<div class="mb-2">
+															<h10 class="text-muted">
+																If Data Source has Promotion, please add as promotion IDs column.
+															</h10>
+														</div>
+														<input name="promotion_id" type="text" class="form-control mb-3" id="promotion_id" placeholder="">
+													</div>
+												</div>
+
+												<div class="row">
+													<div class="mb-4 col-md-12">
+														<label class="form-label mb-2" for="order_id_tag">Action Column Names in Data Source </label>
+														<div class="mb-2">
+															<h10 class="text-muted">
+																Action Columns are typed below with comma separated form. These action names must be the exact column name on the data set.
+																Each Action column must have values with True/False. More actions mean more understanding of Customers.
+															</h10>
+														</div>
+														<input name="actions" type="text" class="form-control mb-3" id="actions" placeholder="has_basket, has_order_screen, e.g.">
+													</div>
+												</div>
+
+												<div class="row">
+													<div class="col-md-6">
+														<label class="form-label" for="inputState">data source</label>
+														<select size="3" name="orders_data_source_type" id="inputState2"  data-show-content="true" class="form-control mb-3" required>
+															<option>postgresql</option>
+															<option>google big query</option>
+															<option>aws redshift</option>
+															<option selected>csv</option>
+															<option>parquet</option>
+															<option>hdf5</option>
+														</select>
+														<label class="form-label">Data Query or Path</label>
+														<textarea name="orders_data_query_path" class="form-control mb-3" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+													</div>
+													<div class="col-md-6">
+														<label class="form-label" for="inputPasswordNew2">user</label>
+														<input name="orders_user" type="text" class="form-control mb-3" id="inputPasswordNew2">
+														<label class="form-label" for="inputPasswordNew">password</label>
+														<input name="orders_password" type="password" class="form-control mb-3" id="inputPasswordNew">
+														<label class="form-label" for="inputPasswordNew2">port</label>
+														<input name="orders_port" type="text" class="form-control mb-3" id="inputPasswordNew2">
+														<label class="form-label" for="inputPasswordNew2">host</label>
+														<input name="orders_host" type="text" class="form-control mb-3" id="inputPasswordNew2">
+														<label class="form-label" for="inputPasswordNew2">database</label>
+														<input name="orders_db" type="text" class="form-control" id="inputPasswordNew2">
+													</div>
+												</div>
+												<button name="connect" value="orders" type="submit" class="btn btn-primary" >Connect</button>
+											</form>
+										{% endif %}
+
+										{% if values['es_connection'] == '....' %}
+											<strong style="color:red;">Please add ElasticSearch Connection</strong>
+										{% endif %}
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card-mb-6">
+									<div class="card-header">
+										<h5 class="card-title"><strong style="color:green;">Customers</strong></h5>
+										<h6 class="card-subtitle text-muted mb-7">
+											<div class="row">
+												- Each customer ID must be unique. Customer IDs are eligible to join with the Session of client IDs.
+											</div>
+											<div class="row">
+												- Download Date is required.
+											</div>
+											<div class="row">
+												- Signup Date is optional.
+											</div>
+											<div class="row">
+												- Even there is no download date is available please make sure to assign any date valuable for the business.
+											</div>
+											<div class="row">
+												-  Actions must be date rather than True/False columns just like Sessions Data Source of Actions.
+											</div>
+											<div class="row">
+												-  Actions are optional. But It is good to be added. Funnels, Anomaly is related to Actions.
+											</div>
+											<div class="row">
+												-  If there is an assigned dimensional column on Session Data Source,
+												make sure customers Data Source includes the clients for all dimension.
+											</div>
+										</h6>
+
+									</div>
+
+									<div class="mb-4 col-md-12">
+										{% if values['es_connection'] != '....' %}
+											<form method="POST">
+												<div class="mb-4 col-md-12">
+													{% if values['es_connection']['url'] == 'None' %}
+														<td>  <a href="{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a></td>
+													{% endif %}
+												</div>
+
+												<div class="mb-4 col-md-12">
+													<label class="form-label mb-2" for="input_name">Customers Connection Tag Name</label>
+													<input name="downloads_data_source_tag" type="text" class="form-control mb-3" id="input_name" placeholder="main_customer connection" required>
+												</div>
+
+												<table class="table table-striped">
+													<thead>
+														<tr>
+															<th  style="width:33%;">
+																Client ID
+															</th>
+
+															<th style="width:33%;">
+																Download Date
+															</th>
+
+															<th style="width:33%;">
+																Signup Date
+															</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td> <input name="client_2" type="text" class="form-control mb-3" id="client_2" required> </td>
+															<td> <input name="download_date" type="text" class="form-control mb-3" id="download_date" required> </td>
+															<td> <input name="signup_date" type="text" class="form-control mb-3" id="signup_date"> </td>
+														</tr>
+
+													</tbody>
+												</table>
+												<div class="row">
+
+													<div class="mb-7 col-md-12">
+													</div>
+													<div class="mb-7 col-md-12">
+													</div>
+
+												</div>
+
+												<div class="row">
+
+													<div class="mb-3 col-md-12">
+														<label class="form-label mb-2" for="order_id_tag">Action Column Names in Data Source </label>
+														<div class="mb-3">
+															<h10 class="text-muted">
+																Action Columns are typed below with comma separated form. These action names must be the exact column name on the data set.
+																Each Action column must have values with True/False. More actions mean more understanding of Customers.
+															</h10>
+														</div>
+
+														<textarea name="actions" class="form-control mb-3" placeholder="first_session_start_date, first_order_date, e.g." rows="1"></textarea>
+													</div>
+												</div>
+
+												<div class="card-body">
+													<div class="row">
+														<div class="col-md-6">
+															<label class="form-label" for="inputState">data source</label>
+															<select size="3" name="downloads_data_source_type" id="inputState2"  data-show-content="true" class="form-control mb-3" required>
+																<option>postgresql</option>
+																<option>google big query</option>
+																<option>aws redshift</option>
+																<option selected>csv</option>
+																<option>parquet</option>
+																<option>hdf5</option>
+															</select>
+															<label class="form-label">Data Query or Path</label>
+															<textarea name="downloads_data_query_path" class="form-control mb-3" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+														</div>
+														<div class="col-md-6">
+															<label class="form-label" for="inputPasswordNew2">user</label>
+															<input name="downloads_user" type="text" class="form-control mb-3" id="inputPasswordNew2">
+															<label class="form-label" for="inputPasswordNew">password</label>
+															<input name="downloads_password" type="password" class="form-control mb-3" id="inputPasswordNew">
+															<label class="form-label" for="inputPasswordNew2">port</label>
+															<input name="downloads_port" type="text" class="form-control mb-3" id="inputPasswordNew2">
+															<label class="form-label" for="inputPasswordNew2">host</label>
+															<input name="downloads_host" type="text" class="form-control mb-3" id="inputPasswordNew2">
+															<label class="form-label" for="inputPasswordNew2">database</label>
+															<input name="downloads_db" type="text" class="form-control" id="inputPasswordNew2">
+														</div>
+													</div>
+													<button name="connect" value="downloads" type="submit" class="btn btn-primary" >Connect</button>
+												</div>
+											</form>
+										{% endif %}
+										{% if values['es_connection'] == '....' %}
+											<strong style="color:red;">Please add ElasticSearch Connection</strong>
+										{% endif %}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<script>
+function myFunction() {
+  // Get the checkbox
+  var checkBox = document.getElementById("myCheck");
+  // Get the output text
+  var text = document.getElementById("text");
+
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+  } else {
+    text.style.display = "none";
+  }
+}
+</script>
+{% block javascripts %}{% endblock javascripts %}

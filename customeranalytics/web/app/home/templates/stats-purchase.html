@@ -1,0 +1,221 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Stats Purchase {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Purchase Of Statistics</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="accordion" id="accordionExample">
+								<div class="card">
+									<div class="card-header" id="headingOne">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Filters
+											</a>
+										</h5>
+									</div>
+									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+										<form method="POST">
+											<div class="row">
+												<div class="col-md-6">
+													<div class="card">
+														<div class="card-body">
+															<div class="card">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Dimension selection</h5>
+																</div>
+																<div class="card-body">
+																	<select name="index" id="index" class="form-control">
+																		{% for d in filters['dimensions'] %}
+																			{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value= "main">{{ d }}</option>
+																			{% endif %}
+																			{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value="{{ d }}">{{ d }}</option>
+																			{% endif %}
+																		{% endfor %}
+																	</select>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-6">
+													<div class="card flex-fil">
+														<div class="card-body col-12">
+															<div class="col-12 ">
+																<div class="align-self-center w-100">
+																	<div class="chart">
+																		<input name="date" id="datetimepicker-dashboard" hidden>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="card-header">
+													<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+												</div>
+											</div>
+										</form>
+									</div>
+								</div>
+
+								<div class="card">
+									<div class="card-header" id="headingTwo">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Infos
+											</a>
+										</h5>
+									</div>
+									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+										<div class="card-body ">
+											<ul>
+											  <li>
+												  <div class="card-header">
+													<h5 class="card-title" style="color:green;">Daily Orders</h5>
+													  Total number of orders per day.
+													  Total number of unique session IDs which has has_purchase (has_purchase = True) breakdown with day.
+												  </div>
+											  </li>
+											   <li>
+												  <div class="card-header">
+													<h5 class="card-title" style="color:green;">Hourly Orders</h5>
+													  Average of total order count per day.
+													  Total number of order count per day and per hour is aggregated.
+													  Next step is calculating average order count per hour by using aggregated data from the previous step.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+													<h5 class="card-title" style="color:green;">Weekly Orders</h5>
+													    Total number of orders per week. Each week is represented by Mondays.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+													<h5 class="card-title" style="color:green;">Monthly Orders</h5>
+													    Total number of orders per month;
+													    total number of purchase unique session IDs are counted per month.
+												  </div>
+											  </li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Daily Orders {% if data_type['daily_orders'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div  id="d_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Hourly Orders {% if data_type['hourly_orders'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="h_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Weekly Orders {% if data_type['weekly_orders'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="w_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Monthly Orders {% if data_type['monthly_orders'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="m_orders_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+			var d_orders = {{daily_orders | safe}};
+
+	        Plotly.plot('d_orders_id', // the ID of the div, created above
+						d_orders.trace, d_orders.layout, {});
+
+			var h_orders = {{hourly_orders | safe}};
+
+	        Plotly.plot('h_orders_id', // the ID of the div, created above
+						h_orders.trace, h_orders.layout, {});
+
+			var w_orders = {{weekly_orders | safe}};
+
+	        Plotly.plot('w_orders_id', // the ID of the div, created above
+						w_orders.trace, w_orders.layout, {});
+
+			var m_orders = {{monthly_orders | safe}};
+
+	        Plotly.plot('m_orders_id', // the ID of the div, created above
+						m_orders.trace, m_orders.layout, {});
+
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}
