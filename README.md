@@ -808,42 +808,175 @@ Each type of search represents an individual dashboard with results. When the ex
 
     So, each creation of charts and KPIs .csv files must be applied individually.
     
-#### 1. Product
+##### 1. Product
 
 Each product ID or name can be searched from the search bar. Product search is able to check unique product IDs or names at product columns that are created at Products Data Source. Once the scheduling process has been done, It is possible to search for unique products. In order to search for the new product name or ID, it must be rescheduled.
 
 ![image](https://user-images.githubusercontent.com/26736844/128750165-fdb95ad3-b86b-4688-a953-fb63b9cfbbdf.png)
 
 
-#### 2. Client
+##### 2. Client
 
 Each client or client ID can be searched from the search bar. Client search is able to check unique clients at the client column that is created at  Sessions Data Source and Customers Data Source. Once the scheduling process has been done, It is possible to search for unique clients. In order to search for the new client name or ID, it must be rescheduled.
 
 ![image](https://user-images.githubusercontent.com/26736844/128750314-e4b49609-02a3-4703-b760-da9bedae59fc.png)
 
-#### 3. Promotion
+##### 3. Promotion
 
 Each promotion or promotion ID can be searched from the search bar. Promotion search is able to check unique promotions at the promotion column that is created at  Sessions Data Source and it is the optional column. Once the scheduling process has been done, It is possible to search for unique promotions. In order to search for the new promotion name or ID, it must be rescheduled.
     
 ![image](https://user-images.githubusercontent.com/26736844/128750395-0dc1cdd1-8774-4e67-a59d-aed73eabe9e2.png)
     
-### 4. Dimension
+##### 4. Dimension
 
 Each dimension value can be searched from the search bar. Dimension search is able to check unique dimensions at the dimension column that is created at  Sessions Data Source and it is the optional column. Once the scheduling process has been done, It is possible to search unique dimensions. In order to search for the new dimension, it must be rescheduled.
 
 ![image](https://user-images.githubusercontent.com/26736844/128750487-df620acc-23e4-4f62-af31-9097b70973a9.png)
 
 
+#### I. Use CustomerAnalytics via Python
 
-
+Creating ElasticSearch connection, temporary data folder, Sessions - Customers - Products Data Sources, Exploratory Analysis, Machine Learning Works and running/shutting down CustomerAnalytics user interface are able to be operated via Python code.
     
     
+    import customeranalytics
+
+
+##### 1. Creating ElasticSearch connection and Temporary Data Folder
+
+It enables us to configure ElasticSearch with host and port. Another requirement which is a temporary path is for importing files such as CLV Prediction of model files and .csv format files with the build_in_reports folder.
+
+    customeranalytics.create_ElasticSearch_connection(            
+						       port="9200, 
+                               host="localhost", 
+                               temporary_path=“/*****”)    
+
+##### 2. Sessions - Customers - Products Data Sources
+
+This process is for the connecting data sources which are SESSIONS, CUSTOMERS PRODUCTS. Each data source has its own unique form to connect. This process checks the connection failure, before store the connection information to the SQLite DB. There are 3 main updating processes for the store process;
+
+-   ***1. db connection :*** These process included data_source_name, data_source_type, DB_name, DB_user, DB_name, data_source_path/query, etc.
+-   ***2. actions :*** This is for actions both for Sessions and Customer Data Source. Example of actions; "has_basket, order_screen". Actions are split with ',' and string format.
+-   ***3. column names :*** data source columns must be matched with ElasticSearch fields for each data source (Session, Customers, products) individually. column names must be string format. Example of columns;
+    -   ***1. sessions_fields :***
+        -   ***order_id :*** unique ID for each session (purchased/non-purchased sessions.
+        -   ***client :*** ID for client this column can connect with client ID (client_2) or customer_fields.
+        -   ***session_start_date :*** eligible date format (yyyy-mm-dd hh:mm)
+        -   ***date :*** eligible date format (yyyy-mm-dd hh:mm)
+        -   ***payment_amount :*** value of purchase (float/int). If it not purchased, please assign None, Null ‘-'.
+        -   ***discount_amount :*** discount of purchase (float/int). If it not purchased, please assign None, Null ‘-'.
+        -   ***has_purchased :*** True/False. If it is True, session ends with purchased. If it is False, session ends with non-purchased.
+        -   ***optional columns :*** date, discount_amount.
+
+    -   ***2. Customer Fields :***
+        -   ***client_2 :*** unique ID for client this column can connect with client ID (client) or session_fields.
+        -   ***download_date :*** eligible date format (yyyy-mm-dd hh:mm). This date can be any date which customers first appear at the business.
+        -   ***signup_date :*** eligible date format (yyyy-mm-dd hh:mm). First event of timestamp after the download_Date per customer.
+        -   ***optimal columns :*** signup_date
+    
+    -   ***3. Product Fields :***
+        -   ***order_id :*** Order ID for each session which has the created basket. This column is eligible to merge with Order Id column at session fields.
+        -   ***product :*** product Id or name. Make sure it is easy to read from charts.
+        -   ***price :*** price per each product.
+        -   ***category :***  product of category.
+    
+        
+Products and sessions data sets are stored into the orders Index at ElasticSearch. Customer data sets are stored in the customers Index at ElasticSearch.
+
+-   ***Parameters***
+
+    -   ***customers_connection :*** dictionary with data_source, data_query_path, host, port, password, user, db.
+    -   ***sessions_connection :*** dictionary with data_source, data_query_path, host, port, password, user, db.
+    -   ***products_connection :*** dictionary with data_source, data_query_path, host, port, password, user, db.
+    -   ***sessions_fields :*** dictionary with order_id, client, session_start_date, date, payment_amount, discount_amount, has_purchased.
+    -   ***customer_fields :*** client_2, download_date, signup_date.
+    -   ***product_fields :*** order_id, product, price, category.
+    -   ***actions_sessions :*** string with comma separated for sessions.
+    -   ***actions_customers :*** string with comma separated for customers. 
+    -   ***promotion_id :*** string column name for promotions.
+    -   ***dimension_sessions :*** string column name for dimensions.
     
     
-
-
-
-
+        customers_connection = {'data_source_type': "postgresql",     
+                                'data_query_path': """                
+                                SELECT *        
+                                FROM customers  
+                                """,                
+                                'user': "c****",                      
+                                'password': "1******",                
+                                'port': "5432",                       
+                                'host': "127.0.0.1",                  
+                                'db': "c******"                       
+                                }
+        
+        
+        
+        
+        
+        sessions_connection = {'data_source_type': "postgresql",      
+                               'data_query_path': """                
+                               SELECT *        
+                               FROM sessions   
+                               """,                
+                               'user': "c****",                      
+                               'password': "1******",                
+                               'port': "5432",                       
+                               'host': "127.0.0.1",                  
+                               'db': "c******"                       
+                               }
+        
+        
+        products_connection = {'data_source_type': "postgresql",      
+                               'data_query_path': """                
+                               SELECT *        
+                               FROM products   
+                               """,                
+                               'user': "c****",                      
+                               'password': "1******",                
+                               'port': "5432",                       
+                               'host': "127.0.0.1",                  
+                               'db': "c******"                       
+                               }   
+                               
+                               
+        sessions_fields = {'order_id': ‘order_id',                    
+                   'client': ‘client',                        
+                   ‘session_start_date':'session_start_date', 
+                   'date': ‘end_date',                        
+                   'payment_amount': ‘payment_amount',        
+                   'discount_amount': ‘discount_amount',      
+                   'has_purchased': ‘has_purchased’} 
+                   
+        
+        customer_fields = {'client_2': 'client',                      
+                           'download_date': 'download_d',             
+                           'signup_date': ‘signup_d'} 
+        
+        product_fields = {'order_id': ‘order_id',                     
+                          'product': 'product',                       
+                          'price': ‘price',                           
+                          'category': ‘category'} 
+        
+        actions_sessions = "has_basket, order_screen"
+        actions_customers = “first_login_date“
+        promotion_id = “promotion_id“       
+        dimension_sessions = “dimension“     
+        
+        customeranalytics.create_connections(                          
+            dimension_sessions=dimension_sessions,  # optional          
+            customers_connection=customers_connection, # required        
+            sessions_connection=sessions_connection,  # required         
+            sessions_fields=sessions_fields,  # required                 
+            customer_fields=customer_fields,  # required                 
+            product_fields=product_fields,  # required if there is a.  product data source                                                  
+            products_connection=products_connection,  # optional       
+            actions_sessions=actions_sessions,  # optional             
+            actions_customers=actions_customers,  # optional           
+            promotion_id=promotion_id  # optional                          
+            )       
+            
+    
+ 
 
 
 
