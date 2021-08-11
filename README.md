@@ -975,8 +975,121 @@ Products and sessions data sets are stored into the orders Index at ElasticSearc
             promotion_id=promotion_id  # optional                          
             )       
             
+##### 3. Run CustomerAnalytics user interface
+
+    customeranalytics.create_user_interface() 
+    http://127.0.0.1:5000
     
- 
+
+##### 4. Shut Down CustomerAnalytics user interface
+    
+    customeranalytics.kill_user_interface() 
+   
+##### 5. Run Schedule Process
+
+    customeranalytics.create_schedule(time_period=‘once’) 
+    
+##### 6. Delete Schedule Process
+
+    customeranalytics.delete_schedule()
+    
+##### 7. Collecting Reports
+    
+If any report needs as a pandas data-frame, this can help us collect the report with the given name. Name list of the reports are available at report_names.
+
+    customeranalytics.collect_report('daily_clv', 
+                                     date=None, 
+                                     dimension=‘main')   
+
+##### 8. Collecting all report names
+
+
+    customeranalytics.report_names()   
+
+    ['weekly_funnel',
+     'daily_clv',
+     'daily_funnel',
+     'daily_funnel_downloads',
+     'weekly_average_payment_amount',
+     'product_usage_before_after_orders_reject',
+     'chart_4_search',
+     'recency_clusters',
+     'weekly_cohort_from_2_to_3',
+     'daily_dimension_values',
+     'daily_cohort_from_3_to_4',
+     'promotion_comparison',
+     'promotion_usage_before_after_orders_reject',
+     'most_ordered_products',
+     'daily_organic_orders',
+     'monetary_clusters',
+     'frequency_recency',
+     'segments_change_monthly_before_after_amount',
+     'daily_promotion_revenue',
+     'chart_1_search',
+     'daily_cohort_from_2_to_3',
+     'weekly_cohort_from_3_to_4',
+     'product_usage_before_after_orders_accept',
+     'client_feature_predicted',
+     'frequency_clusters',
+     'monthly_orders',
+     'daily_products_of_sales',
+     'hourly_funnel',
+     'weekly_average_order_per_user',
+     'daily_inorganic_ratio',
+     'daily_cohort_downloads',
+     'hourly_inorganic_ratio',
+     'promotion_number_of_customer',
+     'inorganic_orders_per_promotion_per_day',
+     'promotion_usage_before_after_orders_accept',
+     'chart_3_search',
+     'recency_monetary',
+     'segments_change_monthly_before_after_orders',
+     'customer_journey',
+     'purchase_amount_distribution',
+     'dfunnel_anomaly',
+     'dcohort_anomaly_2',
+     'dimension_kpis',
+     'segments_change_weekly_before_after_orders',
+     'user_counts_per_order_seq',
+     'daily_cohort_from_1_to_2',
+     'hourly_organic_orders',
+     'weekly_cohort_downloads',
+     'hourly_funnel_downloads',
+     'product_usage_before_after_amount_accept',
+     'client_kpis',
+     'dorders_anomaly',
+     'churn',
+     'monthly_funnel_downloads',
+     'most_combined_products',
+     'avg_order_count_per_promo_per_cust',
+     'dcohort_anomaly',
+     'weekly_cohort_from_1_to_2',
+     'segments_change_daily_before_after_orders',
+     'rfm',
+     'promotion_usage_before_after_amount_accept',
+     'monthly_funnel',
+     'kpis',
+     'churn_weekly',
+     'clvsegments_amount',
+     'order_and_payment_amount_differences',
+     'hourly_orders',
+     'clvrfm_anomaly',
+     'weekly_funnel_downloads',
+     'product_usage_before_after_amount_reject',
+     'weekly_average_session_per_user',
+     'chart_2_search',
+     'daily_promotion_discount',
+     'product_kpis',
+     'segments_change_weekly_before_after_amount',
+     'daily_orders',
+     'weekly_orders',
+     'segmentation',
+     'segments_change_daily_before_after_amount',
+     'most_ordered_categories',
+     'promotion_usage_before_after_amount_reject',
+     'monetary_frequency',
+     'promotion_kpis']
+
 
 
 
