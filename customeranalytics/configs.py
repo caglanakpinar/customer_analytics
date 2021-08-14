@@ -46,6 +46,15 @@ elasticsearch_settings = {
                                                                               "order_screen": {"type": "boolean"},
                                                                               "purchased": {"type": "boolean"}
                                                                         }
+                                                           },
+                                                           "delivery": {
+                                                               "properties": {
+                                                                   "delivery_date": {"type": "date"},
+                                                                   "return_date": {"type": "date"},
+                                                                   "prepare_date": {"type": "date"},
+                                                                   "latitude": {"type": "float"},
+                                                                   "longitude": {"type": "float"}
+                                                               }
                                                            }
 
                                                           }
@@ -176,17 +185,23 @@ schedule_columns = {
                     "downloads_data_source_type": "Customers Connection Data Source",
                     "downloads_data_query_path": "Customers Connection Data Query/Path",
 
-                    "products_data_source_tag": "Baskets Connection Tag Name",
-                    "products_data_source_type": "Baskets Connection Data Source",
-                    "products_data_query_path": "Baskets Connection Data Query/Path",
-
                     "s_action": "Has Sessions Data Source Actions?",
                     "d_action": "Has Customers Data Source Actions?",
                     "promotion_id": "Has Sessions Data Source Promotions?",
 
                     "max_date_of_order_data": "Last Time Triggered Scheduling Job",
                     "time_period": "Schedule Time Period",
-                    "schedule_tag": "Schedule Status",
+                          "schedule_tag": "Schedule Status",
+}
+
+schedule_columns_optional = {
+                            "products_data_source_tag": "Baskets Connection Tag Name",
+                            "products_data_source_type": "Baskets Connection Data Source",
+                            "products_data_query_path": "Baskets Connection Data Query/Path",
+
+                            "deliveries_data_source_tag": "Deliveries Connection Tag Name",
+                            "deliveries_data_source_type": "Deliveries Connection Data Source",
+                            "deliveries_data_query_path": "Deliveries Connection Data Query/Path",
 }
 
 
@@ -202,6 +217,7 @@ default_message = {'es_connection': '....',
                    'product_orders': '....',
                    'schedule': '...',
                    'schedule_columns': list(schedule_columns.values()),
+                   'schedule_columns_optional': list(schedule_columns_optional.values()),
                    'schedule_tags': '....',
                    'logs': '....',
                    'last_log': '....',
@@ -215,7 +231,7 @@ default_message = {'es_connection': '....',
                    }
 
 
-acception_column_count = {'orders': 5, 'downloads': 2, 'products': 4}
+acception_column_count = {'orders': 5, 'downloads': 2, 'products': 4, 'deliveries': 2}
 
 
 orders_index_obj = {'id': 74915741,
@@ -236,12 +252,18 @@ orders_index_obj = {'id': 74915741,
    'session_start_date': '2020-12-16T09:39:11'}
 orders_index_columns = ["id", "date", "actions", "client", "promotion_id",
                         "payment_amount", "discount_amount", "basket", "total_products",
-                        "session_start_date", "dimension"]
+                        "session_start_date", "dimension", 'delivery']
 
-not_required_columns = {"orders": ['discount_amount'], 'downloads': ['signup_date'], 'products': ['category']}
-not_required_default_values = {'discount_amount': float(0.0), 'signup_date': default_query_date, 'category': 'cat_1'}
+not_required_columns = {"orders": ['discount_amount'], 'downloads': ['signup_date'],
+                        'products': ['category'], 'deliveries': ['return_date', 'prepare_date', 'latitude', 'longitude']}
+not_required_default_values = {'discount_amount': float(0.0),
+                               'signup_date': default_query_date,
+                               'category': 'cat_1',
+                               'return_date': default_query_date, 'prepare_date':default_query_date,
+                               'latitude': float(0.0), 'longitude':float(0.0)}
 
 downloads_index_columns = ["id", "download_date", "signup_date", "client"]
+delivery_metrics = ['return_date', 'prepare_date', 'delivery_date', 'latitude', 'longitude']
 
 downloads_index_obj = {'id': 89481673,
                        'download_date': '2021-01-01T21:23:15',

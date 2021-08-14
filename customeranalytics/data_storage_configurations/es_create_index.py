@@ -17,7 +17,7 @@ from flask_login import current_user
 from os.path import abspath, join
 
 from customeranalytics.utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format, formating_numbers
-from customeranalytics.configs import query_path, default_es_port, default_es_host, none_types
+from customeranalytics.configs import query_path, default_es_port, default_es_host, none_types, delivery_metrics
 from customeranalytics.configs import orders_index_columns, downloads_index_columns, not_required_columns, not_required_default_values
 from customeranalytics.data_storage_configurations.query_es import QueryES
 from customeranalytics.data_storage_configurations.data_access import GetData
@@ -202,7 +202,7 @@ class CreateIndex:
 
     def change_columns_format(self, data, data_source_type):
         columns = list(data.columns)
-        if data_source_type in ['orders', 'products']:
+        if data_source_type in ['orders', 'products', 'deliveries']:
             data['order_id'] = data['order_id'].apply(lambda x: str(x))
         if data_source_type in ['orders', 'downloads']:
             data['client'] = data['client'].apply(lambda x: str(x))
@@ -219,6 +219,11 @@ class CreateIndex:
             if 'promotion_id' in columns:
                 data['promotion_id'] = data['promotion_id'].apply(
                     lambda x: x if x == x and x not in ['None', None, 'nan'] else None)
+            if data_source_type == 'deliveries':
+                for col in delivery_metrics:
+                    if col in columns:
+                        data[col] = data[col].apply(
+                            lambda x: parse(x) if col in ['return_date', 'prepare_date', 'delivery_date'] else float(x))
         if data_source_type == 'downloads':
             data['download_date'] = data['download_date'].apply(
                 lambda x: parse(x) if x == x and x not in ['None', None, 'nan'] else None)
@@ -269,12 +274,20 @@ class CreateIndex:
             print(e)
         return data
 
+    def check_columns(self, col):
+        _col = col
+        if col == 'client_2':
+            _col = 'client'
+        if col == 'order_id_2':
+            _col = 'order_id'
+        return _col
+
     def match_data_columns(self, data):
         cols = list(data.columns)
         renaming = {}
         for col in self.data_columns:
             if self.data_columns[col] in cols:
-                renaming[self.data_columns[col]] = col if col != 'client_2' else 'client'
+                renaming[self.data_columns[col]] = self.check_columns(col)
         return data.rename(columns=renaming)
 
     def check_for_not_required_columns(self, data, data_source_type):
@@ -308,7 +321,7 @@ class CreateIndex:
         data = self.check_for_not_required_columns(data, data_source_type)
         return data
 
-    def merge_orders(self, order_source, product_source):
+    def merge_orders(self, order_source, product_source, delivery_source):
         orders = pd.DataFrame()
         try:
             orders = self.get_data(conf=order_source, data_source_type='orders')
@@ -332,6 +345,18 @@ class CreateIndex:
             except Exception as e:
                 print(e)
                 orders['basket'] = None
+
+            try:
+                if delivery_source.get('data_query_path', None) is not None:
+                    deliveries = self.get_data(conf=delivery_source, data_source_type='deliveries')
+                    deliveries = deliveries.groupby("order_id").agg({m: 'first' for m in delivery_metrics}).reset_index()
+                    deliveries['delivery'] = deliveries.apply(lambda row: {m: row[m] for m in delivery_metrics}, axis=1)
+                    orders = pd.merge(orders, deliveries[['order_id', 'delivery']], on='order_id', how='left')
+                else: orders['delivery'] = None
+            except Exception as e:
+                print(e)
+                orders['delivery'] = None
+
         return orders
 
     def insert_to_index(self, data, index):
@@ -353,6 +378,10 @@ class CreateIndex:
               'payment_amount': 52.75500000000001,
               'discount_amount': 0,
               'basket': {'p_10': {'price': 6.12, 'category': 'p_c_8', 'rank': 109},....},
+              'delivery': {'delivery_date': '2020-12-16T09:39:11',
+                           'return_date': '2020-12-16T09:39:11',
+                           'prepare_date': '2020-12-16T09:39:11',
+                           'latitude':43,2342131232, 'longitude': 34,2342131232}
               'total_products': 7,
               'session_start_date': '2020-12-16T09:39:11'}}
 
@@ -363,7 +392,7 @@ class CreateIndex:
         """
         try:
             _insert = []
-            data = data.to_dict('results')
+            data = data.query("has_purchased == 'True'").to_dict('results')
             if index == 'orders':
                 for i in data:
                     _obj = {i: None for i in orders_index_columns}
@@ -375,6 +404,19 @@ class CreateIndex:
                         _obj['actions']['has_sessions'] = True
                     else:
                         _obj['actions'] = {'purchased': _has_purchased, 'has_sessions': True}
+
+                    if i['delivery'] is not None:
+                        _delivery = {}
+                        if i['delivery'] == i['delivery']:
+                            _delivery = i['delivery']
+                            try:
+                                for k in ['return_date', 'prepare_date', 'delivery_date']:
+                                    if _delivery[k] not in ['None', None, 'nan']:
+                                        _delivery[k] = convert_to_iso_format(i[k])
+                            except Exception as e:
+                                print(e)
+                            i['delivery'] = _delivery
+
                     for k in _obj:
                         if k in _keys:
                             if k in ['date', 'session_start_date']:
@@ -456,7 +498,8 @@ class CreateIndex:
             for _data_type in ['orders', 'downloads']:
                 if _data_type == 'orders':
                     _result_data = self.merge_orders(self.data_connection_structure['orders'],
-                                                     self.data_connection_structure['products'])
+                                                     self.data_connection_structure['products'],
+                                                     self.data_connection_structure['deliveries'])
                 else:
                     _result_data = self.get_data(conf=self.data_connection_structure['downloads'],
                                                  data_source_type='downloads')

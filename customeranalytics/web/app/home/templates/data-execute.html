@@ -59,8 +59,7 @@
 							<div class="mb-2">
 								<h6 class="card-subtitle text-muted">This is the overall picture of all connections which are
 									<strong style="color:#F1B600;">Sessions</strong>,
-									<strong style="color:#40E0D0;">Customers</strong>,
-									<strong style="color:#9797C3;">Products</strong>.
+									<strong style="color:#40E0D0;">Customers</strong>.
 									At the table below they are with individual colors.
 									Each connection has information such as data source type, data/query path, data source name, etc.
 									There are also columns for the scheduling process which are
@@ -103,16 +102,11 @@
 											{% if i in ['Customers Connection Tag Name', 'Customers Connection Data Source', 'Customers Connection Data Query/Path'] %}
 												<th style="font-size:50%;color:#40E0D0;">{{ i }}</th>
 											{% endif %}
-											{% if i in ['Baskets Connection Tag Name', 'Baskets Connection Data Source', 'Baskets Connection Data Query/Path'] %}
-												<th style="font-size:50%;color:#9797C3;">{{ i }}</th>
-											{% endif %}
 											{% if i in ['Last Time Triggered Scheduling Job', 'Schedule Time Period', 'Schedule Status'] %}
 												<th style="font-size:50%;color:#40A0E0;">{{ i }}</th>
 											{% endif %}
 
-
-
-											{% if i not in ['Sessions Connection Tag Name', 'Sessions Connection Data Source', 'Sessions Connection Data Query/Path', 'Customers Connection Tag Name', 'Customers Connection Data Source', 'Customers Connection Data Query/Path', 'Baskets Connection Tag Name', 'Baskets Connection Data Source', 'Baskets Connection Data Query/Path', 'Last Time Triggered Scheduling Job', 'Schedule Time Period', 'Schedule Status'] %}
+											{% if i not in ['Sessions Connection Tag Name', 'Sessions Connection Data Source', 'Sessions Connection Data Query/Path', 'Customers Connection Tag Name', 'Customers Connection Data Source', 'Customers Connection Data Query/Path', 'Last Time Triggered Scheduling Job', 'Schedule Time Period', 'Schedule Status'] %}
 												<th style="font-size:60%;">{{ i }}</th>
 											{% endif %}
 										{% endfor %}
@@ -207,6 +201,56 @@
 
 											</td>
 
+											<td style="font-size:60%;">{{ i['ses_actions'] }}</td>
+											<td style="font-size:60%;">{{ i['d_actions'] }}</td>
+											<td style="font-size:60%;">{{ i['promotion_id'] }}</td>
+
+											<td style="font-size:60%;">{{ i['max_date_of_order_data'] }}</td>
+											<td style="font-size:60%;">{{ i['time_period'] }}</td>
+											<td style="font-size:60%;">
+												{% if i['schedule_tag'] != '....' %}
+													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i>
+												{% endif %}
+												{% if i['schedule_tag'] == '....' %}
+													<i class="align-middle mr-2" data-feather="x-circle" style="color:#FF0000;"></i>
+												{% endif %}
+											</td>
+										</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						    <div class="card-header">
+						    	<h5 class="card-title">OPTIONAL DATA CONNECTIONS</h5>
+						    	<div class="mb-2">
+						    		<h6 class="card-subtitle text-muted">This is the overall picture of all optional connections which are
+						    			<strong style="color:#976966;">Deliveries</strong>,
+						    			<strong style="color:#9797C3;">Products</strong>.
+						    			At the table below they are with individual colors.
+						    			Each connection has information such as data source type, data/query path, data source name, etc.
+						    		</h6>
+						    	</div>
+						    </div>
+							<table class="table scroll">
+								<thead>
+									<tr>
+										{% for i in values['schedule_columns_optional'] %}
+											{% if i in ['Baskets Connection Tag Name', 'Baskets Connection Data Source', 'Baskets Connection Data Query/Path'] %}
+												<th style="font-size:50%;color:#9797C3;">{{ i }}</th>
+											{% endif %}
+
+											{% if i in ['Deliveries Connection Tag Name', 'Deliveries Connection Data Source', 'Deliveries Connection Data Query/Path'] %}
+												<th style="font-size:50%;color:#976966;">{{ i }}</th>
+											{% endif %}
+
+											{% if i not in ['Deliveries Connection Tag Name', 'Deliveries Connection Data Source', 'Deliveries Connection Data Query/Path', 'Baskets Connection Tag Name', 'Baskets Connection Data Source', 'Baskets Connection Data Query/Path'] %}
+												<th style="font-size:60%;">{{ i }}</th>
+											{% endif %}
+										{% endfor %}
+									</tr>
+								</thead>
+								<tbody>
+									{% for i in values['schedule'] %}
+										<tr>
 											<td style="font-size:60%;">{{ i['products_data_source_tag'] }}</td>
 											<td style="font-size:60%;">{{ i['products_data_source_type'] }}</td>
 											<td style="font-size:60%;" >
@@ -245,19 +289,40 @@
 												{% endif %}
 											</td>
 
+											<td style="font-size:60%;">{{ i['deliveries_data_source_tag'] }}</td>
+											<td style="font-size:60%;">{{ i['deliveries_data_source_type'] }}</td>
+											<td style="font-size:60%;" >
+												{% if i['deliveries_data_query_path'] != '...' %}
+													<a data-toggle="modal"  data-target="#edit_query_path_{{ i['products_data_source_tag'] }}" style="color:green;">{{ i['deliveries_data_query_path'] }}</a>
+													<form method="POST">
+													<div class="modal fade" id="edit_query_path_{{ i['deliveries_data_query_path'] }}" tabindex="-1" role="dialog" aria-hidden="true">
+													<div class="modal-dialog" role="document">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h4 class="card-subtitle text-muted"></h4>
+																<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+															</div>
+															<div class="modal-body m-3">
+																<div class="card">
+																	<div class="card-body">
+																		<h5 class="card-title">Edit Query/Path for - {{ i['deliveries_data_query_path'] }}</h5>
+																			<div class="mb-3">
 
-											<td style="font-size:60%;">{{ i['ses_actions'] }}</td>
-											<td style="font-size:60%;">{{ i['d_actions'] }}</td>
-											<td style="font-size:60%;">{{ i['promotion_id'] }}</td>
-
-											<td style="font-size:60%;">{{ i['max_date_of_order_data'] }}</td>
-											<td style="font-size:60%;">{{ i['time_period'] }}</td>
-											<td style="font-size:60%;">
-												{% if i['schedule_tag'] != '....' %}
-													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i>
+																			</div>
+																			<textarea name="products_data_query_path" class="form-control" placeholder="SELECT * FROM table .... / raw_data.csv" rows="5" required></textarea>
+																	</div>
+																</div>
+															</div>
+															<div class="modal-footer">
+																<button name="edit" value="True" type="submit" class="btn btn-primary">Save changes</button>
+															</div>
+														</div>
+													</div>
+													</div>
+													</form>
 												{% endif %}
-												{% if i['schedule_tag'] == '....' %}
-													<i class="align-middle mr-2" data-feather="x-circle" style="color:#FF0000;"></i>
+												{% if i['products_data_query_path'] == '...' %}
+													{{ i['products_data_query_path'] }}
 												{% endif %}
 											</td>
 										</tr>

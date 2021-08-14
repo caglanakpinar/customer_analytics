@@ -50,7 +50,8 @@ def get_data_connection_arguments():
 
     data_configs = {'orders': create_data_access_parameters(conn, index='orders', date=None, test=False),
                     'downloads': create_data_access_parameters(conn, index='downloads', date=None, test=False),
-                    'products': create_data_access_parameters(conn, index='products', date=None, test=False)
+                    'products': create_data_access_parameters(conn, index='products', date=None, test=False),
+                    'deliveries': create_data_access_parameters(conn, index='deliveries', date=None, test=False)
                     }
     return conn, columns, data_configs
 
@@ -167,6 +168,9 @@ def get_columns_condition(request, _columns, index):
 
     if index == 'products':
         desire_column_count = acception_column_count['products']
+
+    if index == 'deliveries':
+        desire_column_count = acception_column_count['deliveries']
 
     if len(_columns) >= desire_column_count:
         return True
