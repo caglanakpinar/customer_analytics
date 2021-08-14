@@ -435,6 +435,7 @@ session_columns = {'order_id', 'client', 'session_start_date', 'date', 'payment_
                    'discount_amount', 'has_purchased'}
 customer_columns = {'client_2', 'download_date', 'signup_date'}
 product_columns = {'order_id', 'product', 'price', 'category'}
+delivery_columns = {'delivery_date', 'prepare_date', 'return_date', 'latitude', 'longitude'}
 
 
 data_types_for_search = {"product": [('chart_1', ['product_kpis']),
