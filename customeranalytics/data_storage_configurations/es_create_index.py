@@ -392,7 +392,7 @@ class CreateIndex:
         """
         try:
             _insert = []
-            data = data.query("has_purchased == 'True'").to_dict('results')
+            data = data.to_dict('results')
             if index == 'orders':
                 for i in data:
                     _obj = {i: None for i in orders_index_columns}
@@ -412,7 +412,7 @@ class CreateIndex:
                             try:
                                 for k in ['return_date', 'prepare_date', 'delivery_date']:
                                     if _delivery[k] not in ['None', None, 'nan']:
-                                        _delivery[k] = convert_to_iso_format(i[k])
+                                        _delivery[k] = convert_to_iso_format(i['delivery'][k])
                             except Exception as e:
                                 print(e)
                             i['delivery'] = _delivery
