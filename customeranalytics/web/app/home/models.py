@@ -280,9 +280,9 @@ class RouterRequest:
 
     def update_actions_table(self, requests):
         if requests['data_type'] not in ['products', 'deliveries']:
+            self.remove_data_type_action(requests)
+            self.check_for_table_exits(table='actions')
             if requests.get('actions', None) is not None:
-                self.check_for_table_exits(table='actions')
-                self.remove_data_type_action(requests)
                 actions = []
                 if requests['actions'] != '':
                     for i in [i.replace(" ", "") for i in requests['actions'].split(",")]:
