@@ -15,6 +15,7 @@ from dateutil.parser import parse
 from sqlalchemy import create_engine, MetaData
 from flask_login import current_user
 from os.path import abspath, join
+import time
 
 from customeranalytics.utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format, formating_numbers
 from customeranalytics.configs import query_path, default_es_port, default_es_host, none_types, delivery_metrics
@@ -359,6 +360,16 @@ class CreateIndex:
 
         return orders
 
+    def partial_insert(self, _insert, index):
+        counter = 0
+        while counter < 10:
+            try:
+                self.query_es.insert_data_to_index(_insert, index)
+                counter = 10
+            except Exception as e:
+                print(e)
+            counter += 1
+
     def insert_to_index(self, data, index):
         """
         Sessions (Orders) Index Document;
@@ -413,6 +424,8 @@ class CreateIndex:
                                 for k in ['return_date', 'prepare_date', 'delivery_date']:
                                     if _delivery[k] not in ['None', None, 'nan']:
                                         _delivery[k] = convert_to_iso_format(i['delivery'][k])
+                                    else:
+                                        _delivery[k] = convert_to_iso_format(i['session_start_date'])
                             except Exception as e:
                                 print(e)
                             i['delivery'] = _delivery
@@ -436,11 +449,11 @@ class CreateIndex:
                     _insert.append(_obj)
                     del _obj
                     if len(_insert) >= 10:
-                        self.query_es.insert_data_to_index(_insert, index)
+                        self.partial_insert(_insert, index)
                         _insert = []
 
                 if len(_insert) != 0:
-                    self.query_es.insert_data_to_index(_insert, index)
+                    self.partial_insert(_insert, index)
                 # insert logs into the sqlite logs table for sessions data insert process
                 self.logs_update(logs={"page": "data-execute",
                                        "info": " SESSIONS index Done! - Number of documents :" + formating_numbers(len(data)),
@@ -467,11 +480,11 @@ class CreateIndex:
 
                     _insert.append(_obj)
                     if len(_insert) >= 10:
-                        self.query_es.insert_data_to_index(_insert, index)
+                        self.partial_insert(_insert, index)
                         _insert = []
 
                 if len(_insert) != 0:
-                    self.query_es.insert_data_to_index(_insert, index)
+                    self.partial_insert(_insert, index)
                 # insert logs into the sqlite logs table for customers data insert process
                 self.logs_update(logs={"page": "data-execute",
                                        "info": " CUSTOMERS index Done! - Number of documents :" + formating_numbers(len(data)),
