@@ -271,6 +271,7 @@ def create_connections(customers_connection,
                 for col in args[i][2]:
                     _req[args[i][1] + '_' + col] = args[i][2][col]
             r.data_connections(r.check_for_request(_req))
+            print(i, " : ", r.message['data_source_con_check'])
     else: print(return_message)
 
 

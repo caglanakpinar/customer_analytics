@@ -63,7 +63,7 @@ def get_action_name():
     return {'orders': check_actions(a_orders), 'downloads': check_actions(a_downloads)}
 
 
-def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion_conn):
+def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion_conn, has_delivery_connection):
     """
         ea_configs = {"date": None,
                       "funnel": {"actions": ["download", "signup"],
@@ -110,7 +110,7 @@ def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion
             if ea == 'funnel':
                 conf[ea]['actions'] = actions['downloads']
                 conf[ea]['purchase_actions'] = actions['orders']
-            if ea in ['abtest', 'clv_prediction']:
+            if ea in ['abtest', 'clv_prediction', 'delivery_anomaly']:
                 conf[ea]['temporary_export_path'] = directory
             if not has_product_conn:
                 if ea in ['products', 'abtest']:
@@ -118,6 +118,9 @@ def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion
             if not has_promotion_conn:
                 if ea in ['abtest', 'promotions']:
                     conf[ea]['has_promotion_connection'] = False
+            if not has_delivery_connection:
+                if ea == 'delivery_anomaly':
+                    conf[ea]['has_delivery_connection'] = False
 
         configs += [conf]
     return configs + [actions]
@@ -125,6 +128,10 @@ def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion
 
 def decision_for_product_conn(data_configs):
     return True if data_configs['products']['data_source'] not in [None, 'None'] else False
+
+
+def decision_for_delivery_conn(data_configs):
+    return True if data_configs['deliveries']['data_source'] not in [None, 'None'] else False
 
 
 def decision_for_promotion_conn(columns):
@@ -138,9 +145,11 @@ def create_index(tag, ea_configs, ml_configs):
     """
     columns, data_configs = get_data_connection_arguments()[1:]
     has_product_connection = decision_for_product_conn(data_configs)
+    has_delivery_connection = decision_for_delivery_conn(data_configs)
     has_promotion_connection = decision_for_promotion_conn(columns)
     _ea_configs, _ml_configs, _actions = get_ea_and_ml_config(ea_configs, ml_configs,
-                                                              has_product_connection, has_promotion_connection)
+                                                              has_product_connection,
+                                                              has_promotion_connection, has_delivery_connection)
     s = Scheduler(es_tag=tag,
                   data_connection_structure=data_configs,
                   ea_connection_structure=_ea_configs,
@@ -196,10 +205,6 @@ def connection_check(request, index='orders', type=''):
                 # required list; order_id, client, s_start_date, amount, has_purchased
                 if get_columns_condition(request, _columns, index):
                     accept, message, data, raw_columns = True, 'Connected', _df.to_dict('results'), gd.data.columns.values
-                ## TODO: change message type according to connection
-                # else:
-                #     _m = " at least " +  str(acception_column_count[type + index]) if type != 'action' else ' must be 2'
-                #     message = "number of columns are incorrect - " + _m
     except Exception as e:
         print(e)
     return accept, message, data, raw_columns

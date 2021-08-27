@@ -259,9 +259,25 @@ not_required_columns = {"orders": ['discount_amount'], 'downloads': ['signup_dat
 not_required_default_values = {'discount_amount': float(0.0),
                                'signup_date': default_query_date,
                                'category': 'cat_1',
-                               'return_date': default_query_date, 'prepare_date':default_query_date,
-                               'latitude': float(0.0), 'longitude':float(0.0)}
+                               'return_date': default_query_date,
+                               'prepare_date': default_query_date,
+                               'latitude': float(0.0), 'longitude': float(0.0)}
 
+delivery_anomaly_model_parameters = {'epochs': 50,
+                                     'batch_size': 64,
+                                     'activation': 'tanh',
+                                     'h_l_unit': 32, 'hidden_layer_count': 5,
+                                     'loss': 'mse', 'drop_out_ratio': 0.2, 'lr': 0.001, 'l1': .001, 'l2': .001}
+
+delivery_anomaly_model_hyper_parameters = {'activation': ['tanh', 'relu'],
+                                           'batch_size': 128,
+                                           'h_l_unit': [256, 128, 64, 32, 16], 'hidden_layer_count': [2, 3, 4, 5, 6], 
+                                           'loss': ['mse'], 
+                                           'drop_out_ratio': [.05, .1, .15, .2], 
+                                           'lr': [.001, .002, .003, .004, .005, .01, .05],
+                                           'l1': [.001, .002, .003, .004, .005], 
+                                           'l2': [.001, .002, .003, .004, .005]}
+   
 downloads_index_columns = ["id", "download_date", "signup_date", "client"]
 delivery_metrics = ['return_date', 'prepare_date', 'delivery_date', 'latitude', 'longitude']
 
