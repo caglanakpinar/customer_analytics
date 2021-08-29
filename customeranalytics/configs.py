@@ -443,7 +443,8 @@ DATA_WORKS_READABLE_FORM = {'clv_prediction': 'CLV Prediction',
                             'abtest': 'A/B Test', 'funnel': 'Session Actions & Customers Actions Funnels',
                             'cohort': 'Cohorts', 'rfm': 'RFM', 'stats': 'Descriptive Statistics',
                             'products': 'Product Analytics', 'segmentation': 'Customer Segmentation',
-                            'anomaly': 'Anomaly Detection', 'promotions': 'Promotion Analytics', 'churn': 'Churn'
+                            'anomaly': 'Anomaly Detection', 'promotions': 'Promotion Analytics', 'churn': 'Churn',
+                            'delivery_anomaly': 'Delivery Anomaly'
                             }
 
 none_types = [None, 'None', '-']
