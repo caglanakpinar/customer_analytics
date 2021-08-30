@@ -51,7 +51,8 @@ setuptools.setup(
         "abtest",
         "pygeohash",
         "random2",
-        "pytest-shutil"
+        "pytest-shutil",
+        "python-math"
     ],
     url="https://github.com/caglanakpinar/customer_analytics",
     include_package_data=True,
