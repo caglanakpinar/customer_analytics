@@ -484,6 +484,15 @@ class DeliveryAnalytics:
         else:
             self.anomaly_metrics = list(set(self.anomaly_metrics) - {'location'})
 
+    def delivery_kpis(self):
+        kpis = {}
+        for m in self.duration_metrics:
+            kpis[m] = np.mean(self.data[m])
+
+        self.data['locations'] = self.data.apply(lambda row: "_".join([str(row['latitude']), str(row['longitude'])]), axis=1)
+        kpis['total_locations'] = len(np.unique(self.data['locations']))
+        return pd.DataFrame([kpis])
+
     def execute_delivery_analysis(self):
         """
 
@@ -515,6 +524,9 @@ class DeliveryAnalytics:
                     if sum(_location[metric]) != 0:
                         self.insert_into_reports_index(delivery_anomaly=_location,
                                                        anomaly_type=metric + '_location', index=self.order_index)
+            # delivery KPIs
+            self.insert_into_reports_index(delivery_anomaly=self.delivery_kpis(),
+                                           anomaly_type='deliver_kpis', index=self.order_index)
 
     def insert_into_reports_index(self, delivery_anomaly, start_date=None, anomaly_type='ride', index='orders'):
         """
