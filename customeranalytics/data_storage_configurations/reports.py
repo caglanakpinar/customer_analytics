@@ -12,7 +12,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from customeranalytics.configs import descriptive_reports, product_analytics, abtest_reports, non_dimensional_reports, \
-    clv_prediction_reports, promotion_analytics
+    clv_prediction_reports, promotion_analytics, delivery_metrics
 from customeranalytics.utils import *
 from customeranalytics.data_storage_configurations.query_es import QueryES
 
@@ -171,7 +171,7 @@ class Reports:
         self.naming_decision = lambda x: 'no change' if x.split(" ")[1] == 'decrease/increase' else x.split(" ")[1]
         self.naming = lambda x1, x2: "Frequency; {0}, Monetary ; {1}".format(self.naming_decision(x1),
                                                                              self.naming_decision(x2))
-        self.delivery_metrics = {'deliver', 'prepare', 'ride'}
+        self.delivery_metrics = delivery_metrics
 
     def connections(self):
         """

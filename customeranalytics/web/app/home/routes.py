@@ -146,6 +146,7 @@ def route_template(template):
                                    filters=filters)
         if template == 'cohorts.html':
             graph_json, data_type, filters = charts.get_chart(target='cohort', index=index, date=date)
+            print(graph_json['charts']['daily_cohort_downloads'])
             return render_template(template,
                                    segment=segment,
                                    pic=pic,
@@ -339,11 +340,32 @@ def route_template(template):
                                        graph_json['charts']['clvrfm_anomaly']),
                                    data_type=data_type,
                                    filters=filters)
+        if template == 'delivery.html':
+            graph_json, data_type, filters = charts.get_chart(target='delivery', index=index, date=date)
+            print(graph_json['charts']['deliver_weekday_hour'])
+            return render_template(template,
+                                   segment=segment,
+                                   pic=pic,
+                                   ride=charts.get_json_format(
+                                       graph_json['charts']['ride']),
+                                   deliver=charts.get_json_format(
+                                       graph_json['charts']['deliver']),
+                                   prepare=charts.get_json_format(
+                                       graph_json['charts']['prepare']),
+                                   prepare_weekday_hour=charts.get_json_format(
+                                       graph_json['charts']['prepare_weekday_hour']),
+                                   deliver_weekday_hour=charts.get_json_format(
+                                       graph_json['charts']['deliver_weekday_hour']),
+                                   ride_weekday_hour=charts.get_json_format(
+                                       graph_json['charts']['ride_weekday_hour']),
+                                   kpis=graph_json['kpis'],
+                                   data_type=data_type,
+                                   filters=filters)
 
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html', 'rfm.htm',
                             'product.html', 'abtest-segments.html', 'abtest-product.html', 'abtest-promotion.html',
                             'stats-desc.html', 'stats-purchase.htm', 'cohorts.html', 'customer-segmentation.html']:
-            if template in ['profile.html', 'settings.html', 'upload.php.html']:
+            if template in ['profile.html', 'settings.html', 'upload.php.html', 'delivery.html']:
                 profile.add_new_message(dict(request.form))
                 args = profile.fetch_chats()
                 return render_template(template,

@@ -1,0 +1,330 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Delivery analytics {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Delivery Analytics</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="accordion" id="accordionExample">
+								<div class="card">
+									<div class="card-header" id="headingOne">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Filters
+											</a>
+										</h5>
+									</div>
+									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+										<form method="POST">
+											<div class="row">
+												<div class="col-md-6">
+													<div class="card">
+														<div class="card-body">
+															<div class="card">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Dimension selection</h5>
+																</div>
+																<div class="card-body">
+																	<select name="index" id="index" class="form-control">
+																		{% for d in filters['dimensions'] %}
+																			{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value= "main">{{ d }}</option>
+																			{% endif %}
+																			{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value="{{ d }}">{{ d }}</option>
+																			{% endif %}
+																		{% endfor %}
+																	</select>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-6">
+													<div class="card flex-fil">
+														<div class="card-body col-12">
+															<div class="col-12 ">
+																<div class="align-self-center w-100">
+																	<div class="chart">
+																		<input name="date" id="datetimepicker-dashboard" hidden>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="card-header">
+													<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+												</div>
+											</div>
+										</form>
+									</div>
+								</div>
+
+								<div class="card">
+									<div class="card-header" id="headingTwo">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Infos
+											</a>
+										</h5>
+									</div>
+									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+										<div class="card-body ">
+											<ul>
+											  <li>
+												  <strong style="color:green;">Cohorts</strong> are aggregated count of customers who are acting in same way at given time period.
+												  In our study, cohorts covers number of customers who have same transaction in given time period and upcoming days/weeks.
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">What are the metrics for Cohorts?</h5>
+												  	Download to First order, First to Second, Second to Third, Third to Fourth Order Cohorts.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Download to First Order Cohort</h5>
+														If there isn`t any downloaded date, you may assign any date which is related to customers of first event with your business.
+														This cohort of date column represent download date. If it is Weekly Cohort it will represent the mondays of each week.
+													  	Otherwise it will represent days.
+													 	Each Numeric column from 0 to 15 are the day differences after the downloaded date.
+													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
+													    this refers that there are 100 customers who have downloads in  2021-05-06 and have first orders 10 days later.
+												  </div>
+											  </li>
+											   <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">First to Second Order Cohort</h5>
+														This cohort of date column represent first order date. If it is Weekly Cohort it will represent the mondays of each week.
+													  	Otherwise it will represent days.
+													 	Each Numeric column from 0 to 15 are the day differences after the first order date.
+													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
+													    this refers that there are 100 customers who have first orders in 2021-05-06 and have second orders 10 days later.
+												  </div>
+											  </li>
+										       <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Second to Third Order Cohort</h5>
+														This cohort of date column represent second order date. If it is Weekly Cohort it will represent the mondays of each week.
+													  	Otherwise it will represent days.
+													 	Each Numeric column from 0 to 15 are the day differences after the second order date.
+													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
+													    this refers that there are 100 customers who have second orders in 2021-05-06 and have third orders 10 days later.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Third to Fourth Order Cohort</h5>
+														This cohort of date column represent third order date. If it is Weekly Cohort it will represent the mondays of each week.
+													  	Otherwise it will represent days.
+													 	Each Numeric column from 0 to 15 are the day differences after the third order date.
+													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
+													    this refers that there are 100 customers who have third orders in 2021-05-06 and have fourth orders 10 days later.
+												  </div>
+											  </li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+
+
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<div class="w-100">
+									<div class="row">
+										<div class="col-sm-2">
+											<div class="card" style="height:145px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">Average Delivery Duration (sec) {% if data_type['deliver'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.deliver }}</h1>
+												</div>
+											</div>
+										</div>
+										<div class="col-sm-2">
+											<div class="card" style="height:145px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">Average Prepare Duration (sec) {% if data_type['prepare'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.prepare }}</h1>
+												</div>
+											</div>
+										</div>
+										<div class="col-sm-2">
+											<div class="card" style="height:145px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">Average Ride Duration (sec) {% if data_type['ride'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.ride }}</h1>
+												</div>
+											</div>
+										</div>
+										<div class="col-sm-2">
+											<div class="card" style="height:145px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">Average Return Duration (sec)  {% if data_type['returns'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.returns }}</h1>
+												</div>
+											</div>
+										</div>
+										<div class="col-sm-2">
+											<div class="card" style="height:145px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">Total Number Location (sec)  {% if data_type['total_locations'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.total_locations }}</h1>
+												</div>
+											</div>
+										</div>
+
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Abnormal <strong>Deliver Duration</strong> Breakdown with Hour Weekday {% if data_type['deliver_weekday_hour'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="d_w_h_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Average <strong>Deliver Duration</strong> per Location {% if data_type['deliver'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="deliver_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Abnormal <strong>Ride Duration</strong> Breakdown with Hour Weekday {% if data_type['ride_weekday_hour'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="r_w_h_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Average <strong>Ride Duration</strong> per Location (100 Sample) {% if data_type['ride'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="ride_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Abnormal <strong>Prepare Duration</strong> Breakdown with Hour Weekday {% if data_type['ride_weekday_hour'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="p_w_h_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Average <strong>Prepare Duration</strong> per Location (100 Sample) {% if data_type['ride'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="prepare_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+			var d = {{deliver | safe}};
+
+	        Plotly.plot('deliver_id', // the ID of the div, created above
+						d.trace, d.layout, {});
+
+			var d_w_h = {{deliver_weekday_hour | safe}};
+
+	        Plotly.plot('d_w_h_id', // the ID of the div, created above
+						d_w_h.trace, d_w_h.layout, {});
+
+			var r = {{ride | safe}};
+
+	        Plotly.plot('ride_id', // the ID of the div, created above
+						r.trace, r.layout, {});
+
+			var r_w_h = {{ride_weekday_hour | safe}};
+
+	        Plotly.plot('r_w_h_id', // the ID of the div, created above
+						r_w_h.trace, r_w_h.layout, {});
+
+			var p = {{prepare | safe}};
+
+	        Plotly.plot('prepare_id', // the ID of the div, created above
+						r.trace, r.layout, {});
+
+			var p_w_h = {{prepare_weekday_hour | safe}};
+
+	        Plotly.plot('p_w_h_id', // the ID of the div, created above
+						p_w_h.trace, p_w_h.layout, {});
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}
