@@ -84,54 +84,88 @@
 										<div class="card-body ">
 											<ul>
 											  <li>
-												  <strong style="color:green;">Cohorts</strong> are aggregated count of customers who are acting in same way at given time period.
-												  In our study, cohorts covers number of customers who have same transaction in given time period and upcoming days/weeks.
+												  <strong style="color:green;">Delivery Analytics</strong> is the process related to businesses of Logistic Departments.
+												  This dashboard gives the general idea of the durations from the date ordered via customers to the date that the customers are received the products.
+												  This dashboard will only be filled with real data if the delivery data source is created.
 											  </li>
 											  <li>
 												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">What are the metrics for Cohorts?</h5>
-												  	Download to First order, First to Second, Second to Third, Third to Fourth Order Cohorts.
+											    	  	There are 3 kind of date can be applied when the delivery data source is created.
+												  </div>
+											      <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Delivery Date (Required)</h5>
+														  It is the date when the order is arrived to the customers.
+														  It is the timestamp when the delivery person is arrived to the delivery location.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Return Date</h5>
+														  It is the date when the delivery person returns back to the first location after the order is delivered.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Prepare Date</h5>
+														  It is the date when the orders is ready to deliver.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Deliver Duration</h5>
+														  It is total duration between order purchased date and ordered delivered date to the customer.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Prepare Duration</h5>
+														  It is total duration between order purchased date and ordered prepared date.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Ride Duration</h5>
+														  It is total duration between order purchased date and
+														  the date the delivery person that return to the first location after the order is delivered.
+											    	  </div>
+											      </li>
+
+												   <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Delivery Location (Latitude - Longitude)</h5>
+														  Each delivery location can be pinned with latitudes -longitudes while the delivery data source is created.
+														  Latitudes and Longitudes are not mandatory, but map charts in the dashboard needs locations.
+											    	  </div>
+											      </li>
+
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">What kind of Charts does the dashboard includes?</h5>
+												  	There are 2 types of charts. Both types of charts are related to abnormal durations according to delivery - ride -prepare durations.
+													These charts are abnormal durations per weekday per hour on the heatmap and abnormal durations per location on the map.
 												  </div>
 											  </li>
 											  <li>
 												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">Download to First Order Cohort</h5>
-														If there isn`t any downloaded date, you may assign any date which is related to customers of first event with your business.
-														This cohort of date column represent download date. If it is Weekly Cohort it will represent the mondays of each week.
-													  	Otherwise it will represent days.
-													 	Each Numeric column from 0 to 15 are the day differences after the downloaded date.
-													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
-													    this refers that there are 100 customers who have downloads in  2021-05-06 and have first orders 10 days later.
+												  	<h5 class="card-title" style="color:green;">Abnormal Durations per weekday per hour</h5>
+													    Usually, the durations are affected by the day of the hour and the week of the day.
+													    Hours between 17:00 pm and 20:00 pm on the weekdays won`t be the similar durations Distributions as Hours in the morning during the weekdays.
+													    For another comparison instance, delivery durations at the weekend won`t be similar to durations for the weekdays.
+													    This type of chart allows us to see the whole picture weekly and detect which hours are highly possible to assign as abnormal.
 												  </div>
 											  </li>
 											   <li>
 												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">First to Second Order Cohort</h5>
-														This cohort of date column represent first order date. If it is Weekly Cohort it will represent the mondays of each week.
-													  	Otherwise it will represent days.
-													 	Each Numeric column from 0 to 15 are the day differences after the first order date.
-													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
-													    this refers that there are 100 customers who have first orders in 2021-05-06 and have second orders 10 days later.
-												  </div>
-											  </li>
-										       <li>
-												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">Second to Third Order Cohort</h5>
-														This cohort of date column represent second order date. If it is Weekly Cohort it will represent the mondays of each week.
-													  	Otherwise it will represent days.
-													 	Each Numeric column from 0 to 15 are the day differences after the second order date.
-													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
-													    this refers that there are 100 customers who have second orders in 2021-05-06 and have third orders 10 days later.
-												  </div>
-											  </li>
-											  <li>
-												  <div class="card-header">
-												  	<h5 class="card-title" style="color:green;">Third to Fourth Order Cohort</h5>
-														This cohort of date column represent third order date. If it is Weekly Cohort it will represent the mondays of each week.
-													  	Otherwise it will represent days.
-													 	Each Numeric column from 0 to 15 are the day differences after the third order date.
-													    For instance, if date columns is 2021-05-06, and numeric column is 10 and value is 100,
-													    this refers that there are 100 customers who have third orders in 2021-05-06 and have fourth orders 10 days later.
+												  	<h5 class="card-title" style="color:green;">Average Durations per Location</h5>
+														Each location represents delivery locations. It is possible that there are orders more than once for each location.
+													    The average duration per location is represented with the map which is centralized with the average of latitude and longitude.
 												  </div>
 											  </li>
 											</ul>
@@ -139,8 +173,6 @@
 									</div>
 								</div>
 							</div>
-
-
 						</div>
 						<div class="row">
 							<div class="col-md-12">
