@@ -117,7 +117,7 @@
 												  <li>
 											    	  <div class="card-header">
 											    	  	<h5 class="card-title" style="color:green;">Deliver Duration</h5>
-														  It is total duration between order purchased date and ordered delivered date to the customer.
+														  It is total duration between order purchased date and order of delivered date to the customer.
 											    	  </div>
 											      </li>
 
@@ -132,14 +132,22 @@
 											    	  <div class="card-header">
 											    	  	<h5 class="card-title" style="color:green;">Ride Duration</h5>
 														  It is total duration between order purchased date and
-														  the date the delivery person that return to the first location after the order is delivered.
+														  the date which the delivery person returns to the first location after the order is delivered.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Return Duration</h5>
+														  It is the total duration between the order delivery date and
+														  the date on which the delivery person returns to the first location after the order is delivered.
 											    	  </div>
 											      </li>
 
 												   <li>
 											    	  <div class="card-header">
 											    	  	<h5 class="card-title" style="color:green;">Delivery Location (Latitude - Longitude)</h5>
-														  Each delivery location can be pinned with latitudes -longitudes while the delivery data source is created.
+														  Each delivery location can be pinned with latitudes - longitudes while the delivery data source is created.
 														  Latitudes and Longitudes are not mandatory, but map charts in the dashboard needs locations.
 											    	  </div>
 											      </li>
@@ -168,6 +176,40 @@
 														Each location represents delivery locations. It is possible that there are orders more than once for each location.
 													    The average duration per location is represented with the map which is centralized with the average of latitude and longitude.
 												  </div>
+											  </li>
+												<li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Delivery KPIs</h5>
+														General metrics in order to follow up on how the delivery system is running at the business.
+												  </div>
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Average Delivery Duration (sec)</h5> Average delivery duration of all purchased transactions.
+												     </div>
+													</li>
+
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Average Prepare Duration (sec)</h5> Average prepare duration of all purchased transactions.
+												     </div>
+													</li>
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Average Ride Duration (sec)</h5> Average ride duration of all purchased transactions.
+												     </div>
+													</li>
+
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Average Return Duration (sec)</h5> Average return duration of all purchased transactions.
+												     </div>
+													</li>
+
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Total Number Location (sec)</h5> Total delivered locations of all purchased transactions.
+												     </div>
+													</li>
 											  </li>
 											</ul>
 										</div>
@@ -289,7 +331,6 @@
 									</div>
 								</div>
 							</div>
-
 						</div>
 					</div>
 				</div>
