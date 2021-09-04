@@ -398,8 +398,8 @@ class DeliveryAnalytics:
         self._model['data']['order_seq'] = self._model['data']['order_seq_max'] - self._model['data']['order_seq']
         self._model['data'] = self._model['data'].query("order_seq_max > 5 and order_seq < 5")
         self._model['feature_data'] = pd.DataFrame(np.array(self._model['data'].pivot_table(columns='order_seq',
-                                                                                index='client',
-                                                                                aggfunc={metric: "mean"}
+                                                                                            index='client',
+                                                                                            aggfunc={metric: "mean"}
                                                                        ).reset_index())).rename(
             columns={0: "client"}).reset_index(drop=True).reset_index().fillna("-")
 

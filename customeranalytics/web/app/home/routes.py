@@ -44,9 +44,7 @@ def search_data():
     """
     pic = profile.fetch_pic()
     search_value = dict(request.form).get('search', '')
-    print("search")
     results = search.search_results(search_value)
-    # print(search_type)
     graph_json, data_type, filters = charts.get_chart(target='search_' + results['search_type'])
     chart_names = search.get_search_chart_names(results['search_type'])
     kpis = search.convert_kpi_names_to_numeric_names(graph_json)
@@ -146,7 +144,6 @@ def route_template(template):
                                    filters=filters)
         if template == 'cohorts.html':
             graph_json, data_type, filters = charts.get_chart(target='cohort', index=index, date=date)
-            print(graph_json['charts']['daily_cohort_downloads'])
             return render_template(template,
                                    segment=segment,
                                    pic=pic,
@@ -342,7 +339,6 @@ def route_template(template):
                                    filters=filters)
         if template == 'delivery.html':
             graph_json, data_type, filters = charts.get_chart(target='delivery', index=index, date=date)
-            print(graph_json['charts']['deliver_weekday_hour'])
             return render_template(template,
                                    segment=segment,
                                    pic=pic,
