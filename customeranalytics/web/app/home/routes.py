@@ -39,7 +39,7 @@ def get_segment(request):
 @login_required
 def search_data():
     """
-    When logged In, Platform start with General Dashboard running on index.html
+    This is for serach result pages rendering with search.html
     :return: render_template
     """
     pic = profile.fetch_pic()
@@ -90,6 +90,9 @@ def index():
 @blueprint.route("/upload-image", methods=["POST"])
 @login_required
 def upload_image():
+    """
+    Uploading user log righ top of the panel
+    """
     segment = get_segment(request)
     if request.method == "POST":
         profile.add_pic(request)
