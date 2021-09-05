@@ -454,7 +454,7 @@ customer_columns = {'client_2', 'download_date', 'signup_date'}
 product_columns = {'order_id', 'product', 'price', 'category'}
 delivery_columns = {'delivery_date', 'prepare_date', 'return_date', 'latitude', 'longitude'}
 delivery_metrics = {'deliver', 'prepare', 'ride'}
-
+delivery_threshold_z_score = 2
 
 data_types_for_search = {"product": [('chart_1', ['product_kpis']),
                                       ('chart_2', ['daily_products_of_sales']),

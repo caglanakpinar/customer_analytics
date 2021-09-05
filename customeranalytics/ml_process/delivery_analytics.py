@@ -26,7 +26,7 @@ from kerastuner.engine.hyperparameters import HyperParameters
 
 from customeranalytics.data_storage_configurations.query_es import QueryES
 from customeranalytics.configs import not_required_default_values, default_es_port, default_es_host, \
-    delivery_anomaly_model_parameters, delivery_anomaly_model_hyper_parameters
+    delivery_anomaly_model_parameters, delivery_anomaly_model_hyper_parameters, delivery_threshold_z_score
 from customeranalytics.utils import convert_to_date, get_index_group, dimension_decision, \
     current_date_to_day, find_week_of_monday
 
@@ -208,15 +208,29 @@ class DeliveryAnalytics:
         return pd.Series([deliver, prepare, ride, returns])
 
     def encode_geo_hash(self, row):
+        """
+        encoding locations (lat - lon) with geohash library
+        :params row: each row represents purchased transactions from orders index
+        """
         try:
             return gh.encode(row['latitude'], row['longitude'], precision=8)
         except Exception as e:
             return None
 
     def parse_lat_lon(self, geohash):
+        """
+        parsing lat - lon from tuple format
+        """
         return pd.Series([geohash[0], geohash[1]])
 
     def geo_hash_perc7(self, _location, perc):
+        """
+        GeoHashing;
+            - Optimum precision for encoding lat - lon is decided as 7.
+            - decoding each transaction with geohash precision 7.
+            - apply parse_lat_lon (encoding hashed lat - lon).
+            - In that case, locations are centralized with hashed encoded - decoded lat - lon.
+        """
         _location['location_perc%s' % str(perc)] = _location.apply(
             lambda row: gh.decode(row['geohash_perc%s' % str(perc)]), axis=1)
         _location[['lat%s' % str(perc), 'lon%s' % str(perc)]] = _location.apply(
@@ -224,12 +238,30 @@ class DeliveryAnalytics:
         return _location
 
     def convert_data_format(self, value, data_type):
+        """
+        if data_type is latitude or longitude, convert the value to float, otherwise, convert the value to timestamp.
+        """
         if data_type in ['latitude', 'longitude']:
             return float(value)
         else:
             return convert_to_date(value)
 
     def data_manipulations(self):
+        """
+        1. Converting date columns to timestamp.
+        2. Converting the payment_amount and the discount_amount columns to float.
+        3. apply lat - lon to geo-hash (perc=7)
+        4. create hour - isoweekday - week columns. Week column is a timestamp that only covers Mondays of the week.
+        5. Calculate Duration metrics;
+            a. Delivery Duration (required):
+               It is total duration between order purchased date and order of delivered date to the customer.
+            b. Prepare Duration (optional):
+               It is total duration between order purchased date and ordered prepared date.
+            c. Ride Duration (optional):
+               It is total duration between order purchased date and the date
+               which the delivery person returns to the first location after the order is delivered.
+
+        """
         for dt in ['session_start_date', 'delivery_date']:
             self.data[dt] = self.data.apply(lambda row: convert_to_date(row[dt]), axis=1)
 
@@ -253,15 +285,26 @@ class DeliveryAnalytics:
         self.data[self.duration_metrics] = self.data.apply(lambda row: self.delivery_durations(row), axis=1)
 
     def min_max_norm(self, value, _min, _max):
+        """
+        Min - Max Normalization for the feature set of AutoEncoder.
+        """
         if abs(_max - _min) != 0:
             return (value - _min) / abs(_max - _min)
         else:
             return 0
 
     def min_max_norm_reverse(self, norm_value, _min, _max):
+        """
+        Reverse back to actual value from the normalized values.
+        """
         return (norm_value * abs(_max - _min)) + _min
 
     def create_feature_set_and_train_test_split(self):
+        """
+        Creating feature set of a given model. Split data into the train and test sets.
+        Assigned split data to the self._main_data dictionary. After the model trained process is done,
+        it is assigned to the self.model dictionary.
+        """
         self._model['features_norm'] = [str(i) + '_norm' for i in range(1, 6)]
         self._model['feature_data'] = self._model['feature_data'].reset_index(drop=True).reset_index()
         index = list(self._model['feature_data']['index'])
@@ -274,12 +317,22 @@ class DeliveryAnalytics:
         self._model['test'] = self._model['feature_data'].query("index in @_test_index")[self._model['features_norm']].values
 
     def build_parameter_tuning_model(self, hp):
+        """
+        Parameter tuning model implementation. THis process can only be triggered with the keras-tuner object.
+        - Hidden Layer & Hidden Unit Decisions with an Example;
+            Hidden layer Count = 4
+            Hidden Layer Unit = 64
+            1st Hidden Layer; hid. unit = 64
+            2nd Hidden Layer; hid. unit = 64 / 2 = 32
+            3rd Hidden Layer; hid. unit = 64 / (2*2) = 16
+        """
         _input = Input(shape=(self._model['train'].shape[1],))
         _unit = hp.Choice('h_l_unit', self._model['hyper_params']['h_l_unit'])
         _layer = Dense(hp.Choice('h_l_unit', self._model['hyper_params']['h_l_unit']),
                        activation=hp.Choice('activation', self._model['hyper_params']['activation'])
                        )(_input)
 
+        # This process is decision of the hidden layer count
         for i in range(1, hp.Choice('hidden_layer_count', self._model['hyper_params']['hidden_layer_count'])):
             _unit = _unit / 2
             _layer = Dense(_unit,
@@ -304,6 +357,15 @@ class DeliveryAnalytics:
             print(" Parameter Tuning Keras Turner dummy files have already removed!!")
 
     def parameter_tuning(self):
+        """
+        THis is the execution of the keras-tuner with RandomSearch
+        execution model function : self.build_parameter_tuning_model
+        hyper-parameters: check self.hyper_params
+        max_trials: check self.parameter_tuning_trials
+
+        After parameter tuning is finalized, the folder of the keras-tuner at the self.temporary_export_path is removed.
+        Parameter tuning is applied every time delivery analytics is triggered.
+        """
         kwargs = {'directory': join(self.temporary_export_path, "delivery_anomaly")}
         tuner = RandomSearch(self.build_parameter_tuning_model,
                              max_trials=self.parameter_tuning_trials,
@@ -336,12 +398,22 @@ class DeliveryAnalytics:
         return anomaly_calculations
 
     def norm_values_outlier(self, scores):
+        """
+        Scoring each AutoEncoder outputs with p-value of the Standart Normal Distribution
+        """
         mean_scores = np.mean(scores)
         std_scores = np.std(scores)
-        standart_error = 2.58 * sqrt(std_scores / len(scores))
+        standart_error = delivery_threshold_z_score * sqrt(std_scores / len(scores))
         return mean_scores + standart_error
 
     def detect_outliers(self, type):
+        """
+        1. Assign each AtutoEncoder score to Anomaly Scores.
+        2. Calculate standart_error_right_tail from self.norm_values_outlier
+        3. assign label as
+            a. if standart_error_right_tail > value, anomaly = 0
+            b. if standart_error_right_tail < value, anomaly = 1
+        """
         self._model['feature_data']['anomaly_scores'] = self.calculating_loss_function(
             self._model['feature_data'][self._model['features_norm']].values,
             self._model['model'], self._model['features_norm'])
@@ -350,6 +422,9 @@ class DeliveryAnalytics:
             lambda x: 1 if x > standart_error_right_tail else 0)
 
     def build_model(self, type):
+        """
+        Creating Auto Encoder Network with tensorfow, keras
+        """
         _input = Input(shape=(self._model['train'].shape[1],))
         _unit = self._model['params']['h_l_unit']
         _layer = Dense(self._model['params']['h_l_unit'],
@@ -372,6 +447,9 @@ class DeliveryAnalytics:
         self.detect_outliers(type)
 
     def calculate_features_min_max_normalization(self):
+        """
+        Applying Min - Max Normalization to the feature set
+        """
         max_value = self._model['feature_data'][self._model['features']].values.max()
         min_value = self._model['feature_data'][self._model['features']].values.min()
         for i in self._model['features']:
@@ -380,8 +458,29 @@ class DeliveryAnalytics:
 
     def customer_delivery_anomaly(self, metric):
         """
+        Customer Anomaly is related to durations per location of each customer per sequential order from 1 to 5.
+        Each customer's average duration is calculated. Each sequential value from 1 to 5 is used as feature data.
+
+        Example of feature set;
+
+            customer  | 1st Order | 2nd Order | 3rd Order | 4th Order | 5th Order     Anomaly
+            ___________________________________________________________________       _______
+            client_1  | 13.34     | 15.33     | 17.22     | 12.56     | 11.45          0
+            client_2  | 20.34     | 19.39     | 18.22     | 22.56     | 25.45          1
+            ....   ..... ..... .... .... .... .... .... .... .... .... .... ....
+            ....   ..... ..... .... .... .... .... .... .... .... .... .... ....
+            ....   ..... ..... .... .... .... .... .... .... .... .... .... ....
+            client_22 | 13.34     | 10.39     | 12.23     | 12.55     | 11.93          0
+            client_24 | 13.59     | 11.94     | 16.40     | 12.60     | 60.12 ****     1
+
+
+        1. calculate average durations (delivery - ride - prepare) per customer per order seq.
+        2. remove client who has less than 5 orders. It might not represent the customer of correct durations and
+           the outlier ratio must be higher than expected.
+        3. apply min-max normalization, parameter tuning, train model, and anomaly score calculation.
 
         """
+        # create feature set with sequential values.
         client_deliveries = self.data.groupby("client").agg(
             {metric: "mean", "order_id": "count"}).reset_index().sort_values(by='order_id', ascending=False)
         client_deliveries = client_deliveries.query("order_id > 5")
@@ -403,17 +502,32 @@ class DeliveryAnalytics:
                                                                        ).reset_index())).rename(
             columns={0: "client"}).reset_index(drop=True).reset_index().fillna("-")
 
+        # remove non-numeric values from data set
         for i in self._model['features']:
             self._model['feature_data'] = self._model['feature_data'][self._model['feature_data'][i] != '-']
 
-        self.calculate_features_min_max_normalization()
-        self.create_feature_set_and_train_test_split()
-        self.parameter_tuning()
-        self.build_model('customer')
-        self.model[metric]['customer'] = self._model
+        self.calculate_features_min_max_normalization()  # normalization of the feature set
+        self.create_feature_set_and_train_test_split()  # train - test split for train model
+        self.parameter_tuning()  # parameter tuning
+        self.build_model('customer')  # train model
+        self.model[metric]['customer'] = self._model  # assigned model to self.model
 
     def location_delivery_anomaly(self, metric):
         """
+        Location-based anomaly is calculated with geo-hashed decoded locations with perc=7 and week of the transactions.
+        Basically, the feature set represents each location (geo-hash prec=7) of the last 4 weeks of average durations.
+
+        Example of feature set;
+
+            gehashed_prec_7              | last week | 2 week before | 3 week before | 4 week before     Anomaly
+            ____________________________________________________________________________
+            34.092349 -  43.092349       | 13.34     | 15.33         | 17.22         | 12.56                0
+            34.023434 -  43.234342       | 20.34     | 19.39         | 18.22         | 22.56                1
+            ....   ...       .. ..... .... .... ....     .... .... ..    .. .... ...
+            ....   ...       .. ..... .... .... ....     .... .... ..    .. .... ...
+            ....   ...       .. ..... .... .... ....     .... .... ..    .. .... ...
+            34.222332 -  43.023424       | 13.34     | 10.39         | 12.23         | 12.55                0
+            34.932423 -  43.234444       | 13.59     | 11.94         | 16.40         | 60.60  ****          1
 
         """
         self._model['data'] = self.data.groupby(["week", 'geohash_perc7']).agg({metric: "mean"}).reset_index()
@@ -435,15 +549,18 @@ class DeliveryAnalytics:
         mean_duration = mean_duration[self._model['features']].values.mean()
         self._model['feature_data'] = self._model['feature_data'].fillna(mean_duration)
 
-        self.calculate_features_min_max_normalization()
-        self.create_feature_set_and_train_test_split()
-        self.parameter_tuning()
-        self.build_model('location')
-        self.model[metric]['location'] = self._model
+        self.calculate_features_min_max_normalization()  # normalization of the feature set
+        self.create_feature_set_and_train_test_split()  # train - test split for train model
+        self.parameter_tuning()  # parameter tuning
+        self.build_model('location')  # train model
+        self.model[metric]['location'] = self._model  # assigned model to self.model
 
     def weekday_hour_delivery_anomaly(self, metric):
         """
-
+        Weekday - hour Anomaly Detection process;
+            1.  calculate average durations per hour per weekday
+            2. assign Min-Max Normalization for the Average of Durations breakdown with weekday - hour
+            3. assign abnormal if the normalized value more than 0.9.
         """
         self._model['feature_data'] = self.data.groupby(["isoweekday", "hour"]).agg(
             {metric: "mean"}).reset_index().rename(columns={metric: "weekday_hour_norm"})
@@ -456,6 +573,16 @@ class DeliveryAnalytics:
             lambda x: 1 if x > 0.9 else 0)
 
     def merge_type_anomaly_data(self, data, metric):
+        """
+        Customer Anomaly Detection is applied for customer.
+        Location Anomaly Detection is applied for Location (geo-hashed prec=7).
+        Weekday Anomaly Detection is applied for weekday per hour.
+        This process is merged these detection into the each transaction. Then, decides for the abnormal transactions.
+        Rules of the Anomaly Decision;
+           - Rule 1; If 3 anomaly detection cases are positive, assign transaction as Abnormal Transaction.
+           - Rule 2; If location base or customer base are positive and weekday - hour case is positive,
+                     assign as Abnormal Transaction.
+        """
         # customers of detected abnormal transactions
         data = data.merge(self.model[metric]['customer']['feature_data'][['client', 'customer_anomaly']],
                           on='client', how='left')
@@ -479,12 +606,25 @@ class DeliveryAnalytics:
                      metric, 'client', 'customer_anomaly', 'location_anomaly', 'weekday_hour_anomaly']]
 
     def decision_for_location_anomaly(self):
+        """
+        Has Delivery Data Source the latitude and longitude values?
+        """
         if len(list(self.data['latitude'].unique())) > 1 or len(list(self.data['latitude'].unique())) > 1:
             self.has_location_data = True
         else:
             self.anomaly_metrics = list(set(self.anomaly_metrics) - {'location'})
 
     def delivery_kpis(self):
+        """
+        Delivery KPIs;
+
+        General metrics in order to follow up on how the delivery system is running at the business.
+        -   Average Delivery Duration (min); Average delivery duration of all purchased transactions.
+        -   Average Prepare Duration (min); Average prepare duration of all purchased transactions.
+        -   Average Ride Duration (min); Average ride duration of all purchased transactions.
+        -   Average Return Duration (min); Average return duration of all purchased transactions.
+        -   Total Number Location (min); Total delivered locations of all purchased transactions.
+        """
         kpis = {}
         for m in self.duration_metrics:
             kpis[m] = np.mean(self.data[m])
@@ -495,6 +635,19 @@ class DeliveryAnalytics:
 
     def execute_delivery_analysis(self):
         """
+        1. Check if there is delivery data source.
+        2. collect the delivery data with deliver - return - prepare dates and lat - lon values.
+        3. check for the end date which indicates session purchase date.
+        4. assign data_manipulations. (check self.data_manipulations for details)
+        5. Check if there is prepare - return date is assigned. Otherwise, Location Anomaly Detection is not triggered.
+        6. Anomaly Detection for Duration Metrics (Deliver - Prepare - Ride):
+             Each metric (Deliver - Prepare - Ride) of Anomaly Detection is applied seperatelly.
+             For each metric, customer - location - weekday - hour base anomaly detection is calculated
+             and decide for transactions of abnormal values individually.
+        7. Insert each metric of abnormal transactions to to reports index with anomaly_type.
+        8. If delivery data source has latitude-longitude values, insert abnormal transactions with the lats - lons.
+        9. Insert Normalized values of average durations per weekday per hour to the reports index.
+
 
         """
         if self.has_delivery_connection:
@@ -558,7 +711,7 @@ class DeliveryAnalytics:
         This allows us to query the created delivery_anomaly reports.
         anomaly_type is crucial for us to collect the correct filters.
         Example of queries;
-            -   anomaly_type: funnel_downloads_daily,
+            -   anomaly_type: delivery_anomaly,
             -   start_date: 2021-01-01T00:00:00
 
             {'size': 10000000,
