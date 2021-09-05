@@ -93,7 +93,7 @@ class CustomerSegmentation:
         self.recency_segments = {}
         self.monetary_segments = {}
         self.customer_segments = {"champions": {'r': [5], 'f': [5], 'm': [5]},
-                                  "loyal customers": {'r': [3, 4, 5], 'f': [3, 4, 5], 'm': [5, 4, 3, 3]},
+                                  "loyal customers": {'r': [4, 5], 'f': [4, 5], 'm': [5, 4, 3, 2, 1]},
                                   "potential loyalist": {'r': [5, 4, 3], 'f': [5, 4, 3], 'm': [4, 3, 2]},
                                   "new customers": {'r': [5], 'f': [2, 1], 'm': [1, 2, 3, 4, 5]},
                                   "promising": {'r': [3, 4], 'f': [1, 2], 'm': [1, 2]},

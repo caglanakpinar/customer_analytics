@@ -151,13 +151,15 @@ class RouterRequest:
 
     def check_for_session_and_customer_product_connect(self):
         data_connection = self.collect_data_from_table(table='data_connection')
-        sessions, customers, products = False, False, False
+        sessions, customers, products, deliveries = False, False, False, False
         if len(data_connection) != 0:
             data_connection = data_connection.to_dict('results')[-1]
             sessions = True if data_connection['orders_data_source_tag'] != 'None' else False
             customers = True if data_connection['downloads_data_source_tag'] != 'None' else False
             products = True if data_connection['products_data_source_tag'] != 'None' else False
-        return sessions, customers, products
+            deliveries = True if data_connection['deliveries_data_source_tag'] != 'None' else False
+        return {'sessions': str(sessions), 'customers': str(customers),
+                'products': str(products), 'deliveries': str(deliveries)}
 
     def values_for_manage_data(self, template):
         es_connection = self.collect_data_from_table(table='es_connection')
@@ -166,8 +168,9 @@ class RouterRequest:
                 self.message['es_connection'] = es_connection.to_dict('results')[-1]
             else:
                 self.message['es_connection'] = es_connection.to_dict('results')
-            self.message['s_c_p_connection_check'] = "_".join(
-                [str(i) for i in self.check_for_session_and_customer_product_connect()])
+            # self.message['s_c_p_connection_check'] = "_".join(
+            #     [str(i) for i in self.check_for_session_and_customer_product_connect()])
+            self.message['s_c_p_connection_check'] = self.check_for_session_and_customer_product_connect()
 
     def values_for_schedule_data(self):
         try:
@@ -201,16 +204,16 @@ class RouterRequest:
         if len(data_connection) != 0:
             if self.check_for_both_sessions_and_customers_data_source(data_connection.to_dict('results')[-1]):
                 self.message['connect_accept'] = True
-                for dt in ['orders', 'downloads', 'products']:
+                for dt in ['orders', 'downloads', 'products', 'deliveries']:
                     data_connection[dt + '_data_query_path'] = sqlite_string_converter(
                         list(data_connection[dt + '_data_query_path'])[0], back_to_normal=True)
                 data_connection = pd.concat([data_connection, prev_schedule], axis=1)
                 data_connection = pd.concat([data_connection,
                                              actions.query("data_type == 'orders'").drop('data_type', axis=1).rename(
-                                                 columns={"action_name": "ses_actions"})], axis=1).fillna('....')
+                                                 columns={"action_name": "ses_actions"}).reset_index()], axis=1).fillna('....')
                 data_connection = pd.concat([data_connection,
                                              actions.query("data_type == 'downloads'").drop('data_type', axis=1).rename(
-                                                 columns={"action_name": "d_actions"})], axis=1).fillna('....')
+                                                 columns={"action_name": "d_actions"}).reset_index()], axis=1).fillna('....')
 
                 schedule = data_connection.to_dict('results')[-1]
                 self.message['schedule'] = {i: '....' for i in list(schedule.keys()) + ['ses_actions', 'd_actions'] +
@@ -276,10 +279,10 @@ class RouterRequest:
                                                   condition=" id = " + str(a['id'])))
 
     def update_actions_table(self, requests):
-        if requests['data_type'] != 'products':
+        if requests['data_type'] not in ['products', 'deliveries']:
+            self.remove_data_type_action(requests)
+            self.check_for_table_exits(table='actions')
             if requests.get('actions', None) is not None:
-                self.check_for_table_exits(table='actions')
-                self.remove_data_type_action(requests)
                 actions = []
                 if requests['actions'] != '':
                     for i in [i.replace(" ", "") for i in requests['actions'].split(",")]:
@@ -320,7 +323,7 @@ class RouterRequest:
 
     def update_data_query_path_on_schedule(self, request):
         keys = list(request.keys())
-        data_source_query_path = [i for i in ['orders', 'downloads', 'products'] if i + '_data_query_path' in keys]
+        data_source_query_path = [i for i in ['orders', 'downloads', 'products', 'deliveries'] if i + '_data_query_path' in keys]
         con.execute(self.update_query(table='data_columns_integration',
                                       condition=" id = 1 ",
                                       columns=data_source_query_path,
@@ -405,7 +408,7 @@ class RouterRequest:
         if req != {}:
             if template == 'data-es':
                 self.manage_data_integration(self.check_for_request(req))
-            if template in ['add-data-purchase', 'add-data-product']:
+            if template in ['add-data-purchase', 'add-data-product', 'add-data-delivery']:
                 self.data_connections(self.check_for_request(req))
             if template == 'data-execute':
                 self.data_execute(self.check_for_request(req))
@@ -417,7 +420,7 @@ class RouterRequest:
             if 'delete' in list(requests.keys()):
                 self.update_message_and_tables()
 
-        if template in ['add-data-purchase', 'add-data-product']:
+        if template in ['add-data-purchase', 'add-data-product', 'add-data-delivery']:
             self.values_for_manage_data(template)
         if template == 'data-es':
             try:

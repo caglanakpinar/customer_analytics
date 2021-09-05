@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="customeranalytics",
-    version="0.0.1",
+    version="0.0.2",
     author="Caglan Akpinar",
     author_email="cakpinar23@gmail.com",
     description="""
@@ -17,13 +17,19 @@ setuptools.setup(
                 """,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords='Customer Analytics',
-    packages= find_packages(exclude='__pycache__'),
+    keywords="""
+                Funnels, Cohorts, A/B Tests, e-commerce, CLV Prediction, Product Analytics, Churn, Anomaly Detection,
+                Customer Segmentation, RFM, Statistics, Customer Analytics
+                """,
+    packages=find_packages(exclude='__pycache__'),
     py_modules=['customer_analytics', "customeranalytics/web", "customeranalytics/docs"],
-    # TODO: will be updated
     install_requires=[
+        "PyYAML",
         "psycopg2-binary",
+        "psutil",
+        "requests",
         "urllib3",
+        "email_validator",
         "flask_login",
         "flask",
         "python-decouple",
@@ -32,8 +38,8 @@ setuptools.setup(
         "sqlalchemy",
         "email-validator",
         "screeninfo",
-        "pandas",
         "numpy",
+        "pandas",
         "elasticsearch",
         "pyyaml",
         "schedule",
@@ -42,7 +48,11 @@ setuptools.setup(
         "keras-tuner",
         "tensorflow",
         "clv-prediction",
-        "abtest"
+        "abtest",
+        "pygeohash",
+        "random2",
+        "pytest-shutil",
+        "python-math"
     ],
     url="https://github.com/caglanakpinar/customer_analytics",
     include_package_data=True,

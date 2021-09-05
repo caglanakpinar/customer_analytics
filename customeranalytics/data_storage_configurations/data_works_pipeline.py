@@ -190,6 +190,7 @@ class DataPipelines:
 
     def pipe_6(self, ml_connection_structure, ea_connection_structure, dim=None):
         self.execute_pipe(ml_connection_structure, create_ml, 'anomaly', dim=dim)
+        self.execute_pipe(ml_connection_structure, create_ml, 'delivery_anomaly', dim=dim)
 
     def data_work_pipelines_execution(self, ml_connection_structure, ea_connection_structure, dim=None):
         _kwargs = {"ml_connection_structure": ml_connection_structure,

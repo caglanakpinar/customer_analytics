@@ -6,6 +6,7 @@ import yaml
 
 from customeranalytics.configs import none_types
 
+
 def current_date_to_day():
     """
     recent date of converting to datetime from isoformat.

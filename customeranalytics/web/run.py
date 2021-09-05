@@ -13,7 +13,6 @@ try:
     from web.app import create_app, db
 
 except Exception as e:
-
     from customeranalytics.web.config import config_dict, web_configs
     from customeranalytics.web.app import create_app, db
 

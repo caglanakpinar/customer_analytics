@@ -1,0 +1,404 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Delivery analytics {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Delivery Analytics</h5>
+			<div class="col-md-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="row">
+							<div class="accordion" id="accordionExample">
+								<div class="card">
+									<div class="card-header" id="headingOne">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Filters
+											</a>
+										</h5>
+									</div>
+									<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+										<form method="POST">
+											<div class="row">
+												<div class="col-md-6">
+													<div class="card">
+														<div class="card-body">
+															<div class="card">
+																<div class="card-header">
+																	<h5 class="card-title mb-0">Dimension selection</h5>
+																</div>
+																<div class="card-body">
+																	<select name="index" id="index" class="form-control">
+																		{% for d in filters['dimensions'] %}
+																			{% if d == 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value= "main">{{ d }}</option>
+																			{% endif %}
+																			{% if d != 'There is no available report. Please execute Schedule Data Process' %}
+																				<option value="{{ d }}">{{ d }}</option>
+																			{% endif %}
+																		{% endfor %}
+																	</select>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="col-md-6">
+													<div class="card flex-fil">
+														<div class="card-body col-12">
+															<div class="col-12 ">
+																<div class="align-self-center w-100">
+																	<div class="chart">
+																		<input name="date" id="datetimepicker-dashboard" hidden>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+
+												<div class="card-header">
+													<button  type="submit" class="btn btn-pill btn-primary">Apply</button>
+												</div>
+											</div>
+										</form>
+									</div>
+								</div>
+
+								<div class="card">
+									<div class="card-header" id="headingTwo">
+										<h5 class="card-title my-1">
+											<a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseOne" style="color:green;font-size:12px">
+												Infos
+											</a>
+										</h5>
+									</div>
+									<div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionExample">
+										<div class="card-body ">
+											<ul>
+											  <li>
+												  <strong style="color:green;">Delivery Analytics</strong> is the process related to businesses of Logistic Departments.
+												  This dashboard gives the general idea of the durations from the date ordered via customers to the date that the customers are received the products.
+												  This dashboard will only be filled with real data if the delivery data source is created.
+											  </li>
+											  <li>
+												  <div class="card-header">
+											    	  	There are 3 kind of date can be applied when the delivery data source is created.
+												  </div>
+											      <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Delivery Date (Required)</h5>
+														  It is the date when the order is arrived to the customers.
+														  It is the timestamp when the delivery person is arrived to the delivery location.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Return Date</h5>
+														  It is the date when the delivery person returns back to the first location after the order is delivered.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Prepare Date</h5>
+														  It is the date when the orders is ready to deliver.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Deliver Duration</h5>
+														  It is total duration between order purchased date and order of delivered date to the customer.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Prepare Duration</h5>
+														  It is total duration between order purchased date and ordered prepared date.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Ride Duration</h5>
+														  It is total duration between order purchased date and
+														  the date which the delivery person returns to the first location after the order is delivered.
+											    	  </div>
+											      </li>
+
+												  <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Return Duration</h5>
+														  It is the total duration between the order delivery date and
+														  the date on which the delivery person returns to the first location after the order is delivered.
+											    	  </div>
+											      </li>
+
+												   <li>
+											    	  <div class="card-header">
+											    	  	<h5 class="card-title" style="color:green;">Delivery Location (Latitude - Longitude)</h5>
+														  Each delivery location can be pinned with latitudes - longitudes while the delivery data source is created.
+														  Latitudes and Longitudes are not mandatory, but map charts in the dashboard needs locations.
+											    	  </div>
+											      </li>
+
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">What kind of Charts does the dashboard includes?</h5>
+												  	There are 2 types of charts. Both types of charts are related to abnormal durations according to delivery - ride -prepare durations.
+													These charts are abnormal durations per weekday per hour on the heatmap and abnormal durations per location on the map.
+												  </div>
+											  </li>
+											  <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Abnormal Durations per weekday per hour</h5>
+													    Usually, the durations are affected by the day of the hour and the week of the day.
+													    Hours between 17:00 pm and 20:00 pm on the weekdays won`t be the similar durations Distributions as Hours in the morning during the weekdays.
+													    For another comparison instance, delivery durations at the weekend won`t be similar to durations for the weekdays.
+													    This type of chart allows us to see the whole picture weekly and detect which hours are highly possible to assign as abnormal.
+													    Numbers are scaled between 0 and 1 on each cell at the charts which do not represent the duration values.
+												  </div>
+											  </li>
+											   <li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Average Durations per Location</h5>
+														Each location represents delivery locations. It is possible that there are orders more than once for each location.
+													    The average duration per location is represented with the map which is centralized with the average of latitude and longitude.
+												  </div>
+											  </li>
+												<li>
+												  <div class="card-header">
+												  	<h5 class="card-title" style="color:green;">Delivery KPIs</h5>
+														General metrics in order to follow up on how the delivery system is running at the business.
+												  </div>
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Average Delivery Duration (min)</h5> Average delivery duration of all purchased transactions.
+												     </div>
+													</li>
+
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Average Prepare Duration (min)</h5> Average prepare duration of all purchased transactions.
+												     </div>
+													</li>
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Average Ride Duration (min)</h5> Average ride duration of all purchased transactions.
+												     </div>
+													</li>
+
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Average Return Duration (min)</h5> Average return duration of all purchased transactions.
+												     </div>
+													</li>
+
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Total Number Location (min)</h5> Total delivered locations of all purchased transactions.
+												     </div>
+													</li>
+											  </li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<div class="w-100">
+									<div class="row">
+										<div class="col-sm-2">
+											<div class="card" style="height:145px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">Average Delivery Duration (min) {% if data_type['deliver'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.deliver }}</h1>
+												</div>
+											</div>
+										</div>
+										<div class="col-sm-2">
+											<div class="card" style="height:145px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">Average Prepare Duration (min) {% if data_type['prepare'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.prepare }}</h1>
+												</div>
+											</div>
+										</div>
+										<div class="col-sm-2">
+											<div class="card" style="height:145px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">Average Ride Duration (min) {% if data_type['ride'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.ride }}</h1>
+												</div>
+											</div>
+										</div>
+										<div class="col-sm-2">
+											<div class="card" style="height:145px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">Average Return Duration (min)  {% if data_type['returns'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.returns }}</h1>
+												</div>
+											</div>
+										</div>
+										<div class="col-sm-2">
+											<div class="card" style="height:145px;">
+												<div class="card-body">
+													<h5 class="card-title mb-4">Total Number Location (min)  {% if data_type['total_locations'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h1 class="mt-1 mb-3">{{ kpis.total_locations }}</h1>
+												</div>
+											</div>
+										</div>
+
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Abnormal <strong>Deliver Duration</strong> Breakdown with Hour Weekday {% if data_type['deliver_weekday_hour'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="d_w_h_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-12">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Average <strong>Deliver Duration</strong> per Location {% if data_type['deliver'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="deliver_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Abnormal <strong>Ride Duration</strong> Breakdown with Hour Weekday {% if data_type['ride_weekday_hour'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="r_w_h_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Average <strong>Ride Duration</strong> per Location (100 Sample) {% if data_type['ride'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="ride_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Abnormal <strong>Prepare Duration</strong> Breakdown with Hour Weekday {% if data_type['ride_weekday_hour'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="p_w_h_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Average <strong>Prepare Duration</strong> per Location (100 Sample) {% if data_type['ride'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="prepare_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+	<script>
+
+			var d = {{deliver | safe}};
+
+	        Plotly.plot('deliver_id', // the ID of the div, created above
+						d.trace, d.layout, {});
+
+			var d_w_h = {{deliver_weekday_hour | safe}};
+
+	        Plotly.plot('d_w_h_id', // the ID of the div, created above
+						d_w_h.trace, d_w_h.layout, {});
+
+			var r = {{ride | safe}};
+
+	        Plotly.plot('ride_id', // the ID of the div, created above
+						r.trace, r.layout, {});
+
+			var r_w_h = {{ride_weekday_hour | safe}};
+
+	        Plotly.plot('r_w_h_id', // the ID of the div, created above
+						r_w_h.trace, r_w_h.layout, {});
+
+			var p = {{prepare | safe}};
+
+	        Plotly.plot('prepare_id', // the ID of the div, created above
+						r.trace, r.layout, {});
+
+			var p_w_h = {{prepare_weekday_hour | safe}};
+
+	        Plotly.plot('p_w_h_id', // the ID of the div, created above
+						p_w_h.trace, p_w_h.layout, {});
+
+	function myFunction() {
+	  // Get the checkbox
+	  var checkBox = document.getElementById("myCheck");
+	  // Get the output text
+	  var text = document.getElementById("text");
+
+	  // If the checkbox is checked, display the output text
+	  if (checkBox.checked == true){
+	    text.style.display = "block";
+	  } else {
+	    text.style.display = "none";
+	  }
+	}
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			document.getElementById("datetimepicker-dashboard").flatpickr({
+				inline: true,
+
+				prevArrow: "<span class=\"fas fa-chevron-left\" title=\"Previous month\"></span>",
+				nextArrow: "<span class=\"fas fa-chevron-right\" title=\"Next month\"></span>",
+			});
+		});
+	</script>
+{% endblock javascripts %}
