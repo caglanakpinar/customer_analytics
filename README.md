@@ -698,7 +698,7 @@ In order to catch the significant increase/decrease, even we think that the busi
    
 #### 5. Delivery Analytics
 
-These analysis are only able to run when the delivery data source is created. It detects abnormal durations of rides according to customer location, location of the order, the hour of the order, weekday of the order.
+These analyses are only able to run when the delivery data source is created. It detects abnormal durations of rides according to customer location, location of the order, the hour of the order, weekday of the order.
 
 - ***Location Base Anomaly Detection;*** Each location is grouped into a central point. Centralization is processed with geo hash library which is encoded with precision 7 and decoded back to latitudes and longitudes. Then, average durations, which are Delivery, Prepare, Ride, are calculated per location (with precision 7). Abnormal locations are detected via scores which are calculated with AutoEncoder. 
 
@@ -737,7 +737,7 @@ These analysis are only able to run when the delivery data source is created. It
 
 - ***ii. Average Deliver Duration per Location***
 
-    This representation is a map that is located with centroids latitude that is the average of all latitudes and longitudes is the average of all longitudes. Values are sampled from the population with the size of 100. Each value on the map represents abnormal values of DELIVER durations that are detected with AutoEncoder.
+    This representation is a map that is located with centroids latitude that is the average of all latitudes and longitudes is the average of all longitudes. Values are sampled from the population with the size of 100. Each value on the map represents abnormal values of ***DELIVER*** durations that are detected with AutoEncoder.
 
 
 ![image](https://user-images.githubusercontent.com/26736844/132107686-02c437d5-dea7-4903-96ad-e6273dc1d8a8.png)
