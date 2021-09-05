@@ -184,30 +184,30 @@
 												  </div>
 													<li>
 												     <div class="card-header">
-												     	<h5 class="card-title" style="color:green;"> Average Delivery Duration (sec)</h5> Average delivery duration of all purchased transactions.
+												     	<h5 class="card-title" style="color:green;"> Average Delivery Duration (min)</h5> Average delivery duration of all purchased transactions.
 												     </div>
 													</li>
 
 													<li>
 												     <div class="card-header">
-												     	<h5 class="card-title" style="color:green;"> Average Prepare Duration (sec)</h5> Average prepare duration of all purchased transactions.
+												     	<h5 class="card-title" style="color:green;"> Average Prepare Duration (min)</h5> Average prepare duration of all purchased transactions.
 												     </div>
 													</li>
 													<li>
 												     <div class="card-header">
-												     	<h5 class="card-title" style="color:green;"> Average Ride Duration (sec)</h5> Average ride duration of all purchased transactions.
-												     </div>
-													</li>
-
-													<li>
-												     <div class="card-header">
-												     	<h5 class="card-title" style="color:green;"> Average Return Duration (sec)</h5> Average return duration of all purchased transactions.
+												     	<h5 class="card-title" style="color:green;"> Average Ride Duration (min)</h5> Average ride duration of all purchased transactions.
 												     </div>
 													</li>
 
 													<li>
 												     <div class="card-header">
-												     	<h5 class="card-title" style="color:green;"> Total Number Location (sec)</h5> Total delivered locations of all purchased transactions.
+												     	<h5 class="card-title" style="color:green;"> Average Return Duration (min)</h5> Average return duration of all purchased transactions.
+												     </div>
+													</li>
+
+													<li>
+												     <div class="card-header">
+												     	<h5 class="card-title" style="color:green;"> Total Number Location (min)</h5> Total delivered locations of all purchased transactions.
 												     </div>
 													</li>
 											  </li>
@@ -224,7 +224,7 @@
 										<div class="col-sm-2">
 											<div class="card" style="height:145px;">
 												<div class="card-body">
-													<h5 class="card-title mb-4">Average Delivery Duration (sec) {% if data_type['deliver'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h5 class="card-title mb-4">Average Delivery Duration (min) {% if data_type['deliver'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 													<h1 class="mt-1 mb-3">{{ kpis.deliver }}</h1>
 												</div>
 											</div>
@@ -232,7 +232,7 @@
 										<div class="col-sm-2">
 											<div class="card" style="height:145px;">
 												<div class="card-body">
-													<h5 class="card-title mb-4">Average Prepare Duration (sec) {% if data_type['prepare'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h5 class="card-title mb-4">Average Prepare Duration (min) {% if data_type['prepare'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 													<h1 class="mt-1 mb-3">{{ kpis.prepare }}</h1>
 												</div>
 											</div>
@@ -240,7 +240,7 @@
 										<div class="col-sm-2">
 											<div class="card" style="height:145px;">
 												<div class="card-body">
-													<h5 class="card-title mb-4">Average Ride Duration (sec) {% if data_type['ride'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h5 class="card-title mb-4">Average Ride Duration (min) {% if data_type['ride'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 													<h1 class="mt-1 mb-3">{{ kpis.ride }}</h1>
 												</div>
 											</div>
@@ -248,7 +248,7 @@
 										<div class="col-sm-2">
 											<div class="card" style="height:145px;">
 												<div class="card-body">
-													<h5 class="card-title mb-4">Average Return Duration (sec)  {% if data_type['returns'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h5 class="card-title mb-4">Average Return Duration (min)  {% if data_type['returns'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 													<h1 class="mt-1 mb-3">{{ kpis.returns }}</h1>
 												</div>
 											</div>
@@ -256,7 +256,7 @@
 										<div class="col-sm-2">
 											<div class="card" style="height:145px;">
 												<div class="card-body">
-													<h5 class="card-title mb-4">Total Number Location (sec)  {% if data_type['total_locations'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+													<h5 class="card-title mb-4">Total Number Location (min)  {% if data_type['total_locations'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
 													<h1 class="mt-1 mb-3">{{ kpis.total_locations }}</h1>
 												</div>
 											</div>
