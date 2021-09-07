@@ -828,7 +828,7 @@ It is a dashboard with a combination of dashboards related to Exploratory analys
     
     First, the Frequency value is calculated for each user. Frequency is the time difference between each sequential order per customer. Each customer's last order date is not expected to be purchased before the average frequency day. In other words, Each customer is expected to order at most average frequency days before. A number of unique customers who have ordered between average frequency date before the current date and current date are engaged users Churn is engaged users divided by total unique ordered users.
     
-    ![image](https://user-images.githubusercontent.com/26736844/128745140-95858dee-6a39-429e-81f1-25206dd15908.png)
+    ![How to use CustomerAnalytics](https://user-images.githubusercontent.com/26736844/132291470-a2369bb8-bba5-4625-b28d-54862c378c2f.jpg)
     
 -   ***Churn Rate Weekly***  
 
