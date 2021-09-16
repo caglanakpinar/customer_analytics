@@ -2,6 +2,19 @@
  
 ---
 
+### How to install for Apple M1 MACOS?
+
+You can download end install via pip. You also need miniforge3 environment rather than other conda environments such as anaconda. This is crucial in order to install tensorflow.
+
+[customeranalytics_arm64-0.0.2.tar.gz](https://github.com/caglanakpinar/customer_analytics/files/7175230/customeranalytics_arm64-0.0.2.tar.gz)
+
+Before installation, here are the requirements that must be installed individually;
+
+- **clv_prediction :** [clv_prediction_arm64-0.1.8.tar.gz](https://github.com/caglanakpinar/clv_prediction/files/7172452/clv_prediction_arm64-0.1.8.tar.gz)
+- **psycopg2-binary**
+- **tensorflow-metal :** via https://developer.apple.com/metal/tensorflow-plugin/ you can check the instructions and it is able to be installed with a few steps.
+- **statsmodels :** Use **conda install -c conda-forge statsmodels** and install individually.
+
 ### A. Understanding the concept of CustomerAnalytics
 
 This platform helps the business related to e-commerce. It also helps the business which has users (B2C) and has their data related to engagement to the business. 
