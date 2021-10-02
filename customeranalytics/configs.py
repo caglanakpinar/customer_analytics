@@ -255,13 +255,18 @@ orders_index_columns = ["id", "date", "actions", "client", "promotion_id",
                         "session_start_date", "dimension", 'delivery']
 
 not_required_columns = {"orders": ['discount_amount'], 'downloads': ['signup_date'],
-                        'products': ['category'], 'deliveries': ['return_date', 'prepare_date', 'latitude', 'longitude']}
+                        'products': ['category'],
+                        'deliveries': ['return_date', 'prepare_date', 'latitude', 'longitude',
+                                       'pickup_id', 'picker', 'pickup_category', 'pickup_lat', 'pickup_lon']}
 not_required_default_values = {'discount_amount': float(0.0),
                                'signup_date': default_query_date,
                                'category': 'cat_1',
                                'return_date': default_query_date,
                                'prepare_date': default_query_date,
-                               'latitude': float(0.0), 'longitude': float(0.0)}
+                               'latitude': float(0.0), 'longitude': float(0.0),
+                                   'pickup_id': 'None', 'picker': 'None', 'pickup_category': 'None',
+                               'pickup_lat': float(0.0), 'pickup_lon': float(0.0)
+                               }
 
 delivery_anomaly_model_parameters = {'epochs': 50,
                                      'batch_size': 64,
@@ -279,7 +284,8 @@ delivery_anomaly_model_hyper_parameters = {'activation': ['tanh', 'relu'],
                                            'l2': [.001, .002, .003, .004, .005]}
    
 downloads_index_columns = ["id", "download_date", "signup_date", "client"]
-delivery_metrics = ['return_date', 'prepare_date', 'delivery_date', 'latitude', 'longitude']
+delivery_metrics = ['return_date', 'prepare_date', 'delivery_date', 'latitude', 'longitude',
+                    'pickup_id', 'picker', 'pickup_category', 'pickup_lat', 'pickup_lon']
 
 downloads_index_obj = {'id': 89481673,
                        'download_date': '2021-01-01T21:23:15',
@@ -453,7 +459,8 @@ session_columns = {'order_id', 'client', 'session_start_date', 'date', 'payment_
 customer_columns = {'client_2', 'download_date', 'signup_date'}
 product_columns = {'order_id', 'product', 'price', 'category'}
 delivery_columns = {'delivery_date', 'prepare_date', 'return_date', 'latitude', 'longitude'}
-delivery_metrics = {'deliver', 'prepare', 'ride'}
+delivery_metrics = {'return_date', 'prepare_date', 'delivery_date', 'latitude', 'longitude',
+                    'pickup_id', 'picker', 'pickup_category', 'pickup_lat', 'pickup_lon'}
 delivery_threshold_z_score = 2
 
 data_types_for_search = {"product": [('chart_1', ['product_kpis']),

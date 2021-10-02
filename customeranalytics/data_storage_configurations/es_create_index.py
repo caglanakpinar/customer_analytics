@@ -296,6 +296,8 @@ class CreateIndex:
         for col in not_required_columns[data_source_type]:
             if col not in _columns:
                 data[col] = not_required_default_values[col]
+            else:
+
         return data
 
     def get_data(self, conf, data_source_type):
@@ -344,7 +346,6 @@ class CreateIndex:
                     del products
                 else: orders['basket'] = None
             except Exception as e:
-                print(e)
                 orders['basket'] = None
 
             try:
@@ -355,7 +356,6 @@ class CreateIndex:
                     orders = pd.merge(orders, deliveries[['order_id', 'delivery']], on='order_id', how='left')
                 else: orders['delivery'] = None
             except Exception as e:
-                print(e)
                 orders['delivery'] = None
 
         return orders
@@ -366,8 +366,7 @@ class CreateIndex:
             try:
                 self.query_es.insert_data_to_index(_insert, index)
                 counter = 10
-            except Exception as e:
-                print(e)
+            except: pass
             counter += 1
 
     def insert_to_index(self, data, index):

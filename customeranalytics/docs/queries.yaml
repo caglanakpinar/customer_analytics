@@ -75,6 +75,13 @@ data_columns_integration:
   return_date VARCHAR,
   latitude VARCHAR,
   longitude VARCHAR,
+
+  pickup_id VARCHAR,
+  picker VARCHAR,
+  pickup_category VARCHAR,
+  pickup_lat VARCHAR,
+  pickup_lon VARCHAR,
+
   PRIMARY KEY (id)
   )
 
@@ -203,6 +210,11 @@ columns:
     - return_date
     - latitude
     - longitude
+    - pickup_id
+    - picker
+    - pickup_category
+    - pickup_lat
+    - pickup_lon
 
   schedule_data:
     - id

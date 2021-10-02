@@ -47,7 +47,6 @@ def create_data_access_parameters(connection, index='orders', date=None, test=Fa
 def get_data_connection_arguments():
     conn = read_sql("SELECT * FROM data_connection  ", con).to_dict('resutls')[-1]
     columns = read_sql("SELECT  *  FROM data_columns_integration", con).to_dict('results')[-1]
-
     data_configs = {'orders': create_data_access_parameters(conn, index='orders', date=None, test=False),
                     'downloads': create_data_access_parameters(conn, index='downloads', date=None, test=False),
                     'products': create_data_access_parameters(conn, index='products', date=None, test=False),
