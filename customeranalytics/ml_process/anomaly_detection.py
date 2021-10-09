@@ -95,6 +95,7 @@ class Anomaly:
         self.features = []
         self.query_es = QueryES(port=port, host=host)
         self.reports = pd.DataFrame()
+        self.check_for_data_set = lambda x: False if len(x) == 0 else True
 
     def collect_clv(self):
         """
@@ -122,6 +123,11 @@ class Anomaly:
                                                            get_index_group(self.order_index),
                                                            query={'index': get_index_group(self.order_index),
                                                                   'end': end_date})
+        print(self.reports.head())
+        print(self.reports['report_date'].unique())
+
+        self.reports = self.reports.query("report_name in ('funnel', 'cohort', 'stats')")
+
         self.reports['report_date'] = self.reports['report_date'].apply(lambda x: convert_to_date(x))
         self.reports = self.reports.sort_values(['report_name', 'report_date'], ascending=False)
         self.collect_clv()
@@ -305,91 +311,100 @@ class Anomaly:
         self.daily_orders['isoweekday'] = self.daily_orders['daily'].apply(lambda x: x.isoweekday())
         max_isoweekday = max(self.daily_orders['daily']).isoweekday()
         number_of_week_back_iteration = len(self.daily_orders[self.daily_orders['isoweekday'] == max_isoweekday]) - 5
-        _data = self.daily_orders
-        for i in range(1, number_of_week_back_iteration + 1):
-            for _diff in [(1, 'is_last_order'), (5, 'is_last_month')]:
-                _data[_diff[1]] = False
-                _data[_diff[1]] = _data.sort_values(["daily", "isoweekday"], ascending=True).groupby("isoweekday")[
-                    _diff[1]].shift(-_diff[0])
-                _data[_diff[1]] = _data[_diff[1]].fillna(True)
-            _last_month_recent_day_compare = _data.query("is_last_month == True").groupby(
-                ["is_last_order", "isoweekday"]).agg({"orders": "mean"}).reset_index()
 
-            _last_month_recent_day_compare = pd.merge(
-                _last_month_recent_day_compare.query(
-                    "is_last_order == False").rename(columns={"orders": "order_count_last_month"}),
-                _last_month_recent_day_compare.query(
-                    "is_last_order == True").rename(columns={"orders": "order_count_last_recent"}),
-                on='isoweekday', how='inner')[['isoweekday', 'order_count_last_month', 'order_count_last_recent']]
-            _last_month_recent_day_compare['diff_perc'] = 100 * (
-                    _last_month_recent_day_compare['order_count_last_recent'] - _last_month_recent_day_compare[
-                'order_count_last_month']) / _last_month_recent_day_compare['order_count_last_month']
-            self.daily_orders_comparison = pd.concat([
-                self.daily_orders_comparison,
-                pd.merge(_data.query("is_last_order == True")[['daily', 'isoweekday']],
-                         _last_month_recent_day_compare, on='isoweekday', how='left')])
-            _data = _data.query("is_last_order != True")
+        if number_of_week_back_iteration > 0:
+            _data = self.daily_orders
+            print("number_of_week_back_iteration :", number_of_week_back_iteration)
+            for i in range(1, number_of_week_back_iteration + 1):
+                for _diff in [(1, 'is_last_order'), (5, 'is_last_month')]:
+                    _data[_diff[1]] = False
+                    _data[_diff[1]] = _data.sort_values(["daily", "isoweekday"], ascending=True).groupby("isoweekday")[
+                        _diff[1]].shift(-_diff[0])
+                    _data[_diff[1]] = _data[_diff[1]].fillna(True)
 
-        confidence_interval = self.calculate_confident_intervals(np.mean(self.daily_orders_comparison['diff_perc']),
-                                                                 np.var(self.daily_orders_comparison['diff_perc']),
-                                                                 len(self.daily_orders_comparison), 0.05)
+                # calculating difference of % (diff_perc)
+                _last_month_recent_day_compare = _data.query("is_last_month == True").groupby(
+                    ["is_last_order", "isoweekday"]).agg({"orders": "mean"}).reset_index()
+                _last_month_recent_day_compare = pd.merge(
+                    _last_month_recent_day_compare.query(
+                        "is_last_order == False").rename(columns={"orders": "order_count_last_month"}),
+                    _last_month_recent_day_compare.query(
+                        "is_last_order == True").rename(columns={"orders": "order_count_last_recent"}),
+                    on='isoweekday', how='inner')[['isoweekday', 'order_count_last_month', 'order_count_last_recent']]
+                _last_month_recent_day_compare['diff_perc'] = 100 * (
+                        _last_month_recent_day_compare['order_count_last_recent'] - _last_month_recent_day_compare[
+                    'order_count_last_month']) / _last_month_recent_day_compare['order_count_last_month']
+                self.daily_orders_comparison = pd.concat([
+                    self.daily_orders_comparison,
+                    pd.merge(_data.query("is_last_order == True")[['daily', 'isoweekday']],
+                             _last_month_recent_day_compare, on='isoweekday', how='left')])
+                _data = _data.query("is_last_order != True")
 
-        self.daily_orders_comparison['anomalities'] = self.daily_orders_comparison['diff_perc'].apply(
-            lambda x: self.significant_dec_inc_detection(x, confidence_interval))
-        self.daily_orders_comparison = self.daily_orders_comparison[['diff_perc', 'anomalities', 'daily']]
+            # calculating confidence interval for diff_perc
+            confidence_interval = self.calculate_confident_intervals(np.mean(self.daily_orders_comparison['diff_perc']),
+                                                                     np.var(self.daily_orders_comparison['diff_perc']),
+                                                                     len(self.daily_orders_comparison), 0.05)
+
+            # assign abnormal data points for daily_orders_comparison
+            self.daily_orders_comparison['anomalities'] = self.daily_orders_comparison['diff_perc'].apply(
+                lambda x: self.significant_dec_inc_detection(x, confidence_interval))
+            self.daily_orders_comparison = self.daily_orders_comparison[['diff_perc', 'anomalities', 'daily']]
 
     def clv_segmentation_change(self):
         """
         Each client of monetary and frequency change related to CLV Predictions.
         On CLV Prediction customers of future expected order date and purchase_amount values can be detected.
         """
-        self.collect_clv()
-        self.rfm = pd.DataFrame(list(self.reports.query("report_name == 'rfm'")['data'])[0])
-        self.clv_prediction['session_start_date'] = self.clv_prediction['session_start_date'].apply(
-            lambda x: convert_to_day(x))
-        self.clv_prediction['session_start_date_prev'] = self.clv_prediction.sort_values(
-            by=['client', 'session_start_date']).groupby(['client'])['session_start_date'].shift(-1)
+        try:
+            self.collect_clv()
+            self.rfm = pd.DataFrame(list(self.reports.query("report_name == 'rfm'")['data'])[0])
+            self.clv_prediction['session_start_date'] = self.clv_prediction['session_start_date'].apply(
+                lambda x: convert_to_day(x))
+            self.clv_prediction['session_start_date_prev'] = self.clv_prediction.sort_values(
+                by=['client', 'session_start_date']).groupby(['client'])['session_start_date'].shift(-1)
 
-        frequency_clv = self.clv_prediction[['session_start_date_prev', 'session_start_date', 'client']]
-        frequency_clv['session_start_date_prev'] = frequency_clv['session_start_date_prev'].fillna(current_date_to_day())
-        frequency_clv['frequency'] = frequency_clv.apply(
-            lambda row: calculate_time_diff(row['session_start_date'], row['session_start_date_prev'], 'week'), axis=1)
-        frequency_clv = frequency_clv.groupby('client').agg({'frequency': 'mean'}).reset_index()
+            frequency_clv = self.clv_prediction[['session_start_date_prev', 'session_start_date', 'client']]
+            frequency_clv['session_start_date_prev'] = frequency_clv['session_start_date_prev'].fillna(current_date_to_day())
+            frequency_clv['frequency'] = frequency_clv.apply(
+                lambda row: calculate_time_diff(row['session_start_date'], row['session_start_date_prev'], 'week'), axis=1)
+            frequency_clv = frequency_clv.groupby('client').agg({'frequency': 'mean'}).reset_index()
 
-        monetary_clv = self.clv_prediction.groupby('client').agg({"payment_amount": "mean"}).reset_index()
+            monetary_clv = self.clv_prediction.groupby('client').agg({"payment_amount": "mean"}).reset_index()
 
-        self.clv_prediction = pd.merge(pd.merge(monetary_clv,
-                                                frequency_clv, on='client', how='left'),
-                                       self.rfm.rename(columns={'frequency': 'frequency_prev',
-                                                                'monetary': 'monetary_prev'}),
-                                       on='client', how='left')
+            self.clv_prediction = pd.merge(pd.merge(monetary_clv,
+                                                    frequency_clv, on='client', how='left'),
+                                           self.rfm.rename(columns={'frequency': 'frequency_prev',
+                                                                    'monetary': 'monetary_prev'}),
+                                           on='client', how='left')
 
-        self.clv_prediction['monetary_diff'] = self.clv_prediction['payment_amount'] - self.clv_prediction['monetary_prev']
-        self.clv_prediction['frequency_diff'] = self.clv_prediction.apply(
-            lambda row: row['frequency_prev'] - row['frequency'] if row['frequency'] == row['frequency'] else None,
-            axis=1)
-        avg_frequency_diff = np.mean(self.clv_prediction.query("frequency_diff == frequency_diff")['frequency_diff'])
-        self.clv_prediction['frequency_diff'] = self.clv_prediction['frequency_diff'].fillna(avg_frequency_diff)
+            self.clv_prediction['monetary_diff'] = self.clv_prediction['payment_amount'] - self.clv_prediction['monetary_prev']
+            self.clv_prediction['frequency_diff'] = self.clv_prediction.apply(
+                lambda row: row['frequency_prev'] - row['frequency'] if row['frequency'] == row['frequency'] else None,
+                axis=1)
+            avg_frequency_diff = np.mean(self.clv_prediction.query("frequency_diff == frequency_diff")['frequency_diff'])
+            self.clv_prediction['frequency_diff'] = self.clv_prediction['frequency_diff'].fillna(avg_frequency_diff)
 
-        self.clv_prediction['m_dec_inc'] = self.clv_prediction['monetary_diff'].apply(
-            lambda x: 'decrease' if x < 0 else 'increase')
-        self.clv_prediction['f_dec_inc'] = self.clv_prediction['frequency_diff'].apply(
-            lambda x: 'decrease' if x < 0 else 'increase')
+            self.clv_prediction['m_dec_inc'] = self.clv_prediction['monetary_diff'].apply(
+                lambda x: 'decrease' if x < 0 else 'increase')
+            self.clv_prediction['f_dec_inc'] = self.clv_prediction['frequency_diff'].apply(
+                lambda x: 'decrease' if x < 0 else 'increase')
 
-        m_confidence_interval = self.calculate_confident_intervals(np.mean(self.clv_prediction['monetary_diff']),
-                                                                   np.var(self.clv_prediction['monetary_diff']),
-                                                                   len(self.clv_prediction), 0.05)
+            m_confidence_interval = self.calculate_confident_intervals(np.mean(self.clv_prediction['monetary_diff']),
+                                                                       np.var(self.clv_prediction['monetary_diff']),
+                                                                       len(self.clv_prediction), 0.05)
 
-        f_confidence_interval = self.calculate_confident_intervals(np.mean(self.clv_prediction['frequency_diff']),
-                                                                   np.var(self.clv_prediction['frequency_diff']),
-                                                                   len(self.clv_prediction), 0.05)
+            f_confidence_interval = self.calculate_confident_intervals(np.mean(self.clv_prediction['frequency_diff']),
+                                                                       np.var(self.clv_prediction['frequency_diff']),
+                                                                       len(self.clv_prediction), 0.05)
 
-        self.clv_prediction['m_anomaly'] = self.clv_prediction['monetary_diff'].apply(
-            lambda x: self.significant_dec_inc_detection(x, m_confidence_interval))
-        self.clv_prediction['f_anomaly'] = self.clv_prediction['frequency_diff'].apply(
-            lambda x: self.significant_dec_inc_detection(x, f_confidence_interval))
-        self.clv_prediction = self.clv_prediction[['f_anomaly', 'm_anomaly',
-                                                   'monetary_diff', 'frequency_diff', 'f_dec_inc', 'm_dec_inc']]
+            self.clv_prediction['m_anomaly'] = self.clv_prediction['monetary_diff'].apply(
+                lambda x: self.significant_dec_inc_detection(x, m_confidence_interval))
+            self.clv_prediction['f_anomaly'] = self.clv_prediction['frequency_diff'].apply(
+                lambda x: self.significant_dec_inc_detection(x, f_confidence_interval))
+            self.clv_prediction = self.clv_prediction[['f_anomaly', 'm_anomaly',
+                                                       'monetary_diff', 'frequency_diff', 'f_dec_inc', 'm_dec_inc']]
+        except Exception as e:
+            print(e)
 
     def execute_anomaly(self, date):
         self.get_reports(date)
@@ -402,7 +417,9 @@ class Anomaly:
         names = ['daily_funnel', 'cohort', 'cohort_d', 'daily_orders_comparison', 'clv_prediction']
         for i in zip(names, dfs):
             print("names :", i[0])
-            self.insert_into_reports_index(i[0], i[1], current_date_to_day(), index=self.order_index)
+            if self.check_for_data_set(i[1]):  # check if anomaly data set is calculated
+                self.insert_into_reports_index(i[0], i[1], current_date_to_day(), index=self.order_index)
+            else: print(i[0], " is not able to be created. Not enough previous data for it.")
 
     def insert_into_reports_index(self, name, anomaly, start_date, index='orders'):
         """

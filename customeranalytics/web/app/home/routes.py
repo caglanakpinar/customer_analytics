@@ -342,6 +342,7 @@ def route_template(template):
                                    filters=filters)
         if template == 'delivery.html':
             graph_json, data_type, filters = charts.get_chart(target='delivery', index=index, date=date)
+            print(graph_json['charts'].keys())
             return render_template(template,
                                    segment=segment,
                                    pic=pic,
@@ -357,6 +358,14 @@ def route_template(template):
                                        graph_json['charts']['deliver_weekday_hour']),
                                    ride_weekday_hour=charts.get_json_format(
                                        graph_json['charts']['ride_weekday_hour']),
+                                   deliver_client=charts.get_json_format(
+                                       graph_json['charts']['deliver_client']),
+                                   prepare_client=charts.get_json_format(
+                                       graph_json['charts']['prepare_client']),
+                                   deliver_pickup=charts.get_json_format(
+                                       graph_json['charts']['deliver_pickup']),
+                                   prepare_pickup=charts.get_json_format(
+                                       graph_json['charts']['prepare_pickup']),
                                    kpis=graph_json['kpis'],
                                    data_type=data_type,
                                    filters=filters)

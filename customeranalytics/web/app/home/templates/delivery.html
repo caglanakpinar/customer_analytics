@@ -331,6 +331,47 @@
 									</div>
 								</div>
 							</div>
+
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Average <strong>Deliver Duration</strong> per Client Location (1000 Sample) {% if data_type['deliver_client'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="deliver_client_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Average <strong>Prepare Duration</strong> per Client Location (1000 Sample) {% if data_type['prepare_client'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="prepare_client_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Average <strong>Deliver Duration</strong> per Pickup Location (1000 Sample) {% if data_type['delivery_pickup'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="deliver_pickup_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card">
+									<div class="card-header">
+										<h5 class="card-title">Average <strong>Prepare Duration</strong> per Pickup Location (1000 Sample) {% if data_type['prepare_pickup'] == False %}  <strong style="color:red;"> sample data </strong> {% endif %}</h5>
+									</div>
+									<div class="card-body">
+										<div  id="prepare_pickup_id" class="plotly-gra ph-div" style="height:400px;"></div>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -375,6 +416,26 @@
 
 	        Plotly.plot('p_w_h_id', // the ID of the div, created above
 						p_w_h.trace, p_w_h.layout, {});
+
+			var dc = {{deliver_client | safe}};
+
+	        Plotly.plot('deliver_client_id', // the ID of the div, created above
+						dc.trace, dc.layout, {});
+
+			var pc = {{prepare_client | safe}};
+
+	        Plotly.plot('prepare_client_id', // the ID of the div, created above
+						pc.trace, pc.layout, {});
+
+			var dp = {{deliver_pickup | safe}};
+
+	        Plotly.plot('deliver_pickup_id', // the ID of the div, created above
+						dp.trace, dp.layout, {});
+
+			var pp = {{prepare_pickup | safe}};
+
+	        Plotly.plot('prepare_pickup_id', // the ID of the div, created above
+						pp.trace, pp.layout, {});
 
 	function myFunction() {
 	  // Get the checkbox

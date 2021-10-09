@@ -23,7 +23,11 @@ ml_configs = {"date": None,
                           'download_index': 'downloads', 'order_index': 'orders'},
               "delivery_anomaly": {"host": 'localhost', "port": '9200',
                                    'download_index': 'downloads', 'order_index': 'orders', 
-                                   "temporary_export_path": None, 'has_delivery_connection': True},
+                                   "temporary_export_path": None, 'has_delivery_connection': True,
+                                   "has_pickup_id_lat_lon_connection": True,
+                                   "has_pickup_category_connection": True,
+                                   "has_picker_connection": True
+              },
 
           }
 

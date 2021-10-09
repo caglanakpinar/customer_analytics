@@ -27,7 +27,7 @@ from customeranalytics.data_storage_configurations.query_es import QueryES
 from customeranalytics.configs import not_required_default_values, default_es_port, default_es_host, \
     delivery_anomaly_model_parameters, delivery_anomaly_model_hyper_parameters, delivery_threshold_z_score
 from customeranalytics.utils import convert_to_date, get_index_group, dimension_decision, \
-    current_date_to_day, find_week_of_monday
+    current_date_to_day, find_week_of_monday, read_yaml, write_yaml
 
 
 class DeliveryAnalytics:
@@ -42,6 +42,9 @@ class DeliveryAnalytics:
     def __init__(self,
                  temporary_export_path,
                  has_delivery_connection=True,
+                 has_pickup_id_lat_lon_connection=True,
+                 has_pickup_category_connection=True,
+                 has_picker_connection=True,
                  host=None,
                  port=None,
                  download_index='downloads',
@@ -66,19 +69,29 @@ class DeliveryAnalytics:
         :param download_index: elasticsearch port
         :param order_index: elasticsearch port
         :param has_delivery_connection: is any additional delivery data source
+        :param has_pickup_id_lat_lon_connection: has data source pickup_id, pickup_lat, pickup_lon
+        :param has_pickup_category_connection: has data source pickup_category
+        :param has_picker_connection: has data source picker (delivery person)
         """
         self.port = default_es_port if port is None else port
         self.host = default_es_host if host is None else host
         self.download_index = download_index
         self.order_index = order_index
         self.has_delivery_connection = has_delivery_connection
+        self.has_pickup_id_lat_lon_connection = has_pickup_id_lat_lon_connection
+        self.has_pickup_category_connection = has_pickup_category_connection
+        self.has_picker_connection = has_picker_connection
         self.temporary_export_path = temporary_export_path
         self.query_es = QueryES(port=self.port, host=self.host)
         self.data = pd.DataFrame()
         self.has_data_end_date = False
         self.has_location_data = False
-        self.features = lambda x: list(range(1, 8)) if x == 'weekday_hour' else list(range(1, 6))
+        self.accepted_order_count = 5
+        self.check_for_data_set = lambda x: False if len(x) == 0 else True
+        self.range_feature_set = lambda: list(range(1, self.accepted_order_count + 1))
+        self.features = lambda x: list(range(1, 8)) if x == 'weekday_hour' else self.range_feature_set()
         self.features_norm = lambda x: [str(i) + '_norm' for i in self.features(x)]
+        self.rename_geo_cols = lambda x, y: x.rename(columns={i[1]: i[0] for i in zip(['latitude', 'longitude'] ,y)})
         self.model_data = {}
         self.centroid = []
         self.duration_metrics = ['deliver', 'prepare', 'ride', 'returns']
@@ -86,11 +99,17 @@ class DeliveryAnalytics:
         self._model = {}
         self.params = delivery_anomaly_model_parameters
         self.hyper_params = delivery_anomaly_model_hyper_parameters
+        self.tuned_params = {}
         self.hp = HyperParameters()
-        self.parameter_tuning_trials = 5  # number of parameter tuning trials
+        self.parameter_tuning_trials = 1  # number of parameter tuning trials
         self.delivery_fields = ['id', 'client', 'session_start_date', 'date', 'payment_amount', 'discount_amount',
                                 'delivery.delivery_date', 'delivery.prepare_date',
-                                'delivery.return_date', 'delivery.latitude', 'delivery.longitude']
+                                'delivery.return_date', 'delivery.latitude', 'delivery.longitude',
+                                'delivery.pickup_id', 'delivery.pickup_lat', 'delivery.pickup_lon',
+                                'delivery.pickup_category', 'delivery.picker']
+        self.renaming_columns = {'id': 'order_id', 'delivery.delivery_date': 'delivery_date',
+                                 'delivery.prepare_date': 'prepare_date', 'delivery.return_date': 'return_date',
+                                 'delivery.latitude': 'latitude', 'delivery.longitude': 'longitude'}
         self.model = {m1: {m2: {"data": pd.DataFrame(),
                                 "feature_data": pd.DataFrame(),
                                 "train": [],
@@ -123,11 +142,20 @@ class DeliveryAnalytics:
         self.query_es.query_builder(fields=self.delivery_fields,
                                     boolean_queries=self.dimensional_query([{"term": {"actions.purchased": True}}]))
 
+        if self.has_pickup_id_lat_lon_connection:
+            for i in ["pickup_id", "pickup_lat", "pickup_lon", "prepare_duration", "delivery_duration"]:
+                self.renaming_columns['delivery.' + i] = i
+
+        if self.has_pickup_category_connection:
+            self.renaming_columns['delivery.pickup_category'] = 'pickup_category'
+
+        if self.has_picker_connection:
+            self.renaming_columns['delivery.picker'] = 'picker'
+
         self.data = pd.DataFrame(self.query_es.get_data_from_es()).rename(
-            columns={'id': 'order_id', 'delivery.delivery_date': 'delivery_date',
-                     'delivery.prepare_date': 'prepare_date', 'delivery.return_date': 'return_date',
-                     'delivery.latitude': 'latitude', 'delivery.longitude': 'longitude'})
-        
+            columns=self.renaming_columns)
+        self.data = self.data.query("delivery_date == delivery_date")
+
     def data_source_date_decision(self, row, dt):
         """
         Check each columns 'date', 'prepare_date', 'return_date', 'latitude', 'longitude'
@@ -304,7 +332,7 @@ class DeliveryAnalytics:
         Assigned split data to the self._main_data dictionary. After the model trained process is done,
         it is assigned to the self.model dictionary.
         """
-        self._model['features_norm'] = [str(i) + '_norm' for i in range(1, 6)]
+        self._model['features_norm'] = [str(i) + '_norm' for i in range(1, self.accepted_order_count)]
         self._model['feature_data'] = self._model['feature_data'].reset_index(drop=True).reset_index()
         index = list(self._model['feature_data']['index'])
         _train_size = int(len(index) * 0.8)
@@ -355,7 +383,7 @@ class DeliveryAnalytics:
         except Exception as e:
             print(" Parameter Tuning Keras Turner dummy files have already removed!!")
 
-    def parameter_tuning(self):
+    def parameter_tuning(self, type):
         """
         THis is the execution of the keras-tuner with RandomSearch
         execution model function : self.build_parameter_tuning_model
@@ -364,24 +392,32 @@ class DeliveryAnalytics:
 
         After parameter tuning is finalized, the folder of the keras-tuner at the self.temporary_export_path is removed.
         Parameter tuning is applied every time delivery analytics is triggered.
-        """
-        kwargs = {'directory': join(self.temporary_export_path, "delivery_anomaly")}
-        tuner = RandomSearch(self.build_parameter_tuning_model,
-                             max_trials=self.parameter_tuning_trials,
-                             hyperparameters=self.hp,
-                             allow_new_entries=True,
-                             objective='loss', **kwargs)
-        tuner.search(x=self._model['train'],
-                     y=self._model['train'],
-                     epochs=5,
-                     batch_size=self._model['hyper_params']['batch_size'],
-                     verbose=1,
-                     validation_data=(self._model['test'], self._model['test']))
 
-        for p in tuner.get_best_hyperparameters()[0].values:
-            if p in list(self._model['params'].keys()):
-                self._model['params'][p] = tuner.get_best_hyperparameters()[0].values[p]
-        self.remove_keras_tuner_folder()
+        tuned parameters are stored in temporary_folder to the delivery_analytics_parameters.yaml file.
+        """
+
+        self.tuned_params = read_yaml(self.temporary_export_path, "delivery_analytics_parameters.yaml")
+        if self.tuned_params.get(type, None) is None:
+            kwargs = {'directory': join(self.temporary_export_path, "delivery_anomaly")}
+            tuner = RandomSearch(self.build_parameter_tuning_model,
+                                 max_trials=self.parameter_tuning_trials,
+                                 hyperparameters=self.hp,
+                                 allow_new_entries=True,
+                                 objective='loss', **kwargs)
+            tuner.search(x=self._model['train'],
+                         y=self._model['train'],
+                         epochs=2,
+                         batch_size=self._model['hyper_params']['batch_size'],
+                         verbose=1,
+                         validation_data=(self._model['test'], self._model['test']))
+
+            for p in tuner.get_best_hyperparameters()[0].values:
+                if p in list(self._model['params'].keys()):
+                    self._model['params'][p] = tuner.get_best_hyperparameters()[0].values[p]
+
+            self.tuned_params[type] = self._model['params']
+            write_yaml(self.temporary_export_path, "delivery_analytics_parameters.yaml", self.tuned_params)
+            self.remove_keras_tuner_folder()
 
     def calculating_loss_function(self, X, model, features):
         """
@@ -457,7 +493,10 @@ class DeliveryAnalytics:
 
     def customer_delivery_anomaly(self, metric):
         """
-        Customer Anomaly is related to durations per location of each customer per sequential order from 1 to 5.
+        Customer Anomaly is related to durations per location of each customer per sequential order
+        from 1 to accepted_order_count.
+        ** accepted_order_count: Calculate average order count. if it is less than 5, assign integer of the avg. + 1.
+                                 If it is not, assign
         Each customer's average duration is calculated. Each sequential value from 1 to 5 is used as feature data.
 
         Example of feature set;
@@ -482,34 +521,42 @@ class DeliveryAnalytics:
         # create feature set with sequential values.
         client_deliveries = self.data.groupby("client").agg(
             {metric: "mean", "order_id": "count"}).reset_index().sort_values(by='order_id', ascending=False)
-        client_deliveries = client_deliveries.query("order_id > 5")
-        clients = list(client_deliveries['client'].unique())
-        self._model['data'] = self.data.query("client in @clients").sort_values(
-            ['client', 'session_start_date'], ascending=True)
-        self._model['data']['order_seq'] = self._model['data'].sort_values(by=['client', 'session_start_date']).groupby(
-            ['client']).cumcount() + 1
+        accepted_order_count = max(int(min(np.mean(client_deliveries['order_id']), 5)) + 1, 2)
+        self.accepted_order_count = accepted_order_count
+        client_deliveries = client_deliveries.query("order_id > @accepted_order_count")
 
-        self._model['data'] = self._model['data'].merge(
-            self._model['data'].groupby('client').agg({"order_seq": "max"}).reset_index().rename(
-                columns={"order_seq": "order_seq_max"}),
-            on='client', how='left')
-        self._model['data']['order_seq'] = self._model['data']['order_seq_max'] - self._model['data']['order_seq']
-        self._model['data'] = self._model['data'].query("order_seq_max > 5 and order_seq < 5")
-        self._model['feature_data'] = pd.DataFrame(np.array(self._model['data'].pivot_table(columns='order_seq',
-                                                                                            index='client',
-                                                                                            aggfunc={metric: "mean"}
-                                                                       ).reset_index())).rename(
-            columns={0: "client"}).reset_index(drop=True).reset_index().fillna("-")
+        if self.check_for_data_set(client_deliveries):  # check if there is enough order count for users
+            # re generate feature set for the model
+            self._model['features'] = self.range_feature_set()
 
-        # remove non-numeric values from data set
-        for i in self._model['features']:
-            self._model['feature_data'] = self._model['feature_data'][self._model['feature_data'][i] != '-']
+            clients = list(client_deliveries['client'].unique())
+            self._model['data'] = self.data.query("client in @clients").sort_values(
+                ['client', 'session_start_date'], ascending=True)
+            self._model['data']['order_seq'] = self._model['data'].sort_values(by=['client', 'session_start_date']).groupby(
+                ['client']).cumcount() + 1
 
-        self.calculate_features_min_max_normalization()  # normalization of the feature set
-        self.create_feature_set_and_train_test_split()  # train - test split for train model
-        self.parameter_tuning()  # parameter tuning
-        self.build_model('customer')  # train model
-        self.model[metric]['customer'] = self._model  # assigned model to self.model
+            self._model['data'] = self._model['data'].merge(
+                self._model['data'].groupby('client').agg({"order_seq": "max"}).reset_index().rename(
+                    columns={"order_seq": "order_seq_max"}),
+                on='client', how='left')
+            self._model['data']['order_seq'] = self._model['data']['order_seq_max'] - self._model['data']['order_seq']
+            self._model['data'] = self._model['data'].query(
+                "order_seq_max > @accepted_order_count and order_seq < @accepted_order_count")
+            self._model['feature_data'] = pd.DataFrame(np.array(self._model['data'].pivot_table(columns='order_seq',
+                                                                                                index='client',
+                                                                                                aggfunc={metric: "mean"}
+                                                                           ).reset_index())).rename(
+                columns={0: "client"}).reset_index(drop=True).reset_index().fillna("-")
+
+            # remove non-numeric values from data set
+            for i in self._model['features']:
+                self._model['feature_data'] = self._model['feature_data'][self._model['feature_data'][i] != '-']
+
+            self.calculate_features_min_max_normalization()  # normalization of the feature set
+            self.create_feature_set_and_train_test_split()  # train - test split for train model
+            self.parameter_tuning("customer")  # parameter tuning
+            self.build_model('customer')  # train model
+            self.model[metric]['customer'] = self._model  # assigned model to self.model
 
     def location_delivery_anomaly(self, metric):
         """
@@ -538,21 +585,28 @@ class DeliveryAnalytics:
         self._model['data'] = self._model['data'].merge(locations_max_weeks, on='geohash_perc7', how='left')
         self._model['data']['week_seq'] = self._model['data']['week_seq_max'] - self._model['data']['week_seq']
 
-        self._model['feature_data'] = pd.DataFrame(np.array(self._model['data'].query("week_seq < 5").pivot_table(
-            columns="week_seq",
-            index='geohash_perc7',
+        accepted_order_count = max(int(min(np.mean(self._model['data']['week_seq']), 5)) + 1, 2)
+        self.accepted_order_count = accepted_order_count
+
+        self._model['feature_data'] = pd.DataFrame(np.array(self._model['data'].query(
+            "week_seq < @accepted_order_count").pivot_table(
+            columns="week_seq", index='geohash_perc7',
             aggfunc={metric: "max"}).reset_index())).rename(columns={0: "location"})
 
-        for f in self._model['features']:
-            mean_duration = self._model['feature_data'][self._model['feature_data'][f] == self._model['feature_data'][f]]
-        mean_duration = mean_duration[self._model['features']].values.mean()
-        self._model['feature_data'] = self._model['feature_data'].fillna(mean_duration)
+        if self.check_for_data_set(self._model['feature_data']):
+            # re generate feature set for the model
+            self._model['features'] = self.range_feature_set()
 
-        self.calculate_features_min_max_normalization()  # normalization of the feature set
-        self.create_feature_set_and_train_test_split()  # train - test split for train model
-        self.parameter_tuning()  # parameter tuning
-        self.build_model('location')  # train model
-        self.model[metric]['location'] = self._model  # assigned model to self.model
+            for f in self._model['features']:
+                mean_duration = self._model['feature_data'][self._model['feature_data'][f] == self._model['feature_data'][f]]
+            mean_duration = mean_duration[self._model['features']].values.mean()
+            self._model['feature_data'] = self._model['feature_data'].fillna(mean_duration)
+
+            self.calculate_features_min_max_normalization()  # normalization of the feature set
+            self.create_feature_set_and_train_test_split()  # train - test split for train model
+            self.parameter_tuning("location")  # parameter tuning
+            self.build_model('location')  # train model
+            self.model[metric]['location'] = self._model  # assigned model to self.model
 
     def weekday_hour_delivery_anomaly(self, metric):
         """
@@ -582,23 +636,26 @@ class DeliveryAnalytics:
            - Rule 2; If location base or customer base are positive and weekday - hour case is positive,
                      assign as Abnormal Transaction.
         """
+        data['customer_anomaly'] = 0
+        data['location_anomaly'] = 0
+        data['weekday_hour_anomaly'] = 0
         # customers of detected abnormal transactions
-        data = data.merge(self.model[metric]['customer']['feature_data'][['client', 'customer_anomaly']],
-                          on='client', how='left')
+        if self.check_for_data_set(self.model[metric]['customer']['feature_data']):
+            data = data.drop('customer_anomaly', axis=1).merge(self.model[metric]['customer']['feature_data'][['client', 'customer_anomaly']],
+                              on='client', how='left')
 
         # locations (geo-hashed (perc=7)) of detected abnormal transactions
-        if self.has_location_data:
-            data = data.merge(
-                self.model[metric]['location']['feature_data'].rename(
-                    columns={"location": "geohash_perc7"})[['geohash_perc7', 'location_anomaly']],
-                on='geohash_perc7', how='left')
-        else:
-            data['location_anomaly'] = 0
+        if self.check_for_data_set(self.model[metric]['location']['feature_data']):
+            if self.has_location_data:
+                data = data.drop('location_anomaly', axis=1).merge(
+                    self.model[metric]['location']['feature_data'].rename(
+                        columns={"location": "geohash_perc7"})[['geohash_perc7', 'location_anomaly']],
+                    on='geohash_perc7', how='left')
 
         # weekday - hour of detected abnormal transactions
-        data = data.merge(self.model[metric]['weekday_hour']['feature_data']
-                          [['hour', 'isoweekday',  'weekday_hour_anomaly']], on=['hour', 'isoweekday'], how='left')
-
+        if self.check_for_data_set(self.model[metric]['weekday_hour']['feature_data']):
+            data = data.drop('weekday_hour_anomaly', axis=1).merge(self.model[metric]['weekday_hour']['feature_data']
+                              [['hour', 'isoweekday',  'weekday_hour_anomaly']], on=['hour', 'isoweekday'], how='left')
         data['anomaly_totals'] = data['customer_anomaly'] + data['location_anomaly'] + data['weekday_hour_anomaly']
         data = data.query("anomaly_totals == 3 or ((customer_anomaly == 1 and weekday_hour_anomaly == 1) or (location_anomaly == 1 and weekday_hour_anomaly == 1))")
         return data[['session_start_date', 'hour', 'isoweekday', 'latitude', 'longitude',
@@ -631,6 +688,31 @@ class DeliveryAnalytics:
         self.data['locations'] = self.data.apply(lambda row: "_".join([str(row['latitude']), str(row['longitude'])]), axis=1)
         kpis['total_locations'] = len(np.unique(self.data['locations']))
         return pd.DataFrame([kpis])
+
+    def get_pickup_id_lat_lon_analysis(self):
+        """
+        If pickup destination such as store, dask store, warehouse, restaurant, etc of name/id, latitude and longitude
+        are assigned, These visualization reports are able to be created for Delivery Analytics Dashboard.
+        There are 4 reports which are;
+            - Deliver Duration per Client Location
+            - Prepare Duration per Client Location
+            - Deliver Duration per Pickup Location
+            - Prepare Duration per Pickup Location
+
+        ** If there isn`` data for pickup name/id, latitude and longitude, process will not be initialized.
+        """
+        if self.has_pickup_id_lat_lon_connection:
+            self.data['pickup_lat'] = self.data['pickup_lat'].apply(lambda x: float(x))
+            self.data['pickup_lon'] = self.data['pickup_lon'].apply(lambda x: float(x))
+            for metric in ["pickup_id", "client"]:
+                for dur in ["deliver", "prepare"]:
+                    _data = self.data.groupby(metric).agg(
+                        {"pickup_lat": "first", "pickup_lon": "first", dur: "mean"}).reset_index()
+                    _data = _data.sample(min(1000, len(_data)))
+                    self.insert_into_reports_index(
+                        delivery_anomaly=self.rename_geo_cols(_data, ['pickup_lat', 'pickup_lon']),
+                        anomaly_type="_".join([dur, metric.split("_")[0]]),
+                        index=self.order_index)
 
     def execute_delivery_analysis(self):
         """
@@ -669,6 +751,7 @@ class DeliveryAnalytics:
                 self.insert_into_reports_index(delivery_anomaly=self.model[metric]['weekday_hour']['feature_data'],
                                                anomaly_type=metric + '_weekday_hour', index=self.order_index)
 
+            # if delivery data source has location columns apply these charts for Delivery Analytics dashboard
             if self.has_location_data:
                 for metric in self.duration_metrics:
                     _location = self.model[metric]['location']['data']
@@ -676,6 +759,10 @@ class DeliveryAnalytics:
                     if sum(_location[metric]) != 0:
                         self.insert_into_reports_index(delivery_anomaly=_location,
                                                        anomaly_type=metric + '_location', index=self.order_index)
+
+            # pickup and client location analysis
+            self.get_pickup_id_lat_lon_analysis()
+
             # delivery KPIs
             self.insert_into_reports_index(delivery_anomaly=self.delivery_kpis(),
                                            anomaly_type='deliver_kpis', index=self.order_index)

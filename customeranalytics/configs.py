@@ -53,7 +53,9 @@ elasticsearch_settings = {
                                                                    "return_date": {"type": "date"},
                                                                    "prepare_date": {"type": "date"},
                                                                    "latitude": {"type": "float"},
-                                                                   "longitude": {"type": "float"}
+                                                                   "longitude": {"type": "float"},
+                                                                   "pickup_lat": {"type": "float"},
+                                                                   "pickup_lon": {"type": "float"},
                                                                }
                                                            }
 
@@ -264,7 +266,7 @@ not_required_default_values = {'discount_amount': float(0.0),
                                'return_date': default_query_date,
                                'prepare_date': default_query_date,
                                'latitude': float(0.0), 'longitude': float(0.0),
-                                   'pickup_id': 'None', 'picker': 'None', 'pickup_category': 'None',
+                               'pickup_id': 'pick_0', 'picker': 'del_person_0', 'pickup_category': 'kebap',
                                'pickup_lat': float(0.0), 'pickup_lon': float(0.0)
                                }
 
@@ -459,8 +461,7 @@ session_columns = {'order_id', 'client', 'session_start_date', 'date', 'payment_
 customer_columns = {'client_2', 'download_date', 'signup_date'}
 product_columns = {'order_id', 'product', 'price', 'category'}
 delivery_columns = {'delivery_date', 'prepare_date', 'return_date', 'latitude', 'longitude'}
-delivery_metrics = {'return_date', 'prepare_date', 'delivery_date', 'latitude', 'longitude',
-                    'pickup_id', 'picker', 'pickup_category', 'pickup_lat', 'pickup_lon'}
+delivery_metrics_vis = {'deliver', 'prepare', 'ride', 'deliveryclient'}
 delivery_threshold_z_score = 2
 
 data_types_for_search = {"product": [('chart_1', ['product_kpis']),

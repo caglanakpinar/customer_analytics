@@ -4,24 +4,18 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 import numpy as np
 import pandas as pd
-import datetime
-import random
-from time import gmtime, strftime
-import pytz
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
-import argparse
 from dateutil.parser import parse
 from sqlalchemy import create_engine, MetaData
 from flask_login import current_user
 from os.path import abspath, join
-import time
 
 from customeranalytics.utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format, formating_numbers
 from customeranalytics.configs import query_path, default_es_port, default_es_host, none_types, delivery_metrics
-from customeranalytics.configs import orders_index_columns, downloads_index_columns, not_required_columns, not_required_default_values
+from customeranalytics.configs import orders_index_columns, downloads_index_columns, not_required_columns, \
+    not_required_default_values, elasticsearch_settings, elasticsearch_settings_downloads
 from customeranalytics.data_storage_configurations.query_es import QueryES
 from customeranalytics.data_storage_configurations.data_access import GetData
+
 
 try:
     engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
@@ -94,6 +88,18 @@ class CreateIndex:
                                                 'user_logo': 'info.jpeg',
                                                 'chat_type': 'info', 'chart': '',
                                                 'general_message': info, 'message': ''}
+        self.es_settings = {'orders': elasticsearch_settings['mappings']['properties'],
+                            'downloads': elasticsearch_settings_downloads['mappings']['properties']}
+        self.es_columns = {}
+        self.get_type = {"text": str, "float": float, "int": int, "date": convert_to_iso_format}
+
+    def get_es_columns_types(self):
+        for i in self.es_settings:
+            for col in self.es_settings[i]:
+                if 'properties' in list(self.es_settings[i][col].keys()):
+                    for col2 in self.es_settings[i][col]['properties']:
+                        self.es_columns[col2] = self.es_settings[i][col]['properties'][col2]['type']
+                else: self.es_columns[col] = self.es_settings[i][col]['type']
 
     def insert_query(self, table, columns, values):
         values = [values[col] for col in columns]
@@ -224,7 +230,8 @@ class CreateIndex:
                 for col in delivery_metrics:
                     if col in columns:
                         data[col] = data[col].apply(
-                            lambda x: parse(x) if col in ['return_date', 'prepare_date', 'delivery_date'] else float(x))
+                            lambda x: parse(x) if col in ['return_date', 'prepare_date', 'delivery_date'] else float(x)
+                            if col in ['latitude', 'longitude', 'pickup_lat', 'pickup_lon'] else str(x))
         if data_source_type == 'downloads':
             data['download_date'] = data['download_date'].apply(
                 lambda x: parse(x) if x == x and x not in ['None', None, 'nan'] else None)
@@ -293,11 +300,14 @@ class CreateIndex:
 
     def check_for_not_required_columns(self, data, data_source_type):
         _columns = list(data.columns)
+        print("total columns :", _columns)
         for col in not_required_columns[data_source_type]:
+            print(col, "*"*5)
             if col not in _columns:
                 data[col] = not_required_default_values[col]
             else:
-
+                if len(data[data[col].isin(none_types)]) != 0:
+                    data[col] = data[col].fillna(self.get_type[self.es_columns[col]](not_required_default_values[col]))
         return data
 
     def get_data(self, conf, data_source_type):
@@ -346,6 +356,7 @@ class CreateIndex:
                     del products
                 else: orders['basket'] = None
             except Exception as e:
+                print(e)
                 orders['basket'] = None
 
             try:
@@ -353,9 +364,15 @@ class CreateIndex:
                     deliveries = self.get_data(conf=delivery_source, data_source_type='deliveries')
                     deliveries = deliveries.groupby("order_id").agg({m: 'first' for m in delivery_metrics}).reset_index()
                     deliveries['delivery'] = deliveries.apply(lambda row: {m: row[m] for m in delivery_metrics}, axis=1)
+                    print(orders.columns)
+                    print(deliveries.columns)
+                    print(len(set(list(orders['order_id'])) & set(list(deliveries['order_id'])[0])))
                     orders = pd.merge(orders, deliveries[['order_id', 'delivery']], on='order_id', how='left')
+                    print(orders.query("delivery == delivery")[["delivery", 'has_purchased']].head())
+                    ## TODO: check if there is no delivery data and it is not purchased
                 else: orders['delivery'] = None
             except Exception as e:
+                print(e)
                 orders['delivery'] = None
 
         return orders
@@ -502,6 +519,7 @@ class CreateIndex:
         """
 
         """
+        self.get_es_columns_types()
         self.job_start_date = current_date_to_day()
         self.get_schedule_data()
         self.get_end_date()
@@ -534,6 +552,7 @@ class CreateIndex:
                                    "color": "green"})
 
         except Exception as e:
+            print(e)
             try: err_str = " - " + str(e).replace("'", " ")
             except: err_str = " "
             self.logs_update(logs={"page": "data-execute",

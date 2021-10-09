@@ -98,6 +98,24 @@ def read_yaml(directory, filename):
     return docs
 
 
+def write_yaml(directory, filename, data, ignoring_aliases=False):
+    """
+    writing yaml file to the given directory & filename
+    :param directory: path
+    :param filename: file name with .yaml format
+    :param data: data with .json or dictionay format
+    :param ignoring_aliases: ignore aliases, by default False
+    """
+    if ignoring_aliases:
+        yaml.Dumper.ignore_aliases = lambda *args : True
+
+    with open(join(directory, "", filename), 'w') as file:
+        if ignoring_aliases:
+            yaml.dump(data, file, default_flow_style=False)
+        else:
+            yaml.dump(data, file)
+
+
 def convert_to_iso_format(date):
     """
     converting iso-format to timestamp Ex: from  2021-01-01T00:00:00 to 2021-01-01 00:00:00

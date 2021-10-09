@@ -11,17 +11,23 @@ from os.path import join, dirname, exists
 from os import listdir
 import plotly.graph_objs as go
 import plotly
+import chart_studio
 from screeninfo import get_monitors
 from sqlalchemy import create_engine, MetaData
 
 from customeranalytics.utils import convert_to_day, abspath_for_sample_data
 from customeranalytics.configs import time_periods, descriptive_stats, abtest_promotions, \
-    abtest_products, abtest_segments, delivery_metrics
+    abtest_products, abtest_segments, delivery_metrics_vis
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
                        connect_args={'check_same_thread': False})
 metadata = MetaData(bind=engine)
 con = engine.connect()
+
+
+mapbox_access_token = 'QdsQUfZmyd98XPC1kcrL'
+chart_studio.tools.set_credentials_file(username='cakpinar23', api_key=mapbox_access_token)
+chart_studio.tools.set_config_file(sharing='public')
 
 
 """
@@ -465,27 +471,48 @@ charts = {
 
                         "kpis": {"chart_1_search": ['order_count', 'payment_amount', 'discount_amount', 'client_count']}},
 
-    "delivery": {"charts": {_f: {'trace': go.Heatmap(z=[], x=[], y=[],
-                                                     colorscale='Viridis', opacity=0.9,
-                                                     showlegend=False, ygap=2, xgap=2,
-                                                     hoverongaps=None, showscale=False) if 'weekday' in _f.split("_") else
-                                          go.Densitymapbox(lat=[], lon=[], z=[], radius=10, showscale=False),
-                                 'layout':
-                                          go.Layout(paper_bgcolor='rgba(0,0,0,0)',
-                                                    plot_bgcolor='rgba(0,0,0,0)',
-                                                    # width=1400,
-                                                    margin=dict(l=50, r=50, t=1, b=50) # ,
-                                                    # height=450
-                                          )
-                                          if 'weekday' in _f.split("_") else
-
-                                          go.Layout(mapbox_style="stamen-terrain",
-                                                    margin=dict(l=1, r=1, t=1, b=1),
-                                                    mapbox=dict(center=dict(lat=0.0, lon=0.0),
-                                                                zoom=10)),
-                                }
-                                 for _f in [i for i in ['deliver', 'prepare', 'ride']] +
-                                           [i + '_weekday_hour' for i in ['deliver', 'prepare', 'ride']]},
+    "delivery": {"charts": {**
+                            {_f: {'trace': go.Heatmap(z=[], x=[], y=[],
+                                                        colorscale='Viridis', opacity=0.9,
+                                                        showlegend=False, ygap=2, xgap=2,
+                                                        hoverongaps=None, showscale=False)
+                                             if 'weekday' in _f.split("_") else
+                                             go.Densitymapbox(lat=[],
+                                                              lon=[],
+                                                              z=[], radius=10, showscale=False),
+                                    'layout':
+                                        go.Layout(paper_bgcolor='rgba(0,0,0,0)',
+                                                  plot_bgcolor='rgba(0,0,0,0)',
+                                                  # width=1400,
+                                                  margin=dict(l=50, r=50, t=1, b=50)  # ,
+                                                  # height=450
+                                                  )
+                                        if 'weekday' in _f.split("_") else
+                                        go.Layout(mapbox_style="stamen-terrain",
+                                                  margin=dict(l=1, r=1, t=1, b=1),
+                                                  mapbox=dict(center=dict(lat=0.0, lon=0.0),
+                                                              zoom=10))}
+                                for _f in [i for i in ['deliver', 'prepare', 'ride']] +
+                                                      [i + '_weekday_hour' for i in ['deliver', 'prepare', 'ride']]},
+                            **{_f: {"trace": go.Scattermapbox(lat=[],
+                                                              lon=[],
+                                                              text=[],
+                                                              mode='markers',
+                                                              marker=go.scattermapbox.Marker(size=8, colorscale= 'YlOrRd',
+color=[]),
+                                                          ),
+                                    "layout": go.Layout(autosize=True,
+                                                        hovermode='closest',
+                                                        mapbox=dict(
+                                                            accesstoken=mapbox_access_token,
+                                                            bearing=0,
+                                                            center=dict(
+                                                                lat=38.92,
+                                                                lon=-77.07
+                                                            ),
+                                                            pitch=0,
+                                                            zoom=10))}
+                               for _f in ['deliver_client', 'prepare_client', 'deliver_pickup', 'prepare_pickup']}},
 
                  "kpis": {
                      "deliver_kpis": ['deliver', 'ride', 'returns', 'prepare', 'total_locations']}}
@@ -632,7 +659,7 @@ class Charts:
         self.abtest_promotions = abtest_promotions
         self.abtest_products = abtest_products
         self.abtest_segments = abtest_segments
-        self.delivery_metrics = delivery_metrics
+        self.delivery_metrics = delivery_metrics_vis
 
     def get_data(self, chart, index, date):
         """
@@ -919,8 +946,11 @@ class Charts:
         if 'weekday' not in chart.split("_") and len(self.delivery_metrics & set(chart.split("_"))) != 0:
             trace['lat'] = list(_data['latitude'])
             trace['lon'] = list(_data['longitude'])
-            trace['z'] = list(_data[chart.split("_")[0]])
-
+            column = 'z'
+            if len({'client', 'pickup'} & set(chart.split("_"))) != 0:
+                column = 'text'
+                trace['marker']['color'] = list(_data[chart.split("_")[0]])
+            trace[column] = list(_data[chart.split("_")[0]])
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
 
     def get_centroids(self, data):
@@ -964,8 +994,34 @@ class Charts:
 
         if len(self.delivery_metrics & set(chart.split("_"))) != 0 and 'weekday' not in chart.split("_"):
             _centroids = self.get_centroids(_data)
-            layout = go.Layout(mapbox_style="stamen-terrain",
-                               mapbox=dict(center=dict(lat=_centroids[0], lon=_centroids[1]), zoom=10))
+            if len({'client', 'pickup'} & set(chart.split("_"))) != 0:
+                layout = go.Layout(autosize=True,
+                                   hovermode='closest',
+
+                                   margin=go.Margin(
+                                       l=0,
+                                       r=0,
+                                       b=0,
+                                       t=0
+                                   ),
+
+                                   mapbox=dict(
+                                       style= "open-street-map",
+                                       accesstoken=mapbox_access_token,
+                                       bearing=0,
+                                       center=dict(lat=_centroids[0], lon=_centroids[1]),
+                                       pitch=0,
+                                       zoom=10
+                                   ),)
+            else:
+                layout = go.Layout(mapbox_style="stamen-terrain",
+                                   margin=go.Margin(
+                                       l=0,
+                                       r=0,
+                                       b=0,
+                                       t=0
+                                   ),
+                                   mapbox=dict(center=dict(lat=_centroids[0], lon=_centroids[1]), zoom=10))
 
         if 'change' in chart.split("_") or 'dfunnel' in chart.split("_"):
             return layout

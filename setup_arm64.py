@@ -47,7 +47,8 @@ setuptools.setup(
         "pygeohash",
         "random2",
         "pytest-shutil",
-        "python-math"
+        "python-math",
+        "chart_studio"
     ],
     url="https://github.com/caglanakpinar/customer_analytics",
     include_package_data=True,
