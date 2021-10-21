@@ -3,6 +3,8 @@ import os
 import inspect
 from os.path import join
 import yaml
+from multiprocessing import cpu_count
+import threading
 
 from customeranalytics.configs import none_types
 
@@ -202,3 +204,34 @@ def formating_numbers(num):
 
     else:
         return '%.2f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+
+
+def get_iter_sample(s_values, i, iters, cpus):
+    if i != iters - 1:
+        return s_values[(i * cpus): ((i+1) * cpus)]
+    else:
+        return s_values[(i * cpus):]
+
+
+def execute_parallel_run(values, executor, parallel=2, arguments=None, prints=True):
+    global process
+    cpus = cpu_count()
+    if parallel < cpus:
+        parallel = cpus
+    iters = int(len(values) / parallel) + 1
+    if prints:
+        print("number of iterations :", iters)
+    for i in range(iters):
+        if prints:
+            print("iteration :", i)
+        _sample_values = get_iter_sample(values, i, iters, parallel)
+        for v in _sample_values:
+            if arguments:
+                process = threading.Thread(target=executor, args=(v, arguments, ))
+            else:
+                process = threading.Thread(target=executor, args=(v,))
+            process.deamon = True
+            process.start()
+        process.join()
+    del process
+    return "done !!!"
