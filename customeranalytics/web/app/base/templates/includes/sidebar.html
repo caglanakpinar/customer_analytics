@@ -35,6 +35,7 @@
 							<li class="sidebar-item {% if 'data-es' in segment %} active {% endif %}"><a class="sidebar-link" href="data-es">ElasticSearch Configurations</a></li>
 							<li class="sidebar-item {% if 'purchase' in segment %} active {% endif %}"><a class="sidebar-link" href="add-data-purchase">Session & Customers</a></li>
 							<li class="sidebar-item {% if 'product' in segment %} active {% endif %}"><a class="sidebar-link" href="add-data-product">Baskets</a></li>
+							<li class="sidebar-item {% if 'delivery' in segment %} active {% endif %}"><a class="sidebar-link" href="add-data-delivery">Deliveries</a></li>
 
 						</ul>
 					</li>
@@ -119,6 +120,12 @@
 					<li class="sidebar-item">
 						<a data-target="#anomaly" data-toggle="{% if 'anomaly' in segment %} active {% endif %}" class="sidebar-link collapsed" href="anomaly">
               				<i class="align-middle" data-feather="briefcase"></i> <span class="align-middle">Anomaly Detection</span>
+            			</a>
+					</li>
+
+					<li class="sidebar-item">
+						<a data-target="#delivery" data-toggle="{% if 'delivery' in segment %} active {% endif %}" class="sidebar-link collapsed" href="delivery">
+              				<i class="align-middle" data-feather="briefcase"></i> <span class="align-middle">Delivery Analytics</span>
             			</a>
 					</li>
 

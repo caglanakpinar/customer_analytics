@@ -3,10 +3,11 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from ml_process.customer_segmentation import CustomerSegmentation
-from ml_process.clv_prediction import CLVPrediction
-from ml_process.ab_test import ABTests
-from ml_process.anomaly_detection import Anomaly
+from customeranalytics.ml_process.customer_segmentation import CustomerSegmentation
+from customeranalytics.ml_process.clv_prediction import CLVPrediction
+from customeranalytics.ml_process.ab_test import ABTests
+from customeranalytics.ml_process.anomaly_detection import Anomaly
+from customeranalytics.ml_process.delivery_analytics import DeliveryAnalytics
 
 ml_configs = {"date": None,
               'time_period': '6 months',
@@ -20,13 +21,17 @@ ml_configs = {"date": None,
                          "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
               "anomaly": {"host": 'localhost', "port": '9200',
                           'download_index': 'downloads', 'order_index': 'orders'},
+              "delivery_anomaly": {"host": 'localhost', "port": '9200',
+                                   'download_index': 'downloads', 'order_index': 'orders', 
+                                   "temporary_export_path": None, 'has_delivery_connection': True},
 
           }
 
 mls = {'segmentation': CustomerSegmentation,
        'clv_prediction': CLVPrediction,
        'abtest': ABTests,
-       'anomaly': Anomaly
+       'anomaly': Anomaly,
+       'delivery_anomaly': DeliveryAnalytics
        }
 
 
@@ -47,6 +52,10 @@ def create_ml(configs, ml):
     if ml == 'anomaly':
         print("*" * 5, " Anomaly Detection ", "*" * 5)
         ea['anomaly'].execute_anomaly(date=configs['date'])
+        del ea
+    if ml == 'delivery_anomaly':
+        print("*" * 5, " Delivery Analytics ", "*" * 5)
+        ea['delivery_anomaly'].execute_delivery_analysis()
         del ea
 
 

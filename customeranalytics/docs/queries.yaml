@@ -36,6 +36,14 @@ data_connection:
   products_port VARCHAR,
   products_host VARCHAR,
   products_db VARCHAR,
+  deliveries_data_source_tag VARCHAR,
+  deliveries_data_source_type VARCHAR,
+  deliveries_data_query_path VARCHAR,
+  deliveries_password VARCHAR,
+  deliveries_user VARCHAR,
+  deliveries_port VARCHAR,
+  deliveries_host VARCHAR,
+  deliveries_db VARCHAR,
   dimension VARCHAR,
   promotion_id VARCHAR,
   PRIMARY KEY (id)
@@ -45,6 +53,7 @@ data_columns_integration:
   CREATE TABLE data_columns_integration (
   id INTEGER NOT NULL,
   order_id VARCHAR,
+  order_id_2 VARCHAR,
   client VARCHAR,
   session_start_date VARCHAR,
   payment_amount VARCHAR,
@@ -61,6 +70,11 @@ data_columns_integration:
   actions VARCHAR,
   dimension VARCHAR,
   client_2 VARCHAR,
+  delivery_date VARCHAR,
+  prepare_date VARCHAR,
+  return_date VARCHAR,
+  latitude VARCHAR,
+  longitude VARCHAR,
   PRIMARY KEY (id)
   )
 
@@ -152,12 +166,22 @@ columns:
     - products_port
     - products_host
     - products_db
+    - deliveries_data_source_tag
+    - deliveries_data_source_type
+    - deliveries_data_query_path
+    - deliveries_password
+    - deliveries_user
+    - deliveries_port
+    - deliveries_host
+    - deliveries_db
+    - products_db
     - dimension
     - promotion_id
 
   data_columns_integration:
     - id
     - order_id
+    - order_id_2
     - client
     - session_start_date
     - payment_amount
@@ -174,6 +198,11 @@ columns:
     - actions
     - dimension
     - client_2
+    - delivery_date
+    - prepare_date
+    - return_date
+    - latitude
+    - longitude
 
   schedule_data:
     - id

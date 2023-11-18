@@ -39,14 +39,12 @@ def get_segment(request):
 @login_required
 def search_data():
     """
-    When logged In, Platform start with General Dashboard running on index.html
+    This is for serach result pages rendering with search.html
     :return: render_template
     """
     pic = profile.fetch_pic()
     search_value = dict(request.form).get('search', '')
-    print("search")
     results = search.search_results(search_value)
-    # print(search_type)
     graph_json, data_type, filters = charts.get_chart(target='search_' + results['search_type'])
     chart_names = search.get_search_chart_names(results['search_type'])
     kpis = search.convert_kpi_names_to_numeric_names(graph_json)
@@ -92,6 +90,9 @@ def index():
 @blueprint.route("/upload-image", methods=["POST"])
 @login_required
 def upload_image():
+    """
+    Uploading user log righ top of the panel
+    """
     segment = get_segment(request)
     if request.method == "POST":
         profile.add_pic(request)
@@ -339,11 +340,31 @@ def route_template(template):
                                        graph_json['charts']['clvrfm_anomaly']),
                                    data_type=data_type,
                                    filters=filters)
+        if template == 'delivery.html':
+            graph_json, data_type, filters = charts.get_chart(target='delivery', index=index, date=date)
+            return render_template(template,
+                                   segment=segment,
+                                   pic=pic,
+                                   ride=charts.get_json_format(
+                                       graph_json['charts']['ride']),
+                                   deliver=charts.get_json_format(
+                                       graph_json['charts']['deliver']),
+                                   prepare=charts.get_json_format(
+                                       graph_json['charts']['prepare']),
+                                   prepare_weekday_hour=charts.get_json_format(
+                                       graph_json['charts']['prepare_weekday_hour']),
+                                   deliver_weekday_hour=charts.get_json_format(
+                                       graph_json['charts']['deliver_weekday_hour']),
+                                   ride_weekday_hour=charts.get_json_format(
+                                       graph_json['charts']['ride_weekday_hour']),
+                                   kpis=graph_json['kpis'],
+                                   data_type=data_type,
+                                   filters=filters)
 
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html', 'rfm.htm',
                             'product.html', 'abtest-segments.html', 'abtest-product.html', 'abtest-promotion.html',
                             'stats-desc.html', 'stats-purchase.htm', 'cohorts.html', 'customer-segmentation.html']:
-            if template in ['profile.html', 'settings.html', 'upload.php.html']:
+            if template in ['profile.html', 'settings.html', 'upload.php.html', 'delivery.html']:
                 profile.add_new_message(dict(request.form))
                 args = profile.fetch_chats()
                 return render_template(template,

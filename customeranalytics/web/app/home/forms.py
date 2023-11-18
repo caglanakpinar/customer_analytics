@@ -4,7 +4,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 import pandas as pd
-from numpy import array
+from numpy import array, mean, std
 import json
 
 from os.path import join, dirname, exists
@@ -15,7 +15,8 @@ from screeninfo import get_monitors
 from sqlalchemy import create_engine, MetaData
 
 from customeranalytics.utils import convert_to_day, abspath_for_sample_data
-from customeranalytics.configs import time_periods, descriptive_stats, abtest_promotions, abtest_products, abtest_segments
+from customeranalytics.configs import time_periods, descriptive_stats, abtest_promotions, \
+    abtest_products, abtest_segments, delivery_metrics
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
                        connect_args={'check_same_thread': False})
@@ -427,17 +428,18 @@ charts = {
 
 
     "search_promotion": {"charts": {_f:
-    {'trace': go.Scatter(mode="lines+markers+text",
-                         line=dict(color='firebrick', width=4),
-                         textposition="bottom center",
-                         textfont=dict(
-                             family="sans serif",
-                             size=30,
-                             color="crimson")),
-     'layout': go.Layout()}
-                   for _f in ["chart_{}_search".format(str(i)) for i in range(2, 5)]},
+                                    {'trace': go.Scatter(mode="lines+markers+text",
+                                                         line=dict(color='firebrick', width=4),
+                                                         textposition="bottom center",
+                                                         textfont=dict(
+                                                             family="sans serif",
+                                                             size=30,
+                                                             color="crimson")),
+                                     'layout': go.Layout()}
+                                                   for _f in ["chart_{}_search".format(str(i)) for i in range(2, 5)]},
 
-     "kpis": {"chart_1_search": ['order_count', 'total_revenue', 'total_discount', 'client_count']}},
+                                     "kpis": {"chart_1_search": ['order_count', 'total_revenue',
+                                                                 'total_discount', 'client_count']}},
 
     "search_client": {"charts": {_f: {'trace': go.Scatter(mode="lines+markers+text",
                                                           line=dict(color='firebrick', width=4),
@@ -452,17 +454,41 @@ charts = {
                       "kpis": {"chart_1_search": ['order_count', 'frequency', 'monetary', 'recency']}},
 
     "search_dimension": {"charts": {_f: {'trace': go.Scatter(mode="lines+markers+text",
-                                                          line=dict(color='firebrick', width=4),
-                                                          textposition="bottom center",
-                                                          textfont=dict(
-                                                              family="sans serif",
-                                                              size=30,
-                                                              color="crimson")),
-                                      'layout': go.Layout()}
+                                                             line=dict(color='firebrick', width=4),
+                                                             textposition="bottom center",
+                                                             textfont=dict(
+                                                                 family="sans serif",
+                                                                 size=30,
+                                                                 color="crimson")),
+                                         'layout': go.Layout()}
                                  for _f in ["chart_{}_search".format(str(i)) for i in range(2, 5)]},
 
-                      "kpis": {"chart_1_search": ['order_count', 'payment_amount', 'discount_amount', 'client_count']}}
+                        "kpis": {"chart_1_search": ['order_count', 'payment_amount', 'discount_amount', 'client_count']}},
 
+    "delivery": {"charts": {_f: {'trace': go.Heatmap(z=[], x=[], y=[],
+                                                     colorscale='Viridis', opacity=0.9,
+                                                     showlegend=False, ygap=2, xgap=2,
+                                                     hoverongaps=None, showscale=False) if 'weekday' in _f.split("_") else
+                                          go.Densitymapbox(lat=[], lon=[], z=[], radius=10, showscale=False),
+                                 'layout':
+                                          go.Layout(paper_bgcolor='rgba(0,0,0,0)',
+                                                    plot_bgcolor='rgba(0,0,0,0)',
+                                                    # width=1400,
+                                                    margin=dict(l=50, r=50, t=1, b=50) # ,
+                                                    # height=450
+                                          )
+                                          if 'weekday' in _f.split("_") else
+
+                                          go.Layout(mapbox_style="stamen-terrain",
+                                                    margin=dict(l=1, r=1, t=1, b=1),
+                                                    mapbox=dict(center=dict(lat=0.0, lon=0.0),
+                                                                zoom=10)),
+                                }
+                                 for _f in [i for i in ['deliver', 'prepare', 'ride']] +
+                                           [i + '_weekday_hour' for i in ['deliver', 'prepare', 'ride']]},
+
+                 "kpis": {
+                     "deliver_kpis": ['deliver', 'ride', 'returns', 'prepare', 'total_locations']}}
 }
 
 
@@ -606,6 +632,7 @@ class Charts:
         self.abtest_promotions = abtest_promotions
         self.abtest_products = abtest_products
         self.abtest_segments = abtest_segments
+        self.delivery_metrics = delivery_metrics
 
     def get_data(self, chart, index, date):
         """
@@ -643,10 +670,13 @@ class Charts:
         if len(set(['funnel', 'distribution', 'clv']) & set(chart.split("_"))) != 0:
             return trace if type(trace) == list else [trace]
         else:
-            if type(trace) == list:
-                return trace
+            if 'weekday' not in chart.split("_") and len(self.delivery_metrics & set(chart.split("_"))) != 0:
+                return trace if type(trace) == list else [trace]
             else:
-                return [trace]
+                if type(trace) == list:
+                    return trace
+                else:
+                    return [trace]
 
     def ab_test_of_trace(self, data, chart):
         """
@@ -666,12 +696,10 @@ class Charts:
         """
         _trace = []
         if chart.split("_")[1] in ['usage', 'change']:
-            print(chart)
             _type = -2 if chart.split("_")[1] == 'usage' else -1
             _name = 'order count' if chart.split("_")[_type] == 'orders' else 'purchase amount'
             names = ["before average "+_name+"  per c.", "after average "+_name+" per c."]
             indicator = chart.split("_")[0] + 's' if chart.split("_")[1] == 'usage' else chart.split("_")[0]
-            print(_type, _name, names, indicator)
             _trace = [
                 go.Bar(name=names[0], x=data[indicator], y=data['mean_control']),
                 go.Bar(name=names[1], x=data[indicator], y=data['mean_validation'])
@@ -681,14 +709,17 @@ class Charts:
             data = data.rename(columns={"diff": "Difference of Order (Before Vs After)",
                                         "diff_amount": "Difference of Payment Amount (Before Vs After)"})
             _trace = go.Scatter(x=data['Difference of Order (Before Vs After)'],
-                                y=data['Difference of Payment Amount (Before Vs After)'], mode='markers',
-                                marker=dict(color=list(range(len(data))), colorscale='Rainbow'))
+                                y=data['Difference of Payment Amount (Before Vs After)'],
+                                mode='markers',
+                                marker=dict(color=list(range(len(data))),
+                                            colorscale='Rainbow'))
         if chart == 'promotion_comparison':
             _trace = go.Scatter(x=data['accept_Ratio'],
                                 y=data['total_effects'],
                                 text=data['1st promo'],
                                 marker=dict(size=data['total_negative_effects'],
-                                            color=list(range(len(data))), colorscale='Rainbow'),
+                                            color=list(range(len(data))),
+                                            colorscale='Rainbow'),
                                 mode='markers',
                                 name='markers')
         return _trace
@@ -870,7 +901,6 @@ class Charts:
                     trace['y'] = list(_data['payment_amount'])
 
             if target == 'search_dimension':
-                print(_data)
                 if chart == "chart_2_search":
                     trace['x'] = list(_data['daily'])
                     trace['y'] = list(_data['order_count'])
@@ -881,7 +911,20 @@ class Charts:
                     trace['x'] = list(_data['daily'])
                     trace['y'] = list(_data['client_count'])
 
+        if 'weekday' in chart.split("_"):
+            trace['x'] = [str(int(col)) for col in list(_data.columns)][1:]
+            trace['y'] = [str(int(ts)) + ':00 ' for ts in list(_data[_data.columns[0]])]
+            trace['z'] = array(_data[_data.columns[1:]]).tolist()
+
+        if 'weekday' not in chart.split("_") and len(self.delivery_metrics & set(chart.split("_"))) != 0:
+            trace['lat'] = list(_data['latitude'])
+            trace['lon'] = list(_data['longitude'])
+            trace['z'] = list(_data[chart.split("_")[0]])
+
         return self.decide_trace_type(chart=chart, trace=trace), is_real_data
+
+    def get_centroids(self, data):
+        return [mean(list(data['latitude'])), mean(list(data['longitude']))]
 
     def get_layout(self, layout, chart, index, date, annotation=None):
         _data = self.get_data(chart, index, date)[0]
@@ -918,10 +961,19 @@ class Charts:
             min_value = round(min(_data['Anomaly Score Download to First Order']) - 0.01, 2)
             max_value = round(max(_data['Anomaly Score Download to First Order']) + 0.01, 2)
             layout['yaxis'] = {"range": [min_value, max_value]}
+
+        if len(self.delivery_metrics & set(chart.split("_"))) != 0 and 'weekday' not in chart.split("_"):
+            _centroids = self.get_centroids(_data)
+            layout = go.Layout(mapbox_style="stamen-terrain",
+                               mapbox=dict(center=dict(lat=_centroids[0], lon=_centroids[1]), zoom=10))
+
         if 'change' in chart.split("_") or 'dfunnel' in chart.split("_"):
             return layout
         else:
-            return [layout] if 'usage' not in chart.split("_") else layout
+            if len(self.delivery_metrics & set(chart.split("_"))) != 0:
+                return layout
+            else:
+                return [layout] if 'usage' not in chart.split("_") else layout
 
     def get_values(self, kpi, index, date):
         """
@@ -931,6 +983,11 @@ class Charts:
         """
         _data, is_real_data = self.get_data(kpi, index, date)
         return _data.to_dict('results')[0], is_real_data
+
+    def has_chart_annotation(self, chart, c):
+        if 'cohort' in chart.split("_"):
+            return c['annotation']
+        else: return None
 
     def get_chart(self, target, index='main', date=None):
         """
@@ -946,7 +1003,7 @@ class Charts:
         for c in charts[target]['charts']:
             trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index, date, target)
             self.get_widths_heights(chart=c, target=target)
-            annotation = charts[target]['charts'][c]['annotation'] if 'cohort' in c.split("_") else None
+            annotation = self.has_chart_annotation(chart=c, c=charts[target]['charts'][c])
             layout = self.get_layout(charts[target]['charts'][c]['layout'], c,
                                      annotation=annotation, index=index, date=date)
             self.data_type[c] = is_real_data

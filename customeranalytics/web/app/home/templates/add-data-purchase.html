@@ -27,20 +27,13 @@
 							<h6 class="card-subtitle text-muted">
 
 								{% if values['data_source_con_check'] == 'Connected' %}
-									{% if values['s_c_p_connection_check'] == 'False_False_False' %}
+									{% if values['s_c_p_connection_check']['sessions'] == 'False' and  values['s_c_p_connection_check']['customers'] == 'False'%}
 										<strong style="color:green;">There isn`t any connection detected for Sessions and Customers.</strong>
 									{% endif %}
-									{% if values['s_c_p_connection_check'] == 'True_True_True' %}
+									{% if values['s_c_p_connection_check']['sessions'] == 'True' and  values['s_c_p_connection_check']['customers'] == 'True'%}
 										<strong style="color:green;">connected successfully!</strong>
 									{% endif %}
-									{% if values['s_c_p_connection_check'] == 'False_False_True' %}
-										<strong style="color:green;">There isn`t any connection detected for Sessions and Customers But There is a connection for Baskets.</strong>
-									{% endif %}
-									{% if values['s_c_p_connection_check'] == 'False_True_True' or  values['s_c_p_connection_check'] == 'False_True_False' %}
-										<strong style="color:green;">There is a connection detected for Customers.</strong>
-										<strong style="color:red;">But There isn`t any connection detected for Sessions. Don`t forget to add Session connection.</strong>
-									{% endif %}
-									{% if values['s_c_p_connection_check'] == 'True_False_True' or  values['s_c_p_connection_check'] == 'True_False_False' %}
+									{% if values['s_c_p_connection_check']['sessions'] == 'True' and  values['s_c_p_connection_check']['customers'] == 'False' %}
 										<strong style="color:green;">There is a connection detected for Sessions.</strong>
 										<strong style="color:red;">But There isn`t any connection detected for Customers. Don`t forget to add Customers connection.</strong>
 									{% endif %}
@@ -49,15 +42,15 @@
 										<strong style="color:red;">Connection is failed! .</strong>
 								{% endif %}
 								{% if values['data_source_con_check'] == '....' %}
-									{% if values['s_c_p_connection_check'] == 'True_False_False' or values['s_c_p_connection_check'] == 'True_False_True' %}
+									{% if values['s_c_p_connection_check']['sessions'] == 'True' and  values['s_c_p_connection_check']['customers'] == 'False' %}
 										<strong style="color:green;">There is a connection detected for Sessions.</strong>
 										<strong style="color:red;">But There isn`t any connection detected for Customers. Don`t forget to add Customers connection.</strong>
 									{% endif %}
-									{% if values['s_c_p_connection_check'] == 'False_True_False' or values['s_c_p_connection_check'] == 'False_True_True' %}
+									{% if values['s_c_p_connection_check']['sessions'] == 'False' and  values['s_c_p_connection_check']['customers'] == 'True' %}
 										<strong style="color:green;">There is a connection detected for Customers.</strong>
 										<strong style="color:red;">But There isn`t any connection detected for Sessions. Don`t forget to add Session connection.</strong>
 									{% endif %}
-									{% if values['s_c_p_connection_check'] == 'True_True_False' or values['s_c_p_connection_check'] == 'True_True_True' %}
+									{% if values['s_c_p_connection_check']['sessions'] == 'True' and  values['s_c_p_connection_check']['customers'] == 'True' %}
 										<strong style="color:green;">Both Sessions and Customers data Sources are detected.</strong>
 									{% endif %}
 								{% endif %}

@@ -2,6 +2,19 @@
  
 ---
 
+### How to install for Apple M1 MACOS?
+
+You can download end install via pip. You also need miniforge3 environment rather than other conda environments such as anaconda. This is crucial in order to install tensorflow.
+
+[customeranalytics_arm64-0.0.2.tar.gz](https://github.com/caglanakpinar/customer_analytics/files/7175230/customeranalytics_arm64-0.0.2.tar.gz)
+
+Before installation, here are the requirements that must be installed individually;
+
+- **clv_prediction :** [clv_prediction_arm64-0.1.8.tar.gz](https://github.com/caglanakpinar/clv_prediction/files/7172452/clv_prediction_arm64-0.1.8.tar.gz)
+- **psycopg2-binary**
+- **tensorflow-metal :** via https://developer.apple.com/metal/tensorflow-plugin/ you can check the instructions and it is able to be installed with a few steps.
+- **statsmodels :** Use **conda install -c conda-forge statsmodels** and install individually.
+
 ### A. Understanding the concept of CustomerAnalytics
 
 This platform helps the business related to e-commerce. It also helps the business which has users (B2C) and has their data related to engagement to the business. 
@@ -69,10 +82,11 @@ These are also fields that are mapping with their types;
 -  ***monetary_segments:*** orders index - type; date
 
 
-At ElasticSearch, Session and Products Data are stored in the same Index which is ***orders index***. In orders index, There is a ***basket object*** that refers to the products of the related order ID. This data set is transferred from the Products Data Source. There is an ***actions object*** that refers to actions columns of the given session. When Sessions Data Source is created, actions are able to be included.
+At ElasticSearch, Session and Products Data are stored in the same Index which is ***orders index***. In orders index, There is a ***basket object*** that refers to the products of the related order ID. This data set is transferred from the Products Data Source. There is an ***actions object*** that refers to actions columns of the given session. When Sessions Data Source is created, actions are able to be included.There is a ***delivery object*** that covers the delivery, prepare and return dates and latitude and longitude of the order location.
 
 
-![image](https://user-images.githubusercontent.com/26736844/128704295-b53ea2d9-338b-4c9c-ab35-7342d4fd0d54.png)
+
+![image](https://user-images.githubusercontent.com/26736844/132098683-f2d0a2e3-34c9-4a6f-97ad-37568845a447.png)
 
 
 Another index is stored with customers of unique information that is called ***downloads index***. This index is shaped with unique customers of dates from 1st interaction with the business to further interactions. Each document at the downloads index represents the unique customer. The first interaction of each customer might be the downloaded date or signup date. If there isn`t any downloaded date, it must be a date that indicates the first interaction date before the first sessions of each customer.
@@ -154,6 +168,27 @@ Customer Data Source Columns Matching Process***. There are 2 parts of connectio
 ##### Example of Products Data Source Columns Matching Process
 
 ![image](https://user-images.githubusercontent.com/26736844/128706046-e4cfe210-90f1-45f9-bc09-8e59027bce17.png)
+
+
+***Delivery Connection*** is the sub-data source for the sessions. This data source is merging with Sessions data source and storing into the ElasticSearch. If any session has a delivery process, the Order ID of the session of delivery information must be included at the delivery data source and the purchase value must be True. Delivery Data Source is optional. See the example of the Delivery data set below in ***Example of Delivery Data Source Columns Matching Process***. There are 2 parts to the connection process. First, the Delivery Data Source of columns and ElasticSearch orders Index of fields must be matched. There are required columns which are order ID, delivery_date, and not required columns which are prepare date, return date, and deliver the location of latitude - longitude.
+
+![image](https://user-images.githubusercontent.com/26736844/132100524-6958c555-1290-469e-9776-7c0c3051114f.png)
+
+
+***Order ID***, indicates an ID for each session (purchased sessions). Please assign a column name that refers to Order ID at your data source. You need to write the correct column name in the box. It is crucial that all order IDs must be matched with order IDs at the session data source. Otherwise missing order IDs wouldn’t be matched and can not be transferred to the orders index.
+
+***Delivery Date*** is the date when the order is arrived to the customers. It is the timestamp when the delivery person is arrived to the delivery location.
+
+***Return Date*** is the date when the delivery person returns back to the first location after the order is delivered.
+
+***Prepare Date*** is the date when the orders is ready to deliver.
+
+***Latitude - Longitude***; Each delivery location can be pinned with latitudes -longitudes while the delivery data source is created. Latitudes and Longitudes are not mandatory, but map charts in the dashboard needs locations.
+
+##### Example of Delivery Data Source Columns Matching Process
+
+![image](https://user-images.githubusercontent.com/26736844/132100581-f661f245-4ec3-4b15-b677-4298cda32ad6.png)
+
 
 ***Schedule Data Process*** is the main console to track the data transferring processes, Exploratory Analysis, and ML Works of scheduling and triggering processes. Once the schedule is created, data transfers from sessions/customers/products data sources to the ElasticSearch Indexes, and Exploratory Analysis and ML Words Processes will be started. If It is aimed at triggering these processes once, choose 'once' for the time period Otherwise process is triggered according to the time period. When you delete the schedule, the process will stop there and never updates the data sets.
 
@@ -673,8 +708,95 @@ In order to catch the significant increase/decrease, even we think that the busi
     There are engaged customers whose purchases are predicted with CLV Prediction. We also know their Recency - Monetary - Frequency values that are calculated with their historic purchases. If we calculate their future RFM values via the CLV prediction and subtract them in order to detect a significant increase/decrease for each metric, we might clearly see how our customers ' behaviors might change in the future.
     
     ![image](https://user-images.githubusercontent.com/26736844/128743808-e0f61a58-13a6-495d-9863-1c8661d74e97.png)
+   
+#### 5. Delivery Analytics
+
+These analyses are only able to run when the delivery data source is created. It detects abnormal durations of rides according to customer location, location of the order, the hour of the order, weekday of the order.
+
+- ***Location Base Anomaly Detection;*** Each location is grouped into a central point. Centralization is processed with geo hash library which is encoded with precision 7 and decoded back to latitudes and longitudes. Then, average durations, which are Delivery, Prepare, Ride, are calculated per location (with precision 7). Abnormal locations are detected via scores which are calculated with AutoEncoder. 
+
+- ***Customer Base Anomaly Detection;***  Average of purchased orders durations are calculated per customer. At that point, Abnormal values are detected with AutoEncoder.
+
+- ***Weekend - Hour Base Anomaly Detection;*** Average Durations per weekday per hour are calculated. Each value is normalized with Min-Max Normalization. Values that are more than 0.9 are labeled as Abnormal weekdays and hours.
+
+- ***Delivery Analytics Anomaly Detection for durations; ***
     
+    -  ***Rule 1;*** If 3 anomaly detection cases are positive, assign transaction as Abnormal Transaction.
+    
+    -  ***Rule 2;*** If location base or customer base are positive and weekday - hour case is positive, assign as Abnormal Transaction.
+
+- ***Deliver Duration;*** It is total duration between order purchased date and order delivered date.
+
+- ***Prepare Duration;*** It is total duration between order purchased date and ordered prepared date.
+
+- ***Ride Duration;*** It is the total duration between order deliver date and the date which the delivery person returns to the first location after the order is delivered.
+
+- ***Return Duration;*** It is the total duration between order deliver date and the date which the delivery person returns to the first location after the order is delivered.
+
+- ***What kind of charts does the dashboard includes?***
+
+    There are 2 types of charts. Both types of charts are related to abnormal durations according to delivery - ride  - prepare durations. These charts are abnormal durations per weekday per hour on the heatmap and abnormal durations pşer location on the map.
+    
+    - ***Abnormal Durations per weekday per hour;*** Usually, the durations are affected by the day of the hour and the week of the day. 
+    Hours between 17:00 pm and 20:00 pm on the weekdays won't be the similar durations Distributions as Hours in the morning during the weekdays. For another comparison instance, delivery durations at the weekend won't be similar to durations for the weekdays. This type of chart allows us to see the whole picture weekly and detect which hours are highly possible to assign as abnormal.
+    
+    - ***Average Duration per Location;*** Each location represents delivery locations. It is possible that there are orders more than once for each location. The average duration per location is represented with the map which is centralized with the average of latitude and longitude.
+
+- ***i. Abnormal Deliver Duration Breakdown with Hour Weekday***
+
+    This presentation is a heatmap chart with the week of the day at the x-axis and the day of hours at the y-axis. Each cell represents each hour during a week. Values are the normalized values at each cell. These values are the normalized ***DELIVER*** Durations with Min-Max Normalization after the average delivery duration per weekday per day is calculated.
+
+![image](https://user-images.githubusercontent.com/26736844/132107662-4cb0c735-1031-45c9-81cc-30da7f36328d.png)
+
+- ***ii. Average Deliver Duration per Location***
+
+    This representation is a map that is located with centroids latitude that is the average of all latitudes and longitudes is the average of all longitudes. Values are sampled from the population with the size of 100. Each value on the map represents abnormal values of ***DELIVER*** durations that are detected with AutoEncoder.
+
+
+![image](https://user-images.githubusercontent.com/26736844/132107686-02c437d5-dea7-4903-96ad-e6273dc1d8a8.png)
+
+
+- ***iii. Abnormal Ride Duration Breakdown with Hour Weekday***
+
+    This presentation is a heatmap chart with the week of the day at the x-axis and the day of hours at the y-axis. Each cell represents each hour during a week. Values are the normalized values at each cell. These values are the normalized ***RIDE*** Durations with Min-Max Normalization after the average delivery duration per weekday per day is calculated.
+    
+![image](https://user-images.githubusercontent.com/26736844/132108133-b61b2861-7f89-45fb-98bb-35d19c34c3fe.png)
+
+
+- ***iv. Average Ride Duration per Location***
+
+    This representation is a map that is located with centroids latitude that is the average of all latitudes and longitudes is the average of all longitudes. Values are sampled from the population with the size of 100. Each value on the map represents abnormal values of ***RIDE*** durations that are detected with AutoEncoder.
+    
+![image](https://user-images.githubusercontent.com/26736844/132108161-83b2e9bf-a579-4347-b670-74a91b2ae9df.png)
+
+- ***v. Abnormal Prepare Duration Breakdown  with Hour Weekday***
+
+    This presentation is a heatmap chart with the week of the day at the x-axis and day of hours at the y-axis. Each cell represents each hour during a week. Values are the normalized values at each cell. These values are the normalized ***PREPARE*** Durations with Min-Max Normalization after the average delivery duration per weekday per day is calculated.
+
+![image](https://user-images.githubusercontent.com/26736844/132108189-81b1cc37-b6d1-4a76-a087-d3325feb44b9.png)
+
+
+- ***vi. Average Prepare Duration per Location***
+
+    This representation is a map that is located with centroids latitude that is the average of all latitudes and longitudes is the average of all longitudes. Values are sampled from the population with the size of 100. Each value on the map represents abnormal values of ***PREPARE*** durations that are detected with AutoEncoder.
+
+![image](https://user-images.githubusercontent.com/26736844/132108220-6592dcd5-18c0-43f9-9d72-210e5aa52a94.png)
+
+- ***vii. Delivery KPIs***
+
+    General metrics in order to follow up on how the delivery system is running at the business.
+    
+    - ***Average Delivery Duration (min);*** Average delivery duration of all purchased transactions.
+    - ***Average Prepare Duration (min);*** Average prepare duration of all purchased transactions.
+    - ***Average Ride Duration (min);*** Average ride duration of all purchased transactions.
+    - ***Average Return Duration (min);*** Average return duration of all purchased transactions.
+    - ***Total Number Location (min);*** Total delivered locations of all purchased transactions.
+    
+![image](https://user-images.githubusercontent.com/26736844/132108241-d8d9c6e2-97db-4359-97f9-fd54600424b3.png)
+
+
 ---
+
 
 ### F. Configugraitions
 

@@ -131,9 +131,11 @@ def create_ElasticSearch_connection(port, host, temporary_path):
 def create_connections(customers_connection,
                        sessions_connection,
                        products_connection=None,
+                       deliveries_connection=None,
                        sessions_fields={},
                        customer_fields={},
                        product_fields={},
+                       delivery_fields={},
                        actions_sessions='None',
                        actions_customers='None',
                        promotion_id='None',
@@ -203,7 +205,8 @@ def create_connections(customers_connection,
 
     args = {"sessions": [sessions_fields, "orders", sessions_connection, dimension_sessions, actions_sessions],
             "products": [product_fields, "products", products_connection],
-            "customers": [customer_fields, "downloads", customers_connection, "", actions_customers]}
+            "customers": [customer_fields, "downloads", customers_connection, "", actions_customers],
+            "deliveries": [delivery_fields, "deliveries", deliveries_connection]}
 
     # check it is eligible to insert data source
     ready_for_insert = True
@@ -268,6 +271,7 @@ def create_connections(customers_connection,
                 for col in args[i][2]:
                     _req[args[i][1] + '_' + col] = args[i][2][col]
             r.data_connections(r.check_for_request(_req))
+            print(i, " : ", r.message['data_source_con_check'])
     else: print(return_message)
 
 

@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 
 setuptools.setup(
-    name="customeranalytics",
+    name="customeranalytics_arm64",
     version="0.0.2",
     author="Caglan Akpinar",
     author_email="cakpinar23@gmail.com",
@@ -25,7 +25,6 @@ setuptools.setup(
     py_modules=['customer_analytics', "customeranalytics/web", "customeranalytics/docs"],
     install_requires=[
         "PyYAML",
-        "psycopg2-binary",
         "psutil",
         "requests",
         "urllib3",
@@ -38,16 +37,12 @@ setuptools.setup(
         "sqlalchemy",
         "email-validator",
         "screeninfo",
-        "numpy",
         "pandas",
         "elasticsearch",
         "pyyaml",
         "schedule",
         "h2o",
         "psutil",
-        "keras-tuner",
-        "tensorflow",
-        "clv-prediction",
         "abtest",
         "pygeohash",
         "random2",

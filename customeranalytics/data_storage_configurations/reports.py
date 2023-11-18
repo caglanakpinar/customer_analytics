@@ -5,13 +5,14 @@ import sys, os, inspect
 from sqlalchemy import create_engine, MetaData
 from os.path import dirname, join
 from os import listdir
+from math import sqrt
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from customeranalytics.configs import descriptive_reports, product_analytics, abtest_reports, non_dimensional_reports, \
-    clv_prediction_reports, promotion_analytics
+    clv_prediction_reports, promotion_analytics, delivery_metrics
 from customeranalytics.utils import *
 from customeranalytics.data_storage_configurations.query_es import QueryES
 
@@ -170,6 +171,7 @@ class Reports:
         self.naming_decision = lambda x: 'no change' if x.split(" ")[1] == 'decrease/increase' else x.split(" ")[1]
         self.naming = lambda x1, x2: "Frequency; {0}, Monetary ; {1}".format(self.naming_decision(x1),
                                                                              self.naming_decision(x2))
+        self.delivery_metrics = delivery_metrics
 
     def connections(self):
         """
@@ -332,6 +334,8 @@ class Reports:
             query = "report_name == 'stats' and type == 'dimension_kpis'"
         if r_name == 'daily_dimension_values':
             query = "report_name == 'stats' and type == 'daily_dimension_values'"
+        if len(self.delivery_metrics & set(_splits)) != 0:
+            query = "report_name == 'delivery_anomaly' and type == '{}'".format(r_name)
         return query
 
     def get_promotion_comparison(self, x):
@@ -465,7 +469,8 @@ class Reports:
             _increase = report_data.query("anomalities == 'increase'")[columns]
             report_data = pd.concat([_normal, _decrease, _increase])
         if r_name == 'clvrfm_anomaly':
-            report_data['naming'] = report_data.apply(lambda row: self.naming(row['f_anomaly'], row['m_anomaly']), axis=1)
+            report_data['naming'] = report_data.apply(
+                lambda row: self.naming(row['f_anomaly'], row['m_anomaly']), axis=1)
         return report_data
 
     def get_sample_report_names(self):
@@ -491,13 +496,21 @@ class Reports:
         """
         report_data = pd.DataFrame(list(report['data'])[0])
         report_data['since_last_week_orders'] = report_data.apply(
-            lambda row: self.calculate_last_week_ratios(row['total_orders'], row['last_week_orders'], row['last_week_revenue']), axis=1)
+            lambda row: self.calculate_last_week_ratios(row['total_orders'],
+                                                        row['last_week_orders'],
+                                                        row['last_week_revenue']), axis=1)
         report_data['since_last_week_revenue'] = report_data.apply(
-            lambda row: self.calculate_last_week_ratios(row['last_week_revenue'], row['total_revenue'], row['last_week_revenue']), axis=1)
+            lambda row: self.calculate_last_week_ratios(row['last_week_revenue'],
+                                                        row['total_revenue'],
+                                                        row['last_week_revenue']), axis=1)
         report_data['since_last_week_total_visitors'] = report_data.apply(
-            lambda row: self.calculate_last_week_ratios(row['last_week_visitors'], row['total_visitors'], row['last_week_visitors']), axis=1)
+            lambda row: self.calculate_last_week_ratios(row['last_week_visitors'],
+                                                        row['total_visitors'],
+                                                        row['last_week_visitors']), axis=1)
         report_data['since_last_week_total_discount'] = report_data.apply(
-            lambda row: self.calculate_last_week_ratios(row['last_week_discount'], row['total_discount'], row['last_week_discount']), axis=1)
+            lambda row: self.calculate_last_week_ratios(row['last_week_discount'],
+                                                        row['total_discount'],
+                                                        row['last_week_discount']), axis=1)
         return report_data[self.index_kpis]
 
     def get_client_kpis(self, report):
@@ -534,7 +547,7 @@ class Reports:
                 report_data = self.required_aggregation(r_name, pd.DataFrame(list(report['data'])[0]))
             if r_name in ['daily_clv', "clvsegments_amount"]:
                 report_data = self.get_clv_report(reports, r_name, index)
-            if 'anomaly' in r_name.split("_"):
+            if 'anomaly' in r_name.split("_") and len(self.delivery_metrics & set(r_name.split("_"))) == 0:
                 report_data = self.get_anomaly_reports(r_name, report)
             if r_name in self.product_analytics + self.promotion_analytics:
                 report_data = pd.DataFrame(pd.DataFrame(list(report['data'])[0]))
@@ -546,8 +559,34 @@ class Reports:
                 report_data = self.get_feature_predicted_data_per_customer(report)
             if r_name in ['dimension_kpis', 'daily_dimension_values']:
                 report_data = pd.DataFrame(list(report['data'])[0])
+            if len(self.delivery_metrics & set(r_name.split("_"))) != 0:
+                report_data = self.get_delivery_anomaly_report(reports.query(self.split_report_name(r_name)), r_name)
 
         report_data = self.radomly_sample_data(report_data)
+        return report_data
+
+    def get_delivery_anomaly_report(self, reports, r_name):
+        report_data = pd.DataFrame(list(reports['data'])[0])
+        if 'weekday' in r_name.split("_"):
+            report_data = self.get_delivery_anomaly_data(report_data)
+        else:
+            if r_name != 'deliver_kpis':
+                metric = list(self.delivery_metrics & set(r_name.split("_")))[0]
+                report_data = self.get_delivery_anomaly_map_report(report_data, metric)
+        return report_data
+
+    def get_delivery_anomaly_data(self, report_data):
+        return pd.DataFrame(np.array(report_data.pivot_table(index='hour',
+                                                             columns='isoweekday',
+                                                             aggfunc={"weekday_hour_norm": 'max'}).reset_index()))
+
+    def get_delivery_anomaly_map_report(self, report_data, metric):
+        _mean, _std, _sample = np.median(report_data[metric]), np.std(report_data[metric]), len(report_data)
+        conf_interval_l_tail = max(0, _mean - (sqrt(2.58 * _std) / sqrt(_sample)))
+        conf_interval_r_tail = _mean + ((2.58 * _std) / sqrt(_sample))
+        report_data = report_data[
+            (report_data[metric] > conf_interval_l_tail) & (report_data[metric] < conf_interval_r_tail)]
+        report_data = report_data if len(report_data) < 100 else report_data.sample(100)
         return report_data
 
     def get_report_count(self, es_tag):
@@ -632,10 +671,6 @@ class Reports:
                  'report_name': report_name,
                  'end': convert_to_iso_format(date),
                  'start': convert_to_iso_format(convert_to_day(date) - datetime.timedelta(days=1))}
-
-
-
-
 
 
 
