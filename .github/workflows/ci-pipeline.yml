@@ -10,9 +10,6 @@ name: Upload Python Package
 
 on: pull_request
 
-permissions:
-  contents: read
-
 jobs:
   deploy:
 

@@ -150,11 +150,11 @@ def create_connections(customers_connection,
         2. actions; This is for actions both for Sessions and Customer Data Source.
             Example of actions; "has_basket, order_screen". Actions are split with ',' and string format.
         3. column names; data source columns must be matched with ElasticSearch fields
-                         for each data source (Session, Customers, products) individually. column maes must be string format.
+                         for each data source (Session, Customers, products) individually. column names must be string format.
             Example of columns;
                 *** SESSION COLUMNS ***
                 sessions_fields = {'order_id': unique ID for each session (purchased/non-purchased sessions),
-                                   'client': ID for client this column can connect with client ID (client_2) ar customer_fields,
+                                   'client': ID for client this column can connect with client ID (client_2) or customer_fields,
                                    'session_start_date': eligible date format (yyyy-mm-dd hh:mm),
                                    'date': eligible date format (yyyy-mm-dd hh:mm), ,
                                    'payment_amount': value of purchase (float/int). If it not purchased, please assign None, Null '-',
@@ -165,7 +165,7 @@ def create_connections(customers_connection,
                 ** optional columns;  date, discount_amount
 
                 *** CUSTOMERS COLUMNS ***
-                customer_fields = {'client_2': unique ID for client this column can connect with client ID (client) ar session_fields,
+                customer_fields = {'client_2': unique ID for client this column can connect with client ID (client) or session_fields,
                                    'download_date': eligible date format (yyyy-mm-dd hh:mm).
                                                     This date can be any date wich customers first appear at the business.
                                    'signup_date': eligible date format (yyyy-mm-dd hh:mm).
