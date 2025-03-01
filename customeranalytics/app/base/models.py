@@ -1,20 +1,13 @@
 from flask_login import UserMixin
 from sqlalchemy import Column, Integer, String
+from sqlalchemy import Binary
 
-try:
-    from sqlalchemy import Binary
-except:
-    from sqlalchemy import LargeBinary as Binary
-
-
-try: from web.app import db, login_manager
-except: from customeranalytics.web.app import db, login_manager
-
-try: from web.app.base.util import hash_pass
-except: from customeranalytics.web.app.base.util import hash_pass
+from customeranalytics.cli.cli import sqlite_db, login_manager
+from customeranalytics.utils import Utils
 
 
-class User(db.Model, UserMixin):
+
+class User(sqlite_db.Model, UserMixin):
     __tablename__ = 'User'
     id = Column(Integer, primary_key=True)
     username = Column(String, unique=True)
@@ -27,7 +20,7 @@ class User(db.Model, UserMixin):
                 value = value[0]
 
             if property == 'password':
-                value = hash_pass(value)
+                value = Utils.hash_pass(value)
             setattr(self, property, value)
 
     def __repr__(self):

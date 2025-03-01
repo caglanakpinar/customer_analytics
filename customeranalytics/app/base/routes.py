@@ -1,19 +1,16 @@
-import logging
-from flask import jsonify, render_template, redirect, request, url_for
+from flask import render_template, redirect, request, url_for
 from flask_login import (
     current_user,
-    login_required,
     login_user,
     logout_user
 )
 
-from customeranalytics.web.app import db, login_manager
-from customeranalytics.web.app.base import blueprint
-from customeranalytics.web.app.base.forms import LoginForm, CreateAccountForm
-from customeranalytics.web.app.base.models import User
+from customeranalytics.cli.cli import sqlite_db, login_manager
+from customeranalytics.app.base import blueprint
+from customeranalytics.app.base.forms import LoginForm, CreateAccountForm
+from customeranalytics.app.base.models import User
 from customeranalytics.data_storage_configurations.logger import LogsBasicConfeger
-
-from customeranalytics.web.app.base.util import verify_pass
+from customeranalytics.utils import Utils
 
 
 LogsBasicConfeger()
@@ -37,7 +34,7 @@ def login():
         user = User.query.filter_by(username=username).first()
         
         # Check the password
-        if user and verify_pass( password, user.password):
+        if user and Utils.verify_pass( password, user.password):
 
             login_user(user)
 
@@ -78,8 +75,8 @@ def register():
 
         # else we can create the user
         user = User(**request.form)
-        db.session.add(user)
-        db.session.commit()
+        sqlite_db.session.add(user)
+        sqlite_db.session.commit()
 
         return render_template('accounts/register.html',
                                msg='User created please <a href="/login">login</a>',

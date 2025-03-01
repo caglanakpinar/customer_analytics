@@ -1,13 +1,5 @@
 import numpy as np
 import pandas as pd
-import datetime
-import random
-from time import gmtime, strftime
-import pytz
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
-import argparse
-from itertools import product
 
 import sys, os, inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))

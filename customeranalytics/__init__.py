@@ -1,90 +1,23 @@
-import sys, os, inspect
 from os.path import join
 import subprocess
 import pandas as pd
-import urllib
-import time
-from sqlalchemy import create_engine, MetaData
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
 
-try: from utils import abspath_for_sample_data
-except: from .utils import abspath_for_sample_data
-
-try: from web.app.home.models import RouterRequest
-except: from customeranalytics.web.app.home.models import RouterRequest
-
-try: from web.app.home.forms import RealData, SampleData
-except: from customeranalytics.web.app.home.forms import RealData, SampleData
-
-from customeranalytics.web.config import config_dict
-
-try: from web.config import web_configs
-except: from customeranalytics.web.config import web_configs
-
-try: from data_storage_configurations import get_data_connection_arguments, \
-    decision_for_product_conn, decision_for_promotion_conn, get_ea_and_ml_config, check_elasticsearch
-except: from customeranalytics.data_storage_configurations import get_data_connection_arguments, \
-    decision_for_product_conn, decision_for_promotion_conn, get_ea_and_ml_config, check_elasticsearch
-
-try: from .exploratory_analysis import ea_configs
-except: from customeranalytics.exploratory_analysis import ea_configs
-
-try: from .exploratory_analysis import ml_configs
-except: from customeranalytics.ml_process import ml_configs
-
-try: from .configs import none_types, session_columns, customer_columns
-except: from customeranalytics.configs import none_types, session_columns, customer_columns
+from customeranalytics.utils.paths import Paths
+from customeranalytics.configs import Config
+from customeranalytics.utils import Utils
+from customeranalytics.app.home.models import RouterRequest
 
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
-                       convert_unicode=True, connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
-con = engine.connect()
+from customeranalytics.data_storage_configurations.storage import DataStorageConfigurations as DSC
+from exploratory_analysis import ea_configs
+from ml_process import ml_configs
+
+
+
 
 
 r = RouterRequest()
-reports = RealData()
-sample_reports = SampleData()
 
-
-def url_string(value, res=False):
-    if value is not None:
-        if res:
-            return value.replace("\r", " ").replace("\n", " ").replace(" ", "+")
-        else:
-            return value.replace("+", " ")
-    else:
-        return None
-
-
-def request_url(url):
-    try:
-        res = urllib.request.urlopen(url)
-    except Exception as e:
-        print(e)
-    time.sleep(2)
-
-
-def create_user_interface():
-    """
-    This process triggers web interface
-    port: port is stored at web_interface.yaml
-    host: host is stored at web_interface.yaml
-    """
-    path = join(abspath_for_sample_data(), "web", "run.py")
-    cmd = "python " + path
-    print('http://' + str(web_configs['host']) + ':' + str(web_configs['port']))
-    _p = subprocess.Popen(cmd, shell=True)
-
-
-def kill_user_interface():
-    """
-    This process kills the thread for web interface
-    """
-    print('http://' + str(web_configs['host']) + ':' + str(web_configs['port']) + '/shutdown')
-    request_url(url='http://' + str(web_configs['host']) + ':' + str(web_configs['port']) + '/shutdown')
 
 
 def collect_data_source():
@@ -98,10 +31,10 @@ def collect_data_source():
                        'password': connection[index + '_password'],
                        'user': connection[index + '_user'], 'db': connection[index + '_db']}}
     """
-    columns, data_configs = get_data_connection_arguments()[1:]
-    has_product_connection = decision_for_product_conn(data_configs)
-    has_promotion_connection = decision_for_promotion_conn(columns)
-    _ea_configs, _ml_configs, _actions = get_ea_and_ml_config(ea_configs, ml_configs,
+    columns, data_configs = DSC.get_data_connection_arguments()[1:]
+    has_product_connection = DSC.decision_for_product_conn(data_configs)
+    has_promotion_connection = DSC.decision_for_promotion_conn(columns)
+    _ea_configs, _ml_configs, _actions = DSC.get_ea_and_ml_config(ea_configs, ml_configs,
                                                               has_product_connection, has_promotion_connection)
 
     for ds in data_configs:
@@ -211,14 +144,16 @@ def create_connections(customers_connection,
     # check it is eligible to insert data source
     ready_for_insert = True
     return_message = ""
-    session_column_need = session_columns - set(args['sessions'][0].keys())
-    customer_column_need = customer_columns - set(args['customers'][0].keys())
+    session_column_need = Config.session_columns - set(args['sessions'][0].keys())
+    customer_column_need = Config.customer_columns - set(args['customers'][0].keys())
 
     # check data sources (sessions/customers) have data_source_type and data_source_type
-    if args['sessions'][2].get('data_source_type', None) in none_types or \
-        args['customers'][2].get('data_query_path', None) in none_types or \
-            args['sessions'][2].get('data_source_type', None) in none_types or \
-            args['customers'][2].get('data_query_path', None) in none_types:
+    if (
+            args['sessions'][2].get('data_source_type', None) in Config.none_types
+            or args['customers'][2].get('data_query_path', None) in Config.none_types
+            or args['sessions'][2].get('data_source_type', None) in Config.none_types
+            or args['customers'][2].get('data_query_path', None) in Config.none_types
+    ):
         ready_for_insert = False
         return_message += """
         - Please make sure customers and sessions connections have both data_source_type and data_source_type. \n
@@ -237,8 +172,12 @@ def create_connections(customers_connection,
         """ + ", ".join(customer_column_need) + " \n "
 
     try:
-        es_con = pd.read_sql(""" SELECT *  FROM es_connection """, con).to_dict('results')[0]
-        connection, message = check_elasticsearch(es_con['port'], es_con['host'], es_con['directory'])
+        es_con = r.collect_data_from_table(table="es_connection", return_list=True)[0]
+        connection, message = DSC.check_elasticsearch(
+            es_con['port'],
+            es_con['host'],
+            es_con['directory']
+        )
     except:
         connection, message = False, """
         ElasticSearch Connection Failed Check ES port/host or temporary path or Add new ElasticSearch connection
@@ -286,7 +225,7 @@ def create_schedule(time_period):
 
     """
     delete_schedule()
-    es_tag = list(pd.read_sql("select tag from es_connection", con)['tag'])[0]
+    es_tag = r.read_query("select tag from es_connection")['tag'][0]
     request = {'schedule': 'True', 'time_period': time_period, "es_tag": es_tag}
     r.data_execute(request)
 
@@ -297,7 +236,7 @@ def delete_schedule():
     Schedule with time_period='once', can only stop with ending running process.
     """
     try:
-        con.execute("delete from schedule_data where id = 1")
+        r.execute_query("delete from schedule_data where id = 1")
     except Exception as e:
         print(e)
 
@@ -306,7 +245,11 @@ def collect_report(report_name, date=None, dimension='main'):
     """
     If there is a report need as .csv format.
     """
-    report = reports.fetch_report(report_name, index=dimension, date=date)
+    report = r.fetch_report(
+        report_name,
+        index=dimension,
+        date=date
+    )
     if report is False:
         print("reports is not created")
         return None
@@ -317,4 +260,4 @@ def report_names():
     """
     Collect all possible report names. These report names are .csv files at sample_data folder.
     """
-    return list(sample_reports.kpis.keys())
+    return list(r.sample_kpis.keys())

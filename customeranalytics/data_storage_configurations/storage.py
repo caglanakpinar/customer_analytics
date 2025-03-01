@@ -1,8 +1,8 @@
-from customeranalytics import Utils, Config
-from customeranalytics.data_storage_configurations import SQLiteDB, Scheduler, GetData, QueryES
+from customeranalytics.data_storage_configurations.base import BaseDataStorageConfiguration
+from customeranalytics.data_storage_configurations import Scheduler, GetData, QueryES
 
 
-class DataStorageConfigurations(Utils, SQLiteDB, Config):
+class DataStorageConfigurations(BaseDataStorageConfiguration):
 
     @staticmethod
     def create_connection_columns(index='orders') -> list[str]:

@@ -1,42 +1,8 @@
-import sys, os, inspect, logging
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from sqlalchemy import create_engine, MetaData
-from os.path import join
-
-try: from utils import convert_dt_to_day_str, abspath_for_sample_data, convert_to_date
-except: from customeranalytics.utils import convert_dt_to_day_str, abspath_for_sample_data
-
-try: from configs import query_path, default_es_port, default_es_host, default_message, schedule_columns, data_types_for_search
-except: from customeranalytics.configs import query_path, default_es_port, default_es_host, default_message, schedule_columns, data_types_for_search
-
-
+import os
 import pandas as pd
-from datetime import datetime
-from flask_login import current_user
 
-try: from data_storage_configurations import connection_check, create_index, check_elasticsearch, QueryES
-except: from customeranalytics.data_storage_configurations import connection_check, create_index, check_elasticsearch, QueryES
-
-try: from exploratory_analysis import ea_configs
-except: from customeranalytics.exploratory_analysis import ea_configs
-
-try: from ml_process import ml_configs
-except: from customeranalytics.ml_process import ml_configs
-
-try: from web.app.home.forms import RealData
-except: from customeranalytics.web.app.home.forms import RealData
-
-
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
-                       connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
-con = engine.connect()
-
-
-reports = RealData()
+from customeranalytics.data_storage_configurations import DataStorageConfigurations
+from customeranalytics.app.home.forms import RealData
 
 
 def ngrams_2(word):
@@ -53,7 +19,7 @@ def ngrams_2(word):
     return ngrams
 
 
-class Search:
+class Search(DataStorageConfigurations, RealData):
     def __init__(self):
         """
         There are 4 types of search;
@@ -84,7 +50,8 @@ class Search:
                So, each creation of charts and KPIs .csv files must be applied individually.
 
         """
-        self.temporary_path = None
+        super().__init__()
+        self.temporary_path: str = ""
         self.search_metrics = ['promotion', 'product', 'client', 'dimension']
         self.query_body = {"query": {}}
         self.intersect_count = lambda x, y: len(set(x) & set(y))
@@ -114,7 +81,6 @@ class Search:
         self.dimension_kpis = ["Total Order Count", "Total Purchase Amount",
                                "Total Unique Client Count", "Total Discount Amount"]
 
-        self.data_types = data_types_for_search
         self.query_column = {'product': "products", "client": "client",
                              "promotion": "promotion_id", "dimension": "dimension"}
 
@@ -123,7 +89,7 @@ class Search:
         query for fetching the temporary folder path
         """
         try:
-            es_con = pd.read_sql(""" SELECT *  FROM es_connection """, con).to_dict('results')[0]
+            es_con = self.read_query(""" SELECT *  FROM es_connection """).to_dict()[0]
             self.temporary_path = es_con['directory']
         except:
             connection, message = False, """
@@ -160,30 +126,18 @@ class Search:
         search_result, similarity_score, searches = search_value, 0, []
         try:
             if type == 'product':
-                searches = list(self.collect_report('product_kpis')['products'].unique())
+                searches = list(self.fetch_report('product_kpis')['products'].unique())
             if type == 'promotion':
-                searches = list(self.collect_report('promotion_kpis')['promotion_id'].unique())
+                searches = list(self.fetch_report('promotion_kpis')['promotion_id'].unique())
             if type == 'client':
-                searches = list(self.collect_report('client_kpis')['client'].unique())
+                searches = list(self.fetch_report('client_kpis')['client'].unique())
             if type == 'dimension':
-                searches = list(self.collect_report('dimension_kpis')['dimension'].unique())
+                searches = list(self.fetch_report('dimension_kpis')['dimension'].unique())
             search_result, similarity_score = self.get_search_similarity_score(search_value, searches)
         except Exception as e:
             print(e)
             search_result = search_value
         return search_result, similarity_score
-
-    def collect_report(self, report_name):
-        """
-        If there is a report need as .csv format
-        :param report_name: name of the report fetch from build-in temporary report folder
-        """
-        report = reports.fetch_report(report_name)
-        if report is False:
-            print("reports is not generated")
-            return pd.DataFrame()
-        else:
-            return report
 
     def visualization_data_for_search(self, type, value):
         """
@@ -198,18 +152,20 @@ class Search:
         :param type: search type; promotions, products, clients, dimensions
         :param value: value for searching
         """
-        _query = "{} == @value".format(self.query_column[type])
-        for data_type in self.data_types[type]:
+        _query = f"{self.query_column[type]} == @value"
+        for data_type in self.data_types_for_search[type]:
             try:
                 result = pd.DataFrame()
                 for r in data_type[1]:
                     result = pd.concat([result, self.collect_report(r).query(_query)])
                 if len({'date', 'daily'} & set(list(result.columns))) != 0:  # covert date columns to timestamp
                     date_column = list({'date', 'daily'} & set(list(result.columns)))[0]
-                    result[date_column] = result[date_column].apply(lambda x: convert_to_date(x))
+                    result[date_column] = result[date_column].apply(self.convert_to_date)
                     result = result.sort_values(date_column, ascending=True)
-                result.to_csv(join(self.temporary_path, "build_in_reports", "main", data_type[0] + '_search.csv'),
-                              index=False)
+                result.to_csv(
+                    os.path.join(self.temporary_path, "build_in_reports", "main", data_type[0] + '_search.csv'),
+                    index=False
+                )
             except Exception as e:
                 print(e)
 
@@ -230,7 +186,7 @@ class Search:
                 data.append({'search_value': _search_value, 'similarity_score': _similarity_score, 'search_type': m})
             data = pd.DataFrame(data).query("similarity_score != 0")
             if len(data) != 0:
-                data = data.sort_values(by='similarity_score', ascending=False).to_dict('results')[0]
+                data = data.sort_values(by='similarity_score', ascending=False).to_dict('records')[0]
                 self.visualization_data_for_search(type=data['search_type'], value=data['search_value'])
                 data['has_results'] = True
                 results = data
@@ -266,7 +222,10 @@ class Search:
         """
         :param graph_json: json file for charts and KPIs in order to show on .html file
          """
-        return {'kpi_' + str(k[1]): graph_json['kpis'][k[0]] for k in zip(list(graph_json['kpis'].keys()), range(1, 5))}
+        return {
+            'kpi_' + str(k[1]): graph_json['kpis'][k[0]]
+            for k in zip(list(graph_json['kpis'].keys()), range(1, 5))
+        }
 
     def delete_search_data(self, results):
         """
@@ -274,7 +233,7 @@ class Search:
         """
         if results['has_results']:
             for i in range(1, 5):
-                _file = join(self.temporary_path, "build_in_reports", "main", 'chart_{}_search.csv'.format(str(i)))
+                _file = os.path.join(self.temporary_path, "build_in_reports", "main", 'chart_{}_search.csv'.format(str(i)))
                 try:
                     os.unlink(_file)
                 except Exception as e:

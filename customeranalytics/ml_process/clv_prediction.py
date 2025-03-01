@@ -3,21 +3,20 @@ import pandas as pd
 import numpy as np
 import glob
 from clv.executor import CLV
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from customeranalytics.configs import default_es_port, default_es_host, max_elasticsearch_bulk_insert_bytes, default_es_bulk_insert_chunk_size
+from customeranalytics.configs import default_es_port, default_es_host, default_es_bulk_insert_chunk_size
 from customeranalytics.utils import *
 from customeranalytics.data_storage_configurations.query_es import QueryES
 from customeranalytics.data_storage_configurations.reports import Reports
 
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
-                       convert_unicode=True, connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
+                       connect_args={'check_same_thread': False})
 con = engine.connect()
 
 

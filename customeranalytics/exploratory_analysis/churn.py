@@ -1,19 +1,13 @@
 import numpy as np
 import pandas as pd
-import sys, os, inspect
 import warnings
+import datetime
 warnings.filterwarnings("ignore")
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from customeranalytics.configs import default_es_port, default_es_host, default_query_date, time_periods
-from customeranalytics.utils import *
-from customeranalytics.data_storage_configurations.query_es import QueryES
+from customeranalytics.exploratory_analysis.base import BaseEDA
 
 
-class Churn:
+class Churn(BaseEDA):
     """
     Churn is the crucial KPI for the businesses. While they are tracking the engaged customers,
     they also check the user who have been lost and never use the business anymore.
@@ -39,11 +33,7 @@ class Churn:
         !!!
     """
 
-    def __init__(self,
-                 host=None,
-                 port=None,
-                 download_index='downloads',
-                 order_index='orders'):
+    def __init__(self, host=None, port=None, download_index='downloads', order_index='orders'):
         """
         ******* ******** *****
         Dimensional Stats:
@@ -64,52 +54,13 @@ class Churn:
         :param download_index: elasticsearch port
         :param order_index: elasticsearch port
         """
-        self.port = default_es_port if port is None else port
-        self.host = default_es_host if host is None else host
-        self.download_index = download_index
-        self.order_index = order_index
-        self.query_es = QueryES(port=port, host=host)
+        super().__init__(host, port, download_index, order_index)
         self.orders_field_data = ["id", "session_start_date", "client", "actions.purchased"]
         self.last_week = None
         self.time_periods = ["weekly", 'monthly']
         self.orders = pd.DataFrame()
         self.results = {}
         self.average_frequency_hr = 7 * 24
-
-    def get_time_period(self, transactions, date_column):
-        """
-        converting date column of  values into the time_periods (hourly weekly, monthly,..)
-        :param transactions: total data (orders/downloads data with actions)
-        :return: data set with time periods
-        """
-        for p in list(zip(self.time_periods,
-                     [find_week_of_monday, convert_dt_to_month_str])):
-            transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
-        return transactions
-
-    def dimensional_query(self, boolean_query=None):
-        if dimension_decision(self.order_index):
-            if boolean_query is None:
-                boolean_query = [{"term": {"dimension": self.order_index}}]
-            else:
-                boolean_query += [{"term": {"dimension": self.order_index}}]
-        return boolean_query
-
-    def get_data(self, start_date=None):
-        """
-        query orders index to collect the data with columns that are
-        "id", "session_start_date", "client", "payment_amount", "discount_amount", "actions.purchased".
-        :param start_date: starting date of query
-        :return: data-frame individual order transactions.
-        """
-        start_date = default_query_date if start_date is None else start_date
-        if len(self.orders) == 0:
-            self.query_es = QueryES(port=self.port, host=self.host)
-            self.query_es.query_builder(fields=self.orders_field_data,
-                                        date_queries=[{"range": {"session_start_date": {"gte": start_date}}}],
-                                        boolean_queries=self.dimensional_query())
-            self.orders = pd.DataFrame(self.query_es.get_data_from_es())
-            self.orders['date'] = self.orders['session_start_date'].apply(lambda x: convert_to_date(x))
 
     def frequency(self):
         """
@@ -123,7 +74,7 @@ class Churn:
         self.orders['next_order_date'] = self.orders.sort_values(
             by=['client', 'date'], ascending=True).groupby(['client'])['date'].shift(-1)
         self.orders['diff_hours'] = self.orders.apply(
-            lambda row: calculate_time_diff(row['date'], row['next_order_date'], 'hour'), axis=1)
+            lambda row: self.calculate_time_diff(row['date'], row['next_order_date'], 'hour'), axis=1)
         _fequency = self.orders.query("next_order_date == next_order_date").groupby("client").agg(
             {"diff_hours": "mean"}).reset_index().rename(columns={"diff_hours": "frequency"})
         self.average_frequency_hr = int(np.mean(_fequency['frequency']))
@@ -169,34 +120,10 @@ class Churn:
         self.get_data()
         self.orders = self.get_time_period(self.orders, 'date')
         self.frequency()
-        self.insert_into_reports_index(self.churn_rate(), start_date, 'overall')
+        self.insert_into_reports_index(
+            report_name="churn", eda=self.churn_rate(), start_date=start_date, eda_type='overall', index='orders')
         for tp in self.time_periods:
-            self.insert_into_reports_index(self.churn_rate_per_time_period(tp), start_date, tp)
-
-    def insert_into_reports_index(self, churn, start_date, churn_type, index='orders'):
-        """
-        via query_es.py, each report can be inserted into the reports index with the given format.
-        {"id": unique report id,
-         "report_date": start_date or current date,
-         "report_name": "churn",
-         "index": "main",
-         "report_types": {
-                          "type": "overall", "weekly", "monthly"
-                          },
-         "data": churn (list of dictionaries)
-         }
-        :param churn: overall, weekly, monthly
-        :param start_date: datetime
-        :param churn_type: {"type": "overall" or "weekly_orders" or "daily_orders" or "monthly_orders"}
-        :param index: dimensionality of data index orders_location1 ;  dimension = location1
-        """
-        list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
-                        "report_name": "churn",
-                        "index": get_index_group(index),
-                        "report_types": {"type": churn_type},
-                        "data": churn.to_dict('results')}]
-        self.query_es.insert_data_to_index(list_of_obj, index='reports')
+            self.insert_into_reports_index("churn",self.churn_rate_per_time_period(tp), start_date, tp, index='orders')
 
     def fetch(self, churn_type, start_date=None):
         """
@@ -215,13 +142,10 @@ class Churn:
 
         boolean_queries = [{"term": {"report_name": "stats"}},
                            {"term": {"report_types.type": churn_type}},
-                           {"term": {"index": get_index_group(self.order_index)}}]
+                           {"term": {"index": self.get_index_group(self.order_index)}}]
         date_queries = []
         if start_date is not None:
-            date_queries = [{"range": {"report_date": {"gte": convert_to_iso_format(start_date)}}}]
-
-        self.query_es = QueryES(port=self.port,
-                                host=self.host)
+            date_queries = [{"range": {"report_date": {"gte": self.convert_to_iso_format(start_date)}}}]
         self.query_es.query_builder(fields=None, _source=True,
                                     boolean_queries=boolean_queries,
                                     date_queries=date_queries)

@@ -9,7 +9,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from customeranalytics.configs import default_es_port, default_es_host, default_query_date, time_periods
+from customeranalytics.configs import default_es_port, default_es_host, time_periods
 from customeranalytics.utils import *
 from customeranalytics.data_storage_configurations.query_es import QueryES
 from customeranalytics.ml_process.customer_segmentation import CustomerSegmentation

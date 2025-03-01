@@ -1,123 +1,80 @@
-import sys, os, inspect, logging
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from sqlalchemy import create_engine, MetaData
-from os.path import abspath, join
-
-try: from utils import read_yaml, current_date_to_day, abspath_for_sample_data, sqlite_string_converter
-except: from customeranalytics.utils import read_yaml, current_date_to_day, abspath_for_sample_data, sqlite_string_converter
-
-try: from configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
-except: from customeranalytics.configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
-
-
 import pandas as pd
-from datetime import datetime
 from flask_login import current_user
+import logging
 
-try: from data_storage_configurations import connection_check, create_index, check_elasticsearch
-except: from customeranalytics.data_storage_configurations import connection_check, create_index, check_elasticsearch
-
-try: from exploratory_analysis import ea_configs
-except: from customeranalytics.exploratory_analysis import ea_configs
-
-try: from ml_process import ml_configs
-except: from customeranalytics.ml_process import ml_configs
-
-
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
-                       connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
-con = engine.connect()
+from customeranalytics.data_storage_configurations import DataStorageConfigurations
+from customeranalytics.app.home.forms import Charts
+from customeranalytics.app.home.profiles import Profiles
+from customeranalytics.app.home.search import Search
+from customeranalytics.exploratory_analysis import ea_configs
+from customeranalytics.ml_process import ml_configs
 
 
-class RouterRequest:
+class RouterRequest(DataStorageConfigurations, Charts, Profiles, Search):
     def __init__(self):
+        super().__init__()
         self.return_values = {}
-        self.sqlite_queries = read_yaml(query_path, "queries.yaml")
-        self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
-        self.table = None
         self.active_connections = False
         self.hold_connection = False
         self.recent_connection = False
-        self.message = default_message
-        self.success_data_execute = """ Data Storage Process is initialized!
-                                        This process mainly involves fetching data
-                                        from the data sources and storing them into the ElasticSearch indexes.
-                                        This will take a while. Data Storage Process is triggered for
-                                    """
-        self.info_logs_for_chat = lambda info: {'user': 'info',
-                                                'date': str(current_date_to_day())[0:19],
-                                                'user_logo': 'info.jpeg',
-                                                'chat_type': 'info', 'chart': '',
-                                                'general_message': info, 'message': ''}
-
-    def insert_query(self, table, columns, values):
-        values = [values[col] for col in columns]
-        _query = "INSERT INTO " + table + " "
-        _query += " (" + ", ".join(columns) + ") "
-        _query += " VALUES (" + ", ".join([" '{}' ".format(v) for v in values]) + ") "
-        _query = _query.replace("\\", "")
-        return _query
-
-    def update_query(self, table, condition, columns, values):
-        values = [(col, values[col]) for col in columns if values.get(col, None) is not None]
-        _query = "UPDATE " + table
-        _query += " SET " + ", ".join([i[0] + " = '" + i[1] + "'" for i in values])
-        _query +=" WHERE " + condition
-        _query = _query.replace("\\", "")
-        return _query
-
-    def delete_query(self, table, condition):
-        _query = "DELETE FROM " + table
-        _query += " WHERE " + condition
-        _query = _query.replace("\\", "")
-        return _query
-
-    def check_for_table_exits(self, table):
+        self.message = self.default_message
+        self.success_data_execute = """ 
+            Data Storage Process is initialized!
+            This process mainly involves fetching data
+            from the data sources and storing them into the ElasticSearch indexes.
+            This will take a while. Data Storage Process is triggered for
         """
-        checking sqlite if table is created before. If it not, table is created.
-        :params table: checking table name in sqlite
-        """
-        if table not in list(self.tables['name']):
-            con.execute(self.sqlite_queries[table])
+
+    def info_logs_for_chat(self, info):
+        return {
+        'user': 'info',
+        'date': str(self.current_date_to_day())[0:19],
+        'user_logo': 'info.jpeg',
+        'chat_type': 'info', 'chart': '',
+        'general_message': info,
+        'message': ''
+    }
 
     def logs_update(self, logs):
         """
         logs table in sqlite table is updated.
         chats table in sqlite table is updated.
         """
-        try: self.check_for_table_exits(table='logs')
-        except Exception as e: logging.error(e)
-
-        try: self.check_for_table_exits(table='chat')
-        except Exception as e: print(e)
+        self.check_for_table_exits(table='logs')
+        self.check_for_table_exits(table='chat')
 
         try:
             logs['login_user'] = current_user
-            logs['log_time'] = str(current_date_to_day())[0:19]
-            con.execute(self.insert_query(table='logs', columns=self.sqlite_queries['columns']['logs'][1:], values=logs))
+            logs['log_time'] = str(self.current_date_to_day())[0:19]
+            self.execute_query(
+                self.insert_query(
+                    table='logs',
+                    columns=self.sqlite_queries['columns']['logs'][1:],
+                    values=logs
+                )
+            )
         except Exception as e: logging.error(e)
 
-        try: con.execute(self.insert_query(table='chat', columns=self.sqlite_queries['columns']['chat'][1:],
-                                           values=self.info_logs_for_chat(logs['info'])))
+        try: self.execute_query(
+            self.insert_query(
+                table='chat',
+                columns=self.sqlite_queries['columns']['chat'][1:],
+                values=self.info_logs_for_chat(logs['info'])
+            )
+        )
         except Exception as e: print(e)
 
     def assign_color_for_es_tag(self, data):
         _unique_es_tags = list(data['tag'].unique())
-        data = pd.merge(data, pd.DataFrame(zip(_unique_es_tags, self.colors[0:len(_unique_es_tags)])).rename(
-            columns={0: "tag", 1: "color"}), on='tag', how='left')
-        return data
-
-    def collect_data_from_table(self, table, query_str=None):
-        data = pd.DataFrame()
-        try:
-            data = pd.read_sql("SELECT * FROM " + table, con)
-            if query_str is not None:
-                data = data.query(query_str)
-        except Exception as e: logging.error(e)
+        data = pd.merge(
+            data,
+            (
+                pd.DataFrame(zip(_unique_es_tags, self.colors[0:len(_unique_es_tags)]))
+                .rename(columns={0: "tag", 1: "color"})
+            ),
+            on='tag',
+            how='left'
+        )
         return data
 
     def get_intersect_columns_with_request(self, requests, table):
@@ -125,7 +82,7 @@ class RouterRequest:
 
     def check_for_data_source_connection(self, requests, columns):
         try:
-            return connection_check(request={col: requests[col] for col in columns},
+            return self.connection_check(request={col: requests[col] for col in columns},
                                     index=requests['data_type'],
                                     type=requests['data_type'])
         except Exception as e: logging.error(e)
@@ -205,7 +162,7 @@ class RouterRequest:
             if self.check_for_both_sessions_and_customers_data_source(data_connection.to_dict('results')[-1]):
                 self.message['connect_accept'] = True
                 for dt in ['orders', 'downloads', 'products', 'deliveries']:
-                    data_connection[dt + '_data_query_path'] = sqlite_string_converter(
+                    data_connection[dt + '_data_query_path'] = self.sqlite_string_converter(
                         list(data_connection[dt + '_data_query_path'])[0], back_to_normal=True)
                 data_connection = pd.concat([data_connection, prev_schedule], axis=1)
                 data_connection = pd.concat([data_connection,
@@ -215,7 +172,7 @@ class RouterRequest:
                                              actions.query("data_type == 'downloads'").drop('data_type', axis=1).rename(
                                                  columns={"action_name": "d_actions"}).reset_index()], axis=1).fillna('....')
 
-                schedule = data_connection.to_dict('results')[-1]
+                schedule = data_connection.to_dict('records')[-1]
                 self.message['schedule'] = {i: '....' for i in list(schedule.keys()) + ['ses_actions', 'd_actions'] +
                                             self.sqlite_queries['columns']['schedule_data'][1:]}
                 for i in schedule:
@@ -227,7 +184,7 @@ class RouterRequest:
 
     def update_data_query_path_for_insert(self, requests):
         _data_type = requests['data_type']
-        requests[_data_type + '_data_query_path'] = sqlite_string_converter(requests[_data_type + '_data_query_path'])
+        requests[_data_type + '_data_query_path'] = self.sqlite_string_converter(requests[_data_type + '_data_query_path'])
         return requests
 
     def update_data_connection_table(self, requests, columns):
@@ -238,34 +195,57 @@ class RouterRequest:
                 if col not in list(requests.keys()):
                     requests[col] = None
             try:
-                con.execute(self.insert_query(table='data_connection',
-                                              columns=self.sqlite_queries['columns']['data_connection'][1:],
-                                              values=requests))
+                self.execute_query(
+                    self.insert_query(
+                        table='data_connection',
+                        columns=self.sqlite_queries['columns']['data_connection'][1:],
+                        values=requests
+                    )
+                )
             except Exception as e: logging.error(e)
         else:
             data_connections = data_connections.to_dict('results')[-1]
             try:
-                con.execute(self.update_query(table='data_connection',
-                                              condition=" id = " + str(data_connections['id']),
-                                              columns=columns, values=requests))
+                self.execute_query(
+                    self.update_query(
+                        table='data_connection',
+                        condition=" id = " + str(data_connections['id']),
+                        columns=columns, values=requests
+                    )
+                )
             except Exception as e: logging.error(e)
 
     def update_data_columns_match_table(self, requests, columns):
         try:
             self.check_for_table_exits(table='data_columns_integration')
-            data_columns_integration = self.collect_data_from_table(table='data_columns_integration', query_str=" id == 1")
+            data_columns_integration = self.collect_data_from_table(
+                table='data_columns_integration',
+                query_str=" id == 1"
+            )
             if len(data_columns_integration) == 0:
-                requests = self.check_for_insert_columns(columns, requests, 'data_columns_integration')
+                requests = self.check_for_insert_columns(
+                    columns,
+                    requests,
+                    'data_columns_integration'
+                )
                 try:
-                    con.execute(self.insert_query(table='data_columns_integration',
-                                                  columns=self.sqlite_queries['columns']['data_columns_integration'][1:],
-                                                  values=requests))
+                    self.execute_query(
+                        self.insert_query(
+                            table='data_columns_integration',
+                            columns=self.sqlite_queries['columns']['data_columns_integration'][1:],
+                            values=requests
+                        )
+                    )
                 except Exception as e: logging.error(e)
             else:
                 try:
-                    con.execute(self.update_query(table='data_columns_integration',
-                                                  condition=" id = 1 ",
-                                                  columns=columns, values=requests))
+                    self.execute_query(
+                        self.update_query(
+                            table='data_columns_integration',
+                            condition=" id = 1 ",
+                            columns=columns, values=requests
+                        )
+                    )
                 except Exception as e: logging.error(e)
         except Exception as e: logging.error(e)
 
@@ -275,8 +255,12 @@ class RouterRequest:
             prev_actions_data_type = prev_actions[prev_actions['data_type'] == requests['data_type']]
             if len(prev_actions_data_type) != 0:
                 for a in prev_actions_data_type.to_dict('results'):
-                    con.execute(self.delete_query(table='actions',
-                                                  condition=" id = " + str(a['id'])))
+                    self.execute_query(
+                        self.delete_query(
+                            table='actions',
+                            condition=" id = " + str(a['id'])
+                        )
+                    )
 
     def update_actions_table(self, requests):
         if requests['data_type'] not in ['products', 'deliveries']:
@@ -294,9 +278,16 @@ class RouterRequest:
                                 break
                         _action = i[counter:]
                         actions.append(_action)
-                        con.execute(self.insert_query(table='actions',
-                                                      columns=self.sqlite_queries['columns']['actions'][1:],
-                                                      values={"action_name": _action, "data_type": requests['data_type']}))
+                        self.execute_query(
+                            self.insert_query(
+                                table='actions',
+                                columns=self.sqlite_queries['columns']['actions'][1:],
+                                values={
+                                    "action_name": _action,
+                                    "data_type": requests['data_type']
+                                }
+                            )
+                        )
                     requests['actions'] = ",".join(actions)
         else:
             self.remove_data_type_action(requests)
@@ -304,16 +295,41 @@ class RouterRequest:
     def update_schedule_table(self, requests):
         try:
             self.check_for_table_exits(table='schedule_data')
-            prev_schedule = self.collect_data_from_table(table='schedule_data').to_dict('results')
+            prev_schedule = self.collect_data_from_table(
+                table='schedule_data',
+                return_list=True
+            )
             if len(prev_schedule) != 0:
-                self.logs_update(logs={"page": "data-execute", "info": "Previous job " + " is removed.", "color": "red"})
-                con.execute(self.delete_query(table='schedule_data', condition=" id = 1"))
-            columns = self.get_intersect_columns_with_request(requests, 'schedule_data')
-            requests = self.check_for_insert_columns(columns, requests, 'schedule_data')
-            requests['max_date_of_order_data'] = str(current_date_to_day())[0:19]
-            con.execute(self.insert_query(table='schedule_data',
-                                          columns=self.sqlite_queries['columns']['schedule_data'][1:],
-                                          values=requests))
+                self.logs_update(
+                    logs={
+                        "page": "data-execute",
+                        "info": "Previous job " + " is removed.",
+                        "color": "red"
+                    }
+                )
+                self.execute_query(
+                    self.delete_query(
+                        table='schedule_data',
+                        condition=" id = 1"
+                    )
+                )
+            columns = self.get_intersect_columns_with_request(
+                requests,
+                'schedule_data'
+            )
+            requests = self.check_for_insert_columns(
+                columns,
+                requests,
+                'schedule_data'
+            )
+            requests['max_date_of_order_data'] = str(self.current_date_to_day())[0:19]
+            self.execute_query(
+                self.insert_query(
+                    table='schedule_data',
+                    columns=self.sqlite_queries['columns']['schedule_data'][1:],
+                    values=requests
+                )
+            )
             self.logs_update(logs={"page": "data-execute",
                                    "info": self.success_data_execute + " ".join(requests['time_period'].split("_")),
                                    "color": "green"})
@@ -323,35 +339,47 @@ class RouterRequest:
 
     def update_data_query_path_on_schedule(self, request):
         keys = list(request.keys())
-        data_source_query_path = [i for i in ['orders', 'downloads', 'products', 'deliveries'] if i + '_data_query_path' in keys]
-        con.execute(self.update_query(table='data_columns_integration',
-                                      condition=" id = 1 ",
-                                      columns=data_source_query_path,
-                                      values={data_source_query_path: request[data_source_query_path[0]]}))
+        data_source_query_path = [
+            i
+            for i in ['orders', 'downloads', 'products', 'deliveries']
+            if i + '_data_query_path' in keys
+        ]
+        self.execute_query(
+            self.update_query(
+                table='data_columns_integration',
+                condition=" id = 1 ",
+                columns=data_source_query_path,
+                values={
+                    data_source_query_path: request[data_source_query_path[0]]
+                }
+            )
+        )
 
     def update_message_and_tables(self):
-        self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
-        self.message = default_message
+        self.message = self.default_message
 
     def manage_data_integration(self, requests):
         if requests.get('connect', None) is not None:
             self.check_for_table_exits(table='es_connection')
-            requests['port'] = str(default_es_port) if requests['port'] is None else requests['port']
-            requests['host'] = str(default_es_host) if requests['host'] is None else requests['host']
-            status, self.message['es_connection_check'] = check_elasticsearch(port=requests['port'],
+            requests['port'] = str(self.default_es_port) if requests['port'] is None else requests['port']
+            requests['host'] = str(self.default_es_host) if requests['host'] is None else requests['host']
+            status, self.message['es_connection_check'] = self.check_elasticsearch(port=requests['port'],
                                                                               host=requests['host'],
                                                                               directory=requests['directory'])
             if status:
                 try:
-                    con.execute(self.insert_query(table='es_connection',
+                    self.execute_query(
+                        self.insert_query(table='es_connection',
                                                   columns=self.sqlite_queries['columns']['es_connection'][1:],
-                                                  values=requests))
+                                                  values=requests
+                        )
+                    )
                 except Exception as e:
                     logging.error(e)
 
         if requests.get('delete', None) is not None:
             try:
-                con.execute("DROP table es_connection")
+                self.execute_query("DROP table es_connection")
             except Exception as e:
                 logging.error(e)
 
@@ -373,12 +401,12 @@ class RouterRequest:
     def data_execute(self, requests):
         if requests.get('schedule', None) is not None:
             es_tag = self.update_schedule_table(requests)
-            create_index(tag=es_tag, ea_configs=ea_configs, ml_configs=ml_configs)
+            self.create_index(tag=es_tag, ea_configs=ea_configs, ml_configs=ml_configs)
         if requests.get('edit', None) is not None:
             self.update_data_query_path_on_schedule(requests)
         if requests.get('delete', None) is not None:
             try:
-                con.execute("DELETE FROM schedule_data")
+                self.execute_query("DELETE FROM schedule_data")
             except Exception as e:
                 logging.error(e)
 

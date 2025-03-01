@@ -1,16 +1,10 @@
 import numpy as np
 import pandas as pd
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
 
-from customeranalytics.configs import default_es_port, default_es_host, default_query_date
-from customeranalytics.utils import *
-from customeranalytics.data_storage_configurations.query_es import QueryES
+from customeranalytics.exploratory_analysis.base import BaseEDA
 
 
-class Cohorts:
+class Cohorts(BaseEDA):
     """
         - From Download to 1st Order Cohort.
             - There are two types of that cohort. Weekly and Daily.
@@ -49,12 +43,7 @@ class Cohorts:
     4.  Calculate average recent hours customers last order to a recent date.
 
     """
-    def __init__(self,
-                 has_download=True,
-                 host=None,
-                 port=None,
-                 download_index='downloads',
-                 order_index='orders'):
+    def __init__(self, has_download=True, host=None, port=None, download_index='downloads', order_index='orders'):
         """
         !!!!
         ******* ******** *****
@@ -80,16 +69,10 @@ class Cohorts:
         :param download_index: elasticsearch port
         :param order_index: elasticsearch port
         """
-        self.port = default_es_port if port is None else port
-        self.host = default_es_host if host is None else host
-        self.download_index = download_index
-        self.order_index = order_index
-        self.query_es = QueryES(port=port, host=host)
+        super().__init__(host, port, download_index, order_index)
         self.has_download = has_download
         self.download_field_data = ["id", "download_date", "client"]
         self.session_orders_field_data = ["id", "session_start_date", "client", "payment_amount"]
-        self.downloads = pd.DataFrame()
-        self.orders = pd.DataFrame()
         self.download_to_first_order = pd.DataFrame()
         self.time_periods = ['daily', 'weekly']
         self.cohorts = {'downloads_to_1st_order': {_t: None for _t in self.time_periods},
@@ -100,49 +83,6 @@ class Cohorts:
                         }
 
         self.order_seq = [1, 2, 3]
-
-    def get_time_period(self, transactions, date_column):
-        """
-        converting date column of  values into the time_periods (hourly weekly, monthly,..)
-        :param transactions: total data (orders/downloads data with actions)
-        :return: data set with time periods
-        """
-        for p in list(zip(self.time_periods,
-                          [convert_dt_to_day_str, find_week_of_monday])):
-            transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
-        return transactions
-
-    def dimensional_query(self, boolean_query):
-        if dimension_decision(self.order_index):
-            boolean_query += [{"term": {"dimension": self.order_index}}]
-        return boolean_query
-
-    def get_data(self, start_date):
-        """
-        Collecting orders and downloads data.
-        Before query for orders and downloads it checks is there any queried data before.
-        query_es.py handles collecting data.
-        :param start_date: starting query date
-        """
-        start_date = default_query_date if start_date is None else start_date
-        if len(self.orders) == 0:
-            self.query_es = QueryES(port=self.port, host=self.host)
-            self.query_es.query_builder(fields=self.session_orders_field_data,
-                                        boolean_queries=self.dimensional_query([{"term": {"actions.purchased": True}}]),
-                                        date_queries=[{"range": {"session_start_date": {"gte": start_date}}}])
-            self.orders = self.query_es.get_data_from_es()
-            self.orders = self.get_time_period(pd.DataFrame(self.orders), 'session_start_date')
-        if len(self.downloads) == 0:
-            if self.has_download:
-
-                self.query_es = QueryES(port=self.port, host=self.host)
-                self.query_es.query_builder(fields=self.download_field_data)
-                self.downloads = pd.DataFrame(self.query_es.get_data_from_es(index='downloads'))
-                # for the dimensional it is only calculating for dimension of users.
-                if dimension_decision(self.order_index):
-                    self.downloads = self.downloads[self.downloads['client'].isin(list(self.orders['client'].unique()))]
-                self.downloads = self.get_time_period(self.downloads, 'download_date')
-                self.downloads['download_date'] = self.downloads['download_date'].apply(lambda x: convert_to_date(x))
 
     def convert_cohort_to_readable_form(self, cohort, time_period, time_period_back=None):
         """
@@ -202,7 +142,7 @@ class Cohorts:
                 self.download_to_first_order = self.get_time_period(self.download_to_first_order, 'session_start_date')
                 for p in self.time_periods:
                     self.download_to_first_order['downloads_to_first_order_' + p] = self.download_to_first_order.apply(
-                        lambda row: calculate_time_diff(row['download_date'], row[p], period=p), axis=1)
+                        lambda row: self.calculate_time_diff(row['download_date'], row[p], period=p), axis=1)
                     self.cohorts['downloads_to_1st_order'][p] = self.download_to_first_order.sort_values(
                     by=['downloads_to_first_order_' + p, p],
                     ascending=True).pivot_table(index=p,
@@ -264,10 +204,10 @@ class Cohorts:
                 by=['client', time_period], ascending=True).groupby(['client'])[time_period].shift(-1)
         if 'diff_days' not in list(self.orders.columns):
             self.orders['diff_days'] = self.orders.apply(
-                lambda row: calculate_time_diff(row[time_period], row['next_order_date'], 'daily'), axis=1)
+                lambda row: self.calculate_time_diff(row[time_period], row['next_order_date'], 'daily'), axis=1)
         if 'diff_weeks' not in list(self.orders.columns):
             self.orders['diff_weeks'] = self.orders.apply(
-                lambda row: calculate_time_diff(row[time_period], row['next_order_date'], 'weekly'), axis=1)
+                lambda row: self.calculate_time_diff(row[time_period], row['next_order_date'], 'weekly'), axis=1)
 
     def cohort_from_to_order(self):
         """
@@ -314,7 +254,7 @@ class Cohorts:
             """
         try:
             # convert session start date to datetime format
-            self.orders['session_start_date'] = self.orders['session_start_date'].apply(lambda x: convert_to_date(x))
+            self.orders['session_start_date'] = self.orders['session_start_date'].apply(self.convert_to_date)
             # e.g. the average is 3; customers of 1st, 2nd 3rd orders have involved the process.
             avg_order_count = int(np.mean(self.orders['order_seq_num']))
             # max date for calculate average recency value (hour).
@@ -338,15 +278,15 @@ class Cohorts:
                                          , on='client', how='left')
 
             first_last_orders['download_to_first_order_hourly'] = first_last_orders.apply(
-                lambda row: calculate_time_diff(row['download_date'], row['first_order_date'], 'hourly'), axis=1)
+                lambda row: self.calculate_time_diff(row['download_date'], row['first_order_date'], 'hourly'), axis=1)
 
             first_last_orders['diff_hours_recency'] = first_last_orders.apply(
-                lambda row: calculate_time_diff(row['last_order_date'], max_date, 'hourly'), axis=1)
+                lambda row: self.calculate_time_diff(row['last_order_date'], max_date, 'hourly'), axis=1)
 
             x_axis, y_axis = [0, np.mean(first_last_orders['download_to_first_order_hourly'])], [0, np.mean(
                 first_last_orders['first_order_amount'])]
             self.orders['download_to_first_order_hourly'] = first_last_orders.apply(
-                lambda row: calculate_time_diff(row['download_date'], row['first_order_date'], 'hourly'), axis=1)
+                lambda row: self.calculate_time_diff(row['download_date'], row['first_order_date'], 'hourly'), axis=1)
 
             for o in range(1, avg_order_count):  # iterate each order and calculate hour diff. and avg. payment amount.
                 _orders = self.orders.query("order_seq_num == @o and next_order_date == next_order_date")
@@ -362,45 +302,6 @@ class Cohorts:
                                                      1: "customers` average Purchase Value"})
         except Exception as e:
             print(e)
-
-    def insert_into_reports_index(self,
-                                  cohort,
-                                  start_date,
-                                  time_period,
-                                  _from=0,
-                                  _to=1,
-                                  cohort_type='orders',
-                                  index='orders'):
-        """
-        via query_es.py, each report can be inserted into the reports index with the given format.
-        {"id": unique report id,
-         "report_date": start_date or current date,
-         "report_name": "cohort",
-         "index": "main",
-         "report_types": {"time_period": weekly, daily, hourly (only for customers_journey)
-                          "type": orders, downloads,
-                          "_from": 0 (only for downlods), 1, 2, 3
-                          "_to": 1, 2, 3, 4
-                          },
-         "data": cohort.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
-         }
-         !!! null values are assigned to 0.
-
-        :param cohort: data set, data frame
-        :param start_date: data start date
-        :param time_period: daily, weekly
-        :param _from: which order is cohort created from?
-        :param _to: which order is cohort created to?
-        :param cohort_type: orders, downloads, customer_journeys
-        :param index: dimensionality of data index orders_location1 ;  dimension = location1
-        """
-        list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
-                        "report_name": "cohort",
-                        "index": get_index_group(index),
-                        "report_types": {"time_period": time_period, "from": _from, "to": _to,  "type": cohort_type},
-                        "data": cohort.fillna(0.0).to_dict("results")}]
-        self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def get_cohort_name(self, cohort_name):
         """
@@ -452,18 +353,23 @@ class Cohorts:
                     _cohort_type, _from, _to = self.get_cohort_name('cohort_' +_c)
                     try:
                         self.cohorts[_c][p][p] = self.cohorts[_c][p][p].apply(lambda x: str(x)[0:10])
-                        self.insert_into_reports_index(self.cohorts[_c][p],
-                                                       start_date,
-                                                       _from=_from,
-                                                       _to=_to,
-                                                       time_period=p,
-                                                       cohort_type=_cohort_type,
-                                                       index=self.order_index)
+                        self.insert_into_reports_index(
+                            report_name="cohort",
+                            eda=self.cohorts[_c][p],
+                            start_date=start_date,
+                            _from=_from,
+                            _to=_to,
+                            time_period=p,
+                            eda_type=_cohort_type,
+                            index=self.order_index
+                        )
                     except Exception as e:
                         print(e)
 
         try:
-            self.insert_into_reports_index(self.cohorts['customers_journey']['hourly'],
+            self.insert_into_reports_index(
+                "cohort",
+                self.cohorts['customers_journey']['hourly'],
                                            start_date,
                                            time_period='hourly',
                                            _from=0,

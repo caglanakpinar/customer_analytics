@@ -107,3 +107,10 @@ def query_exploratory_analysis(configs, queries, ea):
     ea = exploratory_analysis[ea](**configs[ea])
     return ea.fetch(**queries)
 
+
+__all__ = [
+    'create_exploratory_analyse',
+    'create_exploratory_analysis',
+    'ea_configs',
+    'exploratory_analysis'
+]

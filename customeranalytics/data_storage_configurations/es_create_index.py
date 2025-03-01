@@ -1,39 +1,13 @@
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
 import numpy as np
 import pandas as pd
-import datetime
-import random
-from time import gmtime, strftime
-import pytz
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
-import argparse
 from dateutil.parser import parse
-from sqlalchemy import create_engine, MetaData
-from flask_login import current_user
-from os.path import abspath, join
-import time
 
-from customeranalytics.utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format, formating_numbers
-from customeranalytics.configs import query_path, default_es_port, default_es_host, none_types, delivery_metrics
-from customeranalytics.configs import orders_index_columns, downloads_index_columns, not_required_columns, not_required_default_values
+from customeranalytics.data_storage_configurations.base import BaseDataStorageConfiguration
 from customeranalytics.data_storage_configurations.query_es import QueryES
 from customeranalytics.data_storage_configurations.data_access import GetData
 
-try:
-    engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
-    metadata = MetaData(bind=engine)
-    con = engine.connect()
-except Exception as e:
-    engine = create_engine('sqlite://///' + join(parentdir, "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
-    metadata = MetaData(bind=engine)
-    con = engine.connect()
 
-
-class CreateIndex:
+class CreateIndex(BaseDataStorageConfiguration):
     """
     This class is converting input data to elasticsearch index.
     This allow us to query data from elasticsearch.
@@ -77,89 +51,34 @@ class CreateIndex:
         self.data_connection_structure = data_connection_structure
         self.data_columns = data_columns
         self.actions = actions
-        self.sqlite_queries = read_yaml(query_path, "queries.yaml")
-        self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
+        self.sqlite_queries = self.read_yaml(self.query_path, "queries.yaml")
         self.query_es = QueryES()
         self.es_cons = pd.DataFrame()
         self.schedule = pd.DataFrame()
         self.start_date, self.end_date = None, None
-        self.ebd_date = current_date_to_day()
-        self.port = default_es_port
-        self.host = default_es_host
+        self.ebd_date = self.current_date_to_day()
+        self.port = self.default_es_port
+        self.host = self.default_es_host
         self.latest_session_transaction_date = None
         self.result_data = pd.DataFrame()
         self.job_start_date = None
-        self.info_logs_for_chat = lambda info: {'user': 'info',
-                                                'date': str(current_date_to_day())[0:19],
-                                                'user_logo': 'info.jpeg',
-                                                'chat_type': 'info', 'chart': '',
-                                                'general_message': info, 'message': ''}
-
-    def insert_query(self, table, columns, values):
-        values = [values[col] for col in columns]
-        _query = "INSERT INTO " + table + " "
-        _query += " (" + ", ".join(columns) + ") "
-        _query += " VALUES (" + ", ".join([" '{}' ".format(v) for v in values]) + ") "
-        _query = _query.replace("\\", "")
-        return _query
-
-    def update_query(self, table, condition, columns, values):
-        values = [(col, values[col]) for col in columns if values.get(col, None) is not None]
-        _query = "UPDATE " + table
-        _query += " SET " + ", ".join([i[0] + " = '" + i[1] + "'" for i in values])
-        _query +=" WHERE " + condition
-        _query = _query.replace("\\", "")
-        return _query
-
-    def check_for_table_exits(self, table, query=None):
-        try:
-            if table not in list(self.tables['name']):
-                if query is None:
-                    con.execute(self.sqlite_queries[table])
-                else:
-                    con.execute(query)
-        except Exception as e:
-            print(e)
-
-    def logs_update(self, logs):
-        """
-        logs table in sqlite table is updated.
-        chats table in sqlite table is updated.
-        """
-        try: self.check_for_table_exits(table='logs')
-        except Exception as e: print(e)
-
-        try: self.check_for_table_exits(table='chat')
-        except Exception as e: print(e)
-
-        try:
-            logs['login_user'] = current_user
-            logs['log_time'] = str(current_date_to_day())[0:19]
-            logs['general_message'] = logs['info']
-            con.execute(self.insert_query(table='logs',
-                                          columns=self.sqlite_queries['columns']['logs'][1:],
-                                          values=logs
-                                          ))
-        except Exception as e:
-            print(e)
-
-        try: con.execute(self.insert_query(table='chat', columns=self.sqlite_queries['columns']['chat'][1:],
-                                           values=self.info_logs_for_chat(logs['info'])))
-        except Exception as e: print(e)
 
     def update_schedule(self, date):
         self.check_for_table_exits(table='schedule_data')
         try:
-            con.execute(self.update_query(table='schedule_data',
-                                          condition=" id = 1",
-                                          columns=['max_date_of_order_data'],
-                                          values= {'max_date_of_order_data': date}
-                                          ))
+            self.execute_query(
+                self.update_query(
+                    table='schedule_data',
+                    condition=" id = 1",
+                    columns=['max_date_of_order_data'],
+                    values= {'max_date_of_order_data': date}
+                    )
+            )
         except Exception as e:
             print(e)
 
     def collect_es_connection_infos(self):
-        self.es_cons = pd.read_sql("SELECT * FROM es_connection", con)
+        self.es_cons = self.read_query("SELECT * FROM es_connection")
         self.port = list(self.es_cons['port'])[0]
         self.host = list(self.es_cons['host'])[0]
 
@@ -180,15 +99,15 @@ class CreateIndex:
         return accept
 
     def get_schedule_data(self):
-        self.schedule = pd.read_sql("SELECT * FROM schedule_data", con)
+        self.schedule = self.read_query("SELECT * FROM schedule_data")
 
     def get_start_date(self):
         if list(self.schedule['time_period'])[0] != 'once':
-            self.start_date = convert_to_date(list(self.schedule['max_date_of_order_data'])[0])
+            self.start_date = self.convert_to_date(list(self.schedule['max_date_of_order_data'])[0])
 
     def get_end_date(self):
         if list(self.schedule['time_period'])[0] != 'once':
-            self.end_date = current_date_to_day()
+            self.end_date = self.current_date_to_day()
 
     def design_order_basket(self, x):
         try:
@@ -208,7 +127,7 @@ class CreateIndex:
         if data_source_type in ['orders', 'downloads']:
             data['client'] = data['client'].apply(lambda x: str(x))
         if data_source_type == 'orders':
-            data['session_start_date'] = data['session_start_date'].apply(lambda x: parse(x))
+            data['session_start_date'] = data['session_start_date'].apply(parse)
             data['payment_amount'] = data['payment_amount'].apply(
                 lambda x: float(x) if x == x and x not in ['None', None, 'nan'] else None)
             if 'discount_amount' in columns:
@@ -221,7 +140,7 @@ class CreateIndex:
                 data['promotion_id'] = data['promotion_id'].apply(
                     lambda x: x if x == x and x not in ['None', None, 'nan'] else None)
             if data_source_type == 'deliveries':
-                for col in delivery_metrics:
+                for col in self.delivery_metrics:
                     if col in columns:
                         data[col] = data[col].apply(
                             lambda x: parse(x) if col in ['return_date', 'prepare_date', 'delivery_date'] else float(x))
@@ -241,7 +160,7 @@ class CreateIndex:
         try:
             match = {"size": 1, "from": 0, "_source": True, "sort": {date_column: "desc"}, }
             res = self.query_es.es.search(index=index, body=match)['hits']['hits']
-            return convert_to_date([r['_source'][date_column] for r in res][0])
+            return self.convert_to_date([r['_source'][date_column] for r in res][0])
         except Exception as e:
             print("session_start_date/download_date is not inserted into the indexes.")
             return None
@@ -293,9 +212,9 @@ class CreateIndex:
 
     def check_for_not_required_columns(self, data, data_source_type):
         _columns = list(data.columns)
-        for col in not_required_columns[data_source_type]:
+        for col in self.not_required_columns[data_source_type]:
             if col not in _columns:
-                data[col] = not_required_default_values[col]
+                data[col] = self.not_required_default_values[col]
         return data
 
     def get_data(self, conf, data_source_type):
@@ -349,10 +268,27 @@ class CreateIndex:
 
             try:
                 if delivery_source.get('data_query_path', None) is not None:
-                    deliveries = self.get_data(conf=delivery_source, data_source_type='deliveries')
-                    deliveries = deliveries.groupby("order_id").agg({m: 'first' for m in delivery_metrics}).reset_index()
-                    deliveries['delivery'] = deliveries.apply(lambda row: {m: row[m] for m in delivery_metrics}, axis=1)
-                    orders = pd.merge(orders, deliveries[['order_id', 'delivery']], on='order_id', how='left')
+                    deliveries = self.get_data(
+                        conf=delivery_source,
+                        data_source_type='deliveries'
+                    )
+                    deliveries = (
+                        deliveries
+                        .groupby("order_id")
+                        .agg({m: 'first' for m in self.delivery_metrics})
+                        .reset_index()
+                    )
+                    deliveries['delivery'] = deliveries.apply(
+                        lambda row:
+                        {m: row[m] for m in self.delivery_metrics},
+                        axis=1
+                    )
+                    orders = pd.merge(
+                        orders,
+                        deliveries[['order_id', 'delivery']],
+                        on='order_id',
+                        how='left'
+                    )
                 else: orders['delivery'] = None
             except Exception as e:
                 print(e)
@@ -406,7 +342,7 @@ class CreateIndex:
             data = data.to_dict('results')
             if index == 'orders':
                 for i in data:
-                    _obj = {i: None for i in orders_index_columns}
+                    _obj = {i: None for i in self.orders_index_columns}
                     _keys = list(i.keys())
                     _has_purchased = True if i['has_purchased'] in ['True', True] else False
                     if len(self.actions[index]) != 0:
@@ -423,9 +359,9 @@ class CreateIndex:
                             try:
                                 for k in ['return_date', 'prepare_date', 'delivery_date']:
                                     if _delivery[k] not in ['None', None, 'nan']:
-                                        _delivery[k] = convert_to_iso_format(i['delivery'][k])
+                                        _delivery[k] = self.convert_to_iso_format(i['delivery'][k])
                                     else:
-                                        _delivery[k] = convert_to_iso_format(i['session_start_date'])
+                                        _delivery[k] = self.convert_to_iso_format(i['session_start_date'])
                             except Exception as e:
                                 print(e)
                             i['delivery'] = _delivery
@@ -433,7 +369,7 @@ class CreateIndex:
                     for k in _obj:
                         if k in _keys:
                             if k in ['date', 'session_start_date']:
-                                _obj[k] = convert_to_iso_format(i[k])
+                                _obj[k] = self.convert_to_iso_format(i[k])
                             else:
                                 _obj[k] = i[k] if i[k] == i[k] and i[k] not in ['None', None, 'nan'] else None
                         else:
@@ -456,27 +392,27 @@ class CreateIndex:
                     self.partial_insert(_insert, index)
                 # insert logs into the sqlite logs table for sessions data insert process
                 self.logs_update(logs={"page": "data-execute",
-                                       "info": " SESSIONS index Done! - Number of documents :" + formating_numbers(len(data)),
+                                       "info": " SESSIONS index Done! - Number of documents :" + self.formating_numbers(len(data)),
                                        "color": "green"})
             _insert = []
             if index == 'downloads':
                 for i in data:
                     _keys = list(i.keys())
-                    _obj = {i: None for i in downloads_index_columns}
+                    _obj = {i: None for i in self.downloads_index_columns}
                     # TODO : id must be the counter not randomly selected
                     _obj['id'] = np.random.randint(200000000)
                     _obj['client'] = i['client']
-                    _obj['download_date'] = convert_to_iso_format(i['download_date'])
+                    _obj['download_date'] = self.convert_to_iso_format(i['download_date'])
                     if i.get('signup_date', None) is not None:
                         if i['signup_date'] not in ['nan', None, '', '-', 'Null']:
                             try:
-                                _obj['signup_date'] = convert_to_iso_format(i['signup_date'])
+                                _obj['signup_date'] = self.convert_to_iso_format(i['signup_date'])
                             except Exception as e_signup:
                                 _obj['signup_date'] = None
 
                     for _a in self.actions[index]:
                         if i[_a] == i[_a]:
-                            _obj[_a] = convert_to_iso_format(i[_a])
+                            _obj[_a] = self.convert_to_iso_format(i[_a])
 
                     _insert.append(_obj)
                     if len(_insert) >= 10:
@@ -487,7 +423,7 @@ class CreateIndex:
                     self.partial_insert(_insert, index)
                 # insert logs into the sqlite logs table for customers data insert process
                 self.logs_update(logs={"page": "data-execute",
-                                       "info": " CUSTOMERS index Done! - Number of documents :" + formating_numbers(len(data)),
+                                       "info": " CUSTOMERS index Done! - Number of documents :" + self.formating_numbers(len(data)),
                                        "color": "green"})
 
         except Exception as e:
@@ -503,7 +439,7 @@ class CreateIndex:
         """
 
         """
-        self.job_start_date = current_date_to_day()
+        self.job_start_date = self.current_date_to_day()
         self.get_schedule_data()
         self.get_end_date()
 
@@ -522,10 +458,10 @@ class CreateIndex:
                     self.insert_to_index(data=_result_data, index=_data_type)
                 del _result_data
 
-            last_schedule_triggered_date = str(current_date_to_day())
+            last_schedule_triggered_date = str(self.current_date_to_day())
             self.update_schedule(date=last_schedule_triggered_date)
 
-            self.end_date = current_date_to_day()
+            self.end_date = self.current_date_to_day()
 
             spent_hour = round(abs(self.job_start_date - self.end_date).total_seconds() / 60 / 60, 2)
             total_time_str = str(round(spent_hour, 2)) + " hr. " if spent_hour >= 1 else str(round(spent_hour * 60, 2)) + " min. "

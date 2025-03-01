@@ -1,13 +1,10 @@
-from os.path import join, abspath
+from os.path import join
 import pandas as pd
 import numpy as np
 from math import sqrt
-import datetime
-from scipy import stats
 import pygeohash as gh
 import random
 import shutil
-import time
 
 import sys, os, inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))

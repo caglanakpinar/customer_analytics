@@ -1,10 +1,5 @@
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
 import pandas as pd
-from numpy import array, mean, std
+from numpy import array, mean
 import json
 
 from os.path import join, dirname, exists
@@ -12,16 +7,8 @@ from os import listdir
 import plotly.graph_objs as go
 import plotly
 from screeninfo import get_monitors
-from sqlalchemy import create_engine, MetaData
 
-from customeranalytics.utils import convert_to_day, abspath_for_sample_data
-from customeranalytics.configs import time_periods, descriptive_stats, abtest_promotions, \
-    abtest_products, abtest_segments, delivery_metrics
-
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
-                       connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
-con = engine.connect()
+from customeranalytics.data_storage_configurations import DataStorageConfigurations
 
 
 """
@@ -492,29 +479,34 @@ charts = {
 }
 
 
-class SampleData:
+class BaseData(DataStorageConfigurations):
+    sample_kpis = {}
+    real_kpis = {}
+
+
+class SampleData(BaseData):
     """
     This enables us to visualize dashboards when there is no initial data has been created yet.
     These sample data comes from the sample data_folder default in the library.
     """
-    kpis = {}
-    folder = join(abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
-    for f in listdir(dirname(folder)):
-        if f.split(".")[1] == 'csv':
-            kpis["_".join(f.split(".")[0].split("_")[2:])] = None
+    def __init__(self):
+        folder = join(self.abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
+        for f in listdir(dirname(folder)):
+            if f.split(".")[1] == 'csv':
+                self.sample_kpis["_".join(f.split(".")[0].split("_")[2:])] = None
 
-    folder = join(abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
-    for f in listdir(dirname(folder)):
-        if f.split(".")[1] == 'csv':
-            _kpi_name = "_".join(f.split(".")[0].split("_")[2:])
+        folder = join(self.abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
+        for f in listdir(dirname(folder)):
+            if f.split(".")[1] == 'csv':
+                _kpi_name = "_".join(f.split(".")[0].split("_")[2:])
 
-            _data = pd.read_csv(join(folder, f))
-            if 'date' in list(_data.columns):
-                _data['date'] = _data['date'].apply(lambda x: convert_to_day(x))
-            kpis["_".join(f.split(".")[0].split("_")[2:])] = _data
+                _data = pd.read_csv(join(folder, f))
+                if 'date' in list(_data.columns):
+                    _data['date'] = _data['date'].apply(self.convert_to_day)
+                self.sample_kpis["_".join(f.split(".")[0].split("_")[2:])] = _data
 
 
-class RealData:
+class RealData(BaseData):
     """
     After the scheduling process is done,
     reports are created on the temporary folder with a folder name 'build_in_reports'.
@@ -522,11 +514,26 @@ class RealData:
     Each dimension and whole data ('main' folder name) will be stored separately.
     Each dimension of reports will be created as .csv file.
     """
-    kpis = {}
-    try:
-        es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
-        folder = join(es_tag['directory'], "build_in_reports", "")
-    except: es_tag, folder = {}, []
+    def __init__(self):
+        self.report_query = "SELECT * FROM es_connection"
+
+        try:
+            es_tag = self.read_query(self.report_query).to_dict('records')[-1]
+            folder = join(es_tag['directory'], "build_in_reports", "")
+        except: es_tag, folder = {}, []
+
+        # this will collect the report in the 'build_in_reports'.
+        # whole data of reports will be stored in 'main' folder. dimensions are stored seperatelly
+        try:
+            for index in listdir(dirname(folder)):
+                _folder = join(es_tag['directory'], "build_in_reports", index, "")
+                self.real_kpis[index] = {}
+                for f in listdir(dirname(_folder)):
+                    try:
+                        self.real_kpis[index][f.split(".")[0]] = pd.read_csv(join(_folder, f))
+                    except Exception as e:
+                        print(e)
+        except Exception as e: print(e)
 
     def get_report_dimensions(self):
         """
@@ -534,7 +541,7 @@ class RealData:
         """
         dimensions = ['There is no available report. Please execute Schedule Data Process']
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            es_tag = self.read_query(self.report_query).to_dict('records')[-1]
             if exists(join(es_tag['directory'], "build_in_reports")):
                 _dims = listdir(dirname(join(es_tag['directory'], "build_in_reports")))
                 if len(_dims) != 0:
@@ -542,14 +549,15 @@ class RealData:
                     if len(_dims) != 0:
                         dimensions = _dims
             return dimensions
-        except: return dimensions
-    
+        except:
+            return dimensions
+
     def check_for_the_report(self, report_name, index='main', date=None):
         """
         checks for 'build_in_reports' while platform is running.
         """
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            es_tag = self.read_query(self.report_query).to_dict('records')[-1]
             _path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
             if date is not None:
                 _path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
@@ -562,49 +570,18 @@ class RealData:
         checks for 'build_in_reports' while platform is running and collect the selected report.
         """
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            es_tag = self.read_query(self.report_query).to_dict('records')[-1]
             file_path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
             if date is not None:
                 date_file_path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
                 file_path = date_file_path if exists(date_file_path) else file_path
             return pd.read_csv(file_path)
-        except: return False
-
-    # this will collect the report in the 'build_in_reports'.
-    # whole data of reports will be stored in 'main' folder. dimensions are stored seperatelly
-    try:
-        for index in listdir(dirname(folder)):
-            _folder = join(es_tag['directory'], "build_in_reports", index, "")
-            kpis[index] = {}
-            for f in listdir(dirname(_folder)):
-                try:
-                    kpis[index][f.split(".")[0]] = pd.read_csv(join(_folder, f))
-                except Exception as e:
-                    print(e)
-    except Exception as e: print(e)
-            
-
-def cohort_human_readable_form(cohort, tp):
-    """
-    cohorts data is manipulated in or order to convert more readable format.
-    """
-    cohort_updated = pd.DataFrame()
-    cohort_days = [int(i) for i in list(set(list(cohort.columns)) - set([tp]))]
-
-    dates = list(zip(list(range(len(list(cohort[tp])))), reversed(list(cohort[tp]))))
-    days_back = 15
-    while len(cohort_updated) == 0:
-        if days_back <= max(cohort_days):
-            cohort_updated = cohort[[tp] + [str(i) for i in list(range(days_back+1))]]
-            _days = list(map(lambda x: x[1], filter(lambda x: x[0] <= days_back, dates)))
-            cohort_updated = cohort_updated[cohort_updated[tp].isin(_days)]
-        days_back -= 1
-
-    cohort_updated = cohort_updated.sort_values(by=tp, ascending=True)
-    return cohort_updated
+        except:
+            return False
 
 
-class Charts:
+
+class Charts(SampleData, RealData, Config):
     """
     Collecting Charts for Dashboards;
         There are 2 types of data sets for Charts;
@@ -613,7 +590,7 @@ class Charts:
         After collecting the real data by using **charts** dictionary,
         template of the chart related to page (.html) and its data merge and sending to render_template.
     """
-    def __init__(self, samples, real):
+    def __init__(self):
         """
         The main perspective here to store each chart serialized .json file into the self.graph_json
         e.g. index.html has segmentation chart
@@ -622,17 +599,11 @@ class Charts:
         :param samples: built-in data sets in .csv format, converted to pandas data-frame
         :param reals: created ports in .csv format, converted to pandas data-frame
         """
-        self.samples = samples
-        self.reals = real
+        super().__init__()
         self.graph_json = {}
         self.data_type = {}
         self.filters = {}
         self.monitor = get_monitors()[0]
-        self.descriptive_stats = descriptive_stats
-        self.abtest_promotions = abtest_promotions
-        self.abtest_products = abtest_products
-        self.abtest_segments = abtest_segments
-        self.delivery_metrics = delivery_metrics
 
     def get_data(self, chart, index, date):
         """
@@ -641,15 +612,35 @@ class Charts:
         :return:
         """
         try:
-            if chart not in list(self.reals.kpis.keys()):
-                if not self.reals.check_for_the_report(report_name=chart, index=index, date=date):
-                    return self.samples[chart], False
+            if chart not in list(self.real_kpis.keys()):
+                if not self.check_for_the_report(report_name=chart, index=index, date=date):
+                    return self.sample_kpis[chart], False
                 else:
-                    return self.reals.fetch_report(report_name=chart, index=index), True
-            else: return self.samples[chart], False
+                    return self.fetch_report(report_name=chart, index=index), True
+            else: return self.sample_kpis[chart], False
         except Exception as e:
             print(e)
-            return self.samples[chart], False
+            return self.sample_kpis[chart], False
+
+    @staticmethod
+    def cohort_human_readable_form(cohort, tp):
+        """
+        cohorts data is manipulated in or order to convert more readable format.
+        """
+        cohort_updated = pd.DataFrame()
+        cohort_days = [int(i) for i in list(set(list(cohort.columns)) - set([tp]))]
+
+        dates = list(zip(list(range(len(list(cohort[tp])))), reversed(list(cohort[tp]))))
+        days_back = 15
+        while len(cohort_updated) == 0:
+            if days_back <= max(cohort_days):
+                cohort_updated = cohort[[tp] + [str(i) for i in list(range(days_back + 1))]]
+                _days = list(map(lambda x: x[1], filter(lambda x: x[0] <= days_back, dates)))
+                cohort_updated = cohort_updated[cohort_updated[tp].isin(_days)]
+            days_back -= 1
+
+        cohort_updated = cohort_updated.sort_values(by=tp, ascending=True)
+        return cohort_updated
 
     def get_widths_heights(self, target, chart):
         if chart == 'segmentation':
@@ -736,7 +727,7 @@ class Charts:
         """
         _data, is_real_data = self.get_data(chart, index, date)  # collect data
         # data for line chart daily(sum), weekly(sum), houry(average), monthly(sum)
-        if chart in ["_".join([t, 'orders']) for t in time_periods]:
+        if chart in ["_".join([t, 'orders']) for t in self.time_periods]:
             try:
                 _t = 'date' if chart.split("_")[0] not in list(_data.columns) else chart.split("_")[0]
                 _data = _data.sort_values(by=_t, ascending=True)
@@ -758,9 +749,9 @@ class Charts:
             trace['z'] = list(_data['frequency'])
             trace['marker']['color'] = list(_data['segments_numeric']) # segments are numerical values.
         if 'funnel' in chart.split("_"):
-            _tp = list(set(list(_data.columns)) & set(time_periods))[0]
+            _tp = list(set(list(_data.columns)) & set(self.time_periods))[0]
             trace = []
-            for _a in set(list(_data.columns)) - set(time_periods):
+            for _a in set(list(_data.columns)) - set(self.time_periods):
                 trace += [go.Scatter(x=list(_data[_tp]),
                                      y=list(_data[_a]),
                                      mode="lines+markers+text",
@@ -773,7 +764,7 @@ class Charts:
         if 'cohort' in chart.split("_"):
             _t = chart.split("_")[0]
             _t_str = ' day' if _t == 'daily' else ' week'
-            _data = cohort_human_readable_form(_data, _t)
+            _data = self.cohort_human_readable_form(_data, _t)
             z = array(_data[_data.columns[1:]]).tolist()
             x = [str(col) + _t_str for col in list(_data.columns)][1:]
             y = [str(ts)[0:10] for ts in list(_data[_data.columns[0]])]
@@ -931,7 +922,7 @@ class Charts:
         if 'cohort' in chart.split("_"):
             _t = chart.split("_")[0]
             _t_str = ' day' if _t == 'daily' else ' week'
-            _data = cohort_human_readable_form(_data, _t)
+            _data = self.cohort_human_readable_form(_data, _t)
             z = array(_data[_data.columns[1:]]).tolist()
             x = [str(col) + _t_str for col in list(_data.columns)][1:]
             y = [str(ts)[0:10] for ts in list(_data[_data.columns[0]])]

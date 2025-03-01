@@ -3,7 +3,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 
 
-from customeranalytics.app import CreateApp
+from customeranalytics.app.create_app import CreateApp
 from customeranalytics.app.config import config_dict
 from customeranalytics.data_storage_configurations import SQLiteDB
 

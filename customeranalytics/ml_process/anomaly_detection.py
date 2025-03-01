@@ -1,10 +1,7 @@
-from os.path import join, abspath
 import pandas as pd
 import numpy as np
 from math import sqrt
-import datetime
 from scipy import stats
-import sys
 
 import sys, os, inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -15,7 +12,6 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input
 from tensorflow.keras.layers import Dense
 
-from tensorflow.keras.models import model_from_json
 from tensorflow.keras.optimizers import RMSprop
 
 from customeranalytics.configs import default_es_port, default_es_host

@@ -1,29 +1,18 @@
 import numpy as np
 import pandas as pd
 from numpy import unique
-import sys, os, inspect
-from sqlalchemy import create_engine, MetaData
 from os.path import dirname, join
-from os import listdir
+from os import listdir, mkdir
 from math import sqrt
+import datetime
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from customeranalytics.configs import descriptive_reports, product_analytics, abtest_reports, non_dimensional_reports, \
-    clv_prediction_reports, promotion_analytics, delivery_metrics
-from customeranalytics.utils import *
+from customeranalytics.configs import Config
+from customeranalytics.data_storage_configurations import SQLiteDB
+from customeranalytics.utils import Utils
 from customeranalytics.data_storage_configurations.query_es import QueryES
 
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
-                       connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
-con = engine.connect()
-
-
-class Reports:
+class Reports(Config, Utils, SQLiteDB):
     """
     There are some overall values that need to check each day for businesses.
     These values are also crucial metrics for the dashboards.
@@ -137,16 +126,11 @@ class Reports:
 
     def __init__(self):
         self.es_tag = {}
-        self.folder = join(abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
+        self.folder = join(self.abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
         self.sample_report_names = []
         self.get_main_query = lambda x: " time_period == '{0}' and report_name == '{1}' and type == '{2}' ".format(x[0],
                                                                                                                    x[1],
                                                                                                                    x[2])
-        self.descriptive_reports = descriptive_reports
-        self.product_analytics = product_analytics
-        self.promotion_analytics = promotion_analytics
-        self.abtest_reports = abtest_reports
-        self.clv_prediction_reports = clv_prediction_reports
         self.unexpected_reports = ["chart_{}_search".format(str(i)) for i in range(1, 5)]
         self.double_reports = {'promotion_usage_before_after_amount': ['promotion_usage_before_after_amount_accept',
                                                                        'promotion_usage_before_after_amount_reject',
@@ -165,13 +149,12 @@ class Reports:
         self.rfm_reports = ['rfm', 'segmentation']
         self.clv_reports = ["clv_prediction", "stats", "segmentation"]
         self.rfm_metrics = {'recency', 'monetary', 'frequency'}
-        self.day_folder = str(current_date_to_day())[0:10]
+        self.day_folder = str(self.current_date_to_day())[0:10]
         self.rfm_metrics_reports = ['frequency_recency', 'recency_monetary', 'monetary_frequency',
                                     'monetary_clusters', 'frequency_clusters', 'recency_clusters']
         self.naming_decision = lambda x: 'no change' if x.split(" ")[1] == 'decrease/increase' else x.split(" ")[1]
         self.naming = lambda x1, x2: "Frequency; {0}, Monetary ; {1}".format(self.naming_decision(x1),
                                                                              self.naming_decision(x2))
-        self.delivery_metrics = delivery_metrics
 
     def connections(self):
         """
@@ -182,8 +165,8 @@ class Reports:
         """
         tag, has_dimension = {}, False
         try:
-            self.es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
-            dimensions = pd.read_sql("SELECT  * FROM data_connection", con).to_dict('results')[0]
+            self.es_tag = self.collect_data_from_table(table='es_connection', return_list=True)[-1]
+            dimensions = self.collect_data_from_table(table='data_connection', return_list=True)[0]
             if dimensions['dimension'] not in ['None', None]:
                 has_dimension = True
         except Exception as e:
@@ -296,7 +279,7 @@ class Reports:
             query = " report_name == 'abtest' and abtest_type == 'promotion_comparison'"
         if r_name == 'order_and_payment_amount_differences':
             query = " report_name == 'abtest' and abtest_type in ('{}')".format("', '".join(self.p_usage_ba_orders))
-        if r_name in abtest_reports and r_name not in ['promotion_comparison', 'order_and_payment_amount_differences']:
+        if r_name in self.abtest_reports and r_name not in ['promotion_comparison', 'order_and_payment_amount_differences']:
             query = " report_name == 'abtest' and abtest_type == '{}'".format(r_name)
         if 'usage' in _splits:
             for sub_reports in self.double_reports:
@@ -451,7 +434,7 @@ class Reports:
             report_data['outlier'] = report_data['outlier'].apply(lambda x: max_as + 0.01 if x == 1 else min_as - 0.01)
             report_data = report_data.rename(columns={"anomaly_scores":"Anomaly Score Download to First Order"})
         if r_name == 'dcohort_anomaly':
-            report_data['daily'] = report_data['daily'].apply(lambda x: convert_to_day(x))
+            report_data['daily'] = report_data['daily'].apply(self.convert_to_day)
             max_date = str(max(report_data['daily']) - datetime.timedelta(days=30))[0:10]
             report_data = report_data.query("daily > @max_date")
             outlier_days = list(report_data.query("outlier == 1")['daily'])
@@ -612,7 +595,7 @@ class Reports:
 
     def collect_non_dimensional_reports(self):
         additional_reports = []
-        for r in non_dimensional_reports:
+        for r in self.non_dimensional_reports:
             additional_reports.append(self.collect_reports(port=self.es_tag['port'],
                                                            host=self.es_tag['host'],
                                                            index='main',
@@ -621,16 +604,16 @@ class Reports:
 
     def check_for_folder(self):
         try:
-            os.mkdir(join(self.es_tag['directory'], "build_in_reports"))
+            mkdir(join(self.es_tag['directory'], "build_in_reports"))
         except:
             print("folder already exists")
 
     def check_for_index_folder(self, index):
-        try: os.mkdir(join(self.es_tag['directory'], "build_in_reports", index))
+        try: mkdir(join(self.es_tag['directory'], "build_in_reports", index))
         except: print("folder already exists")
 
     def check_for_day_folder(self, index):
-        try: os.mkdir(join(self.es_tag['directory'], "build_in_reports", index, self.day_folder))
+        try: mkdir(join(self.es_tag['directory'], "build_in_reports", index, self.day_folder))
         except: print("folder already exists")
 
     def create_build_in_reports(self):
@@ -648,7 +631,7 @@ class Reports:
             for index in dimensions:
                 reports = self.collect_reports(self.es_tag['port'], self.es_tag['host'], index)
                 reports = pd.concat([reports] + self.collect_non_dimensional_reports())
-                reports['report_date'] = reports['report_date'].apply(lambda x: convert_to_day(x))
+                reports['report_date'] = reports['report_date'].apply(self.convert_to_day)
                 reports = reports.sort_values(['report_name', 'report_date'],  ascending=False)
                 if len(reports) != 0:  # if there has NOT been created any report, yet
                     try:
@@ -669,8 +652,8 @@ class Reports:
         """
         query = {'index': index,
                  'report_name': report_name,
-                 'end': convert_to_iso_format(date),
-                 'start': convert_to_iso_format(convert_to_day(date) - datetime.timedelta(days=1))}
+                 'end': self.convert_to_iso_format(date),
+                 'start': self.convert_to_iso_format(self.convert_to_day(date) - datetime.timedelta(days=1))}
 
 
 

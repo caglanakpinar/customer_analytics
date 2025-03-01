@@ -5,11 +5,10 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from customeranalytics.configs import default_es_port, default_es_host, elasticsearch_settings, elasticsearch_settings_reports
-from customeranalytics.configs import default_es_bulk_insert_chunk_size, default_es_bulk_insert_chunk_bytes, max_elasticsearch_bulk_insert_bytes
+from customeranalytics.configs import Config
 
 
-class QueryES:
+class QueryES(Config):
     """
     This is for querying elasticsearch.
     Mostly, it is using for building elastic search query insert data into the index.
@@ -21,11 +20,11 @@ class QueryES:
         :param host: elasticsearch host
         :param port: elasticsearch port
         """
-        self.port = default_es_port if port is None else port
-        self.host = default_es_host if host is None else host
+        self.port = self.default_es_port if port is None else port
+        self.host = self.default_es_host if host is None else host
         self.es = Elasticsearch([{'host': self.host, 'port': self.port}], timeout=3000, max_retries=100)
         self.match = {}
-        self.query_size = elasticsearch_settings['settings']['index.query.default_field']
+        self.query_size = self.elasticsearch_settings['settings']['index.query.default_field']
         self.fields = False
         self.source = False
         self.date_queries = []
@@ -118,7 +117,7 @@ class QueryES:
         If the index has not been created, yet, This can handle the creation of the index task.
         :param index: index name for the creation
         """
-        try: self.es.indices.create(index, body=elasticsearch_settings_reports)
+        try: self.es.indices.create(index, body=self.elasticsearch_settings_reports)
         except: print("index already exists !!!")
 
     def check_index_exists(self, index):
@@ -140,8 +139,8 @@ class QueryES:
         """
         self.check_index_exists(index=index)
         helpers.bulk(self.es, self.get_insert_obj(list_of_obj, index),
-                     max_chunk_bytes=default_es_bulk_insert_chunk_bytes,
-                     chunk_size=default_es_bulk_insert_chunk_size)
+                     max_chunk_bytes=self.default_es_bulk_insert_chunk_bytes,
+                     chunk_size=self.default_es_bulk_insert_chunk_size)
 
 
 
