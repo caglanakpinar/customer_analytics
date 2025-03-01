@@ -33,6 +33,7 @@ pygeohash = "^1.2.0"
 random2 = "^1.0.2"
 pytest-shutil = "^1.8.1"
 python-math = "^0.0.1"
+dask = "^2025.2.0"
 
 
 [tool.poetry.group.dev.dependencies]
