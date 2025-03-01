@@ -1,19 +1,13 @@
 import pandas as pd
 import numpy as np
 
-from customeranalytics.configs import Config
-from customeranalytics.utils import Utils
+from customeranalytics.data_storage_configurations.sqlite import SQLiteDB
 from customeranalytics.data_storage_configurations.query_es import QueryES
 
 
-class BaseEDA(Config, Utils):
-    def __init__(
-            self,
-            host=None,
-            port=None,
-            download_index='downloads',
-            order_index='orders'
-    ):
+class BaseEDA(SQLiteDB):
+    def __init__(self, host=None, port=None, download_index='downloads', order_index='orders'):
+        super().__init__()
         self.download_index = download_index
         self.order_index = order_index
         self.port = self.default_es_port if port is None else port
