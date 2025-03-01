@@ -349,10 +349,12 @@ class Stats(BaseEDA):
                              "weekly_average_payment_amount", "user_counts_per_order_seq",
                              "total_order_count_per_customer", "dimension_kpis", "daily_dimension_values"]:
                 self.insert_into_reports_index(
-                    metric[1]().to_dict('results'),
-                                               start_date,
-                                               filters={"type": metric[0]},
-                                               index=self.order_index)
+                    "stats",
+                    metric[1](),
+                    start_date=start_date,
+                    filters={"type": metric[0]},
+                    index=self.order_index
+                )
             else:
                 self.results[metric[0]] = metric[1]()
         self.insert_into_reports_index([self.results],
@@ -360,60 +362,3 @@ class Stats(BaseEDA):
                                        filters={"type": ''},
                                        index=self.order_index)
 
-    def insert_into_reports_index(self, stats, start_date, filters={}, index='orders'):
-        """
-        via query_es.py, each report can be inserted into the reports index with the given format.
-        {"id": unique report id,
-         "report_date": start_date or current date,
-         "report_name": "stats",
-         "index": "main",
-         "report_types": {
-                          "type": "overall", "weekly_orders", "daily_orders", "monthly_orders"
-                          },
-         "data": stats (list of dictionaries)
-         }
-        :param stats: overall, weekly_orders, daily_orders, monthly_orders
-        :param start_date: datetime
-        :param filters: {"type": "overall" or "weekly_orders" or "daily_orders" or "monthly_orders"}
-        :param index: dimensionality of data index orders_location1 ;  dimension = location1
-        """
-        list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
-                        "report_name": "stats",
-                        "index": get_index_group(index),
-                        "report_types": filters,
-                        "data": stats}]
-
-        self.query_es.insert_data_to_index(list_of_obj, index='reports')
-
-    def fetch(self, stats, start_date=None):
-        """
-        query format;
-            queries = {"stats": "overall"}
-            queries = {"stats": "weekly_orders"}
-            	weekly	            orders
-            0	2020-12-07T00:00:00	3
-            1	2020-12-14T00:00:00	36687
-            2	2020-12-21T00:00:00	38166
-        :param stats:  overall, weekly_orders, daily_orders, monthly_orders
-        :param start_date:
-        :return: data-frame
-        """
-
-        boolean_queries = [{"term": {"report_name": "stats"}},
-                           {"term": {"report_types.type": stats}},
-                           {"term": {"index": get_index_group(self.order_index)}}]
-        date_queries = []
-        if start_date is not None:
-            date_queries = [{"range": {"report_date": {"gte": convert_to_iso_format(start_date)}}}]
-
-        self.query_es = QueryES(port=self.port,
-                                host=self.host)
-        self.query_es.query_builder(fields=None, _source=True,
-                                    boolean_queries=boolean_queries,
-                                    date_queries=date_queries)
-        _res = self.query_es.get_data_from_es(index="reports")
-        _data = pd.DataFrame()
-        if len(_res) != 0:
-            _data = pd.DataFrame(_res[0]['_source']['data'])
-        return _data

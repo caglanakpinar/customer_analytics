@@ -78,7 +78,18 @@ class BaseEDA(Config, Utils):
                 self.downloads = self.get_time_period(self.downloads, 'download_date')
                 self.downloads['download_date'] = self.downloads['download_date'].apply(self.convert_to_date)
 
-    def insert_into_reports_index(self, report_name, eda, start_date, eda_type, index='orders'):
+    def insert_into_reports_index(
+            self,
+            report_name,
+            eda,
+            start_date,
+            eda_type,
+            end_data=None,
+            _from=None,
+            _to=None,
+            time_period=None,
+            index='orders'
+    ):
         """
         via query_es.py, each report can be inserted into the reports index with the given format.
         {"id": unique report id,
