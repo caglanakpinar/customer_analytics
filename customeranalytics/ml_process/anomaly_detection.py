@@ -2,26 +2,15 @@ import pandas as pd
 import numpy as np
 from math import sqrt
 from scipy import stats
+from keras import Model
+from keras import Input
+from keras import layers, optimizers
 
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input
-from tensorflow.keras.layers import Dense
-
-from tensorflow.keras.optimizers import RMSprop
-
-from customeranalytics.configs import default_es_port, default_es_host
-from customeranalytics.data_storage_configurations.query_es import QueryES
+from customeranalytics.ml_process.base import BaseML
 from customeranalytics.data_storage_configurations.reports import Reports
-from customeranalytics.utils import current_date_to_day, convert_to_date, calculate_time_diff, \
-    get_index_group, convert_to_iso_format, convert_to_day
 
 
-class Anomaly:
+class Anomaly(BaseML):
     """
     dimensional Anomaly Detection;
 
@@ -46,11 +35,7 @@ class Anomaly:
          Then, difference of anomalies are assigned as 'decrease', 'increase' and 'Normal'.
 
     """
-    def __init__(self,
-                 host=None,
-                 port=None,
-                 download_index='downloads',
-                 order_index='orders'):
+    def __init__(self, host=None, port=None, download_index='downloads', order_index='orders'):
         """
         ******* ******** *****
         Dimensional :
@@ -71,8 +56,7 @@ class Anomaly:
         :param download_index: elasticsearch port
         :param order_index: elasticsearch port
         """
-        self.port = default_es_port if port is None else port
-        self.host = default_es_host if host is None else host
+        super().__init__(host, port, download_index, order_index)
         self.download_index = download_index
         self.order_index = order_index
         self.report_execute = Reports()
@@ -89,7 +73,6 @@ class Anomaly:
         self.p_funnel = {"epochs":  40, "batch_size":  256, "h_layers":  4, "encode_dim": 32, "lr":  0.01, 'activation': 'relu'}
         self.p_cohort = {"epochs": 200, "batch_size": 40, "h_layers": 4, "encode_dim": 32, "lr": 0.001, 'activation': 'relu'}
         self.features = []
-        self.query_es = QueryES(port=port, host=host)
         self.reports = pd.DataFrame()
 
     def collect_clv(self):
@@ -99,11 +82,11 @@ class Anomaly:
         """
         clv = self.report_execute.collect_reports(self.port, self.host, 'main',
                                                         query={"report_name": "clv_prediction"})
-        clv['report_date'] = clv['report_date'].apply(lambda x: convert_to_date(x))
+        clv['report_date'] = clv['report_date'].apply(self.convert_to_date)
 
         clv = pd.DataFrame(list(clv.sort_values(['report_name', 'report_date'], ascending=False)['data'])[0])
-        if get_index_group(self.order_index) != 'main':
-            clv = clv[clv['dimension'] == get_index_group(self.order_index)]
+        if self.get_index_group(self.order_index) != 'main':
+            clv = clv[clv['dimension'] == self.get_index_group(self.order_index)]
         if len(clv) != 0:
             self.clv_prediction = clv.rename(columns={"date": "session_start_date"})
 
@@ -111,14 +94,14 @@ class Anomaly:
         """
         collecting all reports from reports index.
         """
-        date = current_date_to_day() if date is None else convert_to_date(date)
+        date = self.current_date_to_day() if date is None else self.convert_to_date(date)
         end_date = date.isoformat()
         self.reports = self.report_execute.collect_reports(self.port,
                                                            self.host,
-                                                           get_index_group(self.order_index),
-                                                           query={'index': get_index_group(self.order_index),
+                                                           self.get_index_group(self.order_index),
+                                                           query={'index': self.get_index_group(self.order_index),
                                                                   'end': end_date})
-        self.reports['report_date'] = self.reports['report_date'].apply(lambda x: convert_to_date(x))
+        self.reports['report_date'] = self.reports['report_date'].apply(self.convert_to_date)
         self.reports = self.reports.sort_values(['report_name', 'report_date'], ascending=False)
         self.collect_clv()
 
@@ -188,21 +171,21 @@ class Anomaly:
         :return: trained model
         """
         _input = Input(shape=(len(features),))
-        encoder1 = Dense(128, activation=params['activation'])(_input)
-        encoder2 = Dense(64, activation=params['activation'])(encoder1)
-        encoder3 = Dense(32, activation=params['activation'])(encoder2)
-        encoder4 = Dense(16, activation=params['activation'])(encoder3)
-        encoder5 = Dense(8, activation=params['activation'])(encoder4)
-        code = Dense(len(features), activation=params['activation'])(encoder5)
-        decoder1 = Dense(1, activation=params['activation'])(code)
-        decoder2 = Dense(8, activation=params['activation'])(decoder1)
-        decoder3 = Dense(16, activation=params['activation'])(decoder2)
-        decoder4 = Dense(32, activation=params['activation'])(decoder3)
-        decoder5 = Dense(64, activation=params['activation'])(decoder4)
-        decoder6 = Dense(128, activation=params['activation'])(decoder5)
-        fr_output = Dense(len(features), activation=params['activation'])(decoder6)
+        encoder1 = layers.Dense(128, activation=params['activation'])(_input)
+        encoder2 = layers.Dense(64, activation=params['activation'])(encoder1)
+        encoder3 = layers.Dense(32, activation=params['activation'])(encoder2)
+        encoder4 = layers.Dense(16, activation=params['activation'])(encoder3)
+        encoder5 = layers.Dense(8, activation=params['activation'])(encoder4)
+        code = layers.Dense(len(features), activation=params['activation'])(encoder5)
+        decoder1 = layers.Dense(1, activation=params['activation'])(code)
+        decoder2 = layers.Dense(8, activation=params['activation'])(decoder1)
+        decoder3 = layers.Dense(16, activation=params['activation'])(decoder2)
+        decoder4 = layers.Dense(32, activation=params['activation'])(decoder3)
+        decoder5 = layers.Dense(64, activation=params['activation'])(decoder4)
+        decoder6 = layers.Dense(128, activation=params['activation'])(decoder5)
+        fr_output = layers.Dense(len(features), activation=params['activation'])(decoder6)
         model_ae = Model(inputs=_input, outputs=fr_output)
-        model_ae.compile(loss='mse', optimizer=RMSprop(lr=params['lr']), metrics=['mse'])
+        model_ae.compile(loss='mse', optimizer=optimizers.RMSprop(lr=params['lr']), metrics=['mse'])
 
         model_ae.fit(X, X,
                      epochs=int(params['epochs']),
@@ -297,7 +280,7 @@ class Anomaly:
     def get_daily_orders_anomaly(self):
         self.daily_orders = pd.DataFrame(list(self.reports.query(
             "report_name == 'stats' and type == 'daily_orders'")['data'])[0])
-        self.daily_orders['daily'] = self.daily_orders['daily'].apply(lambda x: convert_to_date(x))
+        self.daily_orders['daily'] = self.daily_orders['daily'].apply(self.convert_to_date)
         self.daily_orders['isoweekday'] = self.daily_orders['daily'].apply(lambda x: x.isoweekday())
         max_isoweekday = max(self.daily_orders['daily']).isoweekday()
         number_of_week_back_iteration = len(self.daily_orders[self.daily_orders['isoweekday'] == max_isoweekday]) - 5
@@ -341,15 +324,16 @@ class Anomaly:
         """
         self.collect_clv()
         self.rfm = pd.DataFrame(list(self.reports.query("report_name == 'rfm'")['data'])[0])
-        self.clv_prediction['session_start_date'] = self.clv_prediction['session_start_date'].apply(
-            lambda x: convert_to_day(x))
+        self.clv_prediction['session_start_date'] = self.clv_prediction['session_start_date'].apply(self.convert_to_day)
         self.clv_prediction['session_start_date_prev'] = self.clv_prediction.sort_values(
             by=['client', 'session_start_date']).groupby(['client'])['session_start_date'].shift(-1)
 
         frequency_clv = self.clv_prediction[['session_start_date_prev', 'session_start_date', 'client']]
-        frequency_clv['session_start_date_prev'] = frequency_clv['session_start_date_prev'].fillna(current_date_to_day())
+        frequency_clv['session_start_date_prev'] = (
+            frequency_clv['session_start_date_prev'].fillna(self.current_date_to_day())
+        )
         frequency_clv['frequency'] = frequency_clv.apply(
-            lambda row: calculate_time_diff(row['session_start_date'], row['session_start_date_prev'], 'week'), axis=1)
+            lambda row: self.calculate_time_diff(row['session_start_date'], row['session_start_date_prev'], 'week'), axis=1)
         frequency_clv = frequency_clv.groupby('client').agg({'frequency': 'mean'}).reset_index()
 
         monetary_clv = self.clv_prediction.groupby('client').agg({"payment_amount": "mean"}).reset_index()
@@ -398,55 +382,6 @@ class Anomaly:
         names = ['daily_funnel', 'cohort', 'cohort_d', 'daily_orders_comparison', 'clv_prediction']
         for i in zip(names, dfs):
             print("names :", i[0])
-            self.insert_into_reports_index(i[0], i[1], current_date_to_day(), index=self.order_index)
-
-    def insert_into_reports_index(self, name, anomaly, start_date, index='orders'):
-        """
-        via query_es.py, each report can be inserted into the reports index with the given format.
-        {"id": unique report id,
-         "report_date": start_date or current date,
-         "report_name": "rfm",
-         "index": "main",
-         "report_types": {},
-         "data": rfm.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
-         }
-         !!! null values are assigned to 0.
-
-        :param rfm: data set, data frame
-        :param start_date: data start date
-        :param index: dimensionality of data index orders_location1 ;  dimension = location1
-        """
-
-        list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
-                        "report_name": "anomaly",
-                        "index": get_index_group(index),
-                        "report_types": {"type": name},
-                        "data": anomaly.fillna(0).to_dict("results")}]
-        self.query_es.insert_data_to_index(list_of_obj, index='reports')
-
-    def fetch(self, anomly, start_date=None):
-        """
-        Collect RFM values for each user. Collecting stored RFM is useful in order to initialize Customer Segmentation.
-        :return: data-frame
-        """
-
-        boolean_queries, date_queries = [], []
-        boolean_queries = [{"term": {"report_name": "anomaly"}},
-                           {"term": {"index": get_index_group(self.order_index)}},
-                           {"term": {"report_types.type": anomly}}
-                           ]
-
-        if start_date is not None:
-            date_queries = [{"range": {"report_date": {"gte": convert_to_iso_format(start_date)}}}]
-
-        self.query_es = QueryES(port=self.port,
-                                host=self.host)
-        self.query_es.query_builder(fields=None, _source=True,
-                                    date_queries=date_queries,
-                                    boolean_queries=boolean_queries)
-        _res = self.query_es.get_data_from_es(index="reports")
-        _data = pd.DataFrame()
-        if len(_res) != 0:
-            _data = pd.DataFrame(_res[0]['_source']['data'])
-        return _data
+            self.insert_into_reports_index(
+                "anomaly",
+                i[0], i[1], self.current_date_to_day(), index=self.order_index)

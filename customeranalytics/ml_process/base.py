@@ -74,8 +74,8 @@ class BaseML(SQLiteDB):
 
     def insert_into_reports_index(
             self,
-            report_name,
-            eda,
+            ml_name,
+            ml,
             start_date,
             eda_type,
             end_data=None,
@@ -103,16 +103,16 @@ class BaseML(SQLiteDB):
         list_of_obj = [
             {"id": np.random.randint(200000000),
             "report_date": self.current_date_to_day().isoformat() if start_date is None else start_date,
-            "report_name": report_name,
+            "report_name": ml_name,
             "index": self.get_index_group(index),
             "report_types": {"type": eda_type},
-            "data": eda.to_dict('records')
+            "data": ml.to_dict('records')
              }
         ]
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def fetch(
-            self, report_name, eda_type, start_date=None,  end_date=None,
+            self, ml_name, ml_type, start_date=None,  end_date=None,
             time_period=None,
             _from=None,
             _to=None,
@@ -131,14 +131,14 @@ class BaseML(SQLiteDB):
         :param start_date:
         :return: data-frame
         """
-        eda_type = {"report_types": {"type": eda_type}}
+        eda_type = {"report_types": {"type": ml_type}}
         if time_period is not None:
             eda_type['report_types']['time_period'] = time_period
         if _from is not None:
             eda_type['report_types']['_from'] = _from
         if _to is not None:
             eda_type['report_types']['to'] = _to
-        boolean_queries = [{"term": {"report_name": report_name}},
+        boolean_queries = [{"term": {"report_name": ml_name}},
                            {"term": eda_type},
                            {"term": {"index": self.get_index_group(self.order_index)}}]
         date_queries = []

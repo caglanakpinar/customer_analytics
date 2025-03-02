@@ -4,10 +4,11 @@ import h2o
 from h2o.estimators.kmeans import H2OKMeansEstimator
 from h2o.grid.grid_search import H2OGridSearch
 
-from customeranalytics.exploratory_analysis.base import BaseEDA
+from customeranalytics.ml_process.base import BaseML
+from customeranalytics.exploratory_analysis import ea_configs, query_exploratory_analysis
 
 
-class CustomerSegmentation(BaseEDA):
+class CustomerSegmentation(BaseML):
     """
     Customer Segmentation is one of the crucial problems for Businesses that are mostly engaging with their buyers.
     This relationship for some reason might differ from one customer to another one.
@@ -100,7 +101,7 @@ class CustomerSegmentation(BaseEDA):
         ea_configs['rfm']['order_index'] = self.order_index
         _total_cols, _counter = 0, 0
         while len(set(self.rfm.columns) & set(self.METRICS)) != 3:
-            self.rfm = self.query_exploratory_analysis(ea_configs, {"start_date": date}, "rfm")
+            self.rfm = query_exploratory_analysis(ea_configs, {"start_date": date}, "rfm")
             if _counter >= 10:
                 _total_cols = 3
             else:
@@ -289,5 +290,10 @@ class CustomerSegmentation(BaseEDA):
         self.rfm['segments'] = self.rfm['segments'].fillna('others')
         self.rfm['segments_numeric'] = self.rfm['segments'].apply(lambda x: self.segments_numerics[x])
 
-        self.insert_into_reports_index(self.rfm[self.insert_columns], date=start_date, index=self.order_index)
+        self.insert_into_reports_index(
+            ml_name="segmentation",
+            ml=self.rfm[self.insert_columns],
+            start_date=start_date,
+            index=self.order_index
+        )
         h2o.shutdown(prompt=False)

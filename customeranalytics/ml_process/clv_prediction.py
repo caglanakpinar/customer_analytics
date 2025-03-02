@@ -186,7 +186,9 @@ class CLVPrediction(BaseML):
             self.clv_predictions['date'] = self.clv_predictions['date'].apply(self.convert_to_iso_format)
             self.add_dimensions()
             self.clv_predictions = self.clv_predictions[['dimension', 'date', 'payment_amount', 'client']]
-            self.insert_into_reports_index(self.clv_predictions,
+            self.insert_into_reports_index(
+                ml_name="clv_prediction",
+                ml=self.clv_predictions,
                                            time_period=time_period,
                                            date=start_date,
                                            index=self.order_index)

@@ -421,9 +421,12 @@ class ABTests(BaseML):
                 self.decision = ab.get_results()
                 self.decision_of_test(f, groups[0], groups[1])
                 _name = self.name_of_test(is_before_after=True, fetaure=f, group=groups[0], time_period=groups[1])
-                self.insert_into_reports_index(self.decision,
-                                               abtest_type=_name,
-                                               index=self.order_index)
+                self.insert_into_reports_index(
+                    ml_name='abtest',
+                    ml=self.decision,
+                    ml_type=_name,
+                    index=self.order_index
+                )
                 del ab
 
                 # self.decision.to_csv(join(self.path, _name + ".csv"), index=False)
@@ -462,7 +465,9 @@ class ABTests(BaseML):
             for p in self.promotion_combinations:
                 self.promotion_comparison = pd.concat([self.promotion_comparison,
                                                        self.execute_promotion_comparison_test(p)])
-            self.insert_into_reports_index(self.promotion_comparison,
+            self.insert_into_reports_index(
+                "abtest",
+                self.promotion_comparison,
                                            abtest_type='promotion_comparison',
                                            index=self.order_index)
             del self.promotion_comparison

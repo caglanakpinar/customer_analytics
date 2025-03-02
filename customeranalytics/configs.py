@@ -1,4 +1,4 @@
-from os.path import abspath, join
+
 
 class Config:
     elasticsearch_settings = {
@@ -164,7 +164,6 @@ class Config:
     max_elasticsearch_bulk_insert_bytes = 100000000
     time_periods = ["hourly", "daily", "weekly", 'monthly']
     default_query_date = "1900-01-01T00:00:00"
-    query_path = join(abspath(__file__).split("configs.py")[0], "docs")
     default_dask_partitions = 4
     elasticsearch_connection_refused_comment = """
                 Please check your directory. File path must be ending with ...../bin/elasticsearch.
