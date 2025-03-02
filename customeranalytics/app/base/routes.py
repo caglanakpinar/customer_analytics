@@ -4,7 +4,7 @@ from customeranalytics.app.base import blueprint
 
 @blueprint.route('/')
 def route_default():
-    return redirect(url_for('base_blueprint.index'))
+    return redirect(url_for('home_blueprint.index'))
 
 
 @blueprint.errorhandler(404)

@@ -2,15 +2,13 @@ import pandas as pd
 from flask_login import current_user
 import logging
 
-from customeranalytics.data_storage_configurations import DataStorageConfigurations
-from customeranalytics.app.home.forms import Charts
 from customeranalytics.app.home.profiles import Profiles
 from customeranalytics.app.home.search import Search
 from customeranalytics.exploratory_analysis import ea_configs
 from customeranalytics.ml_process import ml_configs
 
 
-class RouterRequest(DataStorageConfigurations, Charts, Profiles, Search):
+class RouterRequest(Profiles, Search):
     def __init__(self):
         super().__init__()
         self.return_values = {}

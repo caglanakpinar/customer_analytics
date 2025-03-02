@@ -3,10 +3,14 @@ import datetime
 import os
 
 from flask_login import current_user
+from flask_login import LoginManager
 from werkzeug.utils import secure_filename
 
 from customeranalytics.data_storage_configurations import DataStorageConfigurations
 from customeranalytics.app.home.forms import Charts
+
+
+login_manager = LoginManager()
 
 
 def image_format(filename):
@@ -36,10 +40,9 @@ def allowed_image_filesize(request):
         return True
 
 
-class Profiles(DataStorageConfigurations, Charts):
-    def __init__(self, user=None):
+class Profiles(Charts):
+    def __init__(self):
         super().__init__()
-        self.user = user
         self.users = []
         self.tables = pd.read_sql(self.sqlite_queries['tables'], self.con)
         self.data_types = {'orders': 'Sessions', 'downloads': 'Customers', 'products': 'Products (Baskets)'}
@@ -53,11 +56,6 @@ class Profiles(DataStorageConfigurations, Charts):
             SELECT chat.*, user_avatar.user_avatar
             FROM chat LEFT JOIN (SELECT user, user_avatar FROM user_avatar) AS user_avatar 
             ON chat.user = user_avatar.user
-        """
-        self.user_logo_pic_query = f"""
-            SELECT user_avatar 
-            FROM user_avatar 
-            WHERE user = '{current_user.username}'
         """
 
     def check_for_table_exits(self, table):
@@ -156,20 +154,28 @@ class Profiles(DataStorageConfigurations, Charts):
             recent_chats['date_1'] = recent_chats['date'].apply(self.get_time_diff_string)
             recent_chats['date_2'] = recent_chats['date'].apply(self.get_date_diff_string)
             charts_for_profiles, recent_chats['chart_name'] = self.get_plots(list(recent_chats['chart']))
-        self.filters = {"dimensions": self.get_report_dimensions(), "chart_names": self.chart_names}
+        self.filters = {
+            "dimensions": self.get_report_dimensions(),
+            "chart_names": self.chart_names
+        }
         return {
-            "messages": recent_chats.to_dict('results') if len(recent_chats) != 0 else None,
+            "messages": (
+                recent_chats.to_dict('records')
+                if len(recent_chats) != 0
+                else None
+            ),
             'charts': charts_for_profiles,
             'filters': self.filters
         }
 
     def fetch_pic(self, user=None):
-        _user_name = current_user.username
-        logo = "info.pic"
-        if user is not None:
-            _user_name = user
+        user_logo_pic_query = f"""
+            SELECT user_avatar 
+            FROM user_avatar 
+            WHERE user = '{user}'
+        """
         try:
-            logo = list(self.read_query(self.user_logo_pic_query)['user_avatar'])[0]
+            logo = list(self.read_query(user_logo_pic_query)['user_avatar'])[0]
         except Exception as e:
             print(e)
             logo = "info.jpeg"
@@ -216,7 +222,6 @@ class Profiles(DataStorageConfigurations, Charts):
 
         """
         if request != {}:
-            _user = self.find_user()
             _user_logo = self.fetch_pic()
             try:
                 _chart_name = self.chart_names[request['chart'].split("*")[0]][request['chart'].split("*")[1]]

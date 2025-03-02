@@ -8,6 +8,7 @@ import plotly.graph_objs as go
 import plotly
 from screeninfo import get_monitors
 
+from customeranalytics.configs import Config
 from customeranalytics.data_storage_configurations import DataStorageConfigurations
 
 
@@ -490,6 +491,7 @@ class SampleData(BaseData):
     These sample data comes from the sample data_folder default in the library.
     """
     def __init__(self):
+        super().__init__()
         folder = join(self.abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
         for f in listdir(dirname(folder)):
             if f.split(".")[1] == 'csv':
@@ -515,6 +517,7 @@ class RealData(BaseData):
     Each dimension of reports will be created as .csv file.
     """
     def __init__(self):
+        super().__init__()
         self.report_query = "SELECT * FROM es_connection"
 
         try:
@@ -774,7 +777,7 @@ class Charts(SampleData, RealData, Config):
                 _data['payment_bins'] = _data['payment_bins'].apply(lambda x: round(float(x), 2))
                 _data['orders'] = _data['orders'].apply(lambda x: int(x))
                 _trace_updated = []
-                for _bin in _data.to_dict('results'):
+                for _bin in _data.to_dict('records'):
                     _trace_updated.append(go.Bar(x=[_bin['payment_bins']], y=[_bin['orders']], showlegend=False))
                 trace = _trace_updated
             else:
@@ -973,7 +976,7 @@ class Charts(SampleData, RealData, Config):
         :return: dictionary with KPIs in keys
         """
         _data, is_real_data = self.get_data(kpi, index, date)
-        return _data.to_dict('results')[0], is_real_data
+        return _data.to_dict('records')[0], is_real_data
 
     def has_chart_annotation(self, chart, c):
         if 'cohort' in chart.split("_"):
@@ -990,7 +993,7 @@ class Charts(SampleData, RealData, Config):
         # collecting charts
         self.graph_json['charts'] = {}
         self.data_type = {}
-        self.filters = {"dimensions": self.reals.get_report_dimensions()}
+        self.filters = {"dimensions": self.get_report_dimensions()}
         for c in charts[target]['charts']:
             trace, is_real_data = self.get_trace(charts[target]['charts'][c]['trace'], c, index, date, target)
             self.get_widths_heights(chart=c, target=target)
