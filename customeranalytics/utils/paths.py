@@ -9,8 +9,13 @@ class Paths:
     parent_dir = os.path.dirname(current_dir)
     sys.path.insert(0, parent_dir)
     base_dir = os.path.abspath(os.path.dirname(__file__))
-    sqlite_url = 'sqlite:///' + os.path.join(parent_dir, 'db.sqlite3')
     query_path = os.path.join(parent_dir, "docs")
+    connection_folder = Path()
+    connection_file_name = "connection.yaml"
+
+    @staticmethod
+    def exists(folder, file_name):
+        return Path(folder, file_name).exists()
 
     def abspath_for_sample_data(self):
         """

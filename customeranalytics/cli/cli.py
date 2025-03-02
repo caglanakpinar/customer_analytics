@@ -4,9 +4,6 @@ from flask_migrate import Migrate
 
 from customeranalytics.app.create_app import CreateApp
 from customeranalytics.app.config import config_dict
-from customeranalytics.data_storage_configurations import SQLiteDB
-
-sqlite_db = SQLiteDB()
 
 
 @click.group()
@@ -36,11 +33,10 @@ def app(
 ):
 
     app = CreateApp(
-        sqlite_db.db,
         config_dict[('Debug'if debug else 'Production')]
     )
 
-    Migrate(app.app, sqlite_db.db)
+    Migrate(app.app)
     app.app.run(
         port=port,
         host=host,

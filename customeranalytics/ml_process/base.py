@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
 
-from customeranalytics.data_storage_configurations.sqlite import SQLiteDB
+from customeranalytics.data_storage_configurations.connection import Connection
 from customeranalytics.data_storage_configurations.query_es import QueryES
 
 
-class BaseML(SQLiteDB):
+class BaseML(Connection):
     def __init__(self, host=None, port=None, download_index='downloads', order_index='orders'):
         super().__init__()
         self.download_index = download_index

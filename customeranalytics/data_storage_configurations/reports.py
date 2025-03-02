@@ -6,11 +6,11 @@ from os import listdir, mkdir
 from math import sqrt
 import datetime
 
-from customeranalytics.data_storage_configurations.sqlite import SQLiteDB
+from customeranalytics.data_storage_configurations.connection import Connection
 from customeranalytics.data_storage_configurations.query_es import QueryES
 
 
-class Reports(SQLiteDB):
+class Reports(Connection):
     """
     There are some overall values that need to check each day for businesses.
     These values are also crucial metrics for the dashboards.

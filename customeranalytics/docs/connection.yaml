@@ -1,0 +1,90 @@
+data_connection:
+  orders_data_source_tag: None
+  orders_data_source_type: None
+  orders_data_query_path: None
+  orders_password: None
+  orders_user: None
+  orders_port: None
+  orders_host: None
+  orders_db: None
+  downloads_data_source_tag: None
+  downloads_data_source_type: None
+  downloads_data_query_path: None
+  downloads_password: None
+  downloads_user: None
+  downloads_port: None
+  downloads_host: None
+  downloads_db: None
+  products_data_source_tag: None
+  products_data_source_type: None
+  products_data_query_path: None
+  products_password: None
+  products_user: None
+  products_port: None
+  products_host: None
+  products_db: None
+  deliveries_data_source_tag: None
+  deliveries_data_source_type: None
+  deliveries_data_query_path: None
+  deliveries_password: None
+  deliveries_user: None
+  deliveries_port: None
+  deliveries_host: None
+  deliveries_db: None
+  dimension: None
+  promotion_id: None
+
+data_columns_integration:
+  order_id: None
+  order_id_2: None
+  client: None
+  session_start_date: None
+  payment_amount: None
+  discount_amount: None
+  date: None
+  download_date: None
+  signup_date: None
+  data_type: None
+  has_purchased: None
+  product: None
+  price: None
+  category: None
+  promotion_id: None
+  actions: None
+  dimension: None
+  client_2: None
+  delivery_date: None
+  prepare_date: None
+  return_date: None
+  latitude: None
+  longitude: None
+
+schedule_data:
+  tag: None
+  schedule_tag: None
+  time_period: None
+  status: None
+  is_mlworks: None
+  is_exploratory: None
+  max_date_of_order_data: None
+
+actions:
+  sessions:
+    data_type: None
+    action_name: None
+  downloads:
+    data_type: None
+    action_name: None
+  products:
+      data_type: None
+      action_name: None
+  delivery:
+      data_type: None
+      action_name: None
+
+logs:
+  -
+    log_time: None
+    page: None
+    color: None
+    info: None

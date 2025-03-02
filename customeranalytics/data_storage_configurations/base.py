@@ -1,9 +1,9 @@
 from flask_login import current_user
 
-from customeranalytics.data_storage_configurations.sqlite import SQLiteDB
+from customeranalytics.data_storage_configurations.connection import Connection
 
 
-class BaseDataStorageConfiguration(SQLiteDB):
+class BaseDataStorageConfiguration(Connection):
     def __init__(self):
         super().__init__()
         self.info_logs_for_chat = lambda info: {'user': 'info',
@@ -31,31 +31,8 @@ class BaseDataStorageConfiguration(SQLiteDB):
 
     def logs_update(self, logs):
         """
-        logs table in sqlite table is updated.
-        chats table in sqlite table is updated.
+        logs in connection.yaml is updated. it has been updated on given temp folder
         """
-        self.check_for_table_exits(table='logs')
-        self.check_for_table_exits(table='chat')
-
-        try:
-            logs['login_user'] = current_user
-            logs['log_time'] = str(self.current_date_to_day())[0:19]
-            logs['general_message'] = logs['info']
-            self.execute_query(
-                self.insert_query(
-                    table='logs',
-                    columns=self.sqlite_queries['columns']['logs'][1:],
-                    values=logs
-                )
-            )
-        except Exception as e:
-            print(e)
-
-        try:
-            self.execute_query(
-                self.insert_query(
-                    table='chat', columns=self.sqlite_queries['columns']['chat'][1:],
-                     values=self.info_logs_for_chat(logs['info'])
-                )
-            )
-        except Exception as e: print(e)
+        logs['log_time'] = str(self.current_date_to_day())[0:19]
+        logs['general_message'] = logs['info']
+        self.update_logs(logs)
