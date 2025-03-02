@@ -19,7 +19,7 @@ def ngrams_2(word):
     return ngrams
 
 
-class Search(DataStorageConfigurations, RealData):
+class Search(RealData):
     def __init__(self):
         """
         There are 4 types of search;
