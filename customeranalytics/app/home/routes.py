@@ -1,7 +1,7 @@
 from customeranalytics.app.home import blueprint
 from flask import render_template, request
-from flask_login import login_required
 from jinja2 import TemplateNotFound
+
 
 from customeranalytics.app.home.models import RouterRequest
 from customeranalytics.data_storage_configurations.logger import LogsBasicConfeger
@@ -22,7 +22,6 @@ def get_segment(request):
 
 
 @blueprint.route('/search', methods=["GET", "POST"])
-@login_required
 def search_data():
     """
     This is for search result pages rendering with search.html
@@ -48,7 +47,6 @@ def search_data():
 
 
 @blueprint.route('/index', methods=["GET", "POST"])
-@login_required
 def index():
     """
     When logged In, Platform start with General Dashboard running on index.html
@@ -74,35 +72,7 @@ def index():
         filters=filters
     )
 
-
-@blueprint.route("/upload-image", methods=["POST"])
-@login_required
-def upload_image():
-    """
-    Uploading user log righ top of the panel
-    """
-    segment = get_segment(request)
-    if request.method == "POST":
-        router.add_pic(request)
-    args = router.fetch_chats()
-    pic = router.fetch_pic()
-    try:
-        return render_template(
-            "profile.html",
-            segment=segment,
-            pic=pic,
-            messages=args['messages'],
-            chart=args['charts'],
-            filters=args['filters']
-        )
-    except TemplateNotFound:
-        return render_template('page-404.html'), 404
-    except Exception as e:
-        return render_template('page-500.html'), 500
-
-
 @blueprint.route('/<template>', methods=['GET', 'POST'])
-@login_required
 def route_template(template):
     """
     page router;
@@ -368,7 +338,7 @@ def route_template(template):
         if template not in ['funnel-customer.html', 'funnel-customer.html', 'index.html', 'index2.html', 'rfm.htm',
                             'product.html', 'abtest-segments.html', 'abtest-product.html', 'abtest-promotion.html',
                             'stats-desc.html', 'stats-purchase.htm', 'cohorts.html', 'customer-segmentation.html']:
-            if template in ['profile.html', 'settings.html', 'upload.php.html', 'delivery.html']:
+            if template == 'delivery.html':
                 router.add_new_message(dict(request.form))
                 args = router.fetch_chats()
                 return render_template(template,
