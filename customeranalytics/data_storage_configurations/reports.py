@@ -123,6 +123,7 @@ class Reports(SQLiteDB):
     """
 
     def __init__(self):
+        super().__init__()
         self.es_tag = {}
         self.folder = join(self.abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
         self.sample_report_names = []
