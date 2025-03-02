@@ -48,10 +48,10 @@ class CreateIndex(BaseDataStorageConfiguration):
         :param data_connection_structure: data connections
         :param data_columns: matched columns
         """
+        super().__init__()
         self.data_connection_structure = data_connection_structure
         self.data_columns = data_columns
         self.actions = actions
-        self.sqlite_queries = self.read_yaml(self.query_path, "queries.yaml")
         self.query_es = QueryES()
         self.es_cons = pd.DataFrame()
         self.schedule = pd.DataFrame()

@@ -12,11 +12,7 @@ class SQLiteDB(Paths, Utils, Config):
     def __init__(self):
         self.sqlite_queries = self.read_yaml(self.query_path, "queries.yaml")
         self.engine = create_engine(
-            'sqlite://///'
-            + os.path.join(
-                self.abspath_for_sample_data(),
-                'db.sqlite3'
-            ),
+            self.sqlite_url,
             connect_args={'check_same_thread': False}
         )
         self.con = self.engine.connect()

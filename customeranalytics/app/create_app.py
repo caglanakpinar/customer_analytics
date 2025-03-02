@@ -1,4 +1,3 @@
-from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 
@@ -11,25 +10,22 @@ class CreateApp:
     def __init__(
             self,
             db: SQLAlchemy,
-            login_manager: LoginManager,
             config: ProductionConfig | DebugConfig
     ):
         self.db = db
-        self.login_manager = login_manager
         self.app = Flask(__name__, static_folder='base/static')
         self.config = config
         self.create_app()
 
     def register_extensions(self, ):
         self.db.init_app(self.app)
-        self.login_manager.init_app(self.app)
 
     def register_blueprints(self):
         self.app.register_blueprint(base_blueprint)
         self.app.register_blueprint(home_blueprint)
 
     def configure_database(self):
-        @self.app.before_first_request
+        @self.app.before_request
         def initialize_database():
             self.db.create_all()
 

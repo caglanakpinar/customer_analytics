@@ -105,7 +105,6 @@ class Scheduler(BaseDataStorageConfiguration):
         self.query_es = QueryES(host=self.es_con['host'], port=self.es_con['port'])
         self.unique_dimensions = []
         self.schedule = True
-        self.sqlite_queries = self.read_yaml(self.query_path, "queries.yaml")
         self.separator = lambda dim: [print("*" * 20) for i in range(3)] + [print("*"*10, " "," DIMENSION : ",dim, "*"*10)]
 
     def query_schedule_status(self):
