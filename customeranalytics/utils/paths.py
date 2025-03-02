@@ -9,9 +9,8 @@ class Paths:
     parent_dir = os.path.dirname(current_dir)
     sys.path.insert(0, parent_dir)
     base_dir = os.path.abspath(os.path.dirname(__file__))
-    sqlite_url = 'sqlite:///' + os.path.join(base_dir, 'db.sqlite3')
+    sqlite_url = 'sqlite:///' + os.path.join(parent_dir, 'db.sqlite3')
     query_path = os.path.join(parent_dir, "docs")
-    print(query_path)
 
     def abspath_for_sample_data(self):
         """
