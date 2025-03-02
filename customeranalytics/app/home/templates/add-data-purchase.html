@@ -102,13 +102,8 @@
 									<div class="card-body">
 
 
-										{% if values['es_connection'] != '....' %}
+										{% if values['connection'] != '....' %}
 											<form method="POST">
-												<div class="mb-4 col-md-12">
-													{% if values['es_connection']['url'] == 'None' %}
-														<td>  <a href="{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a></td>
-													{% endif %}
-												</div>
 
 												<div class="mb-4 col-md-12">
 													<label class="form-label mb-2" for="input_name">Session Connection Tag Name</label>
@@ -225,8 +220,8 @@
 											</form>
 										{% endif %}
 
-										{% if values['es_connection'] == '....' %}
-											<strong style="color:red;">Please add ElasticSearch Connection</strong>
+										{% if values['connection'] == '....' %}
+											<strong style="color:red;">Please add Data Source Configuration</strong>
 										{% endif %}
 									</div>
 								</div>
@@ -263,13 +258,8 @@
 									</div>
 
 									<div class="mb-4 col-md-12">
-										{% if values['es_connection'] != '....' %}
+										{% if values['connection'] != '....' %}
 											<form method="POST">
-												<div class="mb-4 col-md-12">
-													{% if values['es_connection']['url'] == 'None' %}
-														<td>  <a href="{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a></td>
-													{% endif %}
-												</div>
 
 												<div class="mb-4 col-md-12">
 													<label class="form-label mb-2" for="input_name">Customers Connection Tag Name</label>
@@ -357,8 +347,8 @@
 												</div>
 											</form>
 										{% endif %}
-										{% if values['es_connection'] == '....' %}
-											<strong style="color:red;">Please add ElasticSearch Connection</strong>
+										{% if values['connection'] == '....' %}
+											<strong style="color:red;">Please add Data Storage Connection</strong>
 										{% endif %}
 									</div>
 								</div>
