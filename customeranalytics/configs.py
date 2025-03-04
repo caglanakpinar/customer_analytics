@@ -203,7 +203,7 @@ class Config:
                                 "deliveries_data_query_path": "Deliveries Connection Data Query/Path",
     }
 
-
+    default_message_value = '....'
     default_message = {'es_connection': '....',
                        'orders': '....',
                        'orders_data': '....',
