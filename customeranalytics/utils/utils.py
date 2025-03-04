@@ -105,6 +105,18 @@ class Utils:
         return docs
 
     @staticmethod
+    def write_yaml(data, directory, filename):
+        """
+        writing yaml file with given directory
+        :param data: data to write dictionary
+        :param directory: path
+        :param filename: file name with .yaml format
+        :return:
+        """
+        with open(join(directory, "", filename), "w") as file:
+            yaml.dump(data, file)
+
+    @staticmethod
     def convert_to_iso_format(date):
         """
         converting iso-format to timestamp Ex: from  2021-01-01T00:00:00 to 2021-01-01 00:00:00
@@ -137,19 +149,6 @@ class Utils:
         return datetime.datetime.strptime(str(date)[0:7], "%Y-%m")
 
     @staticmethod
-    def sqlite_string_converter(_str, back_to_normal=False):
-        """
-        when query or path is inserted into the sqlite db, it is need to be convert ''' and removing back slashes.
-        :param _str: query string Ex: " SELECT *  FROm table ..."
-        :param back_to_normal: convert back to normal True / False
-        :return: string query
-        """
-        if back_to_normal:
-            return _str.replace("#&_5", "'").replace("+", " ") + ' '
-        else:
-            return _str.replace("'", "#&_5").replace("\r", " ").replace("\n", " ").replace(" ", "+")
-
-    @staticmethod
     def dimension_decision(order_index):
         """
         Decision of dimension.
@@ -161,6 +160,19 @@ class Utils:
             return True
         else:
             return False
+
+    @staticmethod
+    def sqlite_string_converter(_str, back_to_normal=False):
+        """
+        when query or path is inserted into the sqlite db, it is need to be convert ''' and removing back slashes.
+        :param _str: query string Ex: " SELECT *  FROm table ..."
+        :param back_to_normal: convert back to normal True / False
+        :return: string query
+        """
+        if back_to_normal:
+            return _str.replace("#&_5", "'").replace("+", " ") + ' '
+        else:
+            return _str.replace("'", "#&_5").replace("\r", " ").replace("\n", " ").replace(" ", "+")
 
     @staticmethod
     def formating_numbers(num):
