@@ -63,6 +63,13 @@ class Connection(Paths, Utils, Config):
         self.connection_conf.actions[data_type] = self.default_conf.actions[data_type]
         self.update_connection()
 
+    def update_table(self, table_name: str, values: dict):
+        table = getattr(self.connection_conf, table_name)
+        for field, value in values.items():
+            table[field] = value
+        setattr(self.connection_conf, table_name, table)
+        self.update_connection()
+
     def collect_data_from_table(self, table='data_connection') -> dict:
         return getattr(self.connection_conf, table)
 
