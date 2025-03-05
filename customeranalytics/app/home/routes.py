@@ -27,16 +27,15 @@ def search_data():
     This is for search result pages rendering with search.html
     :return: render_template
     """
-    pic = router.fetch_pic()
     search_value = dict(request.form).get('search', '')
     results = router.search_results(search_value)
     graph_json, data_type, filters = router.get_chart(target='search_' + results['search_type'])
     chart_names = router.get_search_chart_names(results['search_type'])
     kpis = router.convert_kpi_names_to_numeric_names(graph_json)
+    router.update_message()
     router.delete_search_data(results)
     return render_template('search.html',
                            segment='search',
-                           pic=pic,
                            chart_2=router.get_json_format(graph_json['charts']['chart_2_search']),
                            chart_3=router.get_json_format(graph_json['charts']['chart_3_search']),
                            chart_4=router.get_json_format(graph_json['charts']['chart_4_search']),
@@ -52,14 +51,13 @@ def index():
     When logged In, Platform start with General Dashboard running on index.html
     :return: render_template
     """
-    pic = router.fetch_pic()
     index = dict(request.form).get('index', 'main')
     date = dict(request.form).get('date', None)
     graph_json, data_type, filters = router.get_chart(target='index', index=index, date=date)  # collect charts on index.html
+    router.update_message()
     return render_template(
         'index.html',
         segment='index',
-        pic=pic,
         charts=router.get_json_format(graph_json['charts']['daily_orders']),
         customer_segments=router.get_json_format(graph_json['charts']['segmentation']),
         customer_journey=router.get_json_format(graph_json['charts']['customer_journey']),
@@ -82,7 +80,7 @@ def route_template(template):
     :param template: .../index, ../manage-data
     :return: render_template
     """
-    pic = router.fetch_pic()
+    router.update_message()
     try:
         if not template.endswith( '.html' ):
             template += '.html'
@@ -93,11 +91,11 @@ def route_template(template):
 
         if template in ['funnel-session.html', 'funnel-customer.html']:
             additional_name = '' if template == 'funnel-session.html' else '_downloads'
+            router.update_message()
             graph_json, data_type, filters = router.get_chart(target='funnel', index=index, date=date)
             return render_template(
                 template,
                 segment=segment,
-                pic=pic,
                 daily_funnel=router.get_json_format(
                     graph_json['charts']['daily_funnel' + additional_name]),
                 weekly_funnel=router.get_json_format(
@@ -122,7 +120,6 @@ def route_template(template):
             return render_template(
                 template,
                 segment=segment,
-                pic=pic,
                 daily_cohort_downloads=router.get_json_format(
                     graph_json['charts']['daily_cohort_downloads']),
                 daily_cohort_from_1_to_2=router.get_json_format(
@@ -147,7 +144,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='stats', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    daily_orders=router.get_json_format(graph_json['charts']['daily_orders']),
                                    weekly_orders=router.get_json_format(graph_json['charts']['weekly_orders']),
                                    monthly_orders=router.get_json_format(graph_json['charts']['monthly_orders']),
@@ -159,7 +155,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='descriptive', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    weekly_average_session_per_user=router.get_json_format(
                                        graph_json['charts']['weekly_average_session_per_user']),
                                    weekly_average_order_per_user=router.get_json_format(
@@ -175,7 +170,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='abtest-promotion', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic="avatar-2.png",
                                    o_pa_diff=router.get_json_format(
                                        graph_json['charts']['order_and_payment_amount_differences']),
                                    promotion_comparison=router.get_json_format(
@@ -195,7 +189,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='abtest-product', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    product_use_ba_a_accept=router.get_json_format(
                                        graph_json['charts']['product_usage_before_after_amount_accept']),
                                    product_use_ba_a_reject=router.get_json_format(
@@ -211,7 +204,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='abtest-segments', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    sc_weekly_ba_orders=router.get_json_format(
                                        graph_json['charts']['segments_change_weekly_before_after_orders']),
                                    sc_daily_ba_orders=router.get_json_format(
@@ -231,7 +223,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='product_analytic', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    most_combined_products=router.get_json_format(
                                        graph_json['charts']['most_combined_products']),
                                    most_ordered_products=router.get_json_format(
@@ -244,7 +235,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='rfm', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    rfm=router.get_json_format(graph_json['charts']['rfm']),
                                    frequency_recency=router.get_json_format(graph_json['charts']['frequency_recency']),
                                    monetary_frequency=router.get_json_format(graph_json['charts']['monetary_frequency']),
@@ -257,7 +247,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='customer-segmentation', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    segmentation=router.get_json_format(graph_json['charts']['segmentation']),
                                    frequency_clusters=router.get_json_format(graph_json['charts']['frequency_clusters']),
                                    monetary_clusters=router.get_json_format(graph_json['charts']['monetary_clusters']),
@@ -269,7 +258,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='index2', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    rfm=router.get_json_format(
                                        graph_json['charts']['rfm']),
                                    purchase_amount_distribution=router.get_json_format(
@@ -289,7 +277,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='clv', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    daily_clv=router.get_json_format(
                                        graph_json['charts']['daily_clv']),
                                    clvsegments_amount=router.get_json_format(
@@ -301,7 +288,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='anomaly', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    dfunnel_anomaly=router.get_json_format(
                                        graph_json['charts']['dfunnel_anomaly']),
                                    dcohort_anomaly=router.get_json_format(
@@ -318,7 +304,6 @@ def route_template(template):
             graph_json, data_type, filters = router.get_chart(target='delivery', index=index, date=date)
             return render_template(template,
                                    segment=segment,
-                                   pic=pic,
                                    ride=router.get_json_format(
                                        graph_json['charts']['ride']),
                                    deliver=router.get_json_format(
@@ -343,12 +328,15 @@ def route_template(template):
                 args = router.fetch_chats()
                 return render_template(template,
                                        segment=segment,
-                                       pic=pic, messages=args['messages'], chart=args['charts'], filters=args['filters'])
+                                       messages=args['messages'],
+                                       chart=args['charts'],
+                                       filters=args['filters']
+                                       )
             else:
                 router.execute_request(req=dict(request.form), template=segment)
-                router.fetch_results(segment, dict(request.form))
+                router.fetch_results(segment)
                 values = router.message
-                return render_template(template, segment=segment, pic=pic, values=values)
+                return render_template(template, segment=segment, values=values)
 
     except TemplateNotFound:
         return render_template('page-404.html'), 404

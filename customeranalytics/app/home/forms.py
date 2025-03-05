@@ -796,7 +796,16 @@ class Charts(SampleData, RealData, Config):
         if chart == 'customer_journey':
             _data = _data.reset_index().iloc[:-1]
             _data['text'] = _data.apply(
-                lambda row: 'Customers Who have ' + str(int(row['index'])) + ' orders. Avg. Purchase Amount : ' + str(round(row['customers` average Purchase Value'], 2)) + "  || Avg. Duration between last and recent order :" + str(round(row['hourly order differences'], 2)), axis=1)
+                lambda row:
+                (
+                        'Customers Who have '
+                        + str(int(row['index']))
+                        + ' orders. Avg. Purchase Amount : '
+                        + str(round(row['customers` average Purchase Value'], 2))
+                        + "  || Avg. Duration between last and recent order :"
+                        + str(round(row['hourly order differences'], 2))
+                ),
+                axis=1)
             trace = go.Scatter(x=_data['index'],
                                y=_data['hourly order differences'],
                                text=_data['text'],

@@ -32,9 +32,9 @@
 										</select>
 									</div>
 									<div class="mb-3 col-md-3">
-										<label class="form-label" for="inputState">Active Connections</label>
+										<label class="form-label" for="inputState">Active Data Storage Folder</label>
 										<select name="tag" id="es_edit" class="form-control" required>
-											<option value= "{{ values['es_connection']['tag'] }}" selected>{{ values['es_connection']['tag'] }}</option>
+											<option value= "{{ values['connection']['directory'] }}" selected>{{ values['connection']['directory'] }}</option>
 										</select>
 									</div>
 
@@ -115,7 +115,6 @@
 								<tbody>
 									{% for i in values['schedule'] %}
 										<tr>
-											<td style="font-size:60%;">{{ values['es_connection']['tag'] }}</td>
 											<td style="font-size:60%;">
 												{% if i['dimension'] != '....' %}
 													<i class="align-middle mr-2" data-feather="check" style="color:#008000;"></i>
@@ -201,8 +200,8 @@
 
 											</td>
 
-											<td style="font-size:60%;">{{ i['ses_actions'] }}</td>
-											<td style="font-size:60%;">{{ i['d_actions'] }}</td>
+											<td style="font-size:60%;">{{ i['sessions']['action_name'] }}</td>
+											<td style="font-size:60%;">{{ i['downloads']['action_name'] }}</td>
 											<td style="font-size:60%;">{{ i['promotion_id'] }}</td>
 
 											<td style="font-size:60%;">{{ i['max_date_of_order_data'] }}</td>
