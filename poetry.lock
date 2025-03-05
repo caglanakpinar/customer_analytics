@@ -886,49 +886,6 @@ trio = ["trio (>=0.23)"]
 wmi = ["wmi (>=1.5.1)"]
 
 [[package]]
-name = "elastic-transport"
-version = "8.17.0"
-description = "Transport classes and utilities shared among Python Elastic client libraries"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "elastic_transport-8.17.0-py3-none-any.whl", hash = "sha256:59f553300866750e67a38828fede000576562a0e66930c641adb75249e0c95af"},
-    {file = "elastic_transport-8.17.0.tar.gz", hash = "sha256:e755f38f99fa6ec5456e236b8e58f0eb18873ac8fe710f74b91a16dd562de2a5"},
-]
-
-[package.dependencies]
-certifi = "*"
-urllib3 = ">=1.26.2,<3"
-
-[package.extras]
-develop = ["aiohttp", "furo", "httpcore (<1.0.6)", "httpx", "opentelemetry-api", "opentelemetry-sdk", "orjson", "pytest", "pytest-asyncio", "pytest-cov", "pytest-httpserver", "pytest-mock", "requests", "respx", "sphinx (>2)", "sphinx-autodoc-typehints", "trustme"]
-
-[[package]]
-name = "elasticsearch"
-version = "8.17.1"
-description = "Python client for Elasticsearch"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "elasticsearch-8.17.1-py3-none-any.whl", hash = "sha256:f1de0a075f12cc0fa377668eb4fb2ce02185c060ebb50cf2c3889242f9a5130e"},
-    {file = "elasticsearch-8.17.1.tar.gz", hash = "sha256:057ab44cae8b3acffbf826a31678e46eafc38f26fcffa91015352d973299cdf0"},
-]
-
-[package.dependencies]
-elastic-transport = ">=8.15.1,<9"
-
-[package.extras]
-async = ["aiohttp (>=3,<4)"]
-dev = ["aiohttp", "black", "build", "coverage", "isort", "jinja2", "mapbox-vector-tile", "nox", "numpy", "orjson", "pandas", "pyarrow", "pytest", "pytest-asyncio", "pytest-cov", "python-dateutil", "pyyaml (>=5.4)", "requests (>=2,<3)", "simsimd", "twine", "unasync"]
-docs = ["sphinx", "sphinx-autodoc-typehints", "sphinx-rtd-theme (>=2.0)"]
-orjson = ["orjson (>=3)"]
-pyarrow = ["pyarrow (>=1)"]
-requests = ["requests (>=2.4.0,!=2.32.2,<3.0.0)"]
-vectorstore-mmr = ["numpy (>=1)", "simsimd (>=3)"]
-
-[[package]]
 name = "email-validator"
 version = "2.2.0"
 description = "A robust email address syntax and deliverability validation library."
@@ -4821,4 +4778,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "8122395d9c5f0e615c0d3a593056df89392fc76d6ca527417f58b8f2d1fe93bc"
+content-hash = "6da34ae371324a5e01296c7448244d2fab84c1bfac9116fe72698dc7902e6ab5"
