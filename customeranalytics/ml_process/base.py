@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 
 from customeranalytics.data_storage_configurations.connection import Connection
-from customeranalytics.data_storage_configurations.query_es import QueryES
 
 
 class BaseML(Connection):
@@ -12,7 +11,6 @@ class BaseML(Connection):
         self.order_index = order_index
         self.port = self.default_es_port if port is None else port
         self.host = self.default_es_host if host is None else host
-        self.query_es = QueryES(port=port, host=host)
         self.orders = pd.DataFrame()
         self.downloads = pd.DataFrame()
         self.dimension_kpis = pd.DataFrame()
@@ -54,7 +52,10 @@ class BaseML(Connection):
         :return: data-frame individual order transactions.
         """
         start_date = self.default_query_date if start_date is None else start_date
-        if len(self.orders) == 0:
+
+        for data_type in self.configs.get('data_sets'):
+            self.data_sets[data_type] = self.get_data_from_folder(data_type)
+
             self.query_es.query_builder(fields=self.orders_field_data,
                                         date_queries=[{"range": {"session_start_date": {"gte": start_date}}}],
                                         boolean_queries=self.dimensional_query())
@@ -63,7 +64,6 @@ class BaseML(Connection):
 
         if len(self.downloads) == 0:
             if self.has_download:
-                self.query_es = QueryES(port=self.port, host=self.host)
                 self.query_es.query_builder(fields=self.download_field_data)
                 self.downloads = pd.DataFrame(self.query_es.get_data_from_es(index='downloads'))
                 # for the dimensional it is only calculating for dimension of users.
@@ -85,7 +85,7 @@ class BaseML(Connection):
             index='orders'
     ):
         """
-        via query_es.py, each report can be inserted into the reports index with the given format.
+        via query.py, each report can be inserted into the reports index with the given format.
         {"id": unique report id,
          "report_date": start_date or current date,
          "report_name": "churn",

@@ -149,14 +149,14 @@ class Utils:
         return datetime.datetime.strptime(str(date)[0:7], "%Y-%m")
 
     @staticmethod
-    def dimension_decision(order_index):
+    def dimension_decision(order_data_type):
         """
         Decision of dimension.
-        if order_index = 'Orders' it will be whole data, if it is not it will be executed for a dimension
-        :param order_index:
+        if order_data_type = 'Orders' it will be whole data, if it is not it will be executed for a dimension
+        :param order_data_type:
         :return: True/False
         """
-        if order_index != 'orders':
+        if order_data_type != 'orders':
             return True
         else:
             return False

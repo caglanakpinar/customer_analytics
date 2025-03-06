@@ -71,12 +71,31 @@ class Churn(BaseEDA):
             -   Calculate the average hourly difference per user.
         User has only 1 order will not be included in calculations.
         """
-        self.orders['next_order_date'] = self.orders.sort_values(
-            by=['client', 'date'], ascending=True).groupby(['client'])['date'].shift(-1)
-        self.orders['diff_hours'] = self.orders.apply(
-            lambda row: self.calculate_time_diff(row['date'], row['next_order_date'], 'hour'), axis=1)
-        _fequency = self.orders.query("next_order_date == next_order_date").groupby("client").agg(
-            {"diff_hours": "mean"}).reset_index().rename(columns={"diff_hours": "frequency"})
+        self.data_sets['orders']['next_order_date'] = (
+            self.data_sets['orders']
+            .sort_values(['client', 'date'], ascending=True)
+            .groupby('client')
+            ['date']
+            .shift(-1)
+        )
+        self.data_sets['diff_hours'] = self.data_sets['orders'].apply(
+            lambda row:
+            self.calculate_time_diff(
+                row['date'],
+                row['next_order_date'],
+                'hour'
+            ),
+            axis=1
+        )
+        _fequency = (
+            self.data_sets['orders']
+            .query("next_order_date == next_order_date")
+            .groupby("client")
+            .diff_hours
+            .mean()
+            .reset_index()
+            .rename(columns={"diff_hours": "frequency"})
+        )
         self.average_frequency_hr = int(np.mean(_fequency['frequency']))
 
     def churn_rate(self):
@@ -118,12 +137,20 @@ class Churn(BaseEDA):
         4. calculate weekly/monthly churn rate
         """
         self.get_data()
-        self.orders = self.get_time_period(self.orders, 'date')
+        self.data_sets['orders'] = self.get_time_period('orders', 'date')
         self.frequency()
-        self.insert_into_reports_index(
-            report_name="churn", eda=self.churn_rate(), start_date=start_date, eda_type='overall', index='orders')
+        self.create_report_data(
+            report_name="churn",
+            eda=self.churn_rate(),
+            start_date=start_date,
+            eda_type='overall'
+        )
         for tp in self.time_periods:
-            self.insert_into_reports_index("churn",self.churn_rate_per_time_period(tp), start_date, tp, index='orders')
+            self.create_report_data(
+                report_name="churn",
+                eda=self.churn_rate_per_time_period(tp),
+                start_date=start_date, eda_type=tp
+            )
 
     def fetch(self, churn_type, start_date=None):
         """

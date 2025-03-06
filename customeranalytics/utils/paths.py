@@ -14,8 +14,12 @@ class Paths:
     connection_file_name = "connection.yaml"
 
     @staticmethod
-    def exists(folder, file_name):
-        return Path(folder, file_name).exists()
+    def exists(folder: Path, file_name):
+        return (folder / Path(file_name)).exists()
+
+    @staticmethod
+    def folder_file_list(folder: Path):
+        return list(folder.iterdir())
 
     def abspath_for_sample_data(self):
         """

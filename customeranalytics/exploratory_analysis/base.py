@@ -2,24 +2,18 @@ import pandas as pd
 import numpy as np
 
 from customeranalytics.data_storage_configurations.connection import Connection
-from customeranalytics.data_storage_configurations.query_es import QueryES
 
 
 class BaseEDA(Connection):
-    def __init__(self, host=None, port=None, download_index='downloads', order_index='orders'):
+    def __init__(self, **kwargs):
         super().__init__()
-        self.download_index = download_index
-        self.order_index = order_index
-        self.port = self.default_es_port if port is None else port
-        self.host = self.default_es_host if host is None else host
-        self.query_es = QueryES(port=port, host=host)
-        self.orders = pd.DataFrame()
-        self.downloads = pd.DataFrame()
+        self.data_sets: dict[str, pd.DataFrame] = {}
+
         self.dimension_kpis = pd.DataFrame()
         self.daily_dimension_values = pd.DataFrame()
         self.orders_field_data = []
         self.download_field_data = []
-        self.has_download = False
+        self.configs = kwargs
 
     def get_time_period(self, transactions, date_column):
         """
@@ -46,6 +40,14 @@ class BaseEDA(Connection):
                 boolean_query += [{"term": {"dimension": self.order_index}}]
         return boolean_query
 
+    def report_file_name(self, report_name, eda_type, start_date=None):
+        report_date = (
+            str(self.current_date_to_day().isoformat() if start_date is None else start_date)
+            [:10]
+        )
+        file_name = f"{report_name}_{eda_type}_{report_date}"
+        return file_name
+
     def get_data(self, start_date=None):
         """
         query orders index to collect the data with columns that are
@@ -54,65 +56,41 @@ class BaseEDA(Connection):
         :return: data-frame individual order transactions.
         """
         start_date = self.default_query_date if start_date is None else start_date
-        if len(self.orders) == 0:
-            self.query_es.query_builder(fields=self.orders_field_data,
-                                        date_queries=[{"range": {"session_start_date": {"gte": start_date}}}],
-                                        boolean_queries=self.dimensional_query())
-            self.orders = pd.DataFrame(self.query_es.get_data_from_es())
-            self.orders['date'] = self.orders['session_start_date'].apply(self.convert_to_date)
+        for data_type in self.configs.get('data_sets'):
+            data = self.get_data_from_folder(data_type)
 
-        if len(self.downloads) == 0:
-            if self.has_download:
-                self.query_es = QueryES(port=self.port, host=self.host)
-                self.query_es.query_builder(fields=self.download_field_data)
-                self.downloads = pd.DataFrame(self.query_es.get_data_from_es(index='downloads'))
-                # for the dimensional it is only calculating for dimension of users.
-                if self.dimension_decision(self.order_index):
-                    self.downloads = self.downloads[self.downloads['client'].isin(list(self.orders['client'].unique()))]
-                self.downloads = self.get_time_period(self.downloads, 'download_date')
-                self.downloads['download_date'] = self.downloads['download_date'].apply(self.convert_to_date)
+            if data_type == 'orders':
+                data['date'] = data['session_start_date'].apply(self.convert_to_date)
+                data = data.query(f"date >= {start_date}")
+            if data_type == 'downloads':
+                data['download_date'] = data['download_date'].apply(self.convert_to_date)
+            self.data_sets[data_type] = data
 
-    def insert_into_reports_index(
+    def create_report_data(
             self,
             report_name,
             eda,
             start_date,
             eda_type,
-            end_data=None,
-            _from=None,
-            _to=None,
-            time_period=None,
-            index='orders'
     ):
         """
-        via query_es.py, each report can be inserted into the reports index with the given format.
-        {"id": unique report id,
-         "report_date": start_date or current date,
-         "report_name": "churn",
-         "index": "main",
-         "report_types": {
-                          "type": "overall", "weekly", "monthly"
-                          },
-         "data": churn (list of dictionaries)
-         }
-        :param eda: overall, weekly, monthly eda e.g. churn funnel, stats
+        each report can be inserted into the folder which is assigned from Data Storage Configuration <data-conf.htm>
+        :param report_name: churn funnel, stats
+        :param eda: pandas data frame
         :param start_date: datetime
         :param eda_type: {"type": "overall" or "weekly_orders" or "daily_orders" or "monthly_orders"}
-        :param index: dimensionality of data index orders_location1 ;  dimension = location1
         """
-        list_of_obj = [
-            {"id": np.random.randint(200000000),
-            "report_date": self.current_date_to_day().isoformat() if start_date is None else start_date,
-            "report_name": report_name,
-            "index": self.get_index_group(index),
-            "report_types": {"type": eda_type},
-            "data": eda.to_dict('records')
-             }
-        ]
-        self.query_es.insert_data_to_index(list_of_obj, index='reports')
+        self.insert_data(
+            eda,
+            self.report_file_name(report_name, eda_type, start_date)
+        )
 
     def fetch(
-            self, report_name, eda_type, start_date=None,  end_date=None,
+            self,
+            report_name,
+            eda_type,
+            start_date=None,
+            end_date=None,
             time_period=None,
             _from=None,
             _to=None,
@@ -131,6 +109,9 @@ class BaseEDA(Connection):
         :param start_date:
         :return: data-frame
         """
+        file_name = self.report_file_name(report_name, eda_type, start_date)
+        return self.get_data_from_folder(file_name)
+
         eda_type = {"report_types": {"type": eda_type}}
         if time_period is not None:
             eda_type['report_types']['time_period'] = time_period
@@ -141,7 +122,12 @@ class BaseEDA(Connection):
         boolean_queries = [{"term": {"report_name": report_name}},
                            {"term": eda_type},
                            {"term": {"index": self.get_index_group(self.order_index)}}]
+
         date_queries = []
+
+        self.folder_file_list
+
+
         if start_date is not None:
             date_queries = [{"range": {"report_date": {"gte": self.convert_to_iso_format(start_date)}}}]
         self.query_es.query_builder(fields=None, _source=True,

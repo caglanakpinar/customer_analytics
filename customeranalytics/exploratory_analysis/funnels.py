@@ -82,7 +82,7 @@ class Funnels(BaseEDA):
             - hourly
         Aggregated value is assigned as a column related to the 'action' argument.
         date_column shows which date column must be used.
-        There are 2 options for query the data by using query_es.py.
+        There are 2 options for query the data by using query.py.
         Orders or Downloads indexes can be queried related to action.
 
         if it is calculating for dimensional data. ElasticSearch query must have additional filter as below;
@@ -156,7 +156,7 @@ class Funnels(BaseEDA):
 
             - purchase funnel process:
                 1. check if there are additional actions
-                2. order session and other actions of count per week, day, hour (query_es.py - QueryBuilder)
+                2. order session and other actions of count per week, day, hour (query.py - QueryBuilder)
                 3. merge actions related to time periods
                 4. insert into the reports index.
 
@@ -218,7 +218,7 @@ class Funnels(BaseEDA):
 
             - download funnel process:
                 1. check if there are additional actions
-                2. download and other actions of count per week, day, hour (query_es.py - QueryBuilder)
+                2. download and other actions of count per week, day, hour (query.py - QueryBuilder)
                 3. merge actions related to time periods
                 4. insert into the reports index.
 

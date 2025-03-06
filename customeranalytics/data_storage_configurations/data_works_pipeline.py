@@ -1,16 +1,13 @@
 import threading
 from flask_login import current_user
 
-from customeranalytics.data_storage_configurations.base import BaseDataStorageConfiguration
+from customeranalytics.data_storage_configurations.reports import Reports
 from customeranalytics.exploratory_analysis import create_exploratory_analyse
 from customeranalytics.ml_process import create_ml
-from customeranalytics.data_storage_configurations.es_create_index import CreateIndex
-from customeranalytics.data_storage_configurations.query_es import QueryES
 
 
-class DataPipelines(BaseDataStorageConfiguration):
-    def __init__(self, es_tag, data_connection_structure, ea_connection_structure, ml_connection_structure,
-                 data_columns, actions):
+class DataPipelines(Reports):
+    def __init__(self):
         """
         :param es_tag: elasticsearch tag name that is created on web interface 'ElasticSearch Configuration' page
         :param data_connection_structure: check :data_configs above
@@ -20,16 +17,6 @@ class DataPipelines(BaseDataStorageConfiguration):
         :param actions: whole actions which are stored into the actions table in sqlite
         """
         super().__init__()
-        self.es_tag = es_tag
-        self.data_connection_structure = data_connection_structure
-        self.ea_connection_structure = ea_connection_structure
-        self.ml_connection_structure = ml_connection_structure
-        self.actions = actions
-        self.data_columns = data_columns
-        self.es_con = self.collect_data_from_table(table="es_connection", return_list=True)[-1]
-        self.create_index = CreateIndex(data_connection_structure=data_connection_structure,
-                                        data_columns=data_columns, actions=actions)
-        self.query_es = QueryES(host=self.es_con['host'], port=self.es_con['port'])
         self.unique_dimensions = []
         self.schedule = True
         self.separator = lambda dim: [print("*" * 20) for i in range(3)] + [
@@ -49,7 +36,13 @@ class DataPipelines(BaseDataStorageConfiguration):
             _info += " || dimension : " + dim
         print("-- Process Info --")
         print(_info)
-        self.logs_update(logs={"page": "data-execute", "info": _info, "color": "green"})
+        self.logs_update(
+            logs={
+                "page": "data-execute",
+                "info": _info,
+                "color": "green"
+            }
+        )
 
     def fail_log_create(self, e, type, dim=None):
         """
@@ -66,9 +59,13 @@ class DataPipelines(BaseDataStorageConfiguration):
         print(" FAIL ---- !!!!!!!!")
         print("-- message :", fail_message)
         print(" ----- description ::::::", e_str)
-        self.logs_update(logs={"page": "data-execute",
-                               "info": fail_message.replace("'", " "),
-                               "color": "red"})
+        self.logs_update(
+            logs={
+                "page": "data-execute",
+                "info": fail_message.replace("'", " "),
+                "color": "red"
+            }
+        )
 
     def execute_pipe(self, _conf, execution, type, dim=None):
         try:
@@ -102,17 +99,15 @@ class DataPipelines(BaseDataStorageConfiguration):
         self.execute_pipe(ml_connection_structure, create_ml, 'anomaly', dim=dim)
         self.execute_pipe(ml_connection_structure, create_ml, 'delivery_anomaly', dim=dim)
 
-    def data_work_pipelines_execution(self, ml_connection_structure, ea_connection_structure, dim=None):
-        _kwargs = {"ml_connection_structure": ml_connection_structure,
-                   'ea_connection_structure': ea_connection_structure, 'dim': dim}
-        if dim is None:
-            self.pipe_1(**_kwargs)
-        self.pipe_2(**_kwargs)
+    def data_work_pipelines_execution(self, **kwargs):
+        if kwargs.get('dim') is None:
+            self.pipe_1(**kwargs)
+        self.pipe_2(**kwargs)
         pipes = [self.pipe_3, self.pipe_4]
         for pipe in pipes:
-            process = threading.Thread(target=pipe, kwargs=_kwargs)
+            process = threading.Thread(target=pipe, kwargs=kwargs)
             process.daemon = True
             process.start()
         process.join()
-        self.pipe_5(**_kwargs)
-        self.pipe_6(**_kwargs)
+        self.pipe_5(**kwargs)
+        self.pipe_6(**kwargs)

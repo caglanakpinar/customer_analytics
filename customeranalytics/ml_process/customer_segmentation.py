@@ -5,7 +5,7 @@ from h2o.estimators.kmeans import H2OKMeansEstimator
 from h2o.grid.grid_search import H2OGridSearch
 
 from customeranalytics.ml_process.base import BaseML
-from customeranalytics.exploratory_analysis import ea_configs, query_exploratory_analysis
+from customeranalytics.exploratory_analysis import query_exploratory_analysis
 
 
 class CustomerSegmentation(BaseML):
@@ -98,7 +98,9 @@ class CustomerSegmentation(BaseML):
         """
         RFM values for segmentation can be fetched from the reports index with related dimensions.
         """
-        ea_configs['rfm']['order_index'] = self.order_index
+        # TODO: update here
+        # ea_configs['rfm']['order_index'] = self.order_index
+        ea_configs = {}
         _total_cols, _counter = 0, 0
         while len(set(self.rfm.columns) & set(self.METRICS)) != 3:
             self.rfm = query_exploratory_analysis(ea_configs, {"start_date": date}, "rfm")
