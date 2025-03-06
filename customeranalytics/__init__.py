@@ -9,9 +9,6 @@ from customeranalytics.app.home.models import RouterRequest
 
 
 from customeranalytics.data_storage_configurations.storage import DataStorageConfigurations as DSC
-from exploratory_analysis import ea_configs
-from ml_process import ml_configs
-
 
 
 
@@ -22,7 +19,7 @@ r = RouterRequest()
 
 def collect_data_source():
     """
-            _ds = {'data_source': connection[index + '_data_source_type'],
+            _ds = {'data_source': connection[data_type + '_data_source_type'],
             'date': date,
             'data_query_path': sqlite_string_converter(connection[index + '_data_query_path'], back_to_normal=True),
             'test': test,
@@ -32,10 +29,6 @@ def collect_data_source():
                        'user': connection[index + '_user'], 'db': connection[index + '_db']}}
     """
     columns, data_configs = DSC.get_data_connection_arguments()[1:]
-    has_product_connection = DSC.decision_for_product_conn(data_configs)
-    has_promotion_connection = DSC.decision_for_promotion_conn(columns)
-    _ea_configs, _ml_configs, _actions = DSC.get_ea_and_ml_config(ea_configs, ml_configs,
-                                                              has_product_connection, has_promotion_connection)
 
     for ds in data_configs:
         for c in data_configs[ds]['config']:
@@ -43,23 +36,6 @@ def collect_data_source():
                 data_configs[ds]['config']['password'] = "*****"
 
     return data_configs
-
-
-def create_ElasticSearch_connection(port, host, temporary_path):
-    """
-    ElasticSearch configurations with host and port.
-    Another requirement which is temporary path is for importing files such as CLV Prediction model files and
-    .csv format files with build_in_reports folder.
-
-    :param port: elasticsearch port
-    :param host: elasticsearch host
-    :param temporary_path: folder path for importing data into the given directory in .csv format.
-    """
-    request = {'tag': 'es_con',
-               'url': "http://{host}:{port}/".format(**{'host': str(host), 'port': str(port)}),
-               "port": str(port), 'host': str(host), 'directory': temporary_path, "connect": 'True'}
-    r.manage_data_integration(r.check_for_request(request))
-
 
 def create_connections(customers_connection,
                        sessions_connection,
@@ -136,10 +112,12 @@ def create_connections(customers_connection,
     :param dimension_sessions: string column name for dimensions
     """
 
-    args = {"sessions": [sessions_fields, "orders", sessions_connection, dimension_sessions, actions_sessions],
-            "products": [product_fields, "products", products_connection],
-            "customers": [customer_fields, "downloads", customers_connection, "", actions_customers],
-            "deliveries": [delivery_fields, "deliveries", deliveries_connection]}
+    args = {
+        "sessions": [sessions_fields,
+        "orders", sessions_connection, dimension_sessions, actions_sessions],
+        "products": [product_fields, "products", products_connection],
+        "customers": [customer_fields, "downloads", customers_connection, "", actions_customers],
+        "deliveries": [delivery_fields, "deliveries", deliveries_connection]}
 
     # check it is eligible to insert data source
     ready_for_insert = True

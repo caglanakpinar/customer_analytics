@@ -194,7 +194,7 @@ class PromotionAnalytics(BaseEDA):
 
     def insert_into_reports_index(self, promotion_analytics, pa_type, start_date=None, index='orders'):
         """
-        via query_es.py, each report can be inserted into the reports index with the given format.
+        via query.py, each report can be inserted into the reports index with the given format.
         {"id": unique report id,
          "report_date": start_date or current date,
          "report_name": "promotion_analytic",

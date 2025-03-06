@@ -1,12 +1,9 @@
-import pandas as pd
-from flask_login import current_user
 import logging
 
 from customeranalytics import Config
 from customeranalytics.app.home.profiles import Profiles
 from customeranalytics.app.home.search import Search
-from customeranalytics.exploratory_analysis import ea_configs
-from customeranalytics.ml_process import ml_configs
+
 
 class DefaultMessage:
     connection = Config.default_message_value
@@ -44,7 +41,7 @@ class RouterRequest(Profiles, Search):
         self.success_data_execute = """ 
             Data Storage Process is initialized!
             This process mainly involves fetching data
-            from the data sources and storing them into the ElasticSearch indexes.
+            from the data sources and storing them into the Data Storage Folder.
             This will take a while. Data Storage Process is triggered for
         """
 
@@ -65,7 +62,7 @@ class RouterRequest(Profiles, Search):
         try:
             return self.connection_check(
                 request=requests,
-                index=requests['data_type'],
+                data_type=requests['data_type'],
                 type=requests['data_type']
             )
         except Exception as e: logging.error(e)
@@ -122,15 +119,15 @@ class RouterRequest(Profiles, Search):
             self.message.logs = []
             for l in logs:
                 l['color'] = f"color:{l['color']};"
-                self.message['logs'].append(l)
+                self.message.logs.append(l)
 
         self.message.connect_accept = False
         self.message.has_product_data_source = False
         if (
             data_connection.get('orders_data_source_tag') is not None
-            and data_connection.get('downloads_data_source_tag') not in None
+            and data_connection.get('downloads_data_source_tag') is not None
         ):
-            self.message['connect_accept'] = True
+            self.message.connect_accept = True
             for dt in ['orders', 'downloads', 'products', 'deliveries']:
                 data_connection[dt + '_data_query_path'] = list(data_connection[dt + '_data_query_path'])[0]
 
@@ -158,86 +155,22 @@ class RouterRequest(Profiles, Search):
                     }
                 )
 
-    def update_schedule_table(self, requests):
-        try:
-            self.check_for_table_exits(table='schedule_data')
-            prev_schedule = self.collect_data_from_table(
-                table='schedule_data',
-                return_list=True
-            )
-            if len(prev_schedule) != 0:
-                self.logs_update(
-                    logs={
-                        "page": "data-execute",
-                        "info": "Previous job " + " is removed.",
-                        "color": "red"
-                    }
-                )
-                self.execute_query(
-                    self.delete_query(
-                        table='schedule_data',
-                        condition=" id = 1"
-                    )
-                )
-            columns = self.get_intersect_columns_with_request(
-                requests,
-                'schedule_data'
-            )
-            requests = self.check_for_insert_columns(
-                columns,
-                requests,
-                'schedule_data'
-            )
-            requests['max_date_of_order_data'] = str(self.current_date_to_day())[0:19]
-            self.execute_query(
-                self.insert_query(
-                    table='schedule_data',
-                    columns=self.sqlite_queries['columns']['schedule_data'][1:],
-                    values=requests
-                )
-            )
-            self.logs_update(logs={"page": "data-execute",
-                                   "info": self.success_data_execute + " ".join(requests['time_period'].split("_")),
-                                   "color": "green"})
-        except Exception as e:
-            logging.error(e)
-        return requests['tag']
-
-    def update_data_query_path_on_schedule(self, request):
-        keys = list(request.keys())
-        data_source_query_path = [
-            i
-            for i in ['orders', 'downloads', 'products', 'deliveries']
-            if i + '_data_query_path' in keys
-        ]
-        self.execute_query(
-            self.update_query(
-                table='data_columns_integration',
-                condition=" id = 1 ",
-                columns=data_source_query_path,
-                values={
-                    data_source_query_path: request[data_source_query_path[0]]
-                }
-            )
-        )
-
-
     def manage_data_integration(self, requests):
         if requests.get('connect', None) is not None:
             self.create_configuration(requests['directory'])
 
     def data_connections(self, requests):
         if requests.get('connect', None) is not None:
-            self.check_for_table_exits(table='data_connection')
-            self.check_for_table_exits(table='data_columns_integration')
             (
                 conn_status,
                 self.message.data_source_con_check,
                 data, data_columns
-            ) = self.check_for_data_source_connection(
+            ) = self.connection_check(
+                request=requests,
+                data_type=requests['data_type']
+            )(
                 requests
             )
-
             # connection update
             if conn_status:
                 request = self.update_data_query_path_for_insert(requests)
@@ -248,15 +181,25 @@ class RouterRequest(Profiles, Search):
 
     def data_execute(self, requests):
         if requests.get('schedule', None) is not None:
-            es_tag = self.update_schedule_table(requests)
-            self.create_index(tag=es_tag, ea_configs=ea_configs, ml_configs=ml_configs)
+            requests['max_date_of_order_data'] = str(self.current_date_to_day())[0:19]
+            self.update_table('schedule_data', requests)
+            self.run_schedule_on_thread(
+                function=self.execute_schedule,
+                args={
+                    "jobs": self.data_works
+                }
+            )
+            self.logs_update(
+                logs={
+                    "page": "data-execute",
+                    "info": self.success_data_execute + " ".join(requests['time_period'].split("_")),
+                    "color": "green"
+                }
+            )
         if requests.get('edit', None) is not None:
-            self.update_data_query_path_on_schedule(requests)
+            self.update_table('data_columns_integration', requests)
         if requests.get('delete', None) is not None:
-            try:
-                self.execute_query("DELETE FROM schedule_data")
-            except Exception as e:
-                logging.error(e)
+            self.remove_table('schedule_data')
 
     def check_for_request(self, _r):
         _r_updated = {}
@@ -295,6 +238,8 @@ class RouterRequest(Profiles, Search):
 
         if template == 'data-execute':
             self.values_for_schedule_data()
+            print()
+        print()
 
 
 

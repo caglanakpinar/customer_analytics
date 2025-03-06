@@ -1,21 +1,18 @@
 import numpy as np
 import pandas as pd
-from numpy import unique
 from os.path import dirname, join
 from os import listdir, mkdir
 from math import sqrt
 import datetime
 
 from customeranalytics.data_storage_configurations.connection import Connection
-from customeranalytics.data_storage_configurations.query_es import QueryES
 
 
 class Reports(Connection):
     """
     There are some overall values that need to check each day for businesses.
     These values are also crucial metrics for the dashboards.
-    These reports are collecting from 'reports' index and storing in a temporary folder.
-    This folder path is a required field when ElasticSearch connection is created from the user.
+    These reports are collecting from Data Source Folder
     This process will be triggered when data storage process will be scheduled.
     Daily scheduling will be generated latest reports of the data
     Structure of the folder;
@@ -35,7 +32,7 @@ class Reports(Connection):
                     ....
 
 
-    Here are the reports;
+    Here are the reports in the folder that;
         index : main || report :  weekly_funnel
         index : main || report :  daily_clv
         index : main || report :  daily_funnel
@@ -124,8 +121,6 @@ class Reports(Connection):
 
     def __init__(self):
         super().__init__()
-        self.es_tag = {}
-        self.folder = join(self.abspath_for_sample_data(), "exploratory_analysis", 'sample_data', '')
         self.sample_report_names = []
         self.get_main_query = lambda x: " time_period == '{0}' and report_name == '{1}' and type == '{2}' ".format(x[0],
                                                                                                                    x[1],
@@ -177,25 +172,7 @@ class Reports(Connection):
         If there is dimension in the orders Index all reports will be created individually per indexes
         with 'main' which indicates whole data in orders index
         """
-        dimensions = []
-        if has_dimensions:
-            try:
-                qs = QueryES(host=self.es_tag['host'], port=self.es_tag['port'])
-                _res = qs.es.search(index='orders', body={"size": 0,
-                                                                "aggs": {"langs": {
-                                                                         "terms": {"field": "dimension.keyword",
-                                                                                   "size": 500}
-                                                                         }}})
-                _res = [r['key'] for r in _res['aggregations']['langs']['buckets']]
-                dimensions = unique(_res).tolist()
-            except Exception as e:
-               print(e)
-            if dimensions not in ['None', None] and len(dimensions) != 1:
-                return ['main'] + dimensions
-            else:
-                return ['main']
-        else:
-            return ['main']
+
 
     def collect_reports(self, port, host, index, query=None):
         """

@@ -60,13 +60,21 @@ data_columns_integration:
   longitude: None
 
 schedule_data:
-  tag: None
-  schedule_tag: None
-  time_period: None
-  status: None
-  is_mlworks: None
-  is_exploratory: None
-  max_date_of_order_data: None
+  downloads:
+
+  ml:
+    schedule_tag: None
+    time_period: None
+    max_date_of_order_data: None
+  ea:
+    schedule_tag: None
+    time_period: None
+    max_date_of_order_data: None
+
+reports:
+  -
+    type:
+    dimension:
 
 actions:
   sessions:
@@ -88,3 +96,138 @@ logs:
     page: None
     color: None
     info: None
+
+
+ea_configs:
+  date: None
+  has_product_connection: True
+  has_promotion_connection: True
+
+  funnel:
+    actions:
+      sessions:
+        - download
+        - signup
+      orders:
+        - has_basket
+        - order_screen
+
+    data_source_tag: None
+    data_source_type: None
+    data_query_path: None
+    password: None
+    user: None
+    port: None
+    host: None
+    db: None
+
+
+    data_sets:
+      - orders
+  cohort:
+    actions:
+      orders:
+        - has_basket
+        - order_screen
+
+    data_source_tag: None
+    data_source_type: None
+    data_query_path: None
+    password: None
+    user: None
+    port: None
+    host: None
+    db: None
+
+
+    data_sets:
+      - orders
+      - downloads
+  products:
+    actions:
+      orders:
+        - has_basket
+        - order_screen
+
+    data_source_tag: None
+    data_source_type: None
+    data_query_path: None
+    password: None
+    user: None
+    port: None
+    host: None
+    db: None
+
+
+
+    data_sets:
+      - orders
+      - products
+  promotions:
+    actions:
+      orders:
+        - has_basket
+        - order_screen
+
+    data_source_tag: None
+    data_source_type: None
+    data_query_path: None
+    password: None
+    user: None
+    port: None
+    host: None
+    db: None
+
+
+
+    data_sets:
+      - orders
+  rfm:
+    actions:
+
+
+    data_source_tag: None
+    data_source_type: None
+    data_query_path: None
+    password: None
+    user: None
+    port: None
+    host: None
+    db: None
+
+
+    data_sets:
+      - orders
+  stats:
+    actions:
+
+
+    data_source_tag: None
+    data_source_type: None
+    data_query_path: None
+    password: None
+    user: None
+    port: None
+    host: None
+    db: None
+
+    data_sets:
+      - orders
+      - downloads
+  churn:
+    actions:
+
+    data_source_tag: None
+    data_source_type: None
+    data_query_path: None
+    password: None
+    user: None
+    port: None
+    host: None
+    db: None
+
+
+    data_sets:
+      - orders
+
+
