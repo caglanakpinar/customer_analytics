@@ -34,6 +34,7 @@ pytest-shutil = "^1.8.1"
 python-math = "^0.0.1"
 dask = "^2025.2.0"
 scikit-learn = "^1.6.1"
+pyarrow = "^19.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
