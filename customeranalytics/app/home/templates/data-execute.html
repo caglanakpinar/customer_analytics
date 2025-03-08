@@ -16,7 +16,7 @@
 						<h6 class="card-subtitle text-muted">Schedule active connections</h6>
 					</div>
 					<div class="card-body">
-						{% if values['connect_accept'] == True %}
+						{% if values.connect_accept == True %}
 							<form method="POST">
 								<div class="row">
 									<div class="mb-3 col-md-3">
@@ -31,13 +31,6 @@
 											<option value="weekly">weekly</option>
 										</select>
 									</div>
-									<div class="mb-3 col-md-3">
-										<label class="form-label" for="inputState">Active Data Storage Folder</label>
-										<select name="tag" id="es_edit" class="form-control" required>
-											<option value= "{{ values['connection']['directory'] }}" selected>{{ values['connection']['directory'] }}</option>
-										</select>
-									</div>
-
 								</div>
 
 								<button name="schedule" type="submit" value="True" class="btn btn-primary mb-1">Create Schedule Job</button>
@@ -46,7 +39,7 @@
 								<button style="background-color: #92a8d1;" name="delete" type="submit" value="True" class="btn btn-primary">Delete Schedule Job</button>
 							</form>
 						{% endif %}
-						{% if values['connect_accept'] != True %}
+						{% if values.connect_accept != True %}
 							<div class="mb-2">
 								<strong style="color:red;">Please create Both Session & Customer Data Source</strong>
 							</div>
@@ -69,15 +62,15 @@
 								</h6>
 							</div>
 						</div>
-						{% if values['connect_accept'] != True %}
+						{% if values.connect_accept != True %}
 							<div class="card-header">
 								<div class="mb-2">
 									<strong style="color:red;">Please create Both Session & Customer Data Source</strong>
 								</div>
 							</div>
 						{% endif %}
-						{% if values['connect_accept'] == True %}
-							{% if values['has_product_data_source'] != True %}
+						{% if values.connect_accept == True %}
+							{% if values.has_product_data_source != True %}
 								<div class="card-header">
 									<div class="mb-1">
 										<h6 class="card-subtitle text-muted">
@@ -95,7 +88,7 @@
 							<table class="table scroll">
 								<thead>
 									<tr>
-										{% for i in values['schedule_columns'] %}
+										{% for i in values.schedule_columns %}
 											{% if i in ['Sessions Connection Tag Name', 'Sessions Connection Data Source', 'Sessions Connection Data Query/Path'] %}
 												<th style="font-size:50%;color:#F1B600;">{{ i }}</th>
 											{% endif %}
@@ -113,7 +106,7 @@
 									</tr>
 								</thead>
 								<tbody>
-									{% for i in values['schedule'] %}
+									{% for i in values.schedule %}
 										<tr>
 											<td style="font-size:60%;">
 												{% if i['dimension'] != '....' %}
@@ -232,7 +225,7 @@
 							<table class="table scroll">
 								<thead>
 									<tr>
-										{% for i in values['schedule_columns_optional'] %}
+										{% for i in values.schedule_columns_optional %}
 											{% if i in ['Baskets Connection Tag Name', 'Baskets Connection Data Source', 'Baskets Connection Data Query/Path'] %}
 												<th style="font-size:50%;color:#9797C3;">{{ i }}</th>
 											{% endif %}
@@ -248,7 +241,7 @@
 									</tr>
 								</thead>
 								<tbody>
-									{% for i in values['schedule'] %}
+									{% for i in values.schedule %}
 										<tr>
 											<td style="font-size:60%;">{{ i['products_data_source_tag'] }}</td>
 											<td style="font-size:60%;">{{ i['products_data_source_type'] }}</td>
@@ -332,7 +325,7 @@
 						{% endif %}
 
 					</div>
-					{% if values['tag'] != '....' %}
+					{% if values.tag != '....' %}
 						<div class="card">
 							<div class="row">
 								<div class="col-md-12 mb-3">
@@ -342,8 +335,8 @@
 											<h6 class="card-subtitle text-muted">Last 20 events of logs.</h6>
 										</div>
 										<div class="card-body scroll">
-											{% if values['logs'] != '....' %}
-												{% for i in values['logs'] %}
+											{% if values.logs != '....' %}
+												{% for i in values.logs %}
 													<div class="mb-2">
 														<h6 class="card-subtitle" style="{{ i['color'] }}">{{ i['info'] }}</h6>
 													</div>
