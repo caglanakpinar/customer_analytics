@@ -224,7 +224,7 @@ class DataStorageConfigurations(BaseDataStorageConfiguration):
                             data_type
                     ):
                         accept, message, data, raw_columns = True, 'Connected', _df.to_dict(
-                            'results'), gd.data.columns.values
+                            'records'), gd.data.columns.values
         except Exception as e:
             print(e)
         return accept, message, data, raw_columns
