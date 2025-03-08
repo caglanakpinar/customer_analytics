@@ -1,8 +1,6 @@
 import pandas as pd
 from pathlib import Path
 
-from clv.utils import read_yaml
-
 from customeranalytics import Utils, Config
 from customeranalytics.utils.paths import Paths
 
@@ -27,15 +25,18 @@ class BaseConnection:
 class Connection(Paths, Utils, Config):
     def __init__(self):
         self.default_conf = BaseConnection.connection_config(
-            self.read_yaml(self.query_path, self.connection_file_name)
+            self.read_connection()
         )
-        self.connection_conf = BaseConnection.connection_config(
-            self.read_yaml(self.query_path, self.connection_file_name)
+        self.connection_conf: BaseConnection = BaseConnection.connection_config(
+            self.read_connection()
         )
+
+    def read_connection(self):
+        return self.read_yaml(self.query_path, self.connection_file_name)
 
     def update_connection(self):
         self.write_yaml(
-            self.connection_conf,
+            self.read_connection(),
             self.connection_folder,
             self.connection_file_name,
         )
@@ -44,8 +45,8 @@ class Connection(Paths, Utils, Config):
         self.connection_folder = Path(folder)
         if not self.exists(self.connection_folder, self.connection_file_name):
             self.update_connection()
-        self.connection_conf = BaseConnection.connection_config(
-            self.read_yaml(self.connection_folder, self.connection_file_name)
+        self.connection_conf: BaseConnection = BaseConnection.connection_config(
+            self.read_connection()
         )
 
     def check_for_table_exits(self, table: str):
