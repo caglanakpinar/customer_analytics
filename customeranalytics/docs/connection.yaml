@@ -60,12 +60,14 @@ data_columns_integration:
   longitude: None
 
 schedule_data:
-  downloads:
-
+  schedule: None
+  schedule_tag: None
+  time_period: None
+  max_date_of_order_data: None
   ml:
     schedule_tag: None
     time_period: None
-    max_date_of_order_data: None
+
   ea:
     schedule_tag: None
     time_period: None
