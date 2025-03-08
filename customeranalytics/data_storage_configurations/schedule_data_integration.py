@@ -125,7 +125,7 @@ class Scheduler(DataPipelines):
 
     def create_schedule(self):
         tag = self.query_schedule_status()
-        time_period = list(tag['time_period'])[0]
+        time_period = tag['time_period']
         if time_period == 'daily':
             return schedule.every().day.at("00:00")
         if time_period == 'weekly':
@@ -134,7 +134,7 @@ class Scheduler(DataPipelines):
             return 'once'
 
 
-    def execute_schedule(self, job: callable):
+    def execute_schedule(self, jobs: callable):
         """
         ElasticSearch Service of Data Scheduling;
             1. This process works on the thread, sequentially.
@@ -148,10 +148,10 @@ class Scheduler(DataPipelines):
         """
         s = self.create_schedule()
         if s == 'once':  # no need to schedule for once triggering process
-            print(self.es_tag, " - triggered for once !!!")
-            job()
+            print(" - triggered for once !!!")
+            jobs()
         else:
-            s.do(job)
+            s.do(jobs)
             while self.schedule:
                 schedule.run_pending()
                 try:
