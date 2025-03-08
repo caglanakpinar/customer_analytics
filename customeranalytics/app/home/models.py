@@ -238,8 +238,7 @@ class RouterRequest(Profiles, Search):
 
         if template == 'data-execute':
             self.values_for_schedule_data()
-            print()
-        print()
+
 
 
 
