@@ -164,12 +164,11 @@ class RouterRequest(Profiles, Search):
             (
                 conn_status,
                 self.message.data_source_con_check,
-                data, data_columns
+                data,
+                data_columns
             ) = self.connection_check(
                 request=requests,
                 data_type=requests['data_type']
-            )(
-                requests
             )
             # connection update
             if conn_status:

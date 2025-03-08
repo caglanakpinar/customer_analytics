@@ -125,7 +125,7 @@ class DataStorageConfigurations(BaseDataStorageConfiguration):
             gd = GetData(**args)
             gd.query_data_source()
             _df = gd.data
-            if self.check_data_exists(data_type):
+            if not self.check_data_exists(data_type):
                 self.insert_data(_df, data_type)
             else:
                 self.update_data(_df, data_type)

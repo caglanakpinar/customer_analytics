@@ -1,6 +1,8 @@
 import pandas as pd
 from pathlib import Path
 
+from clv.utils import read_yaml
+
 from customeranalytics import Utils, Config
 from customeranalytics.utils.paths import Paths
 
@@ -42,10 +44,13 @@ class Connection(Paths, Utils, Config):
         self.connection_folder = Path(folder)
         if not self.exists(self.connection_folder, self.connection_file_name):
             self.update_connection()
+        self.connection_conf = BaseConnection.connection_config(
+            self.read_yaml(self.connection_folder, self.connection_file_name)
+        )
 
     def check_for_table_exits(self, table: str):
         """
-        checking if connection is created at connection.yanl in given folder
+        checking if connection is created at connection.yaml in given folder
         :params table: checking table name in sqlite
         """
         conn = getattr(self.connection_conf, table)
@@ -63,7 +68,7 @@ class Connection(Paths, Utils, Config):
         self.update_connection()
 
     def get_action(self, data_type):
-        return self.default_conf.actions[data_type]
+        return self.connection_conf.actions[data_type]
 
     def get_action_name(self, data_type):
         return self.get_action(data_type)['action_name']
@@ -104,7 +109,7 @@ class Connection(Paths, Utils, Config):
         return f"{data_type}.parquet"
 
     @staticmethod
-    def insert_update_data_type(self, list_of_obj):
+    def insert_update_data_type(list_of_obj):
         """
         if data set in list convert to pandas dataframe
         """
@@ -139,7 +144,7 @@ class Connection(Paths, Utils, Config):
         """
         data = pd.concat([
             self.get_data_from_folder(data_type),
-            self.insert_update_data_type(list_of_obj, data_type)
+            self.insert_update_data_type(list_of_obj)
         ])
         self.insert_data(data, data_type)
 
