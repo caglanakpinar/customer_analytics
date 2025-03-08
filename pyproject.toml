@@ -33,10 +33,12 @@ random2 = "^1.0.2"
 pytest-shutil = "^1.8.1"
 python-math = "^0.0.1"
 dask = "^2025.2.0"
+scikit-learn = "^1.6.1"
 
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^4.3.5"
+pytest = "^8.3.5"
 
 [build-system]
 requires = ["poetry-core"]
