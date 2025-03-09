@@ -40,11 +40,10 @@ class BaseConnection:
 
 class Connection(Paths, Utils, Config):
     def __init__(self):
-        self.default_conf: BaseConnection = self.read_configuration()
-        self.connection_conf: BaseConnection = self.read_configuration()
-
-    def read_configuration(self) -> BaseConnection:
-        return BaseConnection.connection_config(
+        self.default_conf: BaseConnection = BaseConnection.connection_config(
+            self.read_yaml(self.query_path, self.connection_file_name)
+        )
+        self.connection_conf: BaseConnection = BaseConnection.connection_config(
             self.read_yaml(self.query_path, self.connection_file_name)
         )
 
@@ -58,7 +57,10 @@ class Connection(Paths, Utils, Config):
         self.connection_folder = Path(folder)
         if not self.exists(self.connection_folder, self.connection_file_name):
             self.update_connection()
-        self.connection_conf: BaseConnection = self.read_configuration()
+        else:
+            self.connection_conf: BaseConnection = BaseConnection.connection_config(
+                self.read_yaml(self.connection_folder, self.connection_file_name)
+            )
 
     def check_for_table_exits(self, table: str):
         """
