@@ -8,7 +8,6 @@ class BaseEDA(Connection):
     def __init__(self, **kwargs):
         super().__init__()
         self.data_sets: dict[str, pd.DataFrame] = {}
-
         self.dimension_kpis = pd.DataFrame()
         self.daily_dimension_values = pd.DataFrame()
         self.orders_field_data = []
