@@ -82,7 +82,6 @@ class DataStorageConfigurations(BaseDataStorageConfiguration):
                          }
 
         """
-        conn = self.collect_data_from_table('data_connection')
         actions = {
             'orders': self.get_action_name('orders'),
             'downloads': self.get_action_name('downloads')
