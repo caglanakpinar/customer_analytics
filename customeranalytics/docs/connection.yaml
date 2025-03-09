@@ -113,17 +113,6 @@ ea_configs:
       orders:
         - has_basket
         - order_screen
-
-    data_source_tag:
-    data_source_type:
-    data_query_path:
-    password:
-    user:
-    port:
-    host:
-    db:
-
-
     data_sets:
       - orders
   cohort:
@@ -131,17 +120,6 @@ ea_configs:
       orders:
         - has_basket
         - order_screen
-
-    data_source_tag:
-    data_source_type:
-    data_query_path:
-    password:
-    user:
-    port:
-    host:
-    db:
-
-
     data_sets:
       - orders
       - downloads
@@ -150,18 +128,6 @@ ea_configs:
       orders:
         - has_basket
         - order_screen
-
-    data_source_tag:
-    data_source_type:
-    data_query_path:
-    password:
-    user:
-    port:
-    host:
-    db:
-
-
-
     data_sets:
       - orders
       - products
@@ -170,65 +136,19 @@ ea_configs:
       orders:
         - has_basket
         - order_screen
-
-    data_source_tag:
-    data_source_type:
-    data_query_path:
-    password:
-    user:
-    port:
-    host:
-    db:
-
-
-
     data_sets:
       - orders
   rfm:
     actions:
-
-
-    data_source_tag:
-    data_source_type:
-    data_query_path:
-    password:
-    user:
-    port:
-    host:
-    db:
-
-
     data_sets:
       - orders
   stats:
     actions:
-
-
-    data_source_tag:
-    data_source_type:
-    data_query_path:
-    password:
-    user:
-    port:
-    host:
-    db:
-
     data_sets:
       - orders
       - downloads
   churn:
     actions:
-
-    data_source_tag:
-    data_source_type:
-    data_query_path:
-    password:
-    user:
-    port:
-    host:
-    db:
-
-
     data_sets:
       - orders
 
