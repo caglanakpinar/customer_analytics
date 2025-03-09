@@ -15,34 +15,35 @@ class DataStorageConfigurations(BaseDataStorageConfiguration):
             data_type='orders',
             date=None,
             test=False
-    ) -> dict[str, str]:
-        return {
-            'data_source': connection[data_type + '_data_source_type'],
-            'date': date,
-            'data_query_path': self.sqlite_string_converter(
-                connection[data_type + '_data_query_path'],
-                 back_to_normal=True
-            ),
-            'test': test,
-            'config': {
-                'host': connection[f'{data_type}_host'],
-                'port': connection[f'{data_type}_port'],
-                'password': connection[f'{data_type}_password'],
-                'user': connection[f'{data_type}_user'],
-                'db': connection[f'{data_type}_db']
+    ) -> dict[str, str] | None:
+        if connection[data_type + '_data_source_type'] is not None:
+            return {
+                'data_source': connection[data_type + '_data_source_type'],
+                'date': date,
+                'data_query_path': self.sqlite_string_converter(
+                    connection[data_type + '_data_query_path'],
+                     back_to_normal=True
+                ),
+                'test': test,
+                'config': {
+                    'host': connection[f'{data_type}_host'],
+                    'port': connection[f'{data_type}_port'],
+                    'password': connection[f'{data_type}_password'],
+                    'user': connection[f'{data_type}_user'],
+                    'db': connection[f'{data_type}_db']
+                }
             }
-        }
+        return None
 
     def get_data_connection_arguments(self) -> tuple[dict, dict[str, dict[str, str]]]:
         conn = self.collect_data_from_table(table="data_connection")
         columns = self.collect_data_from_table(table="data_columns_integration")
+        data_configs = {}
+        for data_type in ['orders', 'downloads', 'products', 'deliveries']:
+            _conn = self.create_data_access_parameters(conn, data_type=data_type)
+            if _conn is not None:
+                data_configs[data_type] = _conn
 
-        data_configs = {
-            'orders': self.create_data_access_parameters(conn, data_type='orders', date=None, test=False),
-            'downloads': self.create_data_access_parameters(conn, data_type='downloads', date=None, test=False),
-            'products': self.create_data_access_parameters(conn, data_type='products', date=None, test=False),
-            'deliveries': self.create_data_access_parameters(conn, data_type='deliveries', date=None, test=False)
-        }
         return columns, data_configs
 
     def get_and_update_ea_and_ml_config(
@@ -91,9 +92,6 @@ class DataStorageConfigurations(BaseDataStorageConfiguration):
         for config_type in ['ea_configs', 'ml_configs']:
             conf = getattr(self.connection_conf, config_type)
             for ea in conf:
-                if ea not in ['date', 'time_period']:
-                    conf[ea]['host'] = conn['host']
-                    conf[ea]['port'] = conn['port']
                 if ea == 'funnel':
                     conf[ea]['actions'] = actions['downloads']
                     conf[ea]['purchase_actions'] = actions['orders']
@@ -115,7 +113,7 @@ class DataStorageConfigurations(BaseDataStorageConfiguration):
     def decision_for_data_type_conn(self, data_type):
         return (
             True
-            if self.connection_conf.data_connection[f'{data_type}_data_source_tag'] not in [None, 'None']
+            if self.connection_conf.data_connection.get(f'{data_type}_data_source_tag') is not None
             else False
         )
 
