@@ -1,77 +1,77 @@
 data_connection:
-  orders_data_source_tag: None
-  orders_data_source_type: None
-  orders_data_query_path: None
-  orders_password: None
-  orders_user: None
-  orders_port: None
-  orders_host: None
-  orders_db: None
-  downloads_data_source_tag: None
-  downloads_data_source_type: None
-  downloads_data_query_path: None
-  downloads_password: None
-  downloads_user: None
-  downloads_port: None
-  downloads_host: None
-  downloads_db: None
-  products_data_source_tag: None
-  products_data_source_type: None
-  products_data_query_path: None
-  products_password: None
-  products_user: None
-  products_port: None
-  products_host: None
-  products_db: None
-  deliveries_data_source_tag: None
-  deliveries_data_source_type: None
-  deliveries_data_query_path: None
-  deliveries_password: None
-  deliveries_user: None
-  deliveries_port: None
-  deliveries_host: None
-  deliveries_db: None
-  dimension: None
-  promotion_id: None
+  orders_data_source_tag: 
+  orders_data_source_type: 
+  orders_data_query_path: 
+  orders_password: 
+  orders_user: 
+  orders_port: 
+  orders_host: 
+  orders_db: 
+  downloads_data_source_tag: 
+  downloads_data_source_type: 
+  downloads_data_query_path: 
+  downloads_password: 
+  downloads_user:
+  downloads_port:
+  downloads_host:
+  downloads_db:
+  products_data_source_tag: 
+  products_data_source_type: 
+  products_data_query_path: 
+  products_password: 
+  products_user:
+  products_port:
+  products_host:
+  products_db:
+  deliveries_data_source_tag:
+  deliveries_data_source_type:
+  deliveries_data_query_path:
+  deliveries_password:
+  deliveries_user:
+  deliveries_port:
+  deliveries_host:
+  deliveries_db:
+  dimension:
+  promotion_id:
 
 data_columns_integration:
-  order_id: None
-  order_id_2: None
-  client: None
-  session_start_date: None
-  payment_amount: None
-  discount_amount: None
-  date: None
-  download_date: None
-  signup_date: None
-  data_type: None
-  has_purchased: None
-  product: None
-  price: None
-  category: None
-  promotion_id: None
-  actions: None
-  dimension: None
-  client_2: None
-  delivery_date: None
-  prepare_date: None
-  return_date: None
-  latitude: None
-  longitude: None
+  order_id:
+  order_id_2:
+  client:
+  session_start_date:
+  payment_amount:
+  discount_amount:
+  date:
+  download_date:
+  signup_date:
+  data_type:
+  has_purchased:
+  product:
+  price:
+  category:
+  promotion_id:
+  actions:
+  dimension:
+  client_2:
+  delivery_date:
+  prepare_date:
+  return_date:
+  latitude:
+  longitude:
 
 schedule_data:
-  schedule: None
-  schedule_tag: None
-  time_period: None
-  max_date_of_order_data: None
+  schedule:
+  schedule_tag:
+  time_period:
+  max_date_of_order_data:
   ml:
-    schedule_tag: None
-    time_period: None
+    schedule_tag:
+    time_period:
 
   ea:
-    schedule_tag: None
-    time_period: None
-    max_date_of_order_data: None
+    schedule_tag:
+    time_period:
+    max_date_of_order_data:
 
 reports:
   -
@@ -80,28 +80,28 @@ reports:
 
 actions:
   sessions:
-    data_type: None
-    action_name: None
+    data_type:
+    action_name:
   downloads:
-    data_type: None
-    action_name: None
+    data_type:
+    action_name:
   products:
-      data_type: None
-      action_name: None
+      data_type:
+      action_name:
   delivery:
-      data_type: None
-      action_name: None
+      data_type:
+      action_name:
 
 logs:
   -
-    log_time: None
-    page: None
-    color: None
-    info: None
+    log_time:
+    page:
+    color:
+    info:
 
 
 ea_configs:
-  date: None
+  date:
   has_product_connection: True
   has_promotion_connection: True
 
@@ -114,14 +114,14 @@ ea_configs:
         - has_basket
         - order_screen
 
-    data_source_tag: None
-    data_source_type: None
-    data_query_path: None
-    password: None
-    user: None
-    port: None
-    host: None
-    db: None
+    data_source_tag:
+    data_source_type:
+    data_query_path:
+    password:
+    user:
+    port:
+    host:
+    db:
 
 
     data_sets:
@@ -132,14 +132,14 @@ ea_configs:
         - has_basket
         - order_screen
 
-    data_source_tag: None
-    data_source_type: None
-    data_query_path: None
-    password: None
-    user: None
-    port: None
-    host: None
-    db: None
+    data_source_tag:
+    data_source_type:
+    data_query_path:
+    password:
+    user:
+    port:
+    host:
+    db:
 
 
     data_sets:
@@ -151,14 +151,14 @@ ea_configs:
         - has_basket
         - order_screen
 
-    data_source_tag: None
-    data_source_type: None
-    data_query_path: None
-    password: None
-    user: None
-    port: None
-    host: None
-    db: None
+    data_source_tag:
+    data_source_type:
+    data_query_path:
+    password:
+    user:
+    port:
+    host:
+    db:
 
 
 
@@ -171,14 +171,14 @@ ea_configs:
         - has_basket
         - order_screen
 
-    data_source_tag: None
-    data_source_type: None
-    data_query_path: None
-    password: None
-    user: None
-    port: None
-    host: None
-    db: None
+    data_source_tag:
+    data_source_type:
+    data_query_path:
+    password:
+    user:
+    port:
+    host:
+    db:
 
 
 
@@ -188,14 +188,14 @@ ea_configs:
     actions:
 
 
-    data_source_tag: None
-    data_source_type: None
-    data_query_path: None
-    password: None
-    user: None
-    port: None
-    host: None
-    db: None
+    data_source_tag:
+    data_source_type:
+    data_query_path:
+    password:
+    user:
+    port:
+    host:
+    db:
 
 
     data_sets:
@@ -204,14 +204,14 @@ ea_configs:
     actions:
 
 
-    data_source_tag: None
-    data_source_type: None
-    data_query_path: None
-    password: None
-    user: None
-    port: None
-    host: None
-    db: None
+    data_source_tag:
+    data_source_type:
+    data_query_path:
+    password:
+    user:
+    port:
+    host:
+    db:
 
     data_sets:
       - orders
@@ -219,17 +219,21 @@ ea_configs:
   churn:
     actions:
 
-    data_source_tag: None
-    data_source_type: None
-    data_query_path: None
-    password: None
-    user: None
-    port: None
-    host: None
-    db: None
+    data_source_tag:
+    data_source_type:
+    data_query_path:
+    password:
+    user:
+    port:
+    host:
+    db:
 
 
     data_sets:
       - orders
+
+
+ml_configs:
+
 
 
