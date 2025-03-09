@@ -1,9 +1,3 @@
-import sys, os, inspect
-
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
 from customeranalytics.exploratory_analysis.funnels import Funnels
 from customeranalytics.exploratory_analysis.cohorts import Cohorts
 from customeranalytics.exploratory_analysis.product_analytics import ProductAnalytics
@@ -11,26 +5,6 @@ from customeranalytics.exploratory_analysis.promotion_analytics import Promotion
 from customeranalytics.exploratory_analysis.rfm import RFM
 from customeranalytics.exploratory_analysis.descriptive_statistics import Stats
 from customeranalytics.exploratory_analysis.churn import Churn
-
-
-ea_configs = {"date": None,
-              "funnel": {"actions": ["download", "signup"],
-                         "purchase_actions": ["has_basket", "order_screen"],
-                         "host": 'localhost',
-                         "port": '9200',
-                         'download_index': 'downloads',
-                         'order_index': 'orders'},
-              "cohort": {"has_download": True, "host": 'localhost', "port": '9200',
-                         'download_index': 'downloads', 'order_index': 'orders'},
-              "products": {"has_product_connection": True, "host": 'localhost', "port": '9200',
-                           "download_index": 'downloads', "order_index": 'orders'},
-              "promotions": {"has_promotion_connection": True,
-                             "host": 'localhost', "port": '9200',
-                             "download_index": 'downloads', "order_index": 'orders'},
-              "rfm": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
-              "stats": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
-              "churn": {"host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'}
-             }
 
 
 exploratory_analysis = {'funnel': Funnels,
@@ -107,3 +81,10 @@ def query_exploratory_analysis(configs, queries, ea):
     ea = exploratory_analysis[ea](**configs[ea])
     return ea.fetch(**queries)
 
+
+__all__ = [
+    'create_exploratory_analyse',
+    'create_exploratory_analysis',
+    'ea_configs',
+    'exploratory_analysis'
+]

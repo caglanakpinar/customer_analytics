@@ -1,0 +1,70 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} data storage connection {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Data Storage Configuration</h5>
+			<div class="col-md-12">
+				<form method="POST">
+					<div class="card">
+						<div class="card-header">
+							<h5 class="card-title"><strong>Storage Settings</strong> </h5>
+							<div class="row">
+								<h6 class="card-subtitle text-muted mb-1">
+									<strong style="color:green;"> Storage Data Format : </strong> each data set
+									will be stored as <strong style="color:green;"> .parquet </strong> format
+								</h6>
+								<h6 class="card-subtitle text-muted mb-1">
+									<strong style="color:green;"> Storage Data Temp Folder : </strong> each data set
+									will be stored in <strong style="color:green;"> temp folder </strong> .
+								</h6>
+							</div>
+
+						</div>
+						<div class="card-body">
+							<div class="row">
+								<div class="col-md-12">
+									<div class="card">
+										<div class="card-body">
+											<div class="mb-3">
+												<label class="form-label mb-1" for="inputUsername">Temporary Folder Directory</label>
+												<input name="directory" type="text" class="form-control" id="esDirectory" placeholder="enter folder path" required>
+											</div>
+											<button name="connect" type="submit"  value="True" class="btn btn-primary">Connect</button>
+
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<script>
+function myFunction() {
+  // Get the checkbox
+  var checkBox = document.getElementById("myCheck");
+  // Get the output text
+  var text = document.getElementById("text");
+
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+  } else {
+    text.style.display = "none";
+  }
+}
+</script>
+{% block javascripts %}{% endblock javascripts %}

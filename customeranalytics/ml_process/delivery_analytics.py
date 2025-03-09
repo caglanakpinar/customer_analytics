@@ -1,36 +1,19 @@
-from os.path import join, abspath
+from os.path import join
 import pandas as pd
 import numpy as np
 from math import sqrt
-import datetime
-from scipy import stats
 import pygeohash as gh
 import random
 import shutil
-import time
-
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input
-from tensorflow.keras.layers import Dense
-
-from tensorflow.keras.optimizers import Adam
-
+from keras import Model
+from keras import layers, optimizers
 from kerastuner.tuners import RandomSearch
 from kerastuner.engine.hyperparameters import HyperParameters
 
-from customeranalytics.data_storage_configurations.query_es import QueryES
-from customeranalytics.configs import not_required_default_values, default_es_port, default_es_host, \
-    delivery_anomaly_model_parameters, delivery_anomaly_model_hyper_parameters, delivery_threshold_z_score
-from customeranalytics.utils import convert_to_date, get_index_group, dimension_decision, \
-    current_date_to_day, find_week_of_monday
+from customeranalytics.ml_process.base import BaseML
 
 
-class DeliveryAnalytics:
+class DeliveryAnalytics(BaseML):
     """
     Delivery Analytics;
 
@@ -39,13 +22,8 @@ class DeliveryAnalytics:
     weekday of the order.
 
     """
-    def __init__(self,
-                 temporary_export_path,
-                 has_delivery_connection=True,
-                 host=None,
-                 port=None,
-                 download_index='downloads',
-                 order_index='orders'):
+    def __init__(self, temporary_export_path, has_delivery_connection=True, host=None, port=None,
+                 download_index='downloads', order_index='orders'):
         """
         ******* ******** *****
         Dimensional :
@@ -67,13 +45,11 @@ class DeliveryAnalytics:
         :param order_index: elasticsearch port
         :param has_delivery_connection: is any additional delivery data source
         """
-        self.port = default_es_port if port is None else port
-        self.host = default_es_host if host is None else host
+        super().__init__(host, port, download_index, order_index)
         self.download_index = download_index
         self.order_index = order_index
         self.has_delivery_connection = has_delivery_connection
         self.temporary_export_path = temporary_export_path
-        self.query_es = QueryES(port=self.port, host=self.host)
         self.data = pd.DataFrame()
         self.has_data_end_date = False
         self.has_location_data = False
@@ -84,8 +60,8 @@ class DeliveryAnalytics:
         self.duration_metrics = ['deliver', 'prepare', 'ride', 'returns']
         self.anomaly_metrics = ["customer", 'location', 'weekday_hour']
         self._model = {}
-        self.params = delivery_anomaly_model_parameters
-        self.hyper_params = delivery_anomaly_model_hyper_parameters
+        self.params = self.delivery_anomaly_model_parameters
+        self.hyper_params = self.delivery_anomaly_model_hyper_parameters
         self.hp = HyperParameters()
         self.parameter_tuning_trials = 5  # number of parameter tuning trials
         self.delivery_fields = ['id', 'client', 'session_start_date', 'date', 'payment_amount', 'discount_amount',
@@ -105,14 +81,6 @@ class DeliveryAnalytics:
         self.functions = {m[0]: m[1] for m in
             zip(self.anomaly_metrics, [self.customer_delivery_anomaly,
                                        self.location_delivery_anomaly, self.weekday_hour_delivery_anomaly])}
-
-    def dimensional_query(self, boolean_query=None):
-        if dimension_decision(self.order_index):
-            if boolean_query is None:
-                boolean_query = [{"term": {"dimension": self.order_index}}]
-            else:
-                boolean_query += [{"term": {"dimension": self.order_index}}]
-        return boolean_query
 
     def get_delivery_data(self):
         """
@@ -136,7 +104,7 @@ class DeliveryAnalytics:
         :param row: each row at data-frame
         :param dt:  columns names 'date', 'prepare_date', 'return_date', 'latitude', 'longitude'
         """
-        if row[dt] == not_required_default_values.get(dt, None):
+        if row[dt] == self.not_required_default_values.get(dt, None):
             # get(dt, None )this is only for end_date (date) columns
             return True
         else:
@@ -243,7 +211,7 @@ class DeliveryAnalytics:
         if data_type in ['latitude', 'longitude']:
             return float(value)
         else:
-            return convert_to_date(value)
+            return self.convert_to_date(value)
 
     def data_manipulations(self):
         """
@@ -262,7 +230,7 @@ class DeliveryAnalytics:
 
         """
         for dt in ['session_start_date', 'delivery_date']:
-            self.data[dt] = self.data.apply(lambda row: convert_to_date(row[dt]), axis=1)
+            self.data[dt] = self.data[dt].apply(self.convert_to_date)
 
         for dt in ['date', 'prepare_date', 'return_date', 'latitude', 'longitude']:
             self.data[dt] = self.data.apply(
@@ -278,7 +246,7 @@ class DeliveryAnalytics:
         # weekday and hour
         self.data['isoweekday'] = self.data['session_start_date'].apply(lambda x: x.isoweekday())
         self.data['hour'] = self.data['session_start_date'].apply(lambda x: x.hour)
-        self.data['week'] = self.data['session_start_date'].apply(lambda x: find_week_of_monday(x))
+        self.data['week'] = self.data['session_start_date'].apply(self.find_week_of_monday)
 
         # duration calculations; ride, delivery, prepare
         self.data[self.duration_metrics] = self.data.apply(lambda row: self.delivery_durations(row), axis=1)
@@ -325,23 +293,23 @@ class DeliveryAnalytics:
             2nd Hidden Layer; hid. unit = 64 / 2 = 32
             3rd Hidden Layer; hid. unit = 64 / (2*2) = 16
         """
-        _input = Input(shape=(self._model['train'].shape[1],))
+        _input = layers.Input(shape=(self._model['train'].shape[1],))
         _unit = hp.Choice('h_l_unit', self._model['hyper_params']['h_l_unit'])
-        _layer = Dense(hp.Choice('h_l_unit', self._model['hyper_params']['h_l_unit']),
+        _layer = layers.Dense(hp.Choice('h_l_unit', self._model['hyper_params']['h_l_unit']),
                        activation=hp.Choice('activation', self._model['hyper_params']['activation'])
                        )(_input)
 
         # This process is decision of the hidden layer count
         for i in range(1, hp.Choice('hidden_layer_count', self._model['hyper_params']['hidden_layer_count'])):
             _unit = _unit / 2
-            _layer = Dense(_unit,
+            _layer = layers.Dense(_unit,
                            activation=hp.Choice('activation', self._model['hyper_params']['activation'])
                            )(_layer)
 
-        output = Dense(self._model['train'].shape[1], activation='sigmoid')(_layer)
+        output = layers.Dense(self._model['train'].shape[1], activation='sigmoid')(_layer)
         model = Model(inputs=_input, outputs=output)
         model.compile(loss=self._model['hyper_params']['loss'],
-                      optimizer=Adam(lr=hp.Choice('lr', self._model['hyper_params']['lr'])))
+                      optimizer=optimizers.Adam(lr=hp.Choice('lr', self._model['hyper_params']['lr'])))
         return model
 
     def remove_keras_tuner_folder(self):
@@ -402,7 +370,7 @@ class DeliveryAnalytics:
         """
         mean_scores = np.mean(scores)
         std_scores = np.std(scores)
-        standart_error = delivery_threshold_z_score * sqrt(std_scores / len(scores))
+        standart_error = self.delivery_threshold_z_score * sqrt(std_scores / len(scores))
         return mean_scores + standart_error
 
     def detect_outliers(self, type):
@@ -424,19 +392,19 @@ class DeliveryAnalytics:
         """
         Creating Auto Encoder Network with tensorfow, keras
         """
-        _input = Input(shape=(self._model['train'].shape[1],))
+        _input = layers.Input(shape=(self._model['train'].shape[1],))
         _unit = self._model['params']['h_l_unit']
-        _layer = Dense(self._model['params']['h_l_unit'],
+        _layer = layers.Dense(self._model['params']['h_l_unit'],
                        activation=self._model['params']['activation']
                        )(_input)
 
         for i in range(1, self._model['params']['hidden_layer_count']):
             _unit = _unit / 2
-            _layer = Dense(_unit, activation=self._model['params']['activation'])(_layer)
+            _layer = layers.Dense(_unit, activation=self._model['params']['activation'])(_layer)
 
-        output = Dense(self._model['train'].shape[1], activation='sigmoid')(_layer)
+        output = layers.Dense(self._model['train'].shape[1], activation='sigmoid')(_layer)
         self._model['model'] = Model(inputs=_input, outputs=output)
-        self._model['model'].compile(loss='mse', optimizer=Adam(lr=self._model['params']['lr']), metrics=['mse'])
+        self._model['model'].compile(loss='mse', optimizer=optimizers.Adam(lr=self._model['params']['lr']), metrics=['mse'])
         self._model['model'].fit(self._model['train'], self._model['train'],
                                  epochs=int(self._model['params']['epochs']),
                                  batch_size=int(self._model['params']['batch_size']),
@@ -677,72 +645,12 @@ class DeliveryAnalytics:
                         self.insert_into_reports_index(delivery_anomaly=_location,
                                                        anomaly_type=metric + '_location', index=self.order_index)
             # delivery KPIs
-            self.insert_into_reports_index(delivery_anomaly=self.delivery_kpis(),
-                                           anomaly_type='deliver_kpis', index=self.order_index)
+            self.insert_into_reports_index(
+                "delivery_anomaly",
+                ml=self.delivery_kpis(),
+                                           ml_type='deliver_kpis', index=self.order_index)
 
-    def insert_into_reports_index(self, delivery_anomaly, start_date=None, anomaly_type='ride', index='orders'):
-        """
-        via query_es.py, each report can be inserted into the reports index with the given format.
-        {"id": unique report id,
-         "report_date": start_date or current date,
-         "report_name": "delivery_anomaly",
-         "index": "main",
-         "report_types": {
-                          "type": anomaly_type; 'deliver', 'prepare', 'ride', 'returns'
-                          },
-         "data": delivery_anomaly
-         }
-        :param delivery_anomaly: data set, data frame
-        :param start_date: data start date
-        :param anomaly_type: data types; 'deliver', 'prepare', 'ride', 'returns'
-        :param index: dimentionality of data index orders_location1 ;  dimension = location1
-        """
-        list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
-                        "report_name": "delivery_anomaly",
-                        "index": get_index_group(index),
-                        "report_types": {"type": anomaly_type},
-                        "data": delivery_anomaly.fillna(0).to_dict("results")}]
-        self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
-    def fetch(self, anomaly_type, start_date=None):
-        """
-        This allows us to query the created delivery_anomaly reports.
-        anomaly_type is crucial for us to collect the correct filters.
-        Example of queries;
-            -   anomaly_type: delivery_anomaly,
-            -   start_date: 2021-01-01T00:00:00
-
-            {'size': 10000000,
-            'from': 0,
-            '_source': True,
-            'query': {'bool': {'must': [
-                                        {'term': {'report_name': 'delivery_anomaly'}},
-                                        {"term": {"index": "orders_location1"}}
-                                        {'term': {'report_types.type': 'ride'}},
-                                        {'range': {'report_date': {'lt': '2021-04-01T00:00:00'}}}]}}}
-
-            - start date will be filtered from data frame. In this example; .query("daily > @start_date")
-
-        :param anomaly_type: 'deliver', 'prepare', 'ride', 'returns'
-        :param start_date: delivery anomaly executed date
-        :param index: index_name in order to get dimension_of data. If there is no dimension, no need to be assigned
-        :return: data frame
-        """
-        boolean_queries, date_queries = [], []
-        boolean_queries = [{"term": {"report_name": 'delivery_anomaly'}},
-                           {"term": {"index": get_index_group(self.order_index)}},
-                           {"term": {"report_types.type": anomaly_type}},
-                           {'range': {'report_date': {
-                               'lt': current_date_to_day().isoformat() if start_date is None else start_date}}}]
-
-        self.query_es = QueryES(port=self.port,
-                                host=self.host)
-        self.query_es.query_builder(fields=None, _source=True,
-                                    date_queries=date_queries,
-                                    boolean_queries=boolean_queries)
-        _res = self.query_es.get_data_from_es(index="reports")
-        return pd.DataFrame(_res[0]['_source']['data'])
 
 
 

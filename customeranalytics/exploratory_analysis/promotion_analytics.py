@@ -1,34 +1,14 @@
 import numpy as np
 import pandas as pd
-import datetime
-import random
-from time import gmtime, strftime
-import pytz
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
-import argparse
-from itertools import product
 
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from customeranalytics.configs import default_es_port, default_es_host, none_types
-from customeranalytics.utils import current_date_to_day, get_index_group, convert_str_to_hour, convert_to_date, convert_dt_to_day_str
-from customeranalytics.utils import dimension_decision, convert_to_iso_format
-from customeranalytics.data_storage_configurations.query_es import QueryES
+from customeranalytics.exploratory_analysis.base import BaseEDA
 
 
-class PromotionAnalytics:
+class PromotionAnalytics(BaseEDA):
     """
 
     """
-    def __init__(self,
-                 has_promotion_connection=True,
-                 host=None,
-                 port=None,
-                 download_index='downloads',
+    def __init__(self, has_promotion_connection=True, host=None, port=None, download_index='downloads',
                  order_index='orders'):
         """
         !!!!
@@ -51,12 +31,11 @@ class PromotionAnalytics:
         :param download_index: elasticsearch port
         :param order_index: elasticsearch port
         """
-        self.port = default_es_port if port is None else port
-        self.host = default_es_host if host is None else host
+        super().__init__(host, port, download_index, order_index)
+
         self.has_promotion_connection = has_promotion_connection
         self.download_index = download_index
         self.order_index = order_index
-        self.query_es = QueryES(port=port, host=host)
         self.fields_promotions = ["id", "client", "promotion_id", "session_start_date",
                                   "payment_amount", "discount_amount"]
         self.promotions = pd.DataFrame()
@@ -71,30 +50,12 @@ class PromotionAnalytics:
                          "daily_promotion_revenue", "daily_promotion_discount", "avg_order_count_per_promo_per_cust",
                          "promotion_number_of_customer", "promotion_kpis"]
 
-    def dimensional_query(self, boolean_query=None):
-        if dimension_decision(self.order_index):
-            if boolean_query is None:
-                boolean_query = [{"term": {"dimension": self.order_index}}]
-            else:
-                boolean_query += [{"term": {"dimension": self.order_index}}]
-        return boolean_query
-
-    def get_time_period(self):
-        """
-        converting date column of  values into the time_periods (hourly weekly, monthly,..)
-        orders; total data (orders/downloads data with actions)
-        final data; data set with time periods
-        """
-        for p in list(zip(self.time_periods,
-                     [convert_str_to_hour, convert_dt_to_day_str])):
-            self.promotions[p[0]] = self.promotions["session_start_date"].apply(lambda x: p[1](x))
 
     def get_promotions(self, end_date):
         """
             1.  Fetch data from orders with filter; actions.purchased: True with promotion Id
         :param end_date: last date of data set
         """
-        self.query_es = QueryES(port=self.port, host=self.host)
         self.query_es.date_queries_builder({"session_start_date": {"lt": end_date}})
         self.query_es.query_builder(fields=None, _source=True,
                                     boolean_queries=self.dimensional_query([{"term": {"actions.purchased": True}}]))
@@ -103,9 +64,10 @@ class PromotionAnalytics:
             [{col: r['_source'][col] for col in self.fields_promotions} for r in self.promotions])
 
         self.promotions['payment_amount'] = self.promotions['payment_amount'].apply(lambda x: float(x))
-        self.promotions['session_start_date'] = self.promotions['session_start_date'].apply(lambda x: convert_to_date(x))
+        self.promotions['session_start_date'] = self.promotions['session_start_date'].apply(self.convert_to_date)
         print(self.promotions.query("promotion_id != promotion_id"))
-        self.promotions['has_promotion'] = self.promotions['promotion_id'].apply(lambda x: True if x not in none_types else False)
+        self.promotions['has_promotion'] = self.promotions['promotion_id'].apply(
+            lambda x: True if x not in self.none_types else False)
         self.get_time_period()
         print(self.promotions.head())
 
@@ -232,7 +194,7 @@ class PromotionAnalytics:
 
     def insert_into_reports_index(self, promotion_analytics, pa_type, start_date=None, index='orders'):
         """
-        via query_es.py, each report can be inserted into the reports index with the given format.
+        via query.py, each report can be inserted into the reports index with the given format.
         {"id": unique report id,
          "report_date": start_date or current date,
          "report_name": "promotion_analytic",

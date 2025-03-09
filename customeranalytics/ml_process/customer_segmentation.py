@@ -1,22 +1,14 @@
 import numpy as np
 import pandas as pd
-import sys, os, inspect
 import h2o
 from h2o.estimators.kmeans import H2OKMeansEstimator
 from h2o.grid.grid_search import H2OGridSearch
 
-
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from customeranalytics.configs import default_es_port, default_es_host
-from customeranalytics.utils import *
-from customeranalytics.data_storage_configurations.query_es import QueryES
-from customeranalytics.exploratory_analysis import query_exploratory_analysis, ea_configs
+from customeranalytics.ml_process.base import BaseML
+from customeranalytics.exploratory_analysis import query_exploratory_analysis
 
 
-class CustomerSegmentation:
+class CustomerSegmentation(BaseML):
     """
     Customer Segmentation is one of the crucial problems for Businesses that are mostly engaging with their buyers.
     This relationship for some reason might differ from one customer to another one.
@@ -46,11 +38,7 @@ class CustomerSegmentation:
             "lost": {'r': [1], 'f': [1, 2, 3, 4, 5], 'm': [1, 2, 3, 4, 5]}}
 
     """
-    def __init__(self,
-                 host=None,
-                 port=None,
-                 download_index='downloads',
-                 order_index='orders'):
+    def __init__(self, host=None, port=None, download_index='downloads', order_index='orders'):
         """
         ******* ******** *****
         Dimensional Customer Segmentation:
@@ -71,11 +59,9 @@ class CustomerSegmentation:
         :param download_index: elasticsearch port
         :param order_index: elasticsearch port
         """
-        self.port = default_es_port if port is None else port
-        self.host = default_es_host if host is None else host
+        super().__init__(host, port, download_index, order_index)
         self.download_index = download_index
         self.order_index = order_index
-        self.query_es = QueryES(port=port, host=host)
         self.rfm = pd.DataFrame()
         self.METRICS = ['recency', 'frequency', 'monetary']
         self.METRIC_VALUES = {'recency': ['recency', 'rec', 'r'],
@@ -112,7 +98,9 @@ class CustomerSegmentation:
         """
         RFM values for segmentation can be fetched from the reports index with related dimensions.
         """
-        ea_configs['rfm']['order_index'] = self.order_index
+        # TODO: update here
+        # ea_configs['rfm']['order_index'] = self.order_index
+        ea_configs = {}
         _total_cols, _counter = 0, 0
         while len(set(self.rfm.columns) & set(self.METRICS)) != 3:
             self.rfm = query_exploratory_analysis(ea_configs, {"start_date": date}, "rfm")
@@ -274,28 +262,6 @@ class CustomerSegmentation:
             self.detected_segments += list(zip(_segment_clients, (len(_segment_clients) * [s])))
             total_clients = list(set(total_clients) - set(_segment_clients))
 
-    def insert_into_reports_index(self, segments, date=None, index='orders'):
-        """
-        via query_es.py, each report can be inserted into the reports index with the given format.
-        {"id": unique report id,
-         "report_date": date or current date,
-         "report_name": "segmentation",
-         "index": "main",
-         "report_types": {},
-         "data": segments.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
-         }
-         !!! null values are assigned to 0.
-
-        :param segments: data set, data frame
-        :param index: dimensionality of data index orders_location1 ;  dimension = location1
-        """
-        list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if date is None else date,
-                        "report_name": "segmentation",
-                        "index": get_index_group(index),
-                        "report_types": {},
-                        "data": segments.fillna(0.0).to_dict("results")}]
-        self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def execute_customer_segment(self, start_date=None):
         """
@@ -326,29 +292,10 @@ class CustomerSegmentation:
         self.rfm['segments'] = self.rfm['segments'].fillna('others')
         self.rfm['segments_numeric'] = self.rfm['segments'].apply(lambda x: self.segments_numerics[x])
 
-        self.insert_into_reports_index(self.rfm[self.insert_columns], date=start_date, index=self.order_index)
+        self.insert_into_reports_index(
+            ml_name="segmentation",
+            ml=self.rfm[self.insert_columns],
+            start_date=start_date,
+            index=self.order_index
+        )
         h2o.shutdown(prompt=False)
-
-    def fetch(self, start_date=None):
-        """
-        Collect Customer segmentation results with the given date.
-        :param start_date: customer_segmentation first date
-        :return:
-        """
-        boolean_queries, date_queries = [], []
-        boolean_queries = [{"term": {"report_name": "segmentation"}},
-                           {"term": {"index": get_index_group(self.order_index)}}]
-
-        if start_date is not None:
-            date_queries = [{"range": {"report_date": {"gte": convert_to_iso_format(start_date)}}}]
-
-        self.query_es = QueryES(port=self.port,
-                                host=self.host)
-        self.query_es.query_builder(fields=None, _source=True,
-                                    date_queries=date_queries,
-                                    boolean_queries=boolean_queries)
-        _res = self.query_es.get_data_from_es(index="reports")
-        _data = pd.DataFrame()
-        if len(_res) != 0:
-            _data = pd.DataFrame(_res[-1]['_source']['data'])
-        return _data

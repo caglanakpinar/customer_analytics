@@ -1,16 +1,10 @@
 import numpy as np
 import pandas as pd
-import sys, os, inspect
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
 
-from customeranalytics.configs import default_es_port, default_es_host, elasticsearch_settings, time_periods, default_query_date
-from customeranalytics.utils import *
-from customeranalytics.data_storage_configurations.query_es import QueryES
+from customeranalytics.exploratory_analysis.base import BaseEDA
 
 
-class Funnels:
+class Funnels(BaseEDA):
     """
         It is useful for creating an exploratory analysis of data frames for charts and tables.
             -   Purchase Actions Funnel:
@@ -31,12 +25,7 @@ class Funnels:
         These funnels are stored in the elasticsearch reports index.
         It is flexible to collect funnel by using fetch.
     """
-    def __init__(self,
-                 actions,
-                 purchase_actions=None,
-                 host=None,
-                 port=None,
-                 download_index='downloads',
+    def __init__(self, actions, purchase_actions=None, host=None, port=None, download_index='downloads',
                  order_index='orders'):
         """
         !!!!
@@ -58,50 +47,29 @@ class Funnels:
         :param host: elasticsearch host
         :param port: elasticsearch port
         :param download_index: elasticsearch port
-        :param order_index: elasticsearch port
+        :param order_index: elasticsearch index name
         """
-        self.port = default_es_port if port is None else port
-        self.host = default_es_host if host is None else host
-        self.download_index = download_index
-        self.order_index = order_index
-        self.query_es = QueryES(port=self.port, host=self.port)
+        super().__init__(host, port, download_index, order_index)
         self.actions = actions
         self.purchase_actions = purchase_actions
         self.purchase_action_funnel_data = {
-                                   'purchased': {t: None for t in time_periods},
-                                   'has_sessions': {t: None for t in time_periods}
+                                   'purchased': {t: None for t in self.time_periods},
+                                   'has_sessions': {t: None for t in self.time_periods}
                       }
         self.action_funnel_data = {
-                                   'purchased': {t: None for t in time_periods},
-                                   'has_sessions': {t: None for t in time_periods}
+                                   'purchased': {t: None for t in self.time_periods},
+                                   'has_sessions': {t: None for t in self.time_periods}
                                    }
 
-        self.purchase_funnels = {t: None for t in time_periods}
-        self.download_funnels = {t: None for t in time_periods}
+        self.purchase_funnels = {t: None for t in self.time_periods}
+        self.download_funnels = {t: None for t in self.time_periods}
         self.overall_funnels = {}
-        self.time_periods = time_periods
+        self.time_periods = self.time_periods
         self.purchase_action_funnel_fields = ["id", "session_start_date"]
         self.action_funnel_fields = ["id", "session_start_date"]
-        self.query_size = elasticsearch_settings['settings']['index.query.default_field']
+        self.query_size = self.elasticsearch_settings['settings']['index.query.default_field']
 
-    def get_time_period(self, transactions, date_column):
-        """
-        converting date column of  values into the time_periods (hourly weekly, monthly,..)
-        :param transactions: total data (orders/downloads data with actions)
-        :return: data set with time periods
-        """
-        for p in list(zip(self.time_periods,
-                     [convert_str_to_hour, convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
-            transactions[p[0]] = transactions[date_column].apply(lambda x: p[1](x))
-        return transactions
 
-    def dimensional_query(self, boolean_query=None):
-        if dimension_decision(self.order_index):
-            if boolean_query is None:
-                boolean_query = [{"term": {"dimension": self.order_index}}]
-            else:
-                boolean_query += [{"term": {"dimension": self.order_index}}]
-        return boolean_query
 
     def get_purchase_action_funnel_data(self, action, date_column):
         """
@@ -114,10 +82,10 @@ class Funnels:
             - hourly
         Aggregated value is assigned as a column related to the 'action' argument.
         date_column shows which date column must be used.
-        There are 2 options for query the data by using query_es.py.
+        There are 2 options for query the data by using query.py.
         Orders or Downloads indexes can be queried related to action.
 
-        if it is calculating for dimensional data. ElasticSerachquery must have additional filter as below;
+        if it is calculating for dimensional data. ElasticSearch query must have additional filter as below;
             {"term": {"dimension": self.order_index}}
 
         :param action: action from orders / downloads
@@ -188,7 +156,7 @@ class Funnels:
 
             - purchase funnel process:
                 1. check if there are additional actions
-                2. order session and other actions of count per week, day, hour (query_es.py - QueryBuilder)
+                2. order session and other actions of count per week, day, hour (query.py - QueryBuilder)
                 3. merge actions related to time periods
                 4. insert into the reports index.
 
@@ -200,7 +168,6 @@ class Funnels:
                 self.purchase_action_funnel_data[a] = {p: pd.DataFrame() for p in self.time_periods}
 
         for a in self.purchase_action_funnel_data:  # order session and other actions of count per week, day, hour
-            self.query_es = QueryES(port=self.port, host=self.host)
             if start_date is not None:
                 self.query_es.date_queries_builder({"session_start_date": {"gte": start_date}})
             self.query_es.query_builder(fields=self.purchase_action_funnel_fields,
@@ -251,13 +218,13 @@ class Funnels:
 
             - download funnel process:
                 1. check if there are additional actions
-                2. download and other actions of count per week, day, hour (query_es.py - QueryBuilder)
+                2. download and other actions of count per week, day, hour (query.py - QueryBuilder)
                 3. merge actions related to time periods
                 4. insert into the reports index.
 
             - Required actions: download date; datetime, has_session; boolean, has_purchase; boolean
         """
-        start_date = default_query_date if start_date is None else start_date
+        start_date = self.default_query_date if start_date is None else start_date
         if self.actions is not None:  # check for additional actions
             for a in self.actions:
                 self.action_funnel_data[a] = {p: pd.DataFrame() for p in self.time_periods}
@@ -268,7 +235,6 @@ class Funnels:
             else:
                 _date_column = a + "_date"
                 self.action_funnel_fields = ["id", _date_column]
-                self.query_es = QueryES(port=self.port, host=self.host)
                 self.query_es.date_queries_builder({_date_column: {"gte": start_date}})
                 self.query_es.query_builder(fields=self.action_funnel_fields,
                                             boolean_queries=self.dimensional_query())
@@ -277,8 +243,13 @@ class Funnels:
         # merge actions related to time periods
         self.download_funnels = self.merge_actions(self.action_funnel_data)
         # insert into the reports index
-        self.insert_into_reports_index(self.download_funnels, current_date_to_day().isoformat(),
-                                       funnel_type='downloads', index=self.order_index)
+        self.insert_into_reports_index(
+            report_name="funnel",
+            eda=self.download_funnels,
+            start_date=self.current_date_to_day().isoformat(),
+            eda_type='downloads',
+            index=self.order_index
+        )
 
     def overall_funnel(self, start_date=None):
         """
@@ -289,7 +260,7 @@ class Funnels:
         :param start_date:
         :param index: refers the dimensionality of the whole data.
         """
-        start_date = default_query_date if start_date is None else start_date
+        start_date = self.default_query_date if start_date is None else start_date
         if start_date is not None:  # filter monthly column for each actions
             dfs = []
             for df in [self.purchase_funnels['monthly'], self.download_funnels['monthly']]:
@@ -307,38 +278,14 @@ class Funnels:
                 self.overall_funnels[_column] = sum(self.download_funnels['monthly'][a])
         self.time_periods = ['yearly']
         # insert into the reports index
-        self.insert_into_reports_index({"yearly": pd.DataFrame([self.overall_funnels])},
-                                       current_date_to_day().isoformat(), funnel_type='overall',
-                                       index=self.order_index)
-        self.time_periods = time_periods
-
-    def insert_into_reports_index(self, funnel, start_date, funnel_type='orders', index='orders'):
-        """
-        via query_es.py, each report can be inserted into the reports index with the given format.
-        {"id": unique report id,
-         "report_date": start_date or current date,
-         "report_name": "funnel",
-         "index": "main",
-         "report_types": {"time_period": yearly (only for overall funnel), monthly, hourly, weekly, daily
-                          "type": orders, downloads, overall
-                          },
-         "data": funnel[t].to_dict("results") -  dataframe to list of dictionary
-         }
-        :param funnel: data set, data frame
-        :param start_date: data start date
-        :param funnel_type: orders, downloads
-        :param index: dimentionality of data index orders_location1 ;  dimension = location1
-        """
-        list_of_obj = []
-        for t in self.time_periods:
-            insert_obj = {"id": np.random.randint(200000000),
-                          "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
-                          "report_name": "funnel",
-                          "index": get_index_group(index),
-                          "report_types": {"time_period": t, "type": funnel_type},
-                          "data": funnel[t].fillna(0).to_dict("results")}
-            list_of_obj.append(insert_obj)
-        self.query_es.insert_data_to_index(list_of_obj, index='reports')
+        self.insert_into_reports_index(
+            report_name="funnel",
+            eda=pd.DataFrame([self.overall_funnels]),
+            start_date=self.current_date_to_day().isoformat(),
+            eda_type='overall',
+            index=self.order_index
+        )
+        self.time_periods = self.time_periods
 
     def fetch(self, funnel_name, start_date=None, end_date=None):
         """
@@ -370,15 +317,12 @@ class Funnels:
         report_name, funnel_type, time_period = funnel_name.split("_")
         boolean_queries, date_queries = [], []
         boolean_queries = [{"term": {"report_name": report_name}},
-                           {"term": {"index": get_index_group(self.order_index)}},
+                           {"term": {"index": self.get_index_group(self.order_index)}},
                            {"term": {"report_types.time_period": time_period}},
                            {"term": {"report_types.type": funnel_type}}]
 
         if end_date is not None:
-            date_queries = [{"range": {"report_date": {"lt": convert_to_iso_format(end_date)}}}]
-
-        self.query_es = QueryES(port=self.port,
-                                host=self.host)
+            date_queries = [{"range": {"report_date": {"lt": self.convert_to_iso_format(end_date)}}}]
         self.query_es.query_builder(fields=None, _source=True,
                                     date_queries=date_queries,
                                     boolean_queries=boolean_queries)
@@ -388,8 +332,8 @@ class Funnels:
             _data = pd.DataFrame(_res[0]['_source']['data'])
             if start_date is not None:
                 if time_period not in ['yearly', 'hourly']:
-                    _data[time_period] = _data[time_period].apply(lambda x: convert_to_date(x))
-                    start_date = convert_to_date(start_date)
+                    _data[time_period] = _data[time_period].apply(self.convert_to_date)
+                    start_date = self.convert_to_date(start_date)
                     _data = _data[_data[time_period] >= start_date]
         return _data
 

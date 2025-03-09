@@ -1,19 +1,13 @@
 import pandas as pd
-from dateutil.parser import parse
-from os.path import join, dirname
-from os import listdir
+from os.path import join
 import sys, os, inspect
-from os.path import abspath
 import glob
+import dask as dd
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from customeranalytics.configs import default_dask_partitions
+from customeranalytics.configs import Config
 
 
-class GetData:
+class GetData(Config):
     """
     Collecting data for storing Into Orders & Downloads Index
     """
@@ -31,7 +25,7 @@ class GetData:
         self.data = pd.DataFrame()
         self.nrows = test
         self.date = date
-        self.n_partitions = default_dask_partitions
+        self.n_partitions = self.default_dask_partitions
         self.config = config
 
     def get_connection(self):

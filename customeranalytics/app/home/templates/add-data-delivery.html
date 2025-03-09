@@ -1,0 +1,179 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} delivery data connection {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+	<main class="content">
+		<div class="container-fluid p-0">
+			<h5 class="h3 mb-3">Deliveries</h5>
+			<div class="col-md-12">
+				<form method="POST">
+					<div class="card">
+						<div class="card-header">
+							<h5 class="card-title"><strong>Sessions of Delivery Data Source</strong> </h5>
+							<div class="row">
+								<h6 class="card-subtitle text-muted mb-3">
+									<strong style="color:green;"> Delivery : </strong> The delivery data source is the sub-data source for the sessions.
+									This data source is merging with Sessions data source and storing into the Data Storage Folder.
+									If any session has a deliver process, the Order ID of the session of delivery information must be included at delivery data source
+									 and purchase value must be True.
+									Delivery Data Source is optional.
+								</h6>
+							</div>
+
+							<div class="row ">
+								<h6 class="card-subtitle text-muted">
+									{% if values['data_source_con_check'] == 'Connected' %}
+										{% if values['s_c_p_connection_check']['deliveries'] == 'False' %}
+											<strong style="color:green;">There isn`t any connection detected for Deliveries.</strong>
+										{% endif %}
+										{% if values['s_c_p_connection_check']['deliveries'] == 'True' %}
+											<strong style="color:green;">Deliveries Data Source is successfully created.</strong>
+										{% endif %}
+									{% endif %}
+									{% if values['data_source_con_check'] != 'Connected'  and values['data_source_con_check'] != '....' %}
+											<strong style="color:red;">Connection is failed! .</strong>
+									{% endif %}
+									{% if values['data_source_con_check'] == '....' %}
+										{% if values['s_c_p_connection_check']['deliveries'] == 'True' %}
+											<strong style="color:green;">Deliveries Data Source is detected</strong>
+										{% endif %}
+									{% endif %}
+								</h6>
+							</div>
+						</div>
+						<div class="card-body">
+							<div class="row">
+								<div class="col-md-12">
+									<div class="card">
+										<div class="card-header">
+											<h5 class="card-title"><strong style="color:green;">Delivery Data Source</strong></h5>
+											<h6 class="card-subtitle text-muted">
+												<div class="row">
+													- Each session ID (Order ID) must be unique. Sessions must cover only purchase transactions.
+												</div>
+												<div class="row">
+													- session IDs must be matched with Session IDs on Sessions Data Source.
+												</div>
+												<div class="row">
+													- Delivery Date and Session ID columns are required but prepare date, return date latitude longitude are optional.
+												</div>
+												<div class="row">
+													- Latitude and Longitude are the customer of the location coordinates and they are optional.
+												</div>
+											</h6>
+										</div>
+										<div class="card-body">
+											{% if values['connection'] != '....' %}
+
+												<div class="mb-4 col-md-12">
+													<label class="form-label mb-2" for="input_name">Delivery Connection Tag Name</label>
+													<input name="deliveries_data_source_tag" type="text" class="form-control mb-3" id="input_name" placeholder="delivery connection" required>
+												</div>
+												<table class="table table-striped">
+													<thead>
+														<tr>
+														<th  style="width:16%;">
+															order ID
+														</th>
+														<th style="width:15%;">
+															delivery date
+														</th>
+
+														<th style="width:15%;">
+															prepare date
+														</th>
+
+														<th style="width:15%;">
+															return date
+														</th>
+
+														<th style="width:15%;">
+															latitude
+														</th>
+														<th style="width:15%;">
+															longitude
+														</th>
+														</tr>
+													</thead>
+													<tbody>
+														<tr>
+															<td> <input name="order_id_2" type="text" class="form-control mb-3" id="order_id_2" required> </td>
+															<td> <input name="delivery_date" type="text" class="form-control mb-3" id="delivery_date" required> </td>
+															<td> <input name="prepare_date" type="text" class="form-control mb-3" id="prepare_date"> </td>
+															<td> <input name="return_date" type="text" class="form-control mb-3" id="return_date"> </td>
+															<td> <input name="latitude" type="text" class="form-control mb-3" id="latitude"> </td>
+															<td> <input name="longitude" type="text" class="form-control mb-3" id="longitude"> </td>
+														</tr>
+
+													</tbody>
+												</table>
+
+
+												<div class="row">
+													<div class="col-md-6">
+														<label class="form-label" for="inputState">data source</label>
+														<select size="3" name="deliveries_data_source_type" id="products_data_source_type"  data-show-content="true" class="form-control mb-3" required>
+															<option>postgresql</option>
+															<option>google big query</option>
+															<option>aws redshift</option>
+															<option selected>csv</option>
+															<option>parquet</option>
+															<option>hdf5</option>
+														</select>
+														<label class="form-label">Data Query or Path</label>
+														<textarea name="deliveries_data_query_path" class="form-control mb-3" placeholder="SELECT * FROM table .... / raw_data.csv" rows="10"></textarea>
+													</div>
+													<div class="col-md-6">
+														<label class="form-label" for="inputPasswordNew2">user</label>
+														<input name="deliveries_user" type="text" class="form-control mb-3" id="products_user">
+														<label class="form-label" for="inputPasswordNew">password</label>
+														<input name="deliveries_password" type="password" class="form-control mb-3" id="inputPasswordNew">
+														<label class="form-label" for="inputPasswordNew2">port</label>
+														<input name="deliveries_port" type="text" class="form-control mb-3" id="deliveries_port">
+														<label class="form-label" for="inputPasswordNew2">host</label>
+														<input name="deliveries_host" type="text" class="form-control mb-3" id="deliveries_host">
+														<label class="form-label" for="inputPasswordNew2">database</label>
+														<input name="deliveries_db" type="text" class="form-control" id="deliveries_db">
+													</div>
+												</div>
+												<button name="connect" value="deliveries" type="submit" class="btn btn-primary" >Connect</button>
+											{% endif %}
+
+											{% if values['connection'] == '....' %}
+												<strong style="color:red;">Please add Data Storage Folder</strong>
+											{% endif %}
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+
+			</div>
+		</div>
+	</main>
+
+{% endblock content %}
+
+<script>
+function myFunction() {
+  // Get the checkbox
+  var checkBox = document.getElementById("myCheck");
+  // Get the output text
+  var text = document.getElementById("text");
+
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+  } else {
+    text.style.display = "none";
+  }
+}
+</script>
+{% block javascripts %}{% endblock javascripts %}

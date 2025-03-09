@@ -1,0 +1,159 @@
+data_connection:
+  orders_data_source_tag: 
+  orders_data_source_type: 
+  orders_data_query_path: 
+  orders_password: 
+  orders_user: 
+  orders_port: 
+  orders_host: 
+  orders_db: 
+  downloads_data_source_tag: 
+  downloads_data_source_type: 
+  downloads_data_query_path: 
+  downloads_password: 
+  downloads_user:
+  downloads_port:
+  downloads_host:
+  downloads_db:
+  products_data_source_tag: 
+  products_data_source_type: 
+  products_data_query_path: 
+  products_password: 
+  products_user:
+  products_port:
+  products_host:
+  products_db:
+  deliveries_data_source_tag:
+  deliveries_data_source_type:
+  deliveries_data_query_path:
+  deliveries_password:
+  deliveries_user:
+  deliveries_port:
+  deliveries_host:
+  deliveries_db:
+  dimension:
+  promotion_id:
+
+data_columns_integration:
+  order_id:
+  order_id_2:
+  client:
+  session_start_date:
+  payment_amount:
+  discount_amount:
+  date:
+  download_date:
+  signup_date:
+  data_type:
+  has_purchased:
+  product:
+  price:
+  category:
+  promotion_id:
+  actions:
+  dimension:
+  client_2:
+  delivery_date:
+  prepare_date:
+  return_date:
+  latitude:
+  longitude:
+
+schedule_data:
+  schedule:
+  schedule_tag:
+  time_period:
+  max_date_of_order_data:
+  ml:
+    schedule_tag:
+    time_period:
+
+  ea:
+    schedule_tag:
+    time_period:
+    max_date_of_order_data:
+
+reports:
+  -
+    type:
+    dimension:
+
+actions:
+  sessions:
+    data_type:
+    action_name:
+  downloads:
+    data_type:
+    action_name:
+  products:
+      data_type:
+      action_name:
+  delivery:
+      data_type:
+      action_name:
+
+logs:
+  -
+    log_time:
+    page:
+    color:
+    info:
+
+
+ea_configs:
+  date:
+  has_product_connection: True
+  has_promotion_connection: True
+
+  funnel:
+    actions:
+      sessions:
+        - download
+        - signup
+      orders:
+        - has_basket
+        - order_screen
+    data_sets:
+      - orders
+  cohort:
+    actions:
+      orders:
+        - has_basket
+        - order_screen
+    data_sets:
+      - orders
+      - downloads
+  products:
+    actions:
+      orders:
+        - has_basket
+        - order_screen
+    data_sets:
+      - orders
+      - products
+  promotions:
+    actions:
+      orders:
+        - has_basket
+        - order_screen
+    data_sets:
+      - orders
+  rfm:
+    actions:
+    data_sets:
+      - orders
+  stats:
+    actions:
+    data_sets:
+      - orders
+      - downloads
+  churn:
+    actions:
+    data_sets:
+      - orders
+
+
+ml_configs:
+
+
+

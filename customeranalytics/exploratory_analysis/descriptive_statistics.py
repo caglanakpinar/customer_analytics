@@ -1,19 +1,13 @@
 import numpy as np
 import pandas as pd
-import sys, os, inspect
+import datetime
 import warnings
 warnings.filterwarnings("ignore")
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from customeranalytics.configs import default_es_port, default_es_host, default_query_date, time_periods
-from customeranalytics.utils import *
-from customeranalytics.data_storage_configurations.query_es import QueryES
+from customeranalytics.exploratory_analysis.base import BaseEDA
 
 
-class Stats:
+class Stats(BaseEDA):
     """
     There are some overall values that need to check each day for businesses.
     These values are also crucial metrics for the dashboards.
@@ -55,11 +49,7 @@ class Stats:
         !!!
     """
 
-    def __init__(self,
-                 host=None,
-                 port=None,
-                 download_index='downloads',
-                 order_index='orders'):
+    def __init__(self, host=None, port=None, download_index='downloads', order_index='orders'):
         """
         ******* ******** *****
         Dimensional Stats:
@@ -80,11 +70,7 @@ class Stats:
         :param download_index: elasticsearch port
         :param order_index: elasticsearch port
         """
-        self.port = default_es_port if port is None else port
-        self.host = default_es_host if host is None else host
-        self.download_index = download_index
-        self.order_index = order_index
-        self.query_es = QueryES(port=port, host=host)
+        super().__init__(host, port, download_index, order_index)
         self.orders_field_data = ["id", "session_start_date", "client",
                                   "payment_amount", "discount_amount", "actions.purchased", "dimension"]
         self.stats = ["total_orders", "last_week_orders",
@@ -98,35 +84,7 @@ class Stats:
                       "hourly_revenue", "daily_revenue", "weekly_revenue", "monthly_revenue",
                       "total_order_count_per_customer", "dimension_kpis", "daily_dimension_values"]
         self.last_week = None
-        self.time_periods = time_periods  # ["daily", "weekly", 'monthly']
-        self.orders = pd.DataFrame()
-        self.dimension_kpis = pd.DataFrame()
-        self.daily_dimension_values = pd.DataFrame()
         self.results = {}
-
-    def dimensional_query(self, boolean_query=None):
-        if dimension_decision(self.order_index):
-            if boolean_query is None:
-                boolean_query = [{"term": {"dimension": self.order_index}}]
-            else:
-                boolean_query += [{"term": {"dimension": self.order_index}}]
-        return boolean_query
-
-    def get_data(self, start_date=None):
-        """
-        query orders index to collect the data with columns that are
-        "id", "session_start_date", "client", "payment_amount", "discount_amount", "actions.purchased".
-        :param start_date: starting date of query
-        :return: data-frame individual order transactions.
-        """
-        start_date = default_query_date if start_date is None else start_date
-        if len(self.orders) == 0:
-            self.query_es = QueryES(port=self.port, host=self.host)
-            self.query_es.query_builder(fields=self.orders_field_data,
-                                        date_queries=[{"range": {"session_start_date": {"gte": start_date}}}],
-                                        boolean_queries=self.dimensional_query())
-            self.orders = pd.DataFrame(self.query_es.get_data_from_es())
-            self.orders['date'] = self.orders['session_start_date'].apply(lambda x: convert_to_date(x))
 
     def get_last_week(self):
         """
@@ -134,16 +92,6 @@ class Stats:
         :return: datetime
         """
         self.last_week = max(self.orders['date']) - datetime.timedelta(days=7)
-
-    def get_time_period(self):
-        """
-        converting date column of  values into the time_periods (hourly weekly, monthly,..)
-        orders; total data (orders/downloads data with actions)
-        final data; data set with time periods
-        """
-        for p in list(zip(self.time_periods,
-                     [convert_str_to_hour, convert_dt_to_day_str, find_week_of_monday, convert_dt_to_month_str])):
-            self.orders[p[0]] = self.orders["date"].apply(lambda x: p[1](x))
 
     def total_orders(self):
         """
@@ -342,7 +290,7 @@ class Stats:
             {"id": lambda x: len(np.unique(x))}).reset_index().rename(columns={"id": "order_count"})
 
     def get_dimension_kpis(self):
-        if not dimension_decision(self.order_index):
+        if not self.dimension_decision(self.order_index):
             _dimensions = list(self.orders['dimension'].unique())
             print(_dimensions)
             if len(_dimensions) > 1:
@@ -353,7 +301,7 @@ class Stats:
         return self.dimension_kpis
 
     def get_daily_dimension_values(self):
-        if not dimension_decision(self.order_index):
+        if not self.dimension_decision(self.order_index):
             _dimensions = list(self.orders['dimension'].unique())
             if len(_dimensions) > 1:
                 self.daily_dimension_values = self.orders.groupby(["dimension", "daily"]).agg(
@@ -372,7 +320,7 @@ class Stats:
             The rest of them are merged and stored as a one-row data-frame.
         """
         self.get_data(start_date=start_date)
-        self.get_time_period()
+        self.get_time_period(self.orders, 'session_start_date')
         self.get_last_week()
         for metric in list(zip(self.stats, [self.total_orders, self.last_week_orders,
                                             self.total_revenue, self.last_week_revenue,
@@ -400,10 +348,13 @@ class Stats:
                              "weekly_average_session_per_user",
                              "weekly_average_payment_amount", "user_counts_per_order_seq",
                              "total_order_count_per_customer", "dimension_kpis", "daily_dimension_values"]:
-                self.insert_into_reports_index(metric[1]().to_dict('results'),
-                                               start_date,
-                                               filters={"type": metric[0]},
-                                               index=self.order_index)
+                self.insert_into_reports_index(
+                    "stats",
+                    metric[1](),
+                    start_date=start_date,
+                    filters={"type": metric[0]},
+                    index=self.order_index
+                )
             else:
                 self.results[metric[0]] = metric[1]()
         self.insert_into_reports_index([self.results],
@@ -411,60 +362,3 @@ class Stats:
                                        filters={"type": ''},
                                        index=self.order_index)
 
-    def insert_into_reports_index(self, stats, start_date, filters={}, index='orders'):
-        """
-        via query_es.py, each report can be inserted into the reports index with the given format.
-        {"id": unique report id,
-         "report_date": start_date or current date,
-         "report_name": "stats",
-         "index": "main",
-         "report_types": {
-                          "type": "overall", "weekly_orders", "daily_orders", "monthly_orders"
-                          },
-         "data": stats (list of dictionaries)
-         }
-        :param stats: overall, weekly_orders, daily_orders, monthly_orders
-        :param start_date: datetime
-        :param filters: {"type": "overall" or "weekly_orders" or "daily_orders" or "monthly_orders"}
-        :param index: dimensionality of data index orders_location1 ;  dimension = location1
-        """
-        list_of_obj = [{"id": np.random.randint(200000000),
-                        "report_date": current_date_to_day().isoformat() if start_date is None else start_date,
-                        "report_name": "stats",
-                        "index": get_index_group(index),
-                        "report_types": filters,
-                        "data": stats}]
-
-        self.query_es.insert_data_to_index(list_of_obj, index='reports')
-
-    def fetch(self, stats, start_date=None):
-        """
-        query format;
-            queries = {"stats": "overall"}
-            queries = {"stats": "weekly_orders"}
-            	weekly	            orders
-            0	2020-12-07T00:00:00	3
-            1	2020-12-14T00:00:00	36687
-            2	2020-12-21T00:00:00	38166
-        :param stats:  overall, weekly_orders, daily_orders, monthly_orders
-        :param start_date:
-        :return: data-frame
-        """
-
-        boolean_queries = [{"term": {"report_name": "stats"}},
-                           {"term": {"report_types.type": stats}},
-                           {"term": {"index": get_index_group(self.order_index)}}]
-        date_queries = []
-        if start_date is not None:
-            date_queries = [{"range": {"report_date": {"gte": convert_to_iso_format(start_date)}}}]
-
-        self.query_es = QueryES(port=self.port,
-                                host=self.host)
-        self.query_es.query_builder(fields=None, _source=True,
-                                    boolean_queries=boolean_queries,
-                                    date_queries=date_queries)
-        _res = self.query_es.get_data_from_es(index="reports")
-        _data = pd.DataFrame()
-        if len(_res) != 0:
-            _data = pd.DataFrame(_res[0]['_source']['data'])
-        return _data
