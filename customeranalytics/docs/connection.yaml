@@ -154,6 +154,32 @@ ea_configs:
 
 
 ml_configs:
+  date:
+  has_product_connection: True
+  has_promotion_connection: True
+  segmentation:
+    data_sets:
+      - orders
+      - downloads
+  clv_prediction:
+    data_sets:
+      - orders
+      - downloads
+  abtest:
+    data_sets:
+      - orders
+      - downloads
+      - products
+  anomaly:
+    data_sets:
+      - orders
+  delivery_anomaly:
+    data_sets:
+      - orders
+      - deliveries
+
+
+
 
 
 

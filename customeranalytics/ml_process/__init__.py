@@ -9,23 +9,6 @@ from customeranalytics.ml_process.ab_test import ABTests
 from customeranalytics.ml_process.anomaly_detection import Anomaly
 from customeranalytics.ml_process.delivery_analytics import DeliveryAnalytics
 
-ml_configs = {"date": None,
-              'time_period': '6 months',
-              "segmentation": {"host": 'localhost', "port": '9200',
-                               'download_index': 'downloads', 'order_index': 'orders'},
-              "clv_prediction": {"temporary_export_path": None,
-                                 "host": 'localhost', "port": '9200',
-                                 'download_index': 'downloads', 'order_index': 'orders', 'time_period': 'weekly'},
-              "abtest": {"has_product_connection": True,
-                         "has_promotion_connection": True, "temporary_export_path": None,
-                         "host": 'localhost', "port": '9200', 'download_index': 'downloads', 'order_index': 'orders'},
-              "anomaly": {"host": 'localhost', "port": '9200',
-                          'download_index': 'downloads', 'order_index': 'orders'},
-              "delivery_anomaly": {"host": 'localhost', "port": '9200',
-                                   'download_index': 'downloads', 'order_index': 'orders', 
-                                   "temporary_export_path": None, 'has_delivery_connection': True},
-
-          }
 
 mls = {'segmentation': CustomerSegmentation,
        'clv_prediction': CLVPrediction,
@@ -67,6 +50,5 @@ def query_mls(configs, queries, ea):
 __all__ = [
     'create_ml',
     'query_mls',
-    'ml_configs',
     'mls'
 ]
