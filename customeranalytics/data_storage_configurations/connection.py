@@ -11,8 +11,8 @@ class BaseConnection:
     data_columns_integration: dict = dict()
     schedule_data: dict = dict()
     actions: dict[dict] = dict()
-    ea_configs: dict[dict]
-    ml_configs: dict[dict]
+    ea_configs: dict[dict] = dict()
+    ml_configs: dict[dict] = dict()
 
     @classmethod
     def connection_config(cls, arguments: dict):
@@ -21,22 +21,35 @@ class BaseConnection:
             setattr(_cls, a, v)
         return _cls
 
+    def write(self, folder, file_name):
+        Utils.write_yaml(
+            {
+                "logs": self.logs,
+                "data_connection": self.data_connection,
+                "data_columns_integration": self.data_columns_integration,
+                "schedule_data": self.schedule_data,
+                "actions": self.actions,
+                "ea_configs": self.ea_configs,
+                "ml_configs": self.ml_configs
+
+            },
+            folder,
+            file_name
+        )
+
 
 class Connection(Paths, Utils, Config):
     def __init__(self):
-        self.default_conf = BaseConnection.connection_config(
-            self.read_connection()
-        )
-        self.connection_conf: BaseConnection = BaseConnection.connection_config(
-            self.read_connection()
-        )
+        self.default_conf: BaseConnection = self.read_configuration()
+        self.connection_conf: BaseConnection = self.read_configuration()
 
-    def read_connection(self):
-        return self.read_yaml(self.query_path, self.connection_file_name)
+    def read_configuration(self) -> BaseConnection:
+        return BaseConnection.connection_config(
+            self.read_yaml(self.query_path, self.connection_file_name)
+        )
 
     def update_connection(self):
-        self.write_yaml(
-            self.read_connection(),
+        self.connection_conf.write(
             self.connection_folder,
             self.connection_file_name,
         )
@@ -45,9 +58,7 @@ class Connection(Paths, Utils, Config):
         self.connection_folder = Path(folder)
         if not self.exists(self.connection_folder, self.connection_file_name):
             self.update_connection()
-        self.connection_conf: BaseConnection = BaseConnection.connection_config(
-            self.read_connection()
-        )
+        self.connection_conf: BaseConnection = self.read_configuration()
 
     def check_for_table_exits(self, table: str):
         """
