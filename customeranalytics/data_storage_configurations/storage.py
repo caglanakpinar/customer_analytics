@@ -83,17 +83,18 @@ class DataStorageConfigurations(BaseDataStorageConfiguration):
 
         """
         actions = {
-            'orders': self.get_action_name('orders'),
+            'sessions': self.get_action_name('sessions'),
             'downloads': self.get_action_name('downloads')
         }
 
         configs = []
         for config_type in ['ea_configs', 'ml_configs']:
             conf = getattr(self.connection_conf, config_type)
-            for ea in conf:
+            eas = [*conf.keys()]
+            for ea in eas:
                 if ea == 'funnel':
                     conf[ea]['actions'] = actions['downloads']
-                    conf[ea]['purchase_actions'] = actions['orders']
+                    conf[ea]['purchase_actions'] = actions['sessions']
                 if ea in ['abtest', 'clv_prediction', 'delivery_anomaly']:
                     conf[ea]['temporary_export_path'] = self.connection_folder
                 if not self.decision_for_data_type_conn('products'):
@@ -105,9 +106,11 @@ class DataStorageConfigurations(BaseDataStorageConfiguration):
                 if not self.decision_for_data_type_conn('deliveries'):
                     if ea == 'delivery_anomaly':
                         conf[ea]['has_delivery_connection'] = False
+
+                conf['actions'] = actions
             self.update_ea_ml_config(conf, config_type)
             configs += [conf]
-        return configs + [actions]
+        return configs
 
     def decision_for_data_type_conn(self, data_type):
         return (
@@ -148,11 +151,10 @@ class DataStorageConfigurations(BaseDataStorageConfiguration):
         """
         self.inject_data()
 
-        _ea_configs, _ml_configs, _actions = self.get_and_update_ea_and_ml_config()
+        _ea_configs, _ml_configs = self.get_and_update_ea_and_ml_config()
         args = dict(
             ml_connection_structure=_ml_configs,
             ea_connection_structure=_ea_configs,
-            actions=_actions
         )
         self.data_work_pipelines_execution(
             **args
