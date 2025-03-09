@@ -128,8 +128,6 @@ class RouterRequest(Profiles, Search):
             and data_connection.get('downloads_data_source_tag') is not None
         ):
             self.message.connect_accept = True
-            for dt in ['orders', 'downloads', 'products', 'deliveries']:
-                data_connection[dt + '_data_query_path'] = list(data_connection[dt + '_data_query_path'])[0]
 
             if data_connection.get('products_data_source_tag') is not None:
                 self.message.has_product_data_source = True
