@@ -1,0 +1,56 @@
+[tool.poetry]
+name = "customeranalytics"
+version = "0.0.2"
+description = "Funnels, Cohorts, A/B Tests, e-commerce, CLV Prediction, Product Analytics, Churn, Anomaly Detection, Customer Segmentation, RFM, Statistics"
+authors = ["Caglan Akpinar <cakpinar23@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/caglanakpinar/customer_analytics"
+repository = "https://github.com/caglanakpinar/customer_analytics"
+keywords = [
+    "Funnels", "Cohorts", "A/B Tests", "e-commerce", "CLV Prediction",
+    "Product Analytics", "Churn", "Anomaly Detection",
+    "Customer Segmentation", "RFM", "Statistics", "Customer Analytics"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+packages = [
+    { include = "customeranalytics" }
+]
+include = ["customeranalytics/web/**", "customeranalytics/docs/**"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+PyYAML = "*"
+psycopg2-binary = "*"
+psutil = "*"
+requests = "*"
+urllib3 = "*"
+email_validator = "*"
+flask_login = "*"
+flask = "*"
+python-decouple = "*"
+flask_migrate = "*"
+flask_wtf = "*"
+sqlalchemy = "*"
+screeninfo = "*"
+numpy = "*"
+pandas = "*"
+elasticsearch = "*"
+schedule = "*"
+h2o = "*"
+keras-tuner = "*"
+tensorflow = "*"
+clv-prediction = "*"
+abtest = "*"
+pygeohash = "*"
+random2 = "*"
+pytest-shutil = "*"
+python-math = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
