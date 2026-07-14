@@ -15,9 +15,8 @@ from customeranalytics.data_storage_configurations.query_es import QueryES
 from customeranalytics.data_storage_configurations.reports import Reports
 
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
-                       convert_unicode=True, connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), connect_args={'check_same_thread': False})
+metadata = MetaData()
 con = engine.connect()
 
 
@@ -111,7 +110,7 @@ class CLVPrediction:
                                                             query={"report_name": "clv_prediction"})
             if len(_reports) != 0:
                 try:
-                    _directory = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]['directory']
+                    _directory = pd.read_sql("SELECT * FROM es_connection", con).to_dict('records')[-1]['directory']
                     print(_directory)
                     clv_report = pd.read_csv(join(_directory, "build_in_reports", "main", "daily_clv.csv"))
                     if len(clv_report) != 0:
@@ -137,7 +136,7 @@ class CLVPrediction:
          "report_name": "clv_prediction",
          "index": "main",
          "report_types": {"time_period": weekly, monthly, daily },
-         "data": segments.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
+         "data": segments.fillna(0.0).to_dict("records") -  dataframe to list of dictionary
          }
          !!! null values are assigned to 0.
 
@@ -158,7 +157,7 @@ class CLVPrediction:
                              "report_name": "clv_prediction",
                              "index": get_index_group(index),
                              "report_types": {"time_period": time_period, "partition": i},
-                             "data": _clv_predictions.fillna(0.0).to_dict("results")}]
+                             "data": _clv_predictions.fillna(0.0).to_dict("records")}]
             self.query_es.insert_data_to_index(_list_of_obj, index='reports')
 
     def convert_time_period(self, period):

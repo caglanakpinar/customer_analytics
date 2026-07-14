@@ -27,9 +27,9 @@ try: from ml_process import ml_configs
 except: from customeranalytics.ml_process import ml_configs
 
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
                        connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
+metadata = MetaData()
 con = engine.connect()
 
 
@@ -153,7 +153,7 @@ class RouterRequest:
         data_connection = self.collect_data_from_table(table='data_connection')
         sessions, customers, products, deliveries = False, False, False, False
         if len(data_connection) != 0:
-            data_connection = data_connection.to_dict('results')[-1]
+            data_connection = data_connection.to_dict('records')[-1]
             sessions = True if data_connection['orders_data_source_tag'] != 'None' else False
             customers = True if data_connection['downloads_data_source_tag'] != 'None' else False
             products = True if data_connection['products_data_source_tag'] != 'None' else False
@@ -165,9 +165,9 @@ class RouterRequest:
         es_connection = self.collect_data_from_table(table='es_connection')
         if len(es_connection) != 0:
             if template in ['add-data-purchase_2', 'add-data-product_2']:
-                self.message['es_connection'] = es_connection.to_dict('results')[-1]
+                self.message['es_connection'] = es_connection.to_dict('records')[-1]
             else:
-                self.message['es_connection'] = es_connection.to_dict('results')
+                self.message['es_connection'] = es_connection.to_dict('records')
             # self.message['s_c_p_connection_check'] = "_".join(
             #     [str(i) for i in self.check_for_session_and_customer_product_connect()])
             self.message['s_c_p_connection_check'] = self.check_for_session_and_customer_product_connect()
@@ -187,7 +187,7 @@ class RouterRequest:
         try:
             es_connection = self.collect_data_from_table(table='es_connection')
             if len(es_connection) != 0:
-                self.message['es_connection'] = es_connection.to_dict('results')[-1]
+                self.message['es_connection'] = es_connection.to_dict('records')[-1]
             else:
                 self.message['es_connection'] = '....'
         except Exception as e: logging.error(e)
@@ -196,13 +196,13 @@ class RouterRequest:
             logs = self.collect_data_from_table(table='logs')
             if len(logs) != 0:
                 logs['color'] = logs['color'].apply(lambda x: 'color:' + x + ';')
-                self.message['logs'] = logs.to_dict('results')[-min(len(logs), 20):]
+                self.message['logs'] = logs.to_dict('records')[-min(len(logs), 20):]
             else:
                 self.message['logs'] = '....'
         except Exception as e: logging.error(e)
 
         if len(data_connection) != 0:
-            if self.check_for_both_sessions_and_customers_data_source(data_connection.to_dict('results')[-1]):
+            if self.check_for_both_sessions_and_customers_data_source(data_connection.to_dict('records')[-1]):
                 self.message['connect_accept'] = True
                 for dt in ['orders', 'downloads', 'products', 'deliveries']:
                     data_connection[dt + '_data_query_path'] = sqlite_string_converter(
@@ -215,14 +215,14 @@ class RouterRequest:
                                              actions.query("data_type == 'downloads'").drop('data_type', axis=1).rename(
                                                  columns={"action_name": "d_actions"}).reset_index()], axis=1).fillna('....')
 
-                schedule = data_connection.to_dict('results')[-1]
+                schedule = data_connection.to_dict('records')[-1]
                 self.message['schedule'] = {i: '....' for i in list(schedule.keys()) + ['ses_actions', 'd_actions'] +
                                             self.sqlite_queries['columns']['schedule_data'][1:]}
                 for i in schedule:
                     if schedule[i] not in [None, 'None']:
                         self.message['schedule'][i] = schedule[i]
                 self.message['schedule'] = [self.message['schedule']]
-                if self.check_for_product_data_source(data_connection.to_dict('results')[-1]):
+                if self.check_for_product_data_source(data_connection.to_dict('records')[-1]):
                     self.message['has_product_data_source'] = True
 
     def update_data_query_path_for_insert(self, requests):
@@ -243,7 +243,7 @@ class RouterRequest:
                                               values=requests))
             except Exception as e: logging.error(e)
         else:
-            data_connections = data_connections.to_dict('results')[-1]
+            data_connections = data_connections.to_dict('records')[-1]
             try:
                 con.execute(self.update_query(table='data_connection',
                                               condition=" id = " + str(data_connections['id']),
@@ -274,7 +274,7 @@ class RouterRequest:
         if len(prev_actions) != 0:
             prev_actions_data_type = prev_actions[prev_actions['data_type'] == requests['data_type']]
             if len(prev_actions_data_type) != 0:
-                for a in prev_actions_data_type.to_dict('results'):
+                for a in prev_actions_data_type.to_dict('records'):
                     con.execute(self.delete_query(table='actions',
                                                   condition=" id = " + str(a['id'])))
 
@@ -304,7 +304,7 @@ class RouterRequest:
     def update_schedule_table(self, requests):
         try:
             self.check_for_table_exits(table='schedule_data')
-            prev_schedule = self.collect_data_from_table(table='schedule_data').to_dict('results')
+            prev_schedule = self.collect_data_from_table(table='schedule_data').to_dict('records')
             if len(prev_schedule) != 0:
                 self.logs_update(logs={"page": "data-execute", "info": "Previous job " + " is removed.", "color": "red"})
                 con.execute(self.delete_query(table='schedule_data', condition=" id = 1"))
@@ -426,7 +426,7 @@ class RouterRequest:
             try:
                 es_connection = self.collect_data_from_table(table='es_connection')
                 if len(es_connection) != 0:
-                    self.message['es_connection'] = es_connection.to_dict('results')[-1]
+                    self.message['es_connection'] = es_connection.to_dict('records')[-1]
                 else:
                     self.message['es_connection'] = '....'
             except Exception as e:

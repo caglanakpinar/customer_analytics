@@ -18,9 +18,8 @@ from customeranalytics.configs import elasticsearch_connection_refused_comment, 
 from customeranalytics.utils import read_yaml, sqlite_string_converter, abspath_for_sample_data
 
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
-                       convert_unicode=True, connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), connect_args={'check_same_thread': False})
+metadata = MetaData()
 con = engine.connect()
 
 
@@ -46,7 +45,7 @@ def create_data_access_parameters(connection, index='orders', date=None, test=Fa
 
 def get_data_connection_arguments():
     conn = read_sql("SELECT * FROM data_connection  ", con).to_dict('resutls')[-1]
-    columns = read_sql("SELECT  *  FROM data_columns_integration", con).to_dict('results')[-1]
+    columns = read_sql("SELECT  *  FROM data_columns_integration", con).to_dict('records')[-1]
 
     data_configs = {'orders': create_data_access_parameters(conn, index='orders', date=None, test=False),
                     'downloads': create_data_access_parameters(conn, index='downloads', date=None, test=False),
@@ -204,7 +203,7 @@ def connection_check(request, index='orders', type=''):
                 _df = gd.data
                 # required list; order_id, client, s_start_date, amount, has_purchased
                 if get_columns_condition(request, _columns, index):
-                    accept, message, data, raw_columns = True, 'Connected', _df.to_dict('results'), gd.data.columns.values
+                    accept, message, data, raw_columns = True, 'Connected', _df.to_dict('records'), gd.data.columns.values
     except Exception as e:
         print(e)
     return accept, message, data, raw_columns

@@ -18,9 +18,9 @@ from customeranalytics.utils import convert_to_day, abspath_for_sample_data
 from customeranalytics.configs import time_periods, descriptive_stats, abtest_promotions, \
     abtest_products, abtest_segments, delivery_metrics
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
                        connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
+metadata = MetaData()
 con = engine.connect()
 
 
@@ -534,7 +534,7 @@ class RealData:
         """
         dimensions = ['There is no available report. Please execute Schedule Data Process']
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('records')[-1]
             if exists(join(es_tag['directory'], "build_in_reports")):
                 _dims = listdir(dirname(join(es_tag['directory'], "build_in_reports")))
                 if len(_dims) != 0:
@@ -549,7 +549,7 @@ class RealData:
         checks for 'build_in_reports' while platform is running.
         """
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('records')[-1]
             _path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
             if date is not None:
                 _path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
@@ -562,7 +562,7 @@ class RealData:
         checks for 'build_in_reports' while platform is running and collect the selected report.
         """
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
+            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('records')[-1]
             file_path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
             if date is not None:
                 date_file_path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
@@ -783,7 +783,7 @@ class Charts:
                 _data['payment_bins'] = _data['payment_bins'].apply(lambda x: round(float(x), 2))
                 _data['orders'] = _data['orders'].apply(lambda x: int(x))
                 _trace_updated = []
-                for _bin in _data.to_dict('results'):
+                for _bin in _data.to_dict('records'):
                     _trace_updated.append(go.Bar(x=[_bin['payment_bins']], y=[_bin['orders']], showlegend=False))
                 trace = _trace_updated
             else:
@@ -982,7 +982,7 @@ class Charts:
         :return: dictionary with KPIs in keys
         """
         _data, is_real_data = self.get_data(kpi, index, date)
-        return _data.to_dict('results')[0], is_real_data
+        return _data.to_dict('records')[0], is_real_data
 
     def has_chart_annotation(self, chart, c):
         if 'cohort' in chart.split("_"):

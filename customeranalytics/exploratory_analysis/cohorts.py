@@ -382,7 +382,7 @@ class Cohorts:
                           "_from": 0 (only for downlods), 1, 2, 3
                           "_to": 1, 2, 3, 4
                           },
-         "data": cohort.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
+         "data": cohort.fillna(0.0).to_dict("records") -  dataframe to list of dictionary
          }
          !!! null values are assigned to 0.
 
@@ -399,7 +399,7 @@ class Cohorts:
                         "report_name": "cohort",
                         "index": get_index_group(index),
                         "report_types": {"time_period": time_period, "from": _from, "to": _to,  "type": cohort_type},
-                        "data": cohort.fillna(0.0).to_dict("results")}]
+                        "data": cohort.fillna(0.0).to_dict("records")}]
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def get_cohort_name(self, cohort_name):

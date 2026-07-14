@@ -241,7 +241,7 @@ class PromotionAnalytics:
                          "daily_inorganic_ratio", "hourly_inorganic_ratio",
                          "daily_promotion_revenue", "daily_promotion_discount", "avg_order_count_per_promo_per_cust"
                           },
-         "data": promotion_analytic.to_dict("results") -  dataframe to list of dictionary
+         "data": promotion_analytic.to_dict("records") -  dataframe to list of dictionary
          }
         :param promotion_analytic: data set, data frame
         :param start_date: data start date
@@ -253,7 +253,7 @@ class PromotionAnalytics:
                         "report_name": "promotion_analytic",
                         "index": get_index_group(index),
                         "report_types": {"type": pa_type},
-                        "data": promotion_analytics.fillna(0).to_dict("results")}]
+                        "data": promotion_analytics.fillna(0).to_dict("records")}]
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def fetch(self, promotion_analytic_name, start_date=None):

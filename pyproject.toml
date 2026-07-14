@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "customeranalytics"
-version = "0.0.2"
+version = "0.1"
 description = "Funnels, Cohorts, A/B Tests, e-commerce, CLV Prediction, Product Analytics, Churn, Anomaly Detection, Customer Segmentation, RFM, Statistics"
 authors = ["Caglan Akpinar <cakpinar23@gmail.com>"]
 license = "MIT"
@@ -23,7 +23,7 @@ packages = [
 include = ["customeranalytics/web/**", "customeranalytics/docs/**"]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
+python = ">=3.11,<3.13"
 PyYAML = "*"
 psycopg2-binary = "*"
 psutil = "*"
@@ -43,7 +43,7 @@ elasticsearch = "*"
 schedule = "*"
 h2o = "*"
 keras-tuner = "*"
-tensorflow = "*"
+tensorflow = ">=2.18.0,<2.20.0"
 clv-prediction = "*"
 abtest = "*"
 pygeohash = "*"

@@ -189,7 +189,7 @@ class CustomerSegmentation:
         """
         for i in self.rfm.groupby("frequency_segment").agg(
                                 {"frequency": "mean"}).reset_index().sort_values(
-                                by='frequency', ascending=True).reset_index(drop=True).reset_index().to_dict('results'):
+                                by='frequency', ascending=True).reset_index(drop=True).reset_index().to_dict('records'):
             self.frequency_segments[i['frequency_segment']] = 5 - i['index']
 
     def get_recency_segments(self):
@@ -208,7 +208,7 @@ class CustomerSegmentation:
         """
         for i in self.rfm.groupby("recency_segment").agg(
                                 {"recency": "mean"}).reset_index().sort_values(
-                                by='recency', ascending=True).reset_index(drop=True).reset_index().to_dict('results'):
+                                by='recency', ascending=True).reset_index(drop=True).reset_index().to_dict('records'):
             self.recency_segments[i['recency_segment']] = 5 - i['index']
 
     def get_segments_numeric(self):
@@ -234,7 +234,7 @@ class CustomerSegmentation:
         """
         for i in self.rfm.groupby("monetary_segment").agg(
                                 {"monetary": "mean"}).reset_index().sort_values(
-                                by='monetary', ascending=True).reset_index(drop=True).reset_index().to_dict('results'):
+                                by='monetary', ascending=True).reset_index(drop=True).reset_index().to_dict('records'):
             self.monetary_segments[i['monetary_segment']] = 5 - i['index']
 
     def combine_segments(self):
@@ -282,7 +282,7 @@ class CustomerSegmentation:
          "report_name": "segmentation",
          "index": "main",
          "report_types": {},
-         "data": segments.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
+         "data": segments.fillna(0.0).to_dict("records") -  dataframe to list of dictionary
          }
          !!! null values are assigned to 0.
 
@@ -294,7 +294,7 @@ class CustomerSegmentation:
                         "report_name": "segmentation",
                         "index": get_index_group(index),
                         "report_types": {},
-                        "data": segments.fillna(0.0).to_dict("results")}]
+                        "data": segments.fillna(0.0).to_dict("records")}]
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def execute_customer_segment(self, start_date=None):

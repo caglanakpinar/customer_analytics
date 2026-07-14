@@ -195,7 +195,7 @@ class Churn:
                         "report_name": "churn",
                         "index": get_index_group(index),
                         "report_types": {"type": churn_type},
-                        "data": churn.to_dict('results')}]
+                        "data": churn.to_dict('records')}]
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def fetch(self, churn_type, start_date=None):

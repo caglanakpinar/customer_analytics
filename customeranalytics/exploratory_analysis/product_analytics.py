@@ -282,7 +282,7 @@ class ProductAnalytics:
          "report_types": {"type": "most_ordered_products", "most_ordered_categories", "hourly_products_of_sales",
                             "hourly_categories_of_sales", "hourly_categories_of_sales", "most_combined_products"
                           },
-         "data": product_analytic.to_dict("results") -  dataframe to list of dictionary
+         "data": product_analytic.to_dict("records") -  dataframe to list of dictionary
          }
         :param product_analytic: data set, data frame
         :param start_date: data start date
@@ -294,7 +294,7 @@ class ProductAnalytics:
                         "report_name": "product_analytic",
                         "index": get_index_group(index),
                         "report_types": {"type": pa_type},
-                        "data": product_analytic.fillna(0).to_dict("results")}]
+                        "data": product_analytic.fillna(0).to_dict("records")}]
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def fetch(self, product_analytic_name, start_date=None):

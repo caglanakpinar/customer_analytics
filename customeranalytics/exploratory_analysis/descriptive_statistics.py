@@ -400,7 +400,7 @@ class Stats:
                              "weekly_average_session_per_user",
                              "weekly_average_payment_amount", "user_counts_per_order_seq",
                              "total_order_count_per_customer", "dimension_kpis", "daily_dimension_values"]:
-                self.insert_into_reports_index(metric[1]().to_dict('results'),
+                self.insert_into_reports_index(metric[1]().to_dict('records'),
                                                start_date,
                                                filters={"type": metric[0]},
                                                index=self.order_index)

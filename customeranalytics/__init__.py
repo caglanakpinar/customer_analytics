@@ -38,9 +38,8 @@ try: from .configs import none_types, session_columns, customer_columns
 except: from customeranalytics.configs import none_types, session_columns, customer_columns
 
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
-                       convert_unicode=True, connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), connect_args={'check_same_thread': False})
+metadata = MetaData()
 con = engine.connect()
 
 
@@ -237,7 +236,7 @@ def create_connections(customers_connection,
         """ + ", ".join(customer_column_need) + " \n "
 
     try:
-        es_con = pd.read_sql(""" SELECT *  FROM es_connection """, con).to_dict('results')[0]
+        es_con = pd.read_sql(""" SELECT *  FROM es_connection """, con).to_dict('records')[0]
         connection, message = check_elasticsearch(es_con['port'], es_con['host'], es_con['directory'])
     except:
         connection, message = False, """

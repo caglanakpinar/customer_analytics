@@ -322,7 +322,7 @@ class Funnels:
          "report_types": {"time_period": yearly (only for overall funnel), monthly, hourly, weekly, daily
                           "type": orders, downloads, overall
                           },
-         "data": funnel[t].to_dict("results") -  dataframe to list of dictionary
+         "data": funnel[t].to_dict("records") -  dataframe to list of dictionary
          }
         :param funnel: data set, data frame
         :param start_date: data start date
@@ -336,7 +336,7 @@ class Funnels:
                           "report_name": "funnel",
                           "index": get_index_group(index),
                           "report_types": {"time_period": t, "type": funnel_type},
-                          "data": funnel[t].fillna(0).to_dict("results")}
+                          "data": funnel[t].fillna(0).to_dict("records")}
             list_of_obj.append(insert_obj)
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
