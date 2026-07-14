@@ -702,7 +702,7 @@ class DeliveryAnalytics:
                         "report_name": "delivery_anomaly",
                         "index": get_index_group(index),
                         "report_types": {"type": anomaly_type},
-                        "data": delivery_anomaly.fillna(0).to_dict("results")}]
+                        "data": delivery_anomaly.fillna(0).to_dict("records")}]
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def fetch(self, anomaly_type, start_date=None):

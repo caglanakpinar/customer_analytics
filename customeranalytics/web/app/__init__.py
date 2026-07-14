@@ -15,13 +15,12 @@ def register_extensions(app):
 
 def register_blueprints(app):
     for module_name in ('base', 'home'):
-        module = import_module('app.{}.routes'.format(module_name))
+        module = import_module('.{}.routes'.format(module_name), package=__name__)
         app.register_blueprint(module.blueprint)
 
 
 def configure_database(app):
-    @app.before_first_request
-    def initialize_database():
+    with app.app_context():
         db.create_all()
 
     @app.teardown_request

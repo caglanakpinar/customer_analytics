@@ -3,16 +3,16 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from web.app.home import blueprint
+from . import blueprint
 from flask import render_template, request
 from flask_login import login_required
 from jinja2 import TemplateNotFound
 import json
 
-from customeranalytics.web.app.home.models import RouterRequest
-from customeranalytics.web.app.home.search import Search
-from customeranalytics.web.app.home.forms import SampleData, RealData, Charts, charts
-from customeranalytics.web.app.home.profiles import Profiles
+from .models import RouterRequest
+from .search import Search
+from .forms import SampleData, RealData, Charts, charts
+from .profiles import Profiles
 from customeranalytics.data_storage_configurations.logger import LogsBasicConfeger
 
 

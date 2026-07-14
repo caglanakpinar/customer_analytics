@@ -17,9 +17,9 @@ from customeranalytics.utils import *
 from customeranalytics.data_storage_configurations.query_es import QueryES
 
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
                        connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
+metadata = MetaData()
 con = engine.connect()
 
 
@@ -182,8 +182,8 @@ class Reports:
         """
         tag, has_dimension = {}, False
         try:
-            self.es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('results')[-1]
-            dimensions = pd.read_sql("SELECT  * FROM data_connection", con).to_dict('results')[0]
+            self.es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('records')[-1]
+            dimensions = pd.read_sql("SELECT  * FROM data_connection", con).to_dict('records')[0]
             if dimensions['dimension'] not in ['None', None]:
                 has_dimension = True
         except Exception as e:

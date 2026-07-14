@@ -28,9 +28,8 @@ from customeranalytics.utils import current_date_to_day, convert_to_day, abspath
 from customeranalytics.configs import query_path
 
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
-                       convert_unicode=True, connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), connect_args={'check_same_thread': False})
+metadata = MetaData()
 con = engine.connect()
 
 
@@ -118,7 +117,7 @@ class Scheduler:
         self.ml_connection_structure = ml_connection_structure
         self.actions = actions
         self.data_columns = data_columns
-        self.es_con = pd.read_sql("select * from es_connection", con).to_dict('results')[-1]
+        self.es_con = pd.read_sql("select * from es_connection", con).to_dict('records')[-1]
         self.create_index = CreateIndex(data_connection_structure=data_connection_structure,
                                         data_columns=data_columns, actions=actions)
         self.create_build_in_reports = Reports()

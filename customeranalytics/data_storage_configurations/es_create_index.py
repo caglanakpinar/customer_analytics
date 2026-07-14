@@ -24,12 +24,12 @@ from customeranalytics.data_storage_configurations.query_es import QueryES
 from customeranalytics.data_storage_configurations.data_access import GetData
 
 try:
-    engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
-    metadata = MetaData(bind=engine)
+    engine = create_engine('sqlite://///' + join(abspath(""), "web", 'db.sqlite3'), connect_args={'check_same_thread': False})
+    metadata = MetaData()
     con = engine.connect()
 except Exception as e:
-    engine = create_engine('sqlite://///' + join(parentdir, "web", 'db.sqlite3'), convert_unicode=True, connect_args={'check_same_thread': False})
-    metadata = MetaData(bind=engine)
+    engine = create_engine('sqlite://///' + join(parentdir, "web", 'db.sqlite3'), connect_args={'check_same_thread': False})
+    metadata = MetaData()
     con = engine.connect()
 
 
@@ -403,7 +403,7 @@ class CreateIndex:
         """
         try:
             _insert = []
-            data = data.to_dict('results')
+            data = data.to_dict('records')
             if index == 'orders':
                 for i in data:
                     _obj = {i: None for i in orders_index_columns}

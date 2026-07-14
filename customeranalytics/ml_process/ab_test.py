@@ -523,7 +523,7 @@ class ABTests:
          "report_name": "abtest",
          "index": "main",
          "report_types": {"abtest_type":  promotion_comparison || segments_change_monthly_before_after_amount, etc},
-         "data": abtest.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
+         "data": abtest.fillna(0.0).to_dict("records") -  dataframe to list of dictionary
          }
          !!! null values are assigned to 0.
 
@@ -537,7 +537,7 @@ class ABTests:
                         "report_name": "abtest",
                         "index": get_index_group(index),
                         "report_types": {"abtest_type": abtest_type},
-                        "data": abtest.fillna(0.0).to_dict("results")}]
+                        "data": abtest.fillna(0.0).to_dict("records")}]
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def build_in_tests(self, date):

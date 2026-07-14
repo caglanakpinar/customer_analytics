@@ -7,13 +7,13 @@ from flask_login import (
     logout_user
 )
 
-from customeranalytics.web.app import db, login_manager
-from customeranalytics.web.app.base import blueprint
-from customeranalytics.web.app.base.forms import LoginForm, CreateAccountForm
-from customeranalytics.web.app.base.models import User
+from .. import db, login_manager
+from . import blueprint
+from .forms import LoginForm, CreateAccountForm
+from .models import User
 from customeranalytics.data_storage_configurations.logger import LogsBasicConfeger
 
-from customeranalytics.web.app.base.util import verify_pass
+from .util import verify_pass
 
 
 LogsBasicConfeger()

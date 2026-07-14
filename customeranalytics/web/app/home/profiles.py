@@ -19,11 +19,11 @@ from werkzeug.utils import secure_filename
 
 from customeranalytics.utils import abspath_for_sample_data, read_yaml, current_date_to_day, convert_to_date
 from customeranalytics.configs import query_path, chart_names, ALLOWED_IMAGE_EXTENSIONS, MAX_IMAGE_FILESIZE, TIME_DIFF_STR, DATE_DIFF_STR
-from customeranalytics.web.app.home.forms import SampleData, RealData, Charts, charts
+from .forms import SampleData, RealData, Charts, charts
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
                        connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
+metadata = MetaData()
 con = engine.connect()
 
 samples = SampleData()
@@ -196,7 +196,7 @@ class Profiles:
             recent_chats['date_2'] = recent_chats['date'].apply(lambda x: self.get_date_diff_string(x))
             charts_for_profiles, recent_chats['chart_name'] = self.get_plots(list(recent_chats['chart']))
         self.filters = {"dimensions": real.get_report_dimensions(), "chart_names": chart_names}
-        return {"messages": recent_chats.to_dict('results') if len(recent_chats) != 0 else None,
+        return {"messages": recent_chats.to_dict('records') if len(recent_chats) != 0 else None,
                 'charts': charts_for_profiles, 'filters': self.filters}
 
     def fetch_pic(self, user=None):

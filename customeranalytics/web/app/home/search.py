@@ -26,13 +26,12 @@ except: from customeranalytics.exploratory_analysis import ea_configs
 try: from ml_process import ml_configs
 except: from customeranalytics.ml_process import ml_configs
 
-try: from web.app.home.forms import RealData
-except: from customeranalytics.web.app.home.forms import RealData
+from .forms import RealData
 
 
-engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), convert_unicode=True,
+engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
                        connect_args={'check_same_thread': False})
-metadata = MetaData(bind=engine)
+metadata = MetaData()
 con = engine.connect()
 
 
@@ -123,7 +122,7 @@ class Search:
         query for fetching the temporary folder path
         """
         try:
-            es_con = pd.read_sql(""" SELECT *  FROM es_connection """, con).to_dict('results')[0]
+            es_con = pd.read_sql(""" SELECT *  FROM es_connection """, con).to_dict('records')[0]
             self.temporary_path = es_con['directory']
         except:
             connection, message = False, """
@@ -230,7 +229,7 @@ class Search:
                 data.append({'search_value': _search_value, 'similarity_score': _similarity_score, 'search_type': m})
             data = pd.DataFrame(data).query("similarity_score != 0")
             if len(data) != 0:
-                data = data.sort_values(by='similarity_score', ascending=False).to_dict('results')[0]
+                data = data.sort_values(by='similarity_score', ascending=False).to_dict('records')[0]
                 self.visualization_data_for_search(type=data['search_type'], value=data['search_value'])
                 data['has_results'] = True
                 results = data

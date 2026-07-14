@@ -412,7 +412,7 @@ class Anomaly:
          "report_name": "rfm",
          "index": "main",
          "report_types": {},
-         "data": rfm.fillna(0.0).to_dict("results") -  dataframe to list of dictionary
+         "data": rfm.fillna(0.0).to_dict("records") -  dataframe to list of dictionary
          }
          !!! null values are assigned to 0.
 
@@ -426,7 +426,7 @@ class Anomaly:
                         "report_name": "anomaly",
                         "index": get_index_group(index),
                         "report_types": {"type": name},
-                        "data": anomaly.fillna(0).to_dict("results")}]
+                        "data": anomaly.fillna(0).to_dict("records")}]
         self.query_es.insert_data_to_index(list_of_obj, index='reports')
 
     def fetch(self, anomly, start_date=None):

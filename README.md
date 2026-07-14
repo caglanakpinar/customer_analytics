@@ -1,19 +1,93 @@
 # CustomerAnalytics
- 
+
+**The analytics and data science team your e-commerce business hasn't hired yet — as a library.**
+
+Where are customers falling out of the funnel? Which segments deserve the marketing budget? Is that promotion actually paying for itself, or just breaking even? Which customers are about to churn, and which orders look... off? These are the questions that usually take a growth analyst, a data scientist, and a few dashboards to answer. CustomerAnalytics answers all of them out of one library, running against infrastructure you already control.
+
+Point it at your Sessions, Customers, and Products data and it takes care of the rest: funnels, cohorts, RFM segmentation, CLV forecasting, anomaly detection, and statistically rigorous A/B testing — each with its own interactive dashboard, wired directly to your own ElasticSearch cluster. No BI subscription, no data export to a third party, no separate ML pipeline to maintain.
+
+[![PyPI version](https://img.shields.io/pypi/v/customeranalytics.svg)](https://pypi.org/project/customeranalytics/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](pyproject.toml)
+
 ---
 
-### How to install for Apple M1 MACOS?
+## Table of Contents
 
-You can download end install via pip. You also need miniforge3 environment rather than other conda environments such as anaconda. This is crucial in order to install tensorflow.
+- [Why teams reach for CustomerAnalytics](#why-teams-reach-for-customeranalytics)
+- [What it does](#what-it-does)
+- [How to install?](#how-to-install)
+- [Quick start](#quick-start)
+- [A. Understanding the concept of CustomerAnalytics](#a-understanding-the-concept-of-customeranalytics)
+- [B. How to use CustomerAnalytics](#b-how-to-use-customeranalytics)
+- [C. Exploratory Analysis](#c-exploratory-analysis)
+- [D. Machine Learning Works](#d-machine-learning-works)
+- [F. Configurations](#f-configurations)
+- [G. CustomerAnalytics DashBoard](#g-customeranalytics-dashboard)
+- [H. Searching](#h-searching)
 
-[customeranalytics_arm64-0.0.2.tar.gz](https://github.com/caglanakpinar/customer_analytics/files/7175230/customeranalytics_arm64-0.0.2.tar.gz)
+---
 
-Before installation, here are the requirements that must be installed individually;
+## Why teams reach for CustomerAnalytics
 
-- **clv_prediction :** [clv_prediction_arm64-0.1.8.tar.gz](https://github.com/caglanakpinar/clv_prediction/files/7172452/clv_prediction_arm64-0.1.8.tar.gz)
-- **psycopg2-binary**
-- **tensorflow-metal :** via https://developer.apple.com/metal/tensorflow-plugin/ you can check the instructions and it is able to be installed with a few steps.
-- **statsmodels :** Use **conda install -c conda-forge statsmodels** and install individually.
+- **It's a full analytics stack, not a chart library.** Funnels and cohorts tell you what happened; K-Means segmentation, LSTM/Conv-NN revenue forecasting, and AutoEncoder anomaly detection tell you what's about to happen. Both come standard.
+- **Your data never leaves your infrastructure.** Everything runs against your own ElasticSearch cluster. Connect `.csv`, PostgreSQL, Google BigQuery, or AWS Redshift directly — no export step, no third-party warehouse.
+- **Sets up its own upkeep.** One `create_schedule()` call and the data pipeline, exploratory analysis, and ML retraining keep themselves current — daily or every 12 hours — with no cron scripts to babysit.
+- **Answers grow with your data.** Products, Promotions, Deliveries, and custom Dimensions are all optional — connect them later and new dashboards and comparisons unlock automatically.
+
+---
+
+## What it does
+
+| Area | Modules | What you get |
+|---|---|---|
+| **Exploratory Analysis** | Funnels, Cohorts, Descriptive Stats, Product Analytics, Promotion Analytics | Conversion tracking, retention cohorts, and purchase/product breakdowns, refreshed on a schedule |
+| **Machine Learning** | A/B Tests, Customer Segmentation (RFM), CLV Prediction, Anomaly Detection, Delivery Analytics | Statistical before/after testing, K-Means segments, LSTM/Conv-NN revenue forecasts, and AutoEncoder-based outlier detection |
+| **Dashboards** | Overall, Customers, and per-analysis views | Interactive charts wired directly to your ElasticSearch indexes — filterable by dimension |
+| **Search** | Products, Clients, Promotions, Dimensions | Fuzzy n-gram search across your indexed entities |
+
+Data sources plug in as `.csv`, PostgreSQL, Google BigQuery, or AWS Redshift. Sessions and Customers are required; Products, Promotions, Deliveries, and custom Dimensions are optional and unlock additional charts as you add them.
+
+---
+
+## How to install?
+
+The project is managed with [Poetry](https://python-poetry.org/). Install dependencies with:
+
+    poetry install
+
+On Apple Silicon (M1/M2/etc.), `h5py` requires `pkg-config` and the HDF5 system library, and `tensorflow`/`pyarrow` wheels may not yet support the newest Python version installed on your system. If `poetry install` fails:
+
+- Install the system dependencies: `brew install pkg-config hdf5`
+- Point Poetry at a Python version with published `tensorflow`/`pyarrow` wheels (e.g. Python 3.13): `poetry env use /opt/homebrew/bin/python3.13`, then re-run `poetry install`.
+
+## Quick start
+
+```python
+import customeranalytics as ca
+
+# 1. Point CustomerAnalytics at your ElasticSearch instance
+ca.create_ElasticSearch_connection(host="localhost", port=9200, temporary_path="/path/to/workdir")
+
+# 2. Connect your Sessions/Customers (Products optional) data sources
+ca.create_connections(
+    sessions_connection={"data_source": "csv", "data_query_path": "/path/to/sessions.csv"},
+    customers_connection={"data_source": "csv", "data_query_path": "/path/to/customers.csv"},
+    sessions_fields={"order_id": "order_id", "client": "client_id", "session_start_date": "start_date",
+                      "payment_amount": "amount", "has_purchased": "purchased"},
+    customer_fields={"client_2": "client_id", "download_date": "download_date"},
+)
+
+# 3. Schedule the data pipeline + analyses (once, daily, or every 12 hours)
+ca.create_schedule(time_period="daily")
+
+# 4. Launch the dashboard
+ca.create_user_interface()
+```
+
+See [B. How to use CustomerAnalytics](#b-how-to-use-customeranalytics) for the full walkthrough with screenshots.
+
+---
 
 ### A. Understanding the concept of CustomerAnalytics
 
@@ -361,7 +435,7 @@ The dashboard covers the total orders per day/week/hour/month. It enables us to 
     
     ![image](https://user-images.githubusercontent.com/26736844/128715075-91a9b5bd-61c1-4176-8816-e704204bea73.png)
     
-#### 3. Product Analytics
+#### 4. Product Analytics
 
 When Product Data Sources is added and the data is transferred to the ElasticSearch, Product Analytics Charts are able to be updated. These give the basic idea of the products and their categories of purchase processes. These charts help us figure out the relation between products and the customers of order probability.
     
@@ -798,7 +872,7 @@ These analyses are only able to run when the delivery data source is created. It
 ---
 
 
-### F. Configugraitions
+### F. Configurations
 
 CustomerAnalytics allows to change profile pictures and chat according to individual charts in the system. For instance, you would like to create a comment about anomaly increase on Feb 20, 2021, on the Daily Orders Chart. It is possible with creating the message.
 
@@ -809,7 +883,7 @@ At profiles, you can create messages or you can change your profile picture.
 
 ![image](https://user-images.githubusercontent.com/26736844/128744089-df21bcee-8d52-4117-bf73-93815929bbb5.png)
 
-#### G. CustomerAnalytics DashBoard
+### G. CustomerAnalytics DashBoard
 
 It is a dashboard with a combination of dashboards related to Exploratory analysis and Machine Learning Works. When it is logged to the CustomersAnalytics, first you are directed to the Overall Dashboard includes Orders - Revenue - Visitors - Discount KPIS, Daily Orders, Customer Journey, Churn Rate, Churn Rate Weekly, Top 10 Purchased Products, Top 10 Purchased Categories. At the other tab, you can see the Customer Dashboard includes Payment Amount Distribution, Total Number Customer Breakdown with Purchased Order Count, RFM, Download to First Order Cohort, Daily Funnel.
 
@@ -857,7 +931,7 @@ It is a dashboard with a combination of dashboards related to Exploratory analys
 
     The most preferred product categories for the customers. Each bar represents the total number of order per product category (for more details check Product Analytics).
 
-#### 1. Customers Dashboard
+#### 2. Customers Dashboard
 
 -   ***Payment Amount Distribution*** 
 
@@ -894,7 +968,7 @@ It is a dashboard with a combination of dashboards related to Exploratory analys
     
     ![image](https://user-images.githubusercontent.com/26736844/128749609-04cb015b-f849-4b1b-b2ca-b32ab01a3ebd.png)
 
-#### H. Searching
+### H. Searching
 
 There are 4 types of search;
 
@@ -949,7 +1023,7 @@ Each promotion or promotion ID can be searched from the search bar. Promotion se
     
 ![image](https://user-images.githubusercontent.com/26736844/128750395-0dc1cdd1-8774-4e67-a59d-aed73eabe9e2.png)
     
-### 4. Dimension
+#### 4. Dimension
 
 Each dimension value can be searched from the search bar. Dimension search is able to check unique dimensions at the dimension column that is created at  Sessions Data Source and it is the optional column. Once the scheduling process has been done, It is possible to search unique dimensions. In order to search for the new dimension, it must be rescheduled.
 

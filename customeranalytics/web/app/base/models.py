@@ -7,11 +7,8 @@ except:
     from sqlalchemy import LargeBinary as Binary
 
 
-try: from web.app import db, login_manager
-except: from customeranalytics.web.app import db, login_manager
-
-try: from web.app.base.util import hash_pass
-except: from customeranalytics.web.app.base.util import hash_pass
+from .. import db, login_manager
+from .util import hash_pass
 
 
 class User(db.Model, UserMixin):
