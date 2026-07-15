@@ -4,8 +4,6 @@ import datetime
 import random
 from time import gmtime, strftime
 import pytz
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
 import argparse
 from itertools import product
 

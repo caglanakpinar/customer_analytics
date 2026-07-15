@@ -12,7 +12,7 @@ import pandas as pd
 from flask_login import current_user
 
 
-from customeranalytics.utils import read_yaml, current_date_to_day, abspath_for_sample_data
+from customeranalytics.utils import read_yaml, current_date_to_day, abspath_for_sample_data, get_storage_config
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'),
                        connect_args={'check_same_thread': False})
@@ -21,7 +21,7 @@ con = engine.connect()
 
 
 class LogsBasicConfeger:
-        try: directory = pd.read_sql("select * from es_connection", con).to_dict('records')[-1]['directory']
+        try: directory = get_storage_config()['directory']
         except: directory = currentdir
 
         try: user = current_user['email']

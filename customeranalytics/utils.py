@@ -4,7 +4,7 @@ import inspect
 from os.path import join
 import yaml
 
-from customeranalytics.configs import none_types
+from customeranalytics.configs import none_types, default_es_host, default_es_port
 
 
 def current_date_to_day():
@@ -154,6 +154,24 @@ def abspath_for_sample_data():
         currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         base_name = os.path.basename(currentdir)
     return currentdir
+
+
+def get_storage_config():
+    """
+    Single source of truth for the local storage configuration.
+
+    CustomerAnalytics no longer requires any storage/connection setup: data (the analytics database) and exported
+    CSV reports (CLV results, build_in_reports) live in the package folder by default. This returns the same dict
+    shape the removed ``es_connection`` table used to provide, so all previous readers keep working unchanged.
+
+    :return: {'tag', 'host', 'port', 'directory', 'url'}
+    """
+    return {'id': 1,
+            'tag': 'customeranalytics',
+            'host': default_es_host,
+            'port': str(default_es_port),
+            'directory': abspath_for_sample_data(),
+            'url': 'None'}
 
 
 def dimension_decision(order_index):

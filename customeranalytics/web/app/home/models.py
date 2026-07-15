@@ -6,8 +6,8 @@ sys.path.insert(0, parentdir)
 from sqlalchemy import create_engine, MetaData
 from os.path import abspath, join
 
-try: from utils import read_yaml, current_date_to_day, abspath_for_sample_data, sqlite_string_converter
-except: from customeranalytics.utils import read_yaml, current_date_to_day, abspath_for_sample_data, sqlite_string_converter
+try: from utils import read_yaml, current_date_to_day, abspath_for_sample_data, sqlite_string_converter, get_storage_config
+except: from customeranalytics.utils import read_yaml, current_date_to_day, abspath_for_sample_data, sqlite_string_converter, get_storage_config
 
 try: from configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
 except: from customeranalytics.configs import query_path, default_es_port, default_es_host, default_message, schedule_columns
@@ -17,8 +17,8 @@ import pandas as pd
 from datetime import datetime
 from flask_login import current_user
 
-try: from data_storage_configurations import connection_check, create_index, check_elasticsearch
-except: from customeranalytics.data_storage_configurations import connection_check, create_index, check_elasticsearch
+try: from data_storage_configurations import connection_check, create_index, check_data_storage
+except: from customeranalytics.data_storage_configurations import connection_check, create_index, check_data_storage
 
 try: from exploratory_analysis import ea_configs
 except: from customeranalytics.exploratory_analysis import ea_configs
@@ -45,7 +45,7 @@ class RouterRequest:
         self.message = default_message
         self.success_data_execute = """ Data Storage Process is initialized!
                                         This process mainly involves fetching data
-                                        from the data sources and storing them into the ElasticSearch indexes.
+                                        from the data sources and storing them into the local data store.
                                         This will take a while. Data Storage Process is triggered for
                                     """
         self.info_logs_for_chat = lambda info: {'user': 'info',
@@ -162,15 +162,9 @@ class RouterRequest:
                 'products': str(products), 'deliveries': str(deliveries)}
 
     def values_for_manage_data(self, template):
-        es_connection = self.collect_data_from_table(table='es_connection')
-        if len(es_connection) != 0:
-            if template in ['add-data-purchase_2', 'add-data-product_2']:
-                self.message['es_connection'] = es_connection.to_dict('records')[-1]
-            else:
-                self.message['es_connection'] = es_connection.to_dict('records')
-            # self.message['s_c_p_connection_check'] = "_".join(
-            #     [str(i) for i in self.check_for_session_and_customer_product_connect()])
-            self.message['s_c_p_connection_check'] = self.check_for_session_and_customer_product_connect()
+        # storage requires no configuration; the local storage config is always available
+        self.message['es_connection'] = get_storage_config()
+        self.message['s_c_p_connection_check'] = self.check_for_session_and_customer_product_connect()
 
     def values_for_schedule_data(self):
         try:
@@ -184,13 +178,7 @@ class RouterRequest:
         if len(actions) != 0:
             actions = actions.groupby("data_type").agg(
                 {"action_name": lambda x: ", ".join(list(x))}).reset_index().fillna('....')
-        try:
-            es_connection = self.collect_data_from_table(table='es_connection')
-            if len(es_connection) != 0:
-                self.message['es_connection'] = es_connection.to_dict('records')[-1]
-            else:
-                self.message['es_connection'] = '....'
-        except Exception as e: logging.error(e)
+        self.message['es_connection'] = get_storage_config()
 
         try:
             logs = self.collect_data_from_table(table='logs')
@@ -333,30 +321,8 @@ class RouterRequest:
         self.tables = pd.read_sql(self.sqlite_queries['tables'], con)
         self.message = default_message
 
-    def manage_data_integration(self, requests):
-        if requests.get('connect', None) is not None:
-            self.check_for_table_exits(table='es_connection')
-            requests['port'] = str(default_es_port) if requests['port'] is None else requests['port']
-            requests['host'] = str(default_es_host) if requests['host'] is None else requests['host']
-            status, self.message['es_connection_check'] = check_elasticsearch(port=requests['port'],
-                                                                              host=requests['host'],
-                                                                              directory=requests['directory'])
-            if status:
-                try:
-                    con.execute(self.insert_query(table='es_connection',
-                                                  columns=self.sqlite_queries['columns']['es_connection'][1:],
-                                                  values=requests))
-                except Exception as e:
-                    logging.error(e)
-
-        if requests.get('delete', None) is not None:
-            try:
-                con.execute("DROP table es_connection")
-            except Exception as e:
-                logging.error(e)
-
     def data_connections(self, requests):
-        # for orders index choose ElasticSearch Connection from es_connection table (only status == 'on')
+        # connect the orders/sessions data source (only status == 'on')
         if requests.get('connect', None) is not None:
             self.check_for_table_exits(table='data_connection')
             self.check_for_table_exits(table='data_columns_integration')
@@ -406,8 +372,6 @@ class RouterRequest:
 
     def execute_request(self, req, template):
         if req != {}:
-            if template == 'data-es':
-                self.manage_data_integration(self.check_for_request(req))
             if template in ['add-data-purchase', 'add-data-product', 'add-data-delivery']:
                 self.data_connections(self.check_for_request(req))
             if template == 'data-execute':
@@ -422,15 +386,6 @@ class RouterRequest:
 
         if template in ['add-data-purchase', 'add-data-product', 'add-data-delivery']:
             self.values_for_manage_data(template)
-        if template == 'data-es':
-            try:
-                es_connection = self.collect_data_from_table(table='es_connection')
-                if len(es_connection) != 0:
-                    self.message['es_connection'] = es_connection.to_dict('records')[-1]
-                else:
-                    self.message['es_connection'] = '....'
-            except Exception as e:
-                logging.error(e)
         if template == 'data-execute':
             self.values_for_schedule_data()
 

@@ -106,7 +106,7 @@
 											<form method="POST">
 												<div class="mb-4 col-md-12">
 													{% if values['es_connection']['url'] == 'None' %}
-														<td>  <a href="{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a></td>
+														<td>  <strong style="color:green;">Data Folder;</strong> {{ values['es_connection']['directory'] }}</td>
 													{% endif %}
 												</div>
 
@@ -164,7 +164,7 @@
 														<div class="mb-2">
 															<h10 class="text-muted">
 																Dimensional Column will be you grouping column in Exploratory Analysis, Machine Learning Processes, Dashboard, and Charts
-																This will also create a new ElasticSearch Index per unique Dimension on that column of values.
+																This will also create a new data partition per unique Dimension on that column of values.
 															</h10>
 														</div>
 														<input name="dimension" type="text" class="form-control mb-3" id="actions" placeholder="location, region, order_type, order_category, e.g.">
@@ -226,7 +226,7 @@
 										{% endif %}
 
 										{% if values['es_connection'] == '....' %}
-											<strong style="color:red;">Please add ElasticSearch Connection</strong>
+											<strong style="color:red;">Please add Data Storage Connection</strong>
 										{% endif %}
 									</div>
 								</div>
@@ -267,7 +267,7 @@
 											<form method="POST">
 												<div class="mb-4 col-md-12">
 													{% if values['es_connection']['url'] == 'None' %}
-														<td>  <a href="{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a></td>
+														<td>  <strong style="color:green;">Data Folder;</strong> {{ values['es_connection']['directory'] }}</td>
 													{% endif %}
 												</div>
 
@@ -358,7 +358,7 @@
 											</form>
 										{% endif %}
 										{% if values['es_connection'] == '....' %}
-											<strong style="color:red;">Please add ElasticSearch Connection</strong>
+											<strong style="color:red;">Please add Data Storage Connection</strong>
 										{% endif %}
 									</div>
 								</div>

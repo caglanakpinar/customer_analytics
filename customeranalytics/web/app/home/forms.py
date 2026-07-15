@@ -14,7 +14,7 @@ import plotly
 from screeninfo import get_monitors
 from sqlalchemy import create_engine, MetaData
 
-from customeranalytics.utils import convert_to_day, abspath_for_sample_data
+from customeranalytics.utils import convert_to_day, abspath_for_sample_data, get_storage_config
 from customeranalytics.configs import time_periods, descriptive_stats, abtest_promotions, \
     abtest_products, abtest_segments, delivery_metrics
 
@@ -524,7 +524,7 @@ class RealData:
     """
     kpis = {}
     try:
-        es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('resutls')[-1]
+        es_tag = get_storage_config()
         folder = join(es_tag['directory'], "build_in_reports", "")
     except: es_tag, folder = {}, []
 
@@ -534,7 +534,7 @@ class RealData:
         """
         dimensions = ['There is no available report. Please execute Schedule Data Process']
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('records')[-1]
+            es_tag = get_storage_config()
             if exists(join(es_tag['directory'], "build_in_reports")):
                 _dims = listdir(dirname(join(es_tag['directory'], "build_in_reports")))
                 if len(_dims) != 0:
@@ -549,7 +549,7 @@ class RealData:
         checks for 'build_in_reports' while platform is running.
         """
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('records')[-1]
+            es_tag = get_storage_config()
             _path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
             if date is not None:
                 _path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
@@ -562,7 +562,7 @@ class RealData:
         checks for 'build_in_reports' while platform is running and collect the selected report.
         """
         try:
-            es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('records')[-1]
+            es_tag = get_storage_config()
             file_path = join(es_tag['directory'], "build_in_reports", index, report_name + ".csv")
             if date is not None:
                 date_file_path = join(es_tag['directory'], "build_in_reports", index, date, report_name + ".csv")
@@ -571,16 +571,18 @@ class RealData:
         except: return False
 
     # this will collect the report in the 'build_in_reports'.
-    # whole data of reports will be stored in 'main' folder. dimensions are stored seperatelly
+    # whole data of reports will be stored in 'main' folder. dimensions are stored seperatelly.
+    # the folder only exists once the Schedule Data Process has generated reports; skip quietly until then.
     try:
-        for index in listdir(dirname(folder)):
-            _folder = join(es_tag['directory'], "build_in_reports", index, "")
-            kpis[index] = {}
-            for f in listdir(dirname(_folder)):
-                try:
-                    kpis[index][f.split(".")[0]] = pd.read_csv(join(_folder, f))
-                except Exception as e:
-                    print(e)
+        if es_tag and exists(dirname(folder)):
+            for index in listdir(dirname(folder)):
+                _folder = join(es_tag['directory'], "build_in_reports", index, "")
+                kpis[index] = {}
+                for f in listdir(dirname(_folder)):
+                    try:
+                        kpis[index][f.split(".")[0]] = pd.read_csv(join(_folder, f))
+                    except Exception as e:
+                        print(e)
     except Exception as e: print(e)
             
 

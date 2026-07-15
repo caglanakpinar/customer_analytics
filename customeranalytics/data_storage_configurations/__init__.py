@@ -1,4 +1,5 @@
 import sys, os, inspect
+import sqlite3
 from os.path import join, dirname, abspath, exists
 from sqlalchemy import create_engine, MetaData
 from pandas import read_sql, DataFrame
@@ -15,7 +16,7 @@ from customeranalytics.data_storage_configurations.data_access import GetData
 from customeranalytics.data_storage_configurations.es_create_index import CreateIndex
 from customeranalytics.data_storage_configurations.schedule_data_integration import Scheduler
 from customeranalytics.configs import elasticsearch_connection_refused_comment, query_path, acception_column_count
-from customeranalytics.utils import read_yaml, sqlite_string_converter, abspath_for_sample_data
+from customeranalytics.utils import read_yaml, sqlite_string_converter, abspath_for_sample_data, get_storage_config
 
 
 engine = create_engine('sqlite://///' + join(abspath_for_sample_data(), "web", 'db.sqlite3'), connect_args={'check_same_thread': False})
@@ -96,8 +97,8 @@ def get_ea_and_ml_config(ea_configs, ml_configs, has_product_conn, has_promotion
                      }
 
     """
-    es_tag_conn = read_sql(" SELECT  * FROM es_connection ", con)
-    port, host, directory = [list(es_tag_conn[i])[0] for i in ['port', 'host', 'directory']]
+    es_tag_conn = get_storage_config()
+    port, host, directory = es_tag_conn['port'], es_tag_conn['host'], es_tag_conn['directory']
     actions = get_action_name()
 
     configs = []
@@ -219,19 +220,24 @@ def check_data_integration(data, index):
     return data
 
 
-def check_elasticsearch(port, host, directory):
+def check_data_storage(port, host, directory):
     """
+    Validates the local (SQLite) analytics storage.
 
-    :return:
+    Kept under the historical name/signature so existing callers and the web UI stay unchanged. host/port are ignored
+    by the embedded backend; the only requirement is a writable data directory.
+
+    :return: (connection: bool, message: str)
     """
     message = 'connected'
     connection = True
     if exists(directory):
-        es = QueryES(port=port, host=host)
-        if not es.es.ping():
-            message = 'pls check the ElasticSearch connection.'
+        try:
+            _probe = sqlite3.connect(join(directory, 'customeranalytics_data.sqlite3'))
+            _probe.close()
+        except Exception:
+            message = 'pls check the directory (data storage could not be created).'
             connection = False
-
     else:
         message = 'pls check the directory.'
         connection = False

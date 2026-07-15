@@ -1,14 +1,3 @@
-es_connection:
-  CREATE TABLE es_connection (
-  id INTEGER NOT NULL,
-  tag VARCHAR,
-  host VARCHAR,
-  port VARCHAR,
-  directory VARCHAR,
-  url VARCHAR,
-  PRIMARY KEY (id)
-  )
-
 data_connection:
   CREATE TABLE data_connection (
   id INTEGER NOT NULL,
@@ -132,14 +121,6 @@ user_avatar:
   )
 
 columns:
-  es_connection:
-    - id
-    - tag
-    - host
-    - port
-    - directory
-    - url
-
   data_connection:
     - id
     - orders_data_source_tag

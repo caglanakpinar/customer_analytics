@@ -18,7 +18,7 @@
 							<div class="row">
 								<h6 class="card-subtitle text-muted mb-3">
 									<strong style="color:green;"> Delivery : </strong> The delivery data source is the sub-data source for the sessions.
-									This data source is merging with Sessions data source and storing into the ElasticSearch.
+									This data source is merging with Sessions data source and stored in the local data store.
 									If any session has a deliver process, the Order ID of the session of delivery information must be included at delivery data source
 									 and purchase value must be True.
 									Delivery Data Source is optional.
@@ -71,7 +71,7 @@
 											{% if values['es_connection'] != '....' %}
 												<div class="mb-4 col-md-12">
 													{% if values['es_connection']['url'] == 'None' %}
-														<td>  <a href="{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}" target="_blank">{{ 'http://'+ values['es_connection']['host'] + ':' +values['es_connection']['port'] }}</a></td>
+														<td>  <strong style="color:green;">Data Folder;</strong> {{ values['es_connection']['directory'] }}</td>
 													{% endif %}
 												</div>
 
@@ -150,7 +150,7 @@
 											{% endif %}
 
 											{% if values['es_connection'] == '....' %}
-												<strong style="color:red;">Please add ElasticSearch Connection</strong>
+												<strong style="color:red;">Please add Data Storage Connection</strong>
 											{% endif %}
 										</div>
 									</div>

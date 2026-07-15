@@ -182,7 +182,7 @@ class Reports:
         """
         tag, has_dimension = {}, False
         try:
-            self.es_tag = pd.read_sql("SELECT * FROM es_connection", con).to_dict('records')[-1]
+            self.es_tag = get_storage_config()
             dimensions = pd.read_sql("SELECT  * FROM data_connection", con).to_dict('records')[0]
             if dimensions['dimension'] not in ['None', None]:
                 has_dimension = True

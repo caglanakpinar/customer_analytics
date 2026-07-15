@@ -6,8 +6,8 @@ sys.path.insert(0, parentdir)
 from sqlalchemy import create_engine, MetaData
 from os.path import join
 
-try: from utils import convert_dt_to_day_str, abspath_for_sample_data, convert_to_date
-except: from customeranalytics.utils import convert_dt_to_day_str, abspath_for_sample_data
+try: from utils import convert_dt_to_day_str, abspath_for_sample_data, convert_to_date, get_storage_config
+except: from customeranalytics.utils import convert_dt_to_day_str, abspath_for_sample_data, get_storage_config
 
 try: from configs import query_path, default_es_port, default_es_host, default_message, schedule_columns, data_types_for_search
 except: from customeranalytics.configs import query_path, default_es_port, default_es_host, default_message, schedule_columns, data_types_for_search
@@ -17,8 +17,8 @@ import pandas as pd
 from datetime import datetime
 from flask_login import current_user
 
-try: from data_storage_configurations import connection_check, create_index, check_elasticsearch, QueryES
-except: from customeranalytics.data_storage_configurations import connection_check, create_index, check_elasticsearch, QueryES
+try: from data_storage_configurations import connection_check, create_index, check_data_storage, QueryES
+except: from customeranalytics.data_storage_configurations import connection_check, create_index, check_data_storage, QueryES
 
 try: from exploratory_analysis import ea_configs
 except: from customeranalytics.exploratory_analysis import ea_configs
@@ -122,11 +122,11 @@ class Search:
         query for fetching the temporary folder path
         """
         try:
-            es_con = pd.read_sql(""" SELECT *  FROM es_connection """, con).to_dict('records')[0]
+            es_con = get_storage_config()
             self.temporary_path = es_con['directory']
         except:
             connection, message = False, """
-            ElasticSearch Connection Failed Check ES port/host or temporary path or Add new ElasticSearch connection
+            Data storage is not configured. Check the data folder path or add a new Data Storage connection.
             """
             self.temporary_path = None
 

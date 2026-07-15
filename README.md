@@ -66,10 +66,9 @@ On Apple Silicon (M1/M2/etc.), `h5py` requires `pkg-config` and the HDF5 system 
 ```python
 import customeranalytics as ca
 
-# 1. Point CustomerAnalytics at your ElasticSearch instance
-ca.create_ElasticSearch_connection(host="localhost", port=9200, temporary_path="/path/to/workdir")
+# No storage/server setup needed — data is kept in a local embedded database automatically.
 
-# 2. Connect your Sessions/Customers (Products optional) data sources
+# 1. Connect your Sessions/Customers (Products optional) data sources
 ca.create_connections(
     sessions_connection={"data_source": "csv", "data_query_path": "/path/to/sessions.csv"},
     customers_connection={"data_source": "csv", "data_query_path": "/path/to/customers.csv"},
@@ -78,10 +77,10 @@ ca.create_connections(
     customer_fields={"client_2": "client_id", "download_date": "download_date"},
 )
 
-# 3. Schedule the data pipeline + analyses (once, daily, or every 12 hours)
+# 2. Schedule the data pipeline + analyses (once, daily, or every 12 hours)
 ca.create_schedule(time_period="daily")
 
-# 4. Launch the dashboard
+# 3. Launch the dashboard
 ca.create_user_interface()
 ```
 
@@ -103,8 +102,6 @@ At ElasticSearch, there are created 3 indexes. Orders Index (orders) is fetched 
 
 ### B. How to use CustomerAnalytics
 
-![image](https://user-images.githubusercontent.com/26736844/128701752-613908b4-1ee1-42c3-8bd9-9cf47e3aa6b1.png)
-
 There are 3 steps for initializing CustomerAnalytics;
 
  - Configuration of ElasticSearch Connection
@@ -114,8 +111,6 @@ There are 3 steps for initializing CustomerAnalytics;
 All data sets (Sessions, Customers, Products) are transferred to ElasticSearch Indexes. During the processes, there are temporary reports which are also stored at ElasticSearch. In order to run the platform, an accessible ElasticSearch Connection is required. In addition to that, there must be a folder with write/delete permission which the platform will use and store the reports with given folders there.
 
 
-![image](https://user-images.githubusercontent.com/26736844/128701903-86baed38-b518-48f7-8127-9d777803ed04.png)
-
 Once you click on ‘Connect’, the platform will check for both connectivities of ElasticSearch host/url/port and temporary folder of accessibility.
 
 It is also crucial that RAM and CPU consumption are checked by the user. While ElasticSerach is running, it might be useful to use with command; 
@@ -123,9 +118,6 @@ It is also crucial that RAM and CPU consumption are checked by the user. While E
     ES_JAVA_OPTS="-Xms4g -Xmx4g" ./elasticsearch
 
     
-<img width="833" alt="Screen Shot 2021-08-09 at 14 53 19" src="https://user-images.githubusercontent.com/26736844/128702097-8443ff79-56f4-4b5a-80cd-c4c98180b23d.png">
-
-
 When indexes are created there are some constant parameters that are stored at ***configs.py***. These constants are used at ***settings*** when indexes are created. These constants are;
 
 
@@ -170,9 +162,6 @@ Another index is stored with customers of unique information that is called ***d
 
 
 After the platform is connected to the ElasticSearch successfully, the ***Data Sources Connection*** process is eligible to connect to any data access.
-
-
-![image](https://user-images.githubusercontent.com/26736844/128704493-68a7462d-24aa-4cd8-8de0-3fb1c6f47d5d.png)
 
 
 ***Sessions Connection*** is the main responsibility of the data processed.  See the example of the Session data set below in the ***Example of Session Data Source Columns Matching Process***. There are 2 parts to the connection process. First, Session Data Source of columns and ElasticSearch orders Index of fields must be matched. The main concept of matching is assigning the columns name to the orders index fields on Data Source configuration page. There are required columns which are Order ID, client, start date, amount, purchase. There are also optional columns which are date, discount, promotion, dimension, and actions. Second, Data Source connection type and other information such as user, pw, host, port DB. After connecting the data source, it is able to be changed when it is needed. See the Sessions Connection process below.

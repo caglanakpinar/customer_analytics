@@ -110,7 +110,7 @@ class CLVPrediction:
                                                             query={"report_name": "clv_prediction"})
             if len(_reports) != 0:
                 try:
-                    _directory = pd.read_sql("SELECT * FROM es_connection", con).to_dict('records')[-1]['directory']
+                    _directory = get_storage_config()['directory']
                     print(_directory)
                     clv_report = pd.read_csv(join(_directory, "build_in_reports", "main", "daily_clv.csv"))
                     if len(clv_report) != 0:

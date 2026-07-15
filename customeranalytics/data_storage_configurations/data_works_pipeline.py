@@ -20,7 +20,7 @@ try:
 except Exception as e:
     from customeranalytics.ml_process import create_ml
 
-from customeranalytics.utils import current_date_to_day, convert_to_day, abspath_for_sample_data, read_yaml
+from customeranalytics.utils import current_date_to_day, convert_to_day, abspath_for_sample_data, read_yaml, get_storage_config
 from customeranalytics.configs import query_path, DATA_WORKS_READABLE_FORM
 from customeranalytics.data_storage_configurations.es_create_index import CreateIndex
 from customeranalytics.data_storage_configurations.query_es import QueryES
@@ -53,7 +53,7 @@ class DataPipelines:
         self.ml_connection_structure = ml_connection_structure
         self.actions = actions
         self.data_columns = data_columns
-        self.es_con = pd.read_sql("select * from es_connection", con).to_dict('records')[-1]
+        self.es_con = get_storage_config()
         self.create_index = CreateIndex(data_connection_structure=data_connection_structure,
                                         data_columns=data_columns, actions=actions)
         self.query_es = QueryES(host=self.es_con['host'], port=self.es_con['port'])

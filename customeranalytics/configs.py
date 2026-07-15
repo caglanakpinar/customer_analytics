@@ -224,7 +224,6 @@ default_message = {'es_connection': '....',
                    'active_connections': '....',
                    'connect_accept': False,
                    'has_product_data_source': False,
-                   'es_connection_check': '....',
                    'schedule_check': False,
                    's_c_p_connection_check': 'False_False_False',
                    'data_source_con_check': '....'

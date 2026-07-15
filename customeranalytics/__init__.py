@@ -9,8 +9,8 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-try: from utils import abspath_for_sample_data
-except: from .utils import abspath_for_sample_data
+try: from utils import abspath_for_sample_data, get_storage_config
+except: from .utils import abspath_for_sample_data, get_storage_config
 
 try: from web.app.home.models import RouterRequest
 except: from customeranalytics.web.app.home.models import RouterRequest
@@ -24,9 +24,9 @@ try: from web.config import web_configs
 except: from customeranalytics.web.config import web_configs
 
 try: from data_storage_configurations import get_data_connection_arguments, \
-    decision_for_product_conn, decision_for_promotion_conn, get_ea_and_ml_config, check_elasticsearch
+    decision_for_product_conn, decision_for_promotion_conn, get_ea_and_ml_config, check_data_storage
 except: from customeranalytics.data_storage_configurations import get_data_connection_arguments, \
-    decision_for_product_conn, decision_for_promotion_conn, get_ea_and_ml_config, check_elasticsearch
+    decision_for_product_conn, decision_for_promotion_conn, get_ea_and_ml_config, check_data_storage
 
 try: from .exploratory_analysis import ea_configs
 except: from customeranalytics.exploratory_analysis import ea_configs
@@ -109,22 +109,6 @@ def collect_data_source():
                 data_configs[ds]['config']['password'] = "*****"
 
     return data_configs
-
-
-def create_ElasticSearch_connection(port, host, temporary_path):
-    """
-    ElasticSearch configurations with host and port.
-    Another requirement which is temporary path is for importing files such as CLV Prediction model files and
-    .csv format files with build_in_reports folder.
-
-    :param port: elasticsearch port
-    :param host: elasticsearch host
-    :param temporary_path: folder path for importing data into the given directory in .csv format.
-    """
-    request = {'tag': 'es_con',
-               'url': "http://{host}:{port}/".format(**{'host': str(host), 'port': str(port)}),
-               "port": str(port), 'host': str(host), 'directory': temporary_path, "connect": 'True'}
-    r.manage_data_integration(r.check_for_request(request))
 
 
 def create_connections(customers_connection,
@@ -236,11 +220,11 @@ def create_connections(customers_connection,
         """ + ", ".join(customer_column_need) + " \n "
 
     try:
-        es_con = pd.read_sql(""" SELECT *  FROM es_connection """, con).to_dict('records')[0]
-        connection, message = check_elasticsearch(es_con['port'], es_con['host'], es_con['directory'])
+        es_con = get_storage_config()
+        connection, message = check_data_storage(es_con['port'], es_con['host'], es_con['directory'])
     except:
         connection, message = False, """
-        ElasticSearch Connection Failed Check ES port/host or temporary path or Add new ElasticSearch connection
+        Data storage could not be initialised. Please check the data folder is writable.
         """
 
     if not connection:
@@ -285,7 +269,7 @@ def create_schedule(time_period):
 
     """
     delete_schedule()
-    es_tag = list(pd.read_sql("select tag from es_connection", con)['tag'])[0]
+    es_tag = get_storage_config()['tag']
     request = {'schedule': 'True', 'time_period': time_period, "es_tag": es_tag}
     r.data_execute(request)
 

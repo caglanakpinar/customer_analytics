@@ -8,8 +8,6 @@ import datetime
 import random
 from time import gmtime, strftime
 import pytz
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
 import argparse
 from dateutil.parser import parse
 from sqlalchemy import create_engine, MetaData
@@ -17,7 +15,7 @@ from flask_login import current_user
 from os.path import abspath, join
 import time
 
-from customeranalytics.utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format, formating_numbers
+from customeranalytics.utils import read_yaml, current_date_to_day, convert_to_date, convert_to_iso_format, formating_numbers, get_storage_config
 from customeranalytics.configs import query_path, default_es_port, default_es_host, none_types, delivery_metrics
 from customeranalytics.configs import orders_index_columns, downloads_index_columns, not_required_columns, not_required_default_values
 from customeranalytics.data_storage_configurations.query_es import QueryES
@@ -159,9 +157,9 @@ class CreateIndex:
             print(e)
 
     def collect_es_connection_infos(self):
-        self.es_cons = pd.read_sql("SELECT * FROM es_connection", con)
-        self.port = list(self.es_cons['port'])[0]
-        self.host = list(self.es_cons['host'])[0]
+        self.es_cons = get_storage_config()
+        self.port = self.es_cons['port']
+        self.host = self.es_cons['host']
 
     def create_index_connection(self):
         self.collect_es_connection_infos()
