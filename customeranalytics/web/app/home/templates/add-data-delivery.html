@@ -69,11 +69,6 @@
 										</div>
 										<div class="card-body">
 											{% if values['es_connection'] != '....' %}
-												<div class="mb-4 col-md-12">
-													{% if values['es_connection']['url'] == 'None' %}
-														<td>  <strong style="color:green;">Data Folder;</strong> {{ values['es_connection']['directory'] }}</td>
-													{% endif %}
-												</div>
 
 												<div class="mb-4 col-md-12">
 													<label class="form-label mb-2" for="input_name">Delivery Connection Tag Name</label>

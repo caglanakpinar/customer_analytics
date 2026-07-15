@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "customeranalytics"
-version = "0.1"
+version = "0.5"
 description = "Funnels, Cohorts, A/B Tests, e-commerce, CLV Prediction, Product Analytics, Churn, Anomaly Detection, Customer Segmentation, RFM, Statistics"
 authors = ["Caglan Akpinar <cakpinar23@gmail.com>"]
 license = "MIT"
